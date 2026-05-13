@@ -15,8 +15,8 @@ const Navbar = () => {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 ${theme.navbar} z-50 transition-all duration-300`}>
-      <div className='mx-auto flex h-16 lg:h-20 max-w-screen-2xl items-center px-4 lg:px-8'>
-        {/* Logo Section - Left Aligned */}
+      <div className='mx-auto flex h-16 lg:h-20 max-w-screen-2xl items-center px-4 lg:px-32'>
+        {/* Logo Section - Left Aligned with offset */}
         <div className='flex-none'>
           <Link to='/' className='flex items-center bg-white/10 px-4 lg:px-6 py-1.5 lg:py-2.5 rounded-2xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-all group'>
             <img
@@ -28,15 +28,15 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Menu - Rightish Center */}
-        <div className='hidden lg:flex flex-1 justify-center items-center gap-10 ml-24'>
+        <div className='hidden lg:flex flex-1 justify-center items-center gap-10 ml-24 font-inter'>
           {desktopMenuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`text-[13px] font-bold tracking-[0.2em] uppercase transition-all hover:text-blue-600 hover:-translate-y-0.5 transform active:scale-95 ${
+              className={`text-sm font-semibold transition-all hover:text-blue-600 hover:-translate-y-0.5 transform active:scale-95 ${
                 isActive(item.path)
                   ? 'text-blue-600'
-                  : 'text-slate-500'
+                  : 'text-slate-600'
               }`}
             >
               {item.name}

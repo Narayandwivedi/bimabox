@@ -1,13 +1,13 @@
 export const themes = {
   theme1: {
-    navbar: 'bg-gray-800',
-    addButton: 'bg-gray-700',
-    tableHeader: 'bg-gray-700',
+    navbar: 'bg-white/80 backdrop-blur-md border-b border-slate-200',
+    addButton: 'bg-gradient-to-r from-blue-600 to-indigo-700',
+    tableHeader: 'bg-slate-900',
   },
   theme2: {
-    navbar: 'bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900',
-    addButton: 'bg-gradient-to-r from-indigo-600 to-purple-600',
-    tableHeader: 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600',
+    navbar: 'bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-900',
+    addButton: 'bg-gradient-to-r from-blue-500 to-indigo-600',
+    tableHeader: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-700',
   },
 
   theme3: {

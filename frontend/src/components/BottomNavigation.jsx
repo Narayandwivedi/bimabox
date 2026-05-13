@@ -44,7 +44,7 @@ const BottomNavigation = () => {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
-                isActive ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+                isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
               <div>

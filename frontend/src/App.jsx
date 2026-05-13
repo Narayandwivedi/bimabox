@@ -23,14 +23,14 @@ import DocumentDetail from './pages/DocumentDetail'
 
 function AppContent() {
   const location = useLocation()
-  const showNavbar = location.pathname !== '/login' && location.pathname !== '/' && location.pathname !== '/premium-calculator' && location.pathname !== '/setting' && location.pathname !== '/rto-documents' && !location.pathname.startsWith('/document/')
+  const showNavbar = location.pathname !== '/login'
   const showBottomNav = location.pathname !== '/login'
 
   return (
     <>
       <ToastContainer />
       {showNavbar && <Navbar />}
-      <div className={showNavbar ? 'pt-12' : ''}>
+      <div className={showNavbar ? 'pt-16' : ''}>
         <Routes>
           <Route path='/login' element={<Login />} />
           <Route path='/' element={<Home />} />

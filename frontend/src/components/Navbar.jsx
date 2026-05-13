@@ -18,11 +18,11 @@ const Navbar = () => {
       <div className='mx-auto flex h-16 max-w-screen-2xl items-center justify-center px-4'>
         {/* Logo Section - Centered */}
         <div className='flex items-center'>
-          <Link to='/' className='flex items-center bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-all group'>
-            <img 
-              src='/bimabox-Photoroom.avif' 
-              alt='BimaBox' 
-              className='h-11 w-auto drop-shadow-md transition-transform group-hover:scale-105'
+          <Link to='/' className='flex items-center bg-white/10 px-4 py-1.5 rounded-2xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-all group'>
+            <img
+              src='/bimabox-Photoroom.avif'
+              alt='BimaBox'
+              className='h-12 w-auto drop-shadow-md transition-transform group-hover:scale-105'
             />
           </Link>
         </div>

@@ -30,7 +30,7 @@ function AppContent() {
     <>
       <ToastContainer />
       {showNavbar && <Navbar />}
-      <div className={showNavbar ? 'pt-16' : ''}>
+      <div className={showNavbar ? 'pt-16 lg:pt-20' : ''}>
         <Routes>
           <Route path='/login' element={<Login />} />
           <Route path='/' element={<Home />} />

@@ -157,7 +157,8 @@ return (
                 </div>
               </div>
 
-              <div className='space-y-3'>
+              {/* Responsive Views */}
+              <div className='lg:hidden space-y-3'>
                  {demoExpiringDocs
                   .filter(doc => (doc.vehicleNumber.includes(searchQuery.toUpperCase()) || doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && doc.daysLeft <= expiryFilter)
                   .map((doc) => (
@@ -206,6 +207,61 @@ return (
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className='hidden lg:block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
+                <table className='w-full text-left border-collapse'>
+                  <thead>
+                    <tr className='bg-slate-50/80 backdrop-blur-sm border-b border-slate-200'>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Vehicle No.</th>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Document Type</th>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Valid From</th>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Valid To</th>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Days Left</th>
+                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right'>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className='divide-y divide-slate-100'>
+                    {demoExpiringDocs
+                      .filter(doc => (doc.vehicleNumber.includes(searchQuery.toUpperCase()) || doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && doc.daysLeft <= expiryFilter)
+                      .map((doc) => (
+                      <tr 
+                        key={doc.id}
+                        onClick={() => navigate(`/document/${doc.id}`)}
+                        className='group hover:bg-slate-50 transition-colors cursor-pointer'
+                      >
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <span className='text-sm font-black text-slate-900 tracking-wider'>{doc.vehicleNumber}</span>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='flex items-center gap-2'>
+                            <div className={`h-2 w-2 rounded-full bg-${doc.color}-500 shadow-[0_0_8px_rgba(0,0,0,0.1)]`}></div>
+                            <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
+                          </div>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium'>
+                          {doc.validFrom}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-bold'>
+                          {doc.validTo}
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-${doc.color}-50 text-${doc.color}-700 border border-${doc.color}-100`}>
+                            {doc.daysLeft} days left
+                          </span>
+                        </td>
+                        <td className='px-6 py-4 whitespace-nowrap text-right'>
+                          <button className='text-slate-400 group-hover:text-blue-600 transition-colors'>
+                            <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

@@ -122,22 +122,22 @@ const Login = () => {
       </div>
 
       <div className='w-full max-w-md z-10'>
-        <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20'>
-          <div className='text-center mb-8'>
-            <div className='mb-6'>
+        <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/20'>
+          <div className='text-center mb-6'>
+            <div className='mb-4'>
               <img 
                 src='/bimabox-Photoroom.avif' 
                 alt='BimaBox Logo' 
-                className='h-16 mx-auto drop-shadow-md'
+                className='h-12 mx-auto drop-shadow-md'
               />
             </div>
-            <h1 className='text-3xl font-black text-slate-800 mb-2'>Sign In</h1>
-            <p className='text-slate-500 text-sm'>Enter your credentials to access BimaBox</p>
+            <h1 className='text-2xl font-black text-slate-800 mb-1'>Sign In</h1>
+            <p className='text-slate-500 text-xs'>Enter your credentials to access BimaBox</p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-shake'>
+            <div className='mb-4 p-4 bg-red-50 border border-red-200 rounded-xl animate-shake'>
               <div className='flex items-center gap-2'>
                 <svg className='w-5 h-5 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
@@ -148,9 +148,9 @@ const Login = () => {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className='space-y-5'>
+          <form onSubmit={handleSubmit} className='space-y-3.5'>
             <div>
-              <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-1'>
+              <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 ml-1'>
                 Mobile Number
               </label>
               <div className='relative group'>
@@ -165,14 +165,14 @@ const Login = () => {
                   value={formData.identifier}
                   onChange={handleChange}
                   placeholder='10-digit mobile number'
-                  className='w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium'
+                  className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium'
                   disabled={loading}
                 />
               </div>
             </div>
 
             <div>
-              <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 ml-1'>
+              <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 ml-1'>
                 Password
               </label>
               <div className='relative group'>
@@ -187,7 +187,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder='••••••••'
-                  className='w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium'
+                  className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium'
                   disabled={loading}
                 />
               </div>
@@ -196,7 +196,7 @@ const Login = () => {
             <button
               type='submit'
               disabled={loading}
-              className='w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4'
+              className='w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4'
             >
               {loading ? (
                 <>
@@ -216,7 +216,7 @@ const Login = () => {
               )}
             </button>
 
-            <div className='relative my-6'>
+            <div className='relative my-4'>
               <div className='absolute inset-0 flex items-center'>
                 <div className='w-full border-t border-slate-200'></div>
               </div>
@@ -239,7 +239,7 @@ const Login = () => {
           </form>
 
           {/* Footer */}
-          <div className='mt-8 text-center'>
+          <div className='mt-4 text-center'>
             <p className='text-xs text-slate-400 font-medium uppercase tracking-widest'>
               © {new Date().getFullYear()} BimaBox • Secure Insurance Solutions
             </p>

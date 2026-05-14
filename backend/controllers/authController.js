@@ -13,7 +13,9 @@ const {
 const sanitizeUser = (user) => ({
   _id: user._id,
   name: user.name || '',
+  email: user.email || '',
   mobile: user.mobile || '',
+  picture: user.picture || '',
   isActive: user.isActive !== false,
   lastLogin: user.lastLogin || null,
   createdAt: user.createdAt,
@@ -162,6 +164,7 @@ const googleLogin = async (req, res) => {
         name,
         email,
         googleId,
+        picture,
         isActive: true,
         lastLogin: new Date()
       })

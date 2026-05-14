@@ -33,19 +33,19 @@ function AppContent() {
       <div className={showNavbar ? 'pt-16 lg:pt-20' : ''}>
         <Routes>
           <Route path='/login' element={<Login />} />
-          <Route path='/' element={<Home />} />
-          <Route path='/dashboard' element={<Dashboard />} />
-          <Route path='/setting' element={<Setting />} />
-          <Route path='/vehicle' element={<VehicleRegistration />} />
-          <Route path='/vehicle/:id/detail' element={<VehicleDetailPage />} />
-          <Route path='/insurance' element={<Insurance />} />
-          <Route path='/fitness' element={<Fitness />} />
-          <Route path='/tax' element={<Tax />} />
-          <Route path='/puc' element={<Puc />} />
-          <Route path='/gps' element={<Gps />} />
-          <Route path='/rto-documents' element={<RTODocuments />} />
-          <Route path='/premium-calculator' element={<PremiumCalculator />} />
-          <Route path='/document/:id' element={<DocumentDetail />} />
+          <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
+          <Route path='/vehicle' element={<ProtectedRoute><VehicleRegistration /></ProtectedRoute>} />
+          <Route path='/vehicle/:id/detail' element={<ProtectedRoute><VehicleDetailPage /></ProtectedRoute>} />
+          <Route path='/insurance' element={<ProtectedRoute><Insurance /></ProtectedRoute>} />
+          <Route path='/fitness' element={<ProtectedRoute><Fitness /></ProtectedRoute>} />
+          <Route path='/tax' element={<ProtectedRoute><Tax /></ProtectedRoute>} />
+          <Route path='/puc' element={<ProtectedRoute><Puc /></ProtectedRoute>} />
+          <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
+          <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
+          <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
+          <Route path='/document/:id' element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         </Routes>
       </div>
       {showBottomNav && <BottomNavigation />}

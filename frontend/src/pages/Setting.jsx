@@ -22,11 +22,15 @@ const Setting = () => {
           {/* Profile Card */}
           <div className='rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.15)] md:p-8'>
             <div className='flex flex-col items-center gap-3 mb-8 text-center'>
-              <div className='h-14 w-14 rounded-full bg-indigo-600 flex items-center justify-center text-xl text-white font-black shadow-lg shadow-indigo-100'>
-                J
+              <div className='h-14 w-14 rounded-full bg-indigo-600 flex items-center justify-center overflow-hidden text-xl text-white font-black shadow-lg shadow-indigo-100'>
+                {user?.picture ? (
+                  <img src={user.picture} alt={user.name} className='h-full w-full object-cover' />
+                ) : (
+                  user?.name?.charAt(0) || 'U'
+                )}
               </div>
               <div>
-                <h2 className='text-lg font-black text-slate-900'>Joe Doe</h2>
+                <h2 className='text-lg font-black text-slate-900'>{user?.name || 'User'}</h2>
                 <p className='text-[10px] font-bold text-indigo-600 uppercase tracking-widest'>Active Member</p>
               </div>
             </div>
@@ -34,12 +38,12 @@ const Setting = () => {
             <div className='space-y-4'>
               <div className='rounded-2xl bg-white p-4 border border-slate-100'>
                 <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Mobile Number</p>
-                <p className='text-sm font-semibold text-slate-900'>{user?.mobile || '+91 98765 43210'}</p>
+                <p className='text-sm font-semibold text-slate-900'>{user?.mobile || 'Not linked'}</p>
               </div>
               
               <div className='rounded-2xl bg-white p-4 border border-slate-100'>
                 <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Email Address</p>
-                <p className='text-sm font-semibold text-slate-900'>{user?.email || 'demo@example.com'}</p>
+                <p className='text-sm font-semibold text-slate-900'>{user?.email || 'Not linked'}</p>
               </div>
             </div>
           </div>

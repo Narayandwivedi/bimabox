@@ -38,6 +38,9 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
+  picture: {
+    type: String
+  },
   isActive: {
     type: Boolean,
     default: true

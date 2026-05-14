@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { GoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -65,6 +66,35 @@ const Login = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/auth/google`, {
+        credential: credentialResponse.credential
+      }, {
+        withCredentials: true
+      })
+
+      if (response.data.success) {
+        setUser(response.data.data.user)
+        setIsAuthenticated(true)
+        navigate('/')
+      } else {
+        setError(response.data.message || 'Google login failed')
+      }
+    } catch (err) {
+      console.error('Google login error:', err)
+      setError(err.response?.data?.message || 'Google authentication failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    setError('Google Sign In was unsuccessful. Try again later')
   }
 
   if (authLoading) {
@@ -185,6 +215,27 @@ const Login = () => {
                 </>
               )}
             </button>
+
+            <div className='relative my-6'>
+              <div className='absolute inset-0 flex items-center'>
+                <div className='w-full border-t border-slate-200'></div>
+              </div>
+              <div className='relative flex justify-center text-xs uppercase'>
+                <span className='bg-white px-2 text-slate-400 font-bold tracking-widest'>Or continue with</span>
+              </div>
+            </div>
+
+            <div className='flex justify-center'>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                theme="outline"
+                size="large"
+                shape="pill"
+                width="100%"
+              />
+            </div>
           </form>
 
           {/* Footer */}

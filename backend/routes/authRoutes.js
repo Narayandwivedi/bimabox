@@ -6,6 +6,7 @@ const { requireAdminAuth } = require('../middleware/adminAuth')
 const router = express.Router()
 
 router.post('/login', controller.login)
+router.post('/google', controller.googleLogin)
 router.get('/profile', requireAuth, controller.profile)
 router.post('/logout', controller.logout)
 router.post('/admin/login', controller.adminLogin)

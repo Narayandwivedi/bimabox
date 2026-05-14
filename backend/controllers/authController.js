@@ -1,5 +1,7 @@
 const User = require('../models/User')
 const Admin = require('../models/Admin')
+const { OAuth2Client } = require('google-auth-library')
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const {
   signToken,
   buildAuthCookie,
@@ -129,6 +131,58 @@ const adminLogout = async (_req, res) => {
   res.json({ success: true, message: 'Logged out successfully' })
 }
 
+const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body
+    if (!credential) {
+      return res.status(400).json({ success: false, message: 'Google credential is required' })
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    })
+
+    const payload = ticket.getPayload()
+    const { sub: googleId, email, name, picture } = payload
+
+    // Find or create user
+    let user = await User.findOne({ $or: [{ googleId }, { email }] })
+
+    if (user) {
+      // Update googleId if not present (case where email matched)
+      if (!user.googleId) {
+        user.googleId = googleId
+      }
+      user.lastLogin = new Date()
+      await user.save()
+    } else {
+      // Create new user
+      user = new User({
+        name,
+        email,
+        googleId,
+        isActive: true,
+        lastLogin: new Date()
+      })
+      await user.save()
+    }
+
+    const token = signToken({ userId: String(user._id), type: 'user' })
+    res.setHeader('Set-Cookie', buildAuthCookie(token))
+
+    res.json({
+      success: true,
+      data: {
+        user: sanitizeUser(user),
+      },
+    })
+  } catch (error) {
+    console.error('Google login error:', error)
+    res.status(500).json({ success: false, message: 'Google authentication failed' })
+  }
+}
+
 module.exports = {
   login,
   profile,
@@ -136,4 +190,5 @@ module.exports = {
   adminProfile,
   logout,
   adminLogout,
+  googleLogin,
 }

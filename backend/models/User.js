@@ -52,6 +52,18 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 })
 
+// Pre-save hook to handle sparse unique indexes
+userSchema.pre('save', function() {
+  // If mobile is null or empty string, set it to undefined so sparse index ignores it
+  if (this.mobile === null || this.mobile === '') {
+    this.mobile = undefined
+  }
+  // Same for googleId just in case
+  if (this.googleId === null || this.googleId === '') {
+    this.googleId = undefined
+  }
+})
+
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   if (!this.password) return false

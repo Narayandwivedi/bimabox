@@ -62,7 +62,7 @@ const RTODocuments = () => {
 
   return (
     <div className='min-h-screen bg-slate-100 px-4 pb-32 pt-4 md:px-6 lg:px-8'>
-      <div className='mx-auto max-w-5xl'>
+      <div className='mx-auto max-w-6xl'>
         {/* Header Section */}
         <div className='mb-4'>
           <h1 className='text-xl font-black text-slate-900'>RTO Documents</h1>

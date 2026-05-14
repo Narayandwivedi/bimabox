@@ -108,7 +108,7 @@ return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
       <main className='pl-2 pr-4 pt-3 pb-32 lg:pl-3 lg:pr-8 lg:pt-4'>
         <section className='w-full'>
-          <div className='max-w-5xl mx-auto'>
+          <div className='max-w-6xl mx-auto'>
 
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
               <div className='mb-6 grid grid-cols-2 gap-4'>

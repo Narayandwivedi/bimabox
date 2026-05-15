@@ -10,9 +10,7 @@ const ExportModal = ({ isOpen, onClose }) => {
 
   const dataTypes = [
     { id: 'vehicle', name: 'Vehicle', endpoint: '/api/vehicle/export', icon: '🚗' },
-    { id: 'national-permit', name: 'National Permit', endpoint: '/api/national-permits/export', icon: '🛣️' },
-    { id: 'cg-permit', name: 'CG Permit', endpoint: '/api/cg-permits/export', icon: '📄' },
-    { id: 'temporary-permit', name: 'Temporary Permit', endpoint: '/api/temporary-permits/export', icon: '⏰' },
+    { id: 'permit', name: 'Permit', endpoint: '/api/permits/export', icon: '📄' },
     { id: 'fitness', name: 'Fitness', endpoint: '/api/fitness/export', icon: '✅' },
     { id: 'tax', name: 'Tax', endpoint: '/api/tax/export', icon: '💰' },
     { id: 'insurance', name: 'Insurance', endpoint: '/api/insurance/export', icon: '🛡️' },

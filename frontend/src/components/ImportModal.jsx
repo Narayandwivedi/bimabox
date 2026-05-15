@@ -10,51 +10,41 @@ const ImportModal = ({ isOpen, onClose }) => {
     { value: 'insurance', label: 'Insurance' },
     { value: 'tax', label: 'Tax Records' },
     { value: 'fitness', label: 'Fitness Certificates' },
-    { value: 'cg-permit', label: 'CG Permits' },
-    { value: 'national-permit', label: 'National Permits' },
-    { value: 'temporary-permit', label: 'Temporary Permits' },
+    { value: 'permit', label: 'Permit' },
     { value: 'vehicle', label: 'Vehicles' }
   ])
   const [selectedDataType, setSelectedDataType] = useState('')
-  const [jsonFile, setJsonFile] = useState(null)
-  const [jsonData, setJsonData] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [showInstructions, setShowInstructions] = useState(false)
 
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setSelectedDataType('')
-      setJsonFile(null)
-      setJsonData(null)
-      setShowInstructions(false)
+      setSelectedFile(null)
     }
   }, [isOpen])
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]
-    setJsonFile(file)
-
     if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const json = JSON.parse(e.target.result)
-          setJsonData(json)
-          toast.success('File loaded successfully', {
-            position: 'top-right',
-            autoClose: 2000
-          })
-        } catch (error) {
-          toast.error('Invalid file format', {
-            position: 'top-right',
-            autoClose: 3000
-          })
-          setJsonFile(null)
-          setJsonData(null)
-        }
+      const isPdf = file.type === 'application/pdf'
+      const isImage = file.type.startsWith('image/')
+      
+      if (!isPdf && !isImage) {
+        toast.error('Only PDF and image files are allowed', {
+          position: 'top-right',
+          autoClose: 3000
+        })
+        setSelectedFile(null)
+        return
       }
-      reader.readAsText(file)
+
+      setSelectedFile(file)
+      toast.success('File selected successfully', {
+        position: 'top-right',
+        autoClose: 2000
+      })
     }
   }
 
@@ -67,7 +57,7 @@ const ImportModal = ({ isOpen, onClose }) => {
       return
     }
 
-    if (!jsonData) {
+    if (!selectedFile) {
       toast.error('Please upload a document', {
         position: 'top-right',
         autoClose: 3000
@@ -78,86 +68,37 @@ const ImportModal = ({ isOpen, onClose }) => {
     setLoading(true)
 
     try {
-      const response = await axios.post(`${API_URL}/api/import`, {
-        dataType: selectedDataType,
-        data: jsonData
-      }, {
-        withCredentials: true
+      const formData = new FormData()
+      formData.append('dataType', selectedDataType)
+      formData.append('file', selectedFile)
+
+      const response = await axios.post(`${API_URL}/api/import`, formData, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
 
       const result = response.data
 
       if (result.success) {
-        toast.success(`✅ ${result.message}`, {
+        toast.success(`✅ ${result.message || 'Document uploaded successfully'}`, {
           position: 'top-right',
           autoClose: 4000
         })
-
-        // Show detailed results
-        if (result.data.success > 0) {
-          toast.info(`📊 Imported: ${result.data.success} records`, {
-            position: 'top-right',
-            autoClose: 3000
-          })
-        }
-
-        // Show skipped duplicates
-        if (result.data.skipped > 0) {
-          toast.warning(`⏭️ Skipped: ${result.data.skipped} duplicate records`, {
-            position: 'top-right',
-            autoClose: 5000
-          })
-
-          // Log skipped records for debugging
-          if (result.data.skippedRecords && result.data.skippedRecords.length > 0) {
-            console.log('Skipped duplicate records:', result.data.skippedRecords)
-
-            // Show first few skipped records
-            const firstSkipped = result.data.skippedRecords.slice(0, 3)
-            const skippedDetails = firstSkipped.map(s => {
-              const key = Object.keys(s).find(k => k !== 'index' && k !== 'reason')
-              return key ? s[key] : 'Unknown'
-            }).join(', ')
-
-            toast.info(`🔄 Duplicates: ${skippedDetails}${result.data.skippedRecords.length > 3 ? '...' : ''}`, {
-              position: 'top-right',
-              autoClose: 6000
-            })
-          }
-        }
-
-        if (result.data.failed > 0) {
-          toast.error(`⚠️ Failed: ${result.data.failed} records`, {
-            position: 'top-right',
-            autoClose: 5000
-          })
-
-          // Show first error for debugging
-          if (result.data.errors && result.data.errors.length > 0) {
-            console.error('Import errors:', result.data.errors)
-            toast.error(`First error: ${result.data.errors[0].error}`, {
-              position: 'top-right',
-              autoClose: 5000
-            })
-          }
-        }
-
-        // Only close if all succeeded or only skipped (no failures)
-        if (result.data.failed === 0) {
-          setSelectedDataType('')
-          setJsonFile(null)
-          setJsonData(null)
-          onClose()
-        }
+        
+        setSelectedDataType('')
+        setSelectedFile(null)
+        onClose()
       } else {
-        toast.error(result.message || 'Import failed', {
+        toast.error(result.message || 'Upload failed', {
           position: 'top-right',
           autoClose: 3000
         })
       }
     } catch (error) {
-      console.error('Error importing data:', error)
-      toast.error('Failed to import data. Please try again.', {
+      console.error('Error uploading document:', error)
+      toast.error('Failed to upload document. Please try again.', {
         position: 'top-right',
         autoClose: 3000
       })
@@ -172,83 +113,52 @@ const ImportModal = ({ isOpen, onClose }) => {
     <>
       {/* Backdrop */}
       <div
-        className='fixed inset-0 bg-black/60 z-50 transition-opacity'
+        className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity'
         onClick={onClose}
       ></div>
 
       {/* Modal */}
-      <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+      <div className='fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0'>
         <div
-          className='bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto'
+          className='bg-white rounded-2xl shadow-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto'
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className='px-5 py-3.5 md:px-6 md:py-5 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-b border-gray-200 flex items-center justify-between'>
+          <div className='px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10'>
             <div className='flex items-center gap-3'>
-              <div className='w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white text-lg md:text-xl'>
-                📥
+              <div className='w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600'>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
               </div>
               <div>
-                <h2 className='text-lg md:text-xl font-bold text-gray-800'>Upload Document</h2>
-                <p className='text-xs text-gray-500'>Upload file to import</p>
+                <h2 className='text-base font-bold text-gray-900'>Upload Document</h2>
+                <p className='text-[11px] text-gray-500'>Upload PDF or Image</p>
               </div>
             </div>
-            <div className='flex items-center gap-2'>
-              <button
-                onClick={() => setShowInstructions(!showInstructions)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  showInstructions 
-                    ? 'bg-indigo-100 text-indigo-600 shadow-inner' 
-                    : 'text-gray-400 hover:text-indigo-500 hover:bg-indigo-50'
-                }`}
-                title="Show Instructions"
-              >
-                <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-                </svg>
-              </button>
-              <button
-                onClick={onClose}
-                className='text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg'
-              >
-                <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-                </svg>
-              </button>
-            </div>
+            <button
+              onClick={onClose}
+              className='text-gray-400 hover:text-gray-700 transition-colors p-1.5 hover:bg-gray-100 rounded-lg'
+            >
+              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+              </svg>
+            </button>
           </div>
 
-          {/* Collapsible Instructions */}
-          {showInstructions && (
-            <div className='px-6 py-4 bg-indigo-50/50 border-b border-indigo-100 animate-in slide-in-from-top duration-300'>
-              <h3 className='text-sm font-bold text-indigo-800 mb-2 flex items-center gap-2'>
-                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
-                </svg>
-                Instructions
-              </h3>
-              <ul className='text-xs text-indigo-700 space-y-1 list-disc list-inside'>
-                <li>Select the type of document you want to import</li>
-                <li>Upload a valid file with an array of records</li>
-                <li>Duplicate records will be automatically skipped</li>
-                <li>Click Upload to add records to the database</li>
-              </ul>
-            </div>
-          )}
-
           {/* Body */}
-          <div className='p-6 space-y-5'>
+          <div className='p-5 space-y-4'>
             {/* Document Type Selection */}
             <div>
-              <label className='block text-sm font-bold text-gray-700 mb-2'>
-                Select Document Type *
+              <label className='block text-xs font-bold text-gray-700 mb-1.5'>
+                Document Type
               </label>
               <select
                 value={selectedDataType}
                 onChange={(e) => setSelectedDataType(e.target.value)}
-                className='w-full px-4 py-2.5 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 transition-all bg-white text-sm font-semibold'
+                className='w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all bg-gray-50 hover:bg-white text-sm font-medium text-gray-800 outline-none'
               >
-                <option value=''>Choose document type...</option>
+                <option value=''>Choose type...</option>
                 {dataTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -257,55 +167,73 @@ const ImportModal = ({ isOpen, onClose }) => {
               </select>
             </div>
 
-            {/* File Upload */}
+            {/* File Upload Area */}
             <div>
-              <label className='block text-sm font-bold text-gray-700 mb-2'>
-                Upload Document *
+              <label className='block text-xs font-bold text-gray-700 mb-1.5'>
+                Upload File
               </label>
-              <input
-                type='file'
-                accept='.json'
-                onChange={handleFileChange}
-                className='w-full px-4 py-2.5 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-400 transition-all bg-white text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100'
-              />
-              {jsonFile && (
-                <p className='mt-2 text-sm text-green-600 font-semibold flex items-center gap-2'>
-                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
-                  </svg>
-                  {jsonFile.name} ({Array.isArray(jsonData) ? jsonData.length : 0} records)
-                </p>
-              )}
+              <div className='relative'>
+                <input
+                  type='file'
+                  accept='application/pdf,image/*'
+                  onChange={handleFileChange}
+                  className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
+                />
+                <div className={`w-full px-4 py-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all bg-gray-50 ${selectedFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50/30'}`}>
+                  {selectedFile ? (
+                    <>
+                      <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className='text-sm font-bold text-green-700 text-center truncate max-w-[200px]'>
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-xs text-green-600 mt-1 font-medium">
+                        Ready to upload
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 bg-white text-gray-400 shadow-sm border border-gray-100 rounded-full flex items-center justify-center mb-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      <p className='text-sm font-semibold text-gray-700'>
+                        Click or drag file here
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PDF or Images only
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-
-
           </div>
 
           {/* Footer */}
-          <div className='px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 rounded-b-2xl'>
+          <div className='p-5 pt-0 mt-2 flex gap-3'>
             <button
               onClick={onClose}
-              className='px-5 py-2 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all'
+              className='flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all'
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
-              disabled={!selectedDataType || !jsonData || loading}
-              className='px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+              disabled={!selectedDataType || !selectedFile || loading}
+              className='flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-sm shadow-indigo-200 font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
             >
               {loading ? (
                 <>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  Importing...
+                  <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
+                  Uploading
                 </>
               ) : (
-                <>
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
-                  </svg>
-                  Upload Document
-                </>
+                'Upload Document'
               )}
             </button>
           </div>

@@ -153,8 +153,8 @@ const RTODocuments = () => {
       <div className='mx-auto max-w-6xl'>
         {/* Header Section */}
         <div className='mb-4'>
-          <h1 className='text-xl font-black text-slate-900'>RTO Documents</h1>
-          <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>Master Document Repository</p>
+          <h1 className='text-lg md:text-xl font-black text-slate-900'>RTO Documents</h1>
+          <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>see all your record here</p>
         </div>
 
         {/* Search & Filters Bar */}

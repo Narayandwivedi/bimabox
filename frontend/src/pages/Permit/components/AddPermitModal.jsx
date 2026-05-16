@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { handleDateBlur as utilHandleDateBlur, handleSmartDateInput } from '../../../utils/dateFormatter'
 import { validateVehicleNumberRealtime } from '../../../utils/vehicleNoCheck'
+import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -23,21 +24,33 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
     permitDocumentData: ''
   })
   
-  const [fileName, setFileName] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [scanningFile, setScanningFile] = useState(null)
+  const [isExtractingPermit, setIsExtractingPermit] = useState(false)
+  const [uploadedPermitDocument, setUploadedPermitDocument] = useState(null)
+  const [uploadedPermitFile, setUploadedPermitFile] = useState(null)
+  const processedInitialFile = useRef(false)
 
   useEffect(() => {
-    if (initialExtractionFile) {
-      setFileName(initialExtractionFile.name)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          permitDocumentData: reader.result
-        }))
+    return () => {
+      if (uploadedPermitDocument?.revokeOnCleanup && uploadedPermitDocument.previewUrl) {
+        URL.revokeObjectURL(uploadedPermitDocument.previewUrl)
       }
-      reader.readAsDataURL(initialExtractionFile)
     }
-  }, [initialExtractionFile])
+  }, [uploadedPermitDocument])
+
+  useEffect(() => {
+    if (initialExtractionFile && isOpen && !processedInitialFile.current) {
+      processedInitialFile.current = true
+      if (initialExtractionFile.type === 'application/pdf') {
+        setUploadedPermitFile(initialExtractionFile)
+        processExtraction(initialExtractionFile)
+      } else if (initialExtractionFile.type.startsWith('image/')) {
+        setUploadedPermitFile(initialExtractionFile)
+        setScanningFile(initialExtractionFile)
+      }
+    }
+  }, [initialExtractionFile, isOpen])
 
   useEffect(() => {
     if (!isOpen) {
@@ -48,8 +61,20 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
         validTo: '',
         permitDocumentData: ''
       })
-      setFileName('')
       setVehicleValidation({ isValid: false, message: '' })
+      setFetchingVehicle(false)
+      setVehicleError('')
+      setVehicleMatches([])
+      setShowVehicleDropdown(false)
+      setSelectedDropdownIndex(0)
+      setScanningFile(null)
+      setIsExtractingPermit(false)
+      setUploadedPermitDocument(prev => {
+        if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
+        return null
+      })
+      setUploadedPermitFile(null)
+      processedInitialFile.current = false
     }
   }, [isOpen])
 
@@ -158,20 +183,47 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
   const handleDateBlur = (e) => {
     utilHandleDateBlur(e, setFormData)
   }
-  
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
 
-    setFileName(file.name)
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setFormData(prev => ({
-        ...prev,
-        permitDocumentData: reader.result
-      }))
+  const processExtraction = async (fileToProcess) => {
+    setIsExtractingPermit(true)
+    
+    // Simulate extraction for Permit (no AI endpoint exists yet, but we attach the document)
+    setTimeout(() => {
+      setUploadedPermitDocument(prev => {
+        if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
+        return {
+          name: fileToProcess.name || 'permit-document',
+          type: fileToProcess.type === 'application/pdf' ? 'pdf' : 'image',
+          previewUrl: URL.createObjectURL(fileToProcess),
+          revokeOnCleanup: true
+        }
+      })
+      setIsExtractingPermit(false)
+    }, 500)
+  }
+
+  const handlePermitExtractionUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.type === 'application/pdf') {
+      setUploadedPermitFile(file)
+      e.target.value = ''
+      await processExtraction(file)
+      return
     }
-    reader.readAsDataURL(file)
+    if (file.type.startsWith('image/')) {
+      setUploadedPermitFile(file)
+      setScanningFile(file)
+      e.target.value = ''
+      return
+    }
+    alert('Please upload an image or PDF file.')
+  }
+
+  const handleScannerConfirm = async (processedImageFile) => {
+    setScanningFile(null)
+    setUploadedPermitFile(processedImageFile)
+    await processExtraction(processedImageFile)
   }
 
   const handleSubmit = async (e) => {
@@ -182,15 +234,34 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
       return
     }
 
+    setIsSubmitting(true)
+
     try {
-      await axios.post(`${API_URL}/api/permit`, formData, { withCredentials: true })
+      let permitDocumentData = ''
+      if (uploadedPermitFile) {
+        permitDocumentData = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(uploadedPermitFile)
+        })
+      }
+
+      const submitData = {
+        ...formData,
+        permitDocumentData
+      }
+
+      await axios.post(`${API_URL}/api/permit`, submitData, { withCredentials: true })
       if (onSubmit) {
-        onSubmit(formData)
+        onSubmit(submitData)
       }
       onClose()
     } catch (error) {
       console.error(error)
       alert(error.response?.data?.message || 'Failed to create permit')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -205,11 +276,22 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
               <h2 className='text-lg md:text-2xl font-bold'>Add Permit</h2>
               <p className='text-teal-100 text-xs md:text-sm mt-1'>Add a new vehicle permit record</p>
             </div>
-            <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
-              <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-              </svg>
-            </button>
+            <div className='flex items-center gap-3'>
+              <div className='relative overflow-hidden'>
+                <button type='button' disabled={isExtractingPermit} className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 flex items-center gap-2 max-w-full'>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  {isExtractingPermit ? 'Loading...' : 'AI Upload'}
+                </button>
+                <input type='file' accept='image/*, application/pdf' disabled={isExtractingPermit} onChange={handlePermitExtractionUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed' />
+              </div>
+              <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
+                <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -319,25 +401,27 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
                 </div>
               </div>
             </div>
-            
-            <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6'>
-              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
-                Upload Document
-              </h3>
-              <div>
-                <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-2'>
-                  Permit Document (PDF or Image)
-                </label>
-                <div className='flex items-center gap-3'>
-                  <label className='cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition'>
-                    Choose File
-                    <input type='file' accept='.pdf,image/*' className='hidden' onChange={handleFileChange} />
-                  </label>
-                  {fileName && <span className='text-xs text-gray-600 truncate max-w-[200px]'>{fileName}</span>}
+            {uploadedPermitDocument && (
+              <div className='bg-gradient-to-r from-slate-50 to-teal-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+                <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                  Uploaded Permit Document
+                </h3>
+                <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>
+                  <div className='min-w-0'>
+                    <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedPermitDocument.name}</p>
+                    <p className='text-xs text-slate-500'>{uploadedPermitDocument.type === 'pdf' ? 'PDF preview' : 'Image preview'}</p>
+                  </div>
                 </div>
+                {uploadedPermitDocument.type === 'pdf' ? (
+                  <iframe src={uploadedPermitDocument.previewUrl} title='Uploaded Permit PDF' className='w-full h-80 rounded-xl border border-slate-200 bg-white' />
+                ) : (
+                  <div className='rounded-xl border border-slate-200 bg-white p-2'>
+                    <img src={uploadedPermitDocument.previewUrl} alt='Uploaded Permit document' className='w-full max-h-80 object-contain rounded-lg' />
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-end items-center gap-3 flex-shrink-0'>
@@ -345,13 +429,20 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
               <button type='button' onClick={onClose} className='flex-1 md:flex-none px-4 md:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-semibold transition cursor-pointer'>
                 Cancel
               </button>
-              <button type='submit' className='flex-1 md:flex-none px-6 md:px-8 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:shadow-lg font-semibold transition flex items-center justify-center gap-2 cursor-pointer'>
-                Save Permit
+              <button type='submit' disabled={isSubmitting} className='flex-1 md:flex-none px-6 md:px-8 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:shadow-lg font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+                {isSubmitting ? 'Saving...' : 'Save Permit'}
               </button>
             </div>
           </div>
         </form>
       </div>
+      {scanningFile && (
+        <DocumentScannerPreview
+          file={scanningFile}
+          onCancel={() => setScanningFile(null)}
+          onConfirm={handleScannerConfirm}
+        />
+      )}
     </div>
   )
 }

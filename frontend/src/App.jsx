@@ -17,6 +17,7 @@ import Tax from './pages/Tax/Tax'
 import Puc from './pages/Puc/Puc'
 import Gps from './pages/Gps/Gps'
 import RTODocuments from './pages/RTODocuments'
+import RTODocumentDetail from './pages/RTODocumentDetail'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
 
@@ -43,6 +44,7 @@ function AppContent() {
           <Route path='/puc' element={<ProtectedRoute><Puc /></ProtectedRoute>} />
           <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
           <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
+          <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
           <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
         </Routes>
       </div>

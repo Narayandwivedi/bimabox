@@ -161,7 +161,8 @@ const RTODocuments = () => {
             {filteredDocuments.map((doc) => (
               <div
                 key={doc.id}
-                className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
+                onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-indigo-300 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 cursor-pointer'
               >
                 <div className='flex flex-col gap-2.5'>
                   <div className='flex items-center justify-between'>
@@ -190,7 +191,10 @@ const RTODocuments = () => {
                         <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
                       </div>
                     </div>
-                    <button className='rounded-lg bg-slate-50 p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors'>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/rto-documents/${doc.type}/${doc.id}`) }}
+                      className='rounded-lg bg-indigo-50 p-1.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-900 transition-colors'
+                    >
                       <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
                       </svg>

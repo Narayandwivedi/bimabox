@@ -20,8 +20,6 @@ import RTODocuments from './pages/RTODocuments'
 import RTODocumentDetail from './pages/RTODocumentDetail'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
-import Search from './pages/Search'
-
 
 function AppContent() {
   const location = useLocation()
@@ -48,8 +46,6 @@ function AppContent() {
           <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
           <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
           <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
-          <Route path='/search' element={<ProtectedRoute><Search /></ProtectedRoute>} />
-
         </Routes>
       </div>
       {showBottomNav && <BottomNavigation />}

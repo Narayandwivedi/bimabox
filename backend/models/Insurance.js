@@ -18,10 +18,6 @@ const InsuranceSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  insuranceCompany: {
-    type: String,
-    trim: true
-  },
 
   mobileNumber: {
     type: String,

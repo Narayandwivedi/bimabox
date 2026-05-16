@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import SearchBar from '../components/SearchBar'
 import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
 const RTODocuments = () => {
   const navigate = useNavigate()
@@ -9,22 +12,55 @@ const RTODocuments = () => {
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
+  const [documents, setDocuments] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Demo data for all document types
-  const demoDocuments = [
-    { id: 1, type: 'Tax', vehicleNumber: 'MH01AB1234', validFrom: '2023-01-01', validTo: '2023-12-31', status: 'Active' },
-    { id: 2, type: 'PUC', vehicleNumber: 'MH01AB1234', validFrom: '2024-01-15', validTo: '2024-07-15', status: 'Active' },
-    { id: 3, type: 'GPS', vehicleNumber: 'MH01AB1234', validFrom: '2023-06-01', validTo: '2024-06-01', status: 'Active' },
-    { id: 4, type: 'Fitness', vehicleNumber: 'DL01XY9876', validFrom: '2022-10-10', validTo: '2024-10-10', status: 'Active' },
-    { id: 5, type: 'Permit', vehicleNumber: 'DL01XY9876', validFrom: '2023-05-05', validTo: '2025-05-05', status: 'Active' },
-    { id: 6, type: 'Tax', vehicleNumber: 'KA05CD5678', validFrom: '2023-03-01', validTo: '2024-03-01', status: 'Expired' },
-    { id: 7, type: 'PUC', vehicleNumber: 'KA05CD5678', validFrom: '2023-09-01', validTo: '2024-03-01', status: 'Expiring Soon' },
-    { id: 8, type: 'Insurance', vehicleNumber: 'MH12EF4321', validFrom: '2023-11-11', validTo: '2024-11-10', status: 'Active' },
-  ]
+  useEffect(() => {
+    const fetchAllDocuments = async () => {
+      setLoading(true);
+      try {
+        const endpoints = [
+          { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo' },
+          { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo' },
+          { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo' },
+          { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo' },
+          { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo' },
+        ];
+
+        const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 1000 } }));
+        const responses = await Promise.allSettled(requests);
+        
+        let allDocs = [];
+        
+        responses.forEach((response, index) => {
+          if (response.status === 'fulfilled' && response.value.data.success) {
+            const ep = endpoints[index];
+            const records = response.value.data.data.map(record => ({
+              id: record._id,
+              type: ep.type,
+              vehicleNumber: record.vehicleNumber,
+              validFrom: record[ep.fromField] || 'N/A',
+              validTo: record[ep.toField] || 'N/A',
+              status: record.status === 'active' ? 'Active' : (record.status === 'expiring_soon' ? 'Expiring Soon' : 'Expired'),
+            }));
+            allDocs = [...allDocs, ...records];
+          }
+        });
+
+        setDocuments(allDocs);
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllDocuments();
+  }, []);
 
   const statusPriority = { 'Active': 1, 'Expiring Soon': 2, 'Expired': 3 }
 
-  const filteredDocuments = demoDocuments
+  const filteredDocuments = documents
     .filter(doc => {
       const matchesSearch = doc.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           doc.type.toLowerCase().includes(searchQuery.toLowerCase())
@@ -115,52 +151,59 @@ const RTODocuments = () => {
         </div>
 
         {/* Document Cards List */}
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-          {filteredDocuments.map((doc) => (
-            <div
-              key={doc.id}
-              onClick={() => navigate(`/document/${doc.id}`)}
-              className='group relative cursor-pointer overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
-            >
-              <div className='flex flex-col gap-2.5'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center gap-3'>
-                    <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-600 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform'>
-                      <span className='text-xl'>{getDocTypeIcon(doc.type)}</span>
+        {loading ? (
+          <div className='mt-12 flex justify-center items-center flex-col gap-4'>
+            <div className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'></div>
+            <p className='text-sm font-semibold text-slate-500'>Loading documents...</p>
+          </div>
+        ) : (
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
+            {filteredDocuments.map((doc) => (
+              <div
+                key={doc.id}
+                onClick={() => navigate(`/document/${doc.id}`)}
+                className='group relative cursor-pointer overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
+              >
+                <div className='flex flex-col gap-2.5'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                      <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-600 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform'>
+                        <span className='text-xl'>{getDocTypeIcon(doc.type)}</span>
+                      </div>
+                      <div>
+                        <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
+                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase'>{doc.vehicleNumber}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
-                      <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase'>{doc.vehicleNumber}</p>
+                    <div className={`rounded-full px-2.5 py-1 text-[10px] font-bold border shadow-sm ${getStatusColor(doc.status)}`}>
+                      {doc.status}
                     </div>
                   </div>
-                  <div className={`rounded-full px-2.5 py-1 text-[10px] font-bold border shadow-sm ${getStatusColor(doc.status)}`}>
-                    {doc.status}
-                  </div>
-                </div>
 
-                <div className='flex items-center justify-between border-t border-slate-50 pt-2.5'>
-                  <div className='flex gap-6'>
-                    <div>
-                      <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>From</p>
-                      <p className='text-[11px] font-semibold text-slate-700'>{doc.validFrom}</p>
+                  <div className='flex items-center justify-between border-t border-slate-50 pt-2.5'>
+                    <div className='flex gap-6'>
+                      <div>
+                        <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>From</p>
+                        <p className='text-[11px] font-semibold text-slate-700'>{doc.validFrom}</p>
+                      </div>
+                      <div>
+                        <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>To</p>
+                        <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>To</p>
-                      <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
-                    </div>
+                    <button className='rounded-lg bg-slate-50 p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                      </svg>
+                    </button>
                   </div>
-                  <button className='rounded-lg bg-slate-50 p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors'>
-                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-                    </svg>
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredDocuments.length === 0 && (
+        {!loading && filteredDocuments.length === 0 && (
           <div className='mt-12 text-center'>
             <div className='mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 text-4xl shadow-inner grayscale opacity-50'>
               🔍

@@ -10,7 +10,7 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
   const [vehicleValidation, setVehicleValidation] = useState({ isValid: false, message: '' })
-  
+
   const [vehicleMatches, setVehicleMatches] = useState([])
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
   const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(0)
@@ -23,7 +23,7 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
     validTo: '',
     permitDocumentData: ''
   })
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scanningFile, setScanningFile] = useState(null)
   const [isExtractingPermit, setIsExtractingPermit] = useState(false)
@@ -186,7 +186,7 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
 
   const processExtraction = async (fileToProcess) => {
     setIsExtractingPermit(true)
-    
+
     // Simulate extraction for Permit (no AI endpoint exists yet, but we attach the document)
     setTimeout(() => {
       setUploadedPermitDocument(prev => {
@@ -314,9 +314,8 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
                       onChange={handleChange}
                       placeholder='CG04AA1234'
                       maxLength='10'
-                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono ${
-                        formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-teal-500'
-                      }`}
+                      className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono ${formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-teal-500'
+                        }`}
                       required
                     />
                     {fetchingVehicle && (
@@ -334,9 +333,8 @@ const AddPermitModal = ({ isOpen, onClose, onSubmit, initialExtractionFile }) =>
                             key={vehicle._id}
                             ref={(el) => (dropdownItemRefs.current[index] = el)}
                             onClick={() => handleVehicleSelect(vehicle)}
-                            className={`p-3 cursor-pointer border-b border-gray-100 hover:bg-teal-50 transition ${
-                              index === selectedDropdownIndex ? 'bg-teal-100 border-l-4 border-l-teal-600' : ''
-                            }`}
+                            className={`p-3 cursor-pointer border-b border-gray-100 hover:bg-teal-50 transition ${index === selectedDropdownIndex ? 'bg-teal-100 border-l-4 border-l-teal-600' : ''
+                              }`}
                           >
                             <div className='font-mono font-bold text-teal-700'>{vehicle.registrationNumber}</div>
                             <div className='text-xs text-gray-600 mt-1'>Owner: {vehicle.ownerName || 'N/A'}</div>

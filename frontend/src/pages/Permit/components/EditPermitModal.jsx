@@ -4,7 +4,7 @@ import { validateVehicleNumberRealtime } from '../../../utils/vehicleNoCheck'
 
 const EditPermitModal = ({ isOpen, onClose, onSubmit, permit }) => {
   const [vehicleValidation, setVehicleValidation] = useState({ isValid: false, message: '' })
-  
+
   const [formData, setFormData] = useState({
     vehicleNumber: '',
     name: '',
@@ -12,7 +12,7 @@ const EditPermitModal = ({ isOpen, onClose, onSubmit, permit }) => {
     validTo: '',
     permitDocumentData: ''
   })
-  
+
   const [fileName, setFileName] = useState('')
 
   useEffect(() => {
@@ -60,7 +60,7 @@ const EditPermitModal = ({ isOpen, onClose, onSubmit, permit }) => {
   const handleDateBlur = (e) => {
     utilHandleDateBlur(e, setFormData)
   }
-  
+
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -130,9 +130,8 @@ const EditPermitModal = ({ isOpen, onClose, onSubmit, permit }) => {
                     onChange={handleChange}
                     placeholder='CG04AA1234'
                     maxLength='10'
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono ${
-                      formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-teal-500'
-                    }`}
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono ${formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-teal-500'
+                      }`}
                     required
                   />
                   {vehicleValidation.message && (
@@ -192,7 +191,7 @@ const EditPermitModal = ({ isOpen, onClose, onSubmit, permit }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Document Upload */}
             <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>

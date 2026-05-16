@@ -9,6 +9,8 @@ import EditPucModal from './Puc/components/EditPucModal'
 import EditGpsModal from './Gps/components/EditGpsModal'
 import EditTaxModal from './Tax/components/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
+import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
@@ -105,12 +107,7 @@ const RTODocuments = () => {
 
   const handleEditClick = (e, doc) => {
     e.stopPropagation();
-    if (doc.type === 'Insurance') {
-      navigate('/insurance')
-      toast.info('Please edit this record from the Insurance module')
-    } else {
-      setEditingDoc(doc)
-    }
+    setEditingDoc(doc)
   }
 
   const statusPriority = { 'Active': 1, 'Expiring Soon': 2, 'Expired': 3 }
@@ -367,6 +364,18 @@ const RTODocuments = () => {
           onClose={() => setEditingDoc(null)}
           onSubmit={handleEditSubmit}
           permit={editingDoc.rawRecord}
+        />
+      )}
+      {editingDoc?.type === 'Insurance' && (
+        <AddInsuranceModal
+          isOpen={!!editingDoc}
+          onClose={() => setEditingDoc(null)}
+          onSubmit={async () => {
+            setEditingDoc(null)
+            await fetchAllDocuments()
+          }}
+          initialData={editingDoc.rawRecord}
+          isEditMode={true}
         />
       )}
     </div>

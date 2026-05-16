@@ -6,6 +6,9 @@ import EditFitnessModal from './Fitness/components/EditFitnessModal'
 import EditPucModal from './Puc/components/EditPucModal'
 import EditGpsModal from './Gps/components/EditGpsModal'
 import EditTaxModal from './Tax/components/EditTaxModal'
+import EditPermitModal from './Permit/components/EditPermitModal'
+import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -173,12 +176,7 @@ const RTODocumentDetail = () => {
   }
 
   const handleEditClick = () => {
-    if (type === 'Insurance') {
-      navigate('/insurance') // No edit modal exists for insurance
-      toast.info('Please edit this record from the Insurance module')
-    } else {
-      setShowEditModal(true)
-    }
+    setShowEditModal(true)
   }
 
   if (!config) {
@@ -417,6 +415,26 @@ const RTODocumentDetail = () => {
           onClose={() => setShowEditModal(false)}
           onSubmit={handleEditSubmit}
           gps={record}
+        />
+      )}
+      {showEditModal && type === 'Permit' && (
+        <EditPermitModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditSubmit}
+          permit={record}
+        />
+      )}
+      {showEditModal && type === 'Insurance' && (
+        <AddInsuranceModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={async () => {
+            setShowEditModal(false)
+            fetchRecord()
+          }}
+          initialData={record}
+          isEditMode={true}
         />
       )}
     </div>

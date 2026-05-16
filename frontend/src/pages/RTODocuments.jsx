@@ -54,7 +54,7 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-[70] mt-2 max-h-64 overflow-y-auto rounded-xl border border-slate-100 bg-white py-1.5 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute left-0 right-0 z-[70] mt-2 max-h-96 overflow-y-auto rounded-xl border border-slate-100 bg-white py-1.5 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-3 py-1.5 mb-1 border-b border-slate-50">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select {label}</span>
           </div>

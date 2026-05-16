@@ -78,6 +78,7 @@ const TYPE_CONFIG = {
     extraFields: [
       { label: 'Policy Number', key: 'policyNumber' },
       { label: 'Policy Holder', key: 'policyHolderName' },
+      { label: 'Insurance Company', key: 'insuranceCompany' },
       { label: 'Mobile Number', key: 'mobileNumber' },
       { label: 'Remarks', key: 'remarks' },
     ],

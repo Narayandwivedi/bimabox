@@ -25,7 +25,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     policyHolderName: prefilledOwnerName,
     validFrom: '',
     validTo: '',
-    insuranceDocument: ''
+    insuranceDocument: '',
+    insuranceCompany: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -56,7 +57,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: initialData.policyHolderName || '',
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
-        insuranceDocument: initialData.insuranceDocument || ''
+        insuranceDocument: initialData.insuranceDocument || '',
+        insuranceCompany: initialData.insuranceCompany || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -77,7 +79,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: prefilledOwnerName,
         validFrom: '',
         validTo: '',
-        insuranceDocument: ''
+        insuranceDocument: '',
+        insuranceCompany: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -371,7 +374,8 @@ if (e.key === 'Escape') onClose()
       validFrom: formData.validFrom,
       validTo: formData.validTo,
       issueDate: formData.validFrom,
-      insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument
+      insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
+      insuranceCompany: formData.insuranceCompany
     }
 
     if (uploadedInsuranceFile) {
@@ -467,6 +471,32 @@ if (e.key === 'Escape') onClose()
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Holder Name</label>
                   <input type='text' name='policyHolderName' value={formData.policyHolderName} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter policy holder name' tabIndex='3' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Insurance Company</label>
+                  <select name='insuranceCompany' value={formData.insuranceCompany} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Company</option>
+                    <option value="HDFC ERGO">HDFC ERGO</option>
+                    <option value="ICICI Lombard">ICICI Lombard</option>
+                    <option value="Bajaj Allianz">Bajaj Allianz</option>
+                    <option value="Tata AIG">Tata AIG</option>
+                    <option value="Reliance General">Reliance General</option>
+                    <option value="IFFCO Tokio">IFFCO Tokio</option>
+                    <option value="National Insurance">National Insurance</option>
+                    <option value="New India Assurance">New India Assurance</option>
+                    <option value="Oriental Insurance">Oriental Insurance</option>
+                    <option value="United India Insurance">United India Insurance</option>
+                    <option value="Magma HDI">Magma HDI</option>
+                    <option value="Go Digit">Go Digit</option>
+                    <option value="Acko">Acko</option>
+                    <option value="Cholamandalam MS">Cholamandalam MS</option>
+                    <option value="Future Generali">Future Generali</option>
+                    <option value="Royal Sundaram">Royal Sundaram</option>
+                    <option value="SBI General">SBI General</option>
+                    <option value="Shriram General">Shriram General</option>
+                    <option value="Liberty General">Liberty General</option>
+                    <option value="Universal Sompo">Universal Sompo</option>
+                  </select>
                 </div>
               </div>
             </div>

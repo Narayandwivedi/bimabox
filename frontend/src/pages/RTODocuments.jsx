@@ -19,6 +19,7 @@ const RTODocuments = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
+  const [companyFilter, setCompanyFilter] = useState('All')
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
@@ -118,7 +119,8 @@ const RTODocuments = () => {
                           doc.type.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'All' || doc.status === statusFilter
       const matchesType = typeFilter === 'All' || doc.type === typeFilter
-      return matchesSearch && matchesStatus && matchesType
+      const matchesCompany = typeFilter === 'Insurance' ? (companyFilter === 'All' || doc.rawRecord.insuranceCompany === companyFilter) : true
+      return matchesSearch && matchesStatus && matchesType && matchesCompany
     })
     .sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
 
@@ -158,10 +160,11 @@ const RTODocuments = () => {
         </div>
 
         {/* Search & Filters Bar */}
-        <div className='mb-6 flex items-center gap-1.5'>
-          <div className='relative flex-1 min-w-0'>
-            <div className='absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none'>
-              <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+        <div className='mb-6 flex flex-col gap-3'>
+          {/* Search Row */}
+          <div className='relative w-full'>
+            <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+              <svg className='w-4 h-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
               </svg>
             </div>
@@ -169,35 +172,69 @@ const RTODocuments = () => {
               type='text'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Search...'
-              className='w-full rounded-xl border-2 border-slate-200 bg-white py-2 pl-8 pr-2 text-[10px] font-black text-slate-900 placeholder:text-[9px] placeholder:text-slate-400 placeholder:font-semibold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase'
+              placeholder='Search by vehicle or type...'
+              className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] placeholder:text-slate-400 placeholder:font-semibold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase'
             />
           </div>
 
-          <div className='flex gap-1 shrink-0'>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className='rounded-xl border-2 border-slate-200 bg-white px-1.5 py-2 text-[9px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none'
-            >
-              <option value='All'>Status</option>
-              <option value='Active'>Active</option>
-              <option value='Expiring Soon'>Expiring</option>
-              <option value='Expired'>Expired</option>
-            </select>
-
+          {/* Filters Row */}
+          <div className='flex flex-wrap gap-2'>
             <select
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className='rounded-xl border-2 border-slate-200 bg-white px-1.5 py-2 text-[9px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none'
+              onChange={(e) => {
+                setTypeFilter(e.target.value)
+                setCompanyFilter('All') // Reset company filter when type changes
+              }}
+              className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
             >
-              <option value='All'>Type</option>
+              <option value='All'>Type: All</option>
               <option value='Tax'>Tax</option>
               <option value='PUC'>PUC</option>
               <option value='GPS'>GPS</option>
               <option value='Fitness'>Fitness</option>
               <option value='Permit'>Permit</option>
               <option value='Insurance'>Insurance</option>
+            </select>
+
+            {typeFilter === 'Insurance' && (
+              <select
+                value={companyFilter}
+                onChange={(e) => setCompanyFilter(e.target.value)}
+                className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
+              >
+                <option value='All'>Company: All</option>
+                <option value="HDFC ERGO">HDFC ERGO</option>
+                <option value="ICICI Lombard">ICICI Lombard</option>
+                <option value="Bajaj Allianz">Bajaj Allianz</option>
+                <option value="Tata AIG">Tata AIG</option>
+                <option value="Reliance General">Reliance General</option>
+                <option value="IFFCO Tokio">IFFCO Tokio</option>
+                <option value="National Insurance">National Insurance</option>
+                <option value="New India Assurance">New India Assurance</option>
+                <option value="Oriental Insurance">Oriental Insurance</option>
+                <option value="United India Insurance">United India Insurance</option>
+                <option value="Magma HDI">Magma HDI</option>
+                <option value="Go Digit">Go Digit</option>
+                <option value="Acko">Acko</option>
+                <option value="Cholamandalam MS">Cholamandalam MS</option>
+                <option value="Future Generali">Future Generali</option>
+                <option value="Royal Sundaram">Royal Sundaram</option>
+                <option value="SBI General">SBI General</option>
+                <option value="Shriram General">Shriram General</option>
+                <option value="Liberty General">Liberty General</option>
+                <option value="Universal Sompo">Universal Sompo</option>
+              </select>
+            )}
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
+            >
+              <option value='All'>Status: All</option>
+              <option value='Active'>Active</option>
+              <option value='Expiring Soon'>Expiring</option>
+              <option value='Expired'>Expired</option>
             </select>
           </div>
         </div>

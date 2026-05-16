@@ -1,45 +1,77 @@
 import { useState } from 'react'
 
 const PremiumCalculator = () => {
-  const [vehicleType, setVehicleType] = useState('motorcycle')
+  const [step, setStep] = useState(1) // 1: Select Vehicle, 2: Calculator Form
+  const [vehicleType, setVehicleType] = useState('private_car')
+  const [zone, setZone] = useState('A')
+  const [vehicleAge, setVehicleAge] = useState('upto_5')
   const [idv, setIdv] = useState('')
-  const [capacity, setCapacity] = useState('') // CC for bikes, GVW for trucks
+  const [capacity, setCapacity] = useState('') // CC for bikes/cars/taxis, GVW for GCV
   const [ncb, setNcb] = useState(0)
   const [coverageType, setCoverageType] = useState('comprehensive')
   const [result, setResult] = useState(null)
 
   const calculatePremium = () => {
-    let odPremium = 0
+    let odRate = 0
     let tpPremium = 0
     const idvVal = parseFloat(idv) || 0
     const capacityVal = parseFloat(capacity) || 0
 
-    if (vehicleType === 'motorcycle') {
-      // Simple OD calculation: 2% of IDV
-      odPremium = idvVal * 0.02
-      
-      // TP Rates based on CC
-      if (capacityVal < 75) tpPremium = 538
+    if (vehicleType === 'private_car') {
+      if (capacityVal <= 1000) {
+        tpPremium = 2094
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 3.127 : 3.039
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 3.283 : 3.191
+        else odRate = zone === 'A' ? 3.362 : 3.267
+      } else if (capacityVal <= 1500) {
+        tpPremium = 3416
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 3.283 : 3.191
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 3.447 : 3.351
+        else odRate = zone === 'A' ? 3.529 : 3.430
+      } else {
+        tpPremium = 7897
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 3.440 : 3.343
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 3.612 : 3.510
+        else odRate = zone === 'A' ? 3.698 : 3.596
+      }
+    } else if (vehicleType === 'two_wheeler') {
+      if (capacityVal <= 75) tpPremium = 538
       else if (capacityVal <= 150) tpPremium = 714
       else if (capacityVal <= 350) tpPremium = 1366
       else tpPremium = 2804
-    } else {
-      // Truck OD calculation: 1.5% of IDV
-      odPremium = idvVal * 0.015
-      
-      // TP Rates based on GVW (Tonnes)
-      if (capacityVal < 7.5) tpPremium = 15746
-      else if (capacityVal <= 12) tpPremium = 26580
-      else if (capacityVal <= 20) tpPremium = 34503
-      else if (capacityVal <= 40) tpPremium = 43231
-      else tpPremium = 52000
+
+      if (capacityVal <= 150) {
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 1.708 : 1.676
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 1.793 : 1.760
+        else odRate = zone === 'A' ? 1.836 : 1.802
+      } else if (capacityVal <= 350) {
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 1.793 : 1.760
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 1.883 : 1.848
+        else odRate = zone === 'A' ? 1.928 : 1.892
+      } else {
+        if (vehicleAge === 'upto_5') odRate = zone === 'A' ? 1.879 : 1.844
+        else if (vehicleAge === '5_to_7') odRate = zone === 'A' ? 1.973 : 1.936
+        else odRate = zone === 'A' ? 2.020 : 1.982
+      }
+    } else if (vehicleType === 'gcv') {
+      odRate = 1.5 // Flat assumption for GCV
+      if (capacityVal <= 7500) tpPremium = 16049
+      else if (capacityVal <= 12000) tpPremium = 27186
+      else if (capacityVal <= 20000) tpPremium = 35313
+      else if (capacityVal <= 40000) tpPremium = 43950
+      else tpPremium = 44242
+    } else if (vehicleType === 'taxi') {
+      odRate = 1.5 // Flat assumption for Taxi
+      if (capacityVal <= 1000) tpPremium = 6040
+      else if (capacityVal <= 1500) tpPremium = 7940
+      else tpPremium = 10523
     }
 
-    // Apply NCB to OD only
+    let odPremium = 0
     if (coverageType === 'comprehensive') {
+      odPremium = idvVal * (odRate / 100)
+      // Apply NCB to OD only
       odPremium = odPremium * (1 - ncb / 100)
-    } else {
-      odPremium = 0
     }
 
     const netPremium = odPremium + tpPremium
@@ -54,126 +86,193 @@ const PremiumCalculator = () => {
     })
   }
 
+  const handleVehicleSelect = (type) => {
+    setVehicleType(type)
+    setResult(null)
+    setStep(2)
+  }
+
+  const vehicleOptions = [
+    { id: 'private_car', label: 'Private Car', icon: '🚗', desc: 'Personal use 4-wheelers' },
+    { id: 'two_wheeler', label: 'Two Wheeler', icon: '🏍️', desc: 'Scooters & Motorcycles' },
+    { id: 'gcv', label: 'GCV / Truck', icon: '🚚', desc: 'Goods Carrying Vehicles' },
+    { id: 'taxi', label: 'Taxi / Cab', icon: '🚕', desc: 'Passenger Carrying Vehicles' }
+  ]
+
+  const selectedVehicleLabel = vehicleOptions.find(v => v.id === vehicleType)?.label
+
   return (
     <div className='min-h-screen bg-slate-100 px-4 pb-32 pt-4 md:px-6 lg:px-8'>
-      <div className='mx-auto max-w-xl'>
-        <div className='mb-6'>
-          <h1 className='text-2xl font-black text-slate-900'>Premium Calculator</h1>
-          <p className='text-xs font-bold uppercase tracking-widest text-slate-500'>Estimate Insurance Cost</p>
+      <div className='mx-auto max-w-2xl'>
+        <div className='mb-6 text-center md:text-left'>
+          <h1 className='text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
+          <p className='mt-1 text-[9px] md:text-xs font-bold uppercase tracking-widest text-slate-500'>Estimate Insurance Cost (IMT Rates)</p>
         </div>
 
         <div className='rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-[0_20px_50px_-30px_rgba(15,23,42,0.15)] md:p-8'>
-          <div className='space-y-5'>
-            {/* Vehicle Type Toggle */}
-            <div className='flex gap-2 rounded-2xl bg-slate-200 p-1'>
-              <button
-                onClick={() => { setVehicleType('motorcycle'); setResult(null); }}
-                className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${vehicleType === 'motorcycle' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
-              >
-                Motorcycle
-              </button>
-              <button
-                onClick={() => { setVehicleType('truck'); setResult(null); }}
-                className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${vehicleType === 'truck' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
-              >
-                Truck / HCV
-              </button>
-            </div>
-
-            {/* Inputs */}
-            <div className='grid gap-4 sm:grid-cols-2'>
-              <div>
-                <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>IDV (Vehicle Value)</label>
-                <input
-                  type='number'
-                  value={idv}
-                  onChange={(e) => setIdv(e.target.value)}
-                  placeholder='e.g. 50000'
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20'
-                />
-              </div>
-              <div>
-                <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>
-                  {vehicleType === 'motorcycle' ? 'Engine (CC)' : 'Weight (GVW Tonnes)'}
-                </label>
-                <input
-                  type='number'
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
-                  placeholder={vehicleType === 'motorcycle' ? 'e.g. 150' : 'e.g. 12'}
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20'
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB %)</label>
-              <div className='grid grid-cols-5 gap-2'>
-                {[0, 20, 25, 35, 50].map((val) => (
+          
+          {step === 1 ? (
+            <div className='animate-in fade-in zoom-in-95 duration-300'>
+              <h2 className='mb-6 text-center text-lg font-black text-slate-800'>Select Vehicle Category</h2>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                {vehicleOptions.map(v => (
                   <button
-                    key={val}
-                    onClick={() => setNcb(val)}
-                    className={`rounded-xl border py-2 text-xs font-bold transition-all ${ncb === val ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-white text-slate-500'}`}
+                    key={v.id}
+                    onClick={() => handleVehicleSelect(v.id)}
+                    className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-6 text-left transition-all hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-100 active:scale-[0.98]'
                   >
-                    {val}%
+                    <div className='absolute -right-4 -top-4 rounded-full bg-slate-50 p-8 transition-colors group-hover:bg-indigo-50'>
+                      <span className='text-4xl'>{v.icon}</span>
+                    </div>
+                    <div className='relative z-10'>
+                      <h3 className='text-xl font-black text-slate-900 transition-colors group-hover:text-indigo-600'>{v.label}</h3>
+                      <p className='mt-2 text-xs font-bold text-slate-500'>{v.desc}</p>
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
-
-            <div>
-              <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>Coverage Type</label>
-              <div className='flex gap-3'>
-                <button
-                  onClick={() => setCoverageType('comprehensive')}
-                  className={`flex-1 rounded-2xl border-2 p-3 text-left transition-all ${coverageType === 'comprehensive' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white'}`}
+          ) : (
+            <div className='animate-in fade-in slide-in-from-right-8 duration-300 space-y-6'>
+              
+              <div className='flex items-center gap-4 mb-6'>
+                <button 
+                  onClick={() => setStep(1)} 
+                  className='rounded-xl bg-slate-200 p-2 text-slate-600 hover:bg-slate-300 hover:text-slate-900 transition-all'
                 >
-                  <p className='text-xs font-black text-slate-900'>Comprehensive</p>
-                  <p className='text-[10px] text-slate-500'>OD + Third Party</p>
-                </button>
-                <button
-                  onClick={() => setCoverageType('tp')}
-                  className={`flex-1 rounded-2xl border-2 p-3 text-left transition-all ${coverageType === 'tp' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white'}`}
-                >
-                  <p className='text-xs font-black text-slate-900'>Third Party</p>
-                  <p className='text-[10px] text-slate-500'>Mandatory Only</p>
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={calculatePremium}
-              className='w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-[0.98]'
-            >
-              Calculate Premium
-            </button>
-          </div>
-
-          {result && (
-            <div className='mt-8 space-y-4 border-t border-slate-200 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-              <div className='flex items-center justify-between'>
-                <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>OD Premium ({ncb}% NCB)</p>
-                <p className='text-sm font-black text-slate-900'>₹{result.odPremium}</p>
-              </div>
-              <div className='flex items-center justify-between'>
-                <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>TP Premium</p>
-                <p className='text-sm font-black text-slate-900'>₹{result.tpPremium}</p>
-              </div>
-              <div className='flex items-center justify-between'>
-                <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>GST (18%)</p>
-                <p className='text-sm font-black text-slate-900'>₹{result.gst}</p>
-              </div>
-              <div className='mt-4 flex items-center justify-between rounded-2xl bg-indigo-600 p-4 text-white shadow-xl shadow-indigo-100'>
-                <div>
-                  <p className='text-[10px] font-bold uppercase tracking-widest opacity-80'>Total Premium</p>
-                  <p className='text-2xl font-black tracking-tight'>₹{result.totalPremium}</p>
-                </div>
-                <div className='rounded-xl bg-white/20 p-2'>
-                  <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M9 5l7 7-7 7' />
+                  <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M15 19l-7-7 7-7' />
                   </svg>
+                </button>
+                <h2 className='text-lg font-black text-slate-800'>Calculating for: <span className='text-indigo-600'>{selectedVehicleLabel}</span></h2>
+              </div>
+
+              {/* Zone & Age */}
+              <div className='grid gap-4 sm:grid-cols-2'>
+                <div>
+                  <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>Zone</label>
+                  <div className='flex gap-2 rounded-2xl bg-slate-200 p-1'>
+                    <button
+                      onClick={() => setZone('A')}
+                      className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all ${zone === 'A' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                    >
+                      Zone A
+                    </button>
+                    <button
+                      onClick={() => setZone('B')}
+                      className={`flex-1 rounded-xl py-2 text-xs font-bold transition-all ${zone === 'B' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                    >
+                      Zone B
+                    </button>
+                  </div>
+                  <p className='mt-1 text-[9px] text-slate-400'>Zone A: Metro Cities, Zone B: Rest of India</p>
+                </div>
+
+                <div>
+                  <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>Age of Vehicle</label>
+                  <div className='flex gap-1 rounded-2xl bg-slate-200 p-1'>
+                    <button onClick={() => setVehicleAge('upto_5')} className={`flex-1 rounded-xl py-2 text-[10px] font-bold transition-all ${vehicleAge === 'upto_5' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>0-5 Yrs</button>
+                    <button onClick={() => setVehicleAge('5_to_7')} className={`flex-1 rounded-xl py-2 text-[10px] font-bold transition-all ${vehicleAge === '5_to_7' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>5-7 Yrs</button>
+                    <button onClick={() => setVehicleAge('above_7')} className={`flex-1 rounded-xl py-2 text-[10px] font-bold transition-all ${vehicleAge === 'above_7' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>&gt;7 Yrs</button>
+                  </div>
                 </div>
               </div>
+
+              {/* Inputs */}
+              <div className='grid gap-4 sm:grid-cols-2'>
+                <div>
+                  <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>IDV (Vehicle Value in ₹)</label>
+                  <input
+                    type='number'
+                    value={idv}
+                    onChange={(e) => setIdv(e.target.value)}
+                    placeholder='e.g. 500000'
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20'
+                  />
+                </div>
+                <div>
+                  <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>
+                    {vehicleType === 'gcv' ? 'Weight (GVW in Kg)' : 'Engine Capacity (CC)'}
+                  </label>
+                  <input
+                    type='number'
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
+                    placeholder={vehicleType === 'gcv' ? 'e.g. 12000' : 'e.g. 1200'}
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20'
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB %)</label>
+                <div className='grid grid-cols-5 gap-2'>
+                  {[0, 20, 25, 35, 50].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setNcb(val)}
+                      className={`rounded-xl border py-2 text-xs font-bold transition-all ${ncb === val ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-white text-slate-500'}`}
+                    >
+                      {val}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className='mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500'>Coverage Type</label>
+                <div className='flex gap-3'>
+                  <button
+                    onClick={() => setCoverageType('comprehensive')}
+                    className={`flex-1 rounded-2xl border-2 p-3 text-left transition-all ${coverageType === 'comprehensive' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white'}`}
+                  >
+                    <p className='text-xs font-black text-slate-900'>Comprehensive</p>
+                    <p className='text-[10px] text-slate-500'>OD + Third Party</p>
+                  </button>
+                  <button
+                    onClick={() => setCoverageType('tp')}
+                    className={`flex-1 rounded-2xl border-2 p-3 text-left transition-all ${coverageType === 'tp' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white'}`}
+                  >
+                    <p className='text-xs font-black text-slate-900'>Third Party</p>
+                    <p className='text-[10px] text-slate-500'>Mandatory Only</p>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={calculatePremium}
+                className='w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-[0.98]'
+              >
+                Calculate Premium
+              </button>
+
+              {result && (
+                <div className='mt-8 space-y-4 border-t border-slate-200 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+                  <div className='flex items-center justify-between'>
+                    <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>OD Premium ({ncb}% NCB)</p>
+                    <p className='text-sm font-black text-slate-900'>₹{result.odPremium}</p>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>TP Premium</p>
+                    <p className='text-sm font-black text-slate-900'>₹{result.tpPremium}</p>
+                  </div>
+                  <div className='flex items-center justify-between'>
+                    <p className='text-xs font-bold text-slate-500 uppercase tracking-wider'>GST (18%)</p>
+                    <p className='text-sm font-black text-slate-900'>₹{result.gst}</p>
+                  </div>
+                  <div className='mt-4 flex items-center justify-between rounded-2xl bg-indigo-600 p-4 text-white shadow-xl shadow-indigo-100'>
+                    <div>
+                      <p className='text-[10px] font-bold uppercase tracking-widest opacity-80'>Total Premium</p>
+                      <p className='text-2xl font-black tracking-tight'>₹{result.totalPremium}</p>
+                    </div>
+                    <div className='rounded-xl bg-white/20 p-2'>
+                      <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M9 5l7 7-7 7' />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -183,3 +282,4 @@ const PremiumCalculator = () => {
 }
 
 export default PremiumCalculator
+

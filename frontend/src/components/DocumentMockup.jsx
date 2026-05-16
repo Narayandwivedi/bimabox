@@ -1,10 +1,11 @@
 const DocumentMockup = ({ 
-  type = 'Insurance', 
-  vehicleNumber = 'MH01AB1234', 
-  chassisNumber = 'CH-99827364512',
-  policyNumber = 'POL-88273645',
-  validFrom = '01-05-2023',
-  validTo = '30-04-2024',
+  type = 'N/A', 
+  vehicleNumber = 'N/A', 
+  chassisNumber,
+  policyNumber,
+  ownerName,
+  validFrom = 'N/A',
+  validTo = 'N/A',
   color = 'indigo' 
 }) => {
   return (
@@ -31,14 +32,24 @@ const DocumentMockup = ({
 
           {/* Secondary Details Grid */}
           <div className='grid grid-cols-2 gap-4'>
-            <div className='space-y-1'>
-              <p className='text-[8px] font-bold uppercase tracking-widest text-slate-400'>Chassis Number</p>
-              <p className='text-[11px] font-black text-slate-800'>{chassisNumber}</p>
-            </div>
-            <div className='space-y-1'>
-              <p className='text-[8px] font-bold uppercase tracking-widest text-slate-400'>Policy Number</p>
-              <p className='text-[11px] font-black text-slate-800'>{policyNumber}</p>
-            </div>
+            {chassisNumber && chassisNumber !== 'N/A' && (
+              <div className='space-y-1'>
+                <p className='text-[8px] font-bold uppercase tracking-widest text-slate-400'>Chassis Number</p>
+                <p className='text-[11px] font-black text-slate-800'>{chassisNumber}</p>
+              </div>
+            )}
+            {policyNumber && policyNumber !== 'N/A' && (
+              <div className='space-y-1'>
+                <p className='text-[8px] font-bold uppercase tracking-widest text-slate-400'>Document Number</p>
+                <p className='text-[11px] font-black text-slate-800'>{policyNumber}</p>
+              </div>
+            )}
+            {ownerName && ownerName !== 'N/A' && (
+              <div className='space-y-1 col-span-2'>
+                <p className='text-[8px] font-bold uppercase tracking-widest text-slate-400'>Owner Name</p>
+                <p className='text-[11px] font-black text-slate-800'>{ownerName}</p>
+              </div>
+            )}
           </div>
 
           <hr className='border-slate-100' />

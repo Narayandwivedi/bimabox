@@ -274,12 +274,28 @@ const createRecordController = (config) => {
     }
   }
 
+  const getById = async (req, res) => {
+    try {
+      const record = await Model.findOne({ _id: req.params.id, userId: req.user._id }).lean()
+      if (!record) {
+        return res.status(404).json({ success: false, message: `${config.label} record not found` })
+      }
+
+      const status = calculateStatus(record, expiryField, expiringDays)
+      res.json({ success: true, data: { ...record, status } })
+    } catch (error) {
+      console.error(`Error fetching ${config.name} by id:`, error)
+      res.status(500).json({ success: false, message: `Failed to fetch ${config.label} record` })
+    }
+  }
+
   return {
     getAll,
     getExpiringSoon,
     getExpired,
     getPendingPayment,
     getStatistics,
+    getById,
     create,
     update,
     remove,

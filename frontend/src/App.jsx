@@ -45,7 +45,7 @@ function AppContent() {
           <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
           <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
           <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
-          <Route path='/document/:id' element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
+          <Route path='/document/:type/:id' element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         </Routes>
       </div>
       {showBottomNav && <BottomNavigation />}

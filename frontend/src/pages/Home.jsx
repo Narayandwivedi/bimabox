@@ -11,6 +11,7 @@ import AddGpsModal from './Gps/components/AddGpsModal'
 import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
 import AddPermitModal from './Permit/components/AddPermitModal'
 import ImportModal from '../components/ImportModal'
+import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -29,89 +30,114 @@ const Home = () => {
   const [showAddPermitModal, setShowAddPermitModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
-  const [expiryFilter, setExpiryFilter] = useState(15)
+  const [expiryFilter, setExpiryFilter] = useState(30)
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
+  const [realExpiringDocs, setRealExpiringDocs] = useState([])
+  const [loadingDocs, setLoadingDocs] = useState(true)
   
-  const demoExpiringDocs = [
-    { id: 1, type: 'Insurance', vehicleNumber: 'MH01AB1234', validFrom: '01-05-2023', validTo: '30-04-2024', daysLeft: 2, color: 'blue' },
-    { id: 2, type: 'Tax', vehicleNumber: 'DL04CD5678', validFrom: '15-05-2023', validTo: '14-05-2024', daysLeft: 10, color: 'emerald' },
-    { id: 3, type: 'PUC', vehicleNumber: 'KA03EF9012', validFrom: '20-10-2023', validTo: '19-04-2024', daysLeft: 5, color: 'amber' },
-    { id: 4, type: 'Fitness', vehicleNumber: 'TS07GH3456', validFrom: '05-05-2023', validTo: '04-05-2024', daysLeft: 12, color: 'rose' },
-    { id: 5, type: 'GPS', vehicleNumber: 'HR26IJ7890', validFrom: '12-05-2023', validTo: '11-05-2024', daysLeft: 7, color: 'indigo' },
-  ]
-
   useEffect(() => {
     fetchVehicles()
+    fetchExpiringDocs()
   }, [])
 
-  const fetchVehicles = async () => {
-      try {
-        setLoading(true)
-        setError('')
+  const calculateDaysLeft = (validTo) => {
+    if (!validTo || validTo === 'N/A' || validTo === 'None') return 9999
+    const expiryDate = parseDate(validTo)
+    if (!expiryDate) return 9999
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const diffTime = expiryDate.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }
 
-        const response = await axios.get(`${API_URL}/api/vehicle`, {
-          params: {
-            page: 1,
-            limit: 1000,
-          },
-          withCredentials: true,
-        })
+  const fetchExpiringDocs = async () => {
+    try {
+      setLoadingDocs(true)
+      const endpoints = [
+        { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald' },
+        { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo', color: 'amber' },
+        { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo', color: 'indigo' },
+        { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo', color: 'rose' },
+        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo', color: 'blue' },
+        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo', color: 'teal' },
+      ]
 
-        if (response.data?.success) {
-          setVehicles(response.data.data || [])
-        } else {
-          setVehicles([])
-          setError('Failed to load vehicles.')
+      const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 1000 } }))
+      const responses = await Promise.allSettled(requests)
+      
+      let allDocs = []
+      
+      responses.forEach((response, index) => {
+        if (response.status === 'fulfilled' && response.value.data.success) {
+          const ep = endpoints[index]
+          const records = response.value.data.data.map(record => {
+            const validTo = record[ep.toField] || 'N/A'
+            const daysLeft = calculateDaysLeft(validTo)
+            return {
+              id: record._id,
+              type: ep.type,
+              vehicleNumber: record.vehicleNumber || 'N/A',
+              validFrom: record[ep.fromField] || 'N/A',
+              validTo: validTo,
+              daysLeft: daysLeft,
+              color: ep.color,
+              rawRecord: record
+            }
+          })
+          allDocs = [...allDocs, ...records]
         }
-      } catch (err) {
-        console.error('Error fetching vehicles:', err)
-        setVehicles([])
-        setError('Failed to fetch registered vehicles.')
-      } finally {
-        setLoading(false)
-      }
+      })
+
+      allDocs.sort((a, b) => a.daysLeft - b.daysLeft)
+      setRealExpiringDocs(allDocs)
+    } catch (error) {
+      console.error('Error fetching expiring documents:', error)
+    } finally {
+      setLoadingDocs(false)
     }
-
-  const filteredVehicles = vehicles.filter((vehicle) => {
-    const vehicleNumber = String(vehicle.registrationNumber || vehicle.vehicleNumber || '').toUpperCase()
-    return vehicleNumber.includes(searchQuery.trim().toUpperCase())
-  })
-
-  const openAddVehicleModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddVehicleModal(true)
   }
 
-  const openAddFitnessModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddFitnessModal(true)
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await axios.get(`${API_URL}/api/vehicle`, {
+        params: { page: 1, limit: 1000 },
+        withCredentials: true,
+      })
+      if (response.data?.success) {
+        setVehicles(response.data.data || [])
+      } else {
+        setVehicles([])
+        setError('Failed to load vehicles.')
+      }
+    } catch (err) {
+      console.error('Error fetching vehicles:', err)
+      setVehicles([])
+      setError('Failed to fetch registered vehicles.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const openAddTaxModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddTaxModal(true)
-  }
-
-  const openAddPucModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddPucModal(true)
-  }
-
-  const openAddGpsModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddGpsModal(true)
-  }
-
-  const openAddInsuranceModal = () => {
-    setShowMobileSidebar(false)
-    setShowAddInsuranceModal(true)
-  }
-
-return (
+  return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
-      <main className='pl-2 pr-4 pt-3 pb-32 lg:pl-3 lg:pr-8 lg:pt-4'>
+      <Sidebar 
+        show={showMobileSidebar} 
+        onHide={() => setShowMobileSidebar(false)}
+        onAddVehicle={() => setShowAddVehicleModal(true)}
+        onAddFitness={() => setShowAddFitnessModal(true)}
+        onAddTax={() => setShowAddTaxModal(true)}
+        onAddPuc={() => setShowAddPucModal(true)}
+        onAddGps={() => setShowAddGpsModal(true)}
+        onAddInsurance={() => setShowAddInsuranceModal(true)}
+        onAddPermit={() => setShowAddPermitModal(true)}
+      />
+      
+      <main className='pl-2 pr-4 pt-3 pb-32 lg:ml-64 lg:pl-3 lg:pr-8 lg:pt-4'>
         <section className='w-full'>
           <div className='max-w-6xl mx-auto'>
+            {/* Header and Search removed as requested */}
 
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
               <div className='mb-6 grid grid-cols-2 gap-4'>
@@ -141,6 +167,7 @@ return (
                   <span className='text-[10px] md:text-sm font-bold text-slate-900'>Upload Documents</span>
                 </button>
               </div>
+
               <div className='mb-6 flex items-center justify-between'>
                 <h2 className='text-lg font-black text-slate-900'>Expiring Soon</h2>
                 <div className='flex items-center gap-1.5 rounded-xl bg-slate-100 p-1'>
@@ -160,116 +187,116 @@ return (
                 </div>
               </div>
 
-              {/* Responsive Views */}
-              <div className='lg:hidden space-y-3'>
-                 {demoExpiringDocs
-                  .filter(doc => (doc.vehicleNumber.includes(searchQuery.toUpperCase()) || doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && doc.daysLeft <= expiryFilter)
-                  .map((doc) => (
-                  <div
-                    key={doc.id}
-                    className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
-                  >
-                    <div className='flex flex-col gap-2.5'>
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-3'>
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600 shadow-sm border border-${doc.color}-100`}>
-                            {doc.type === 'Insurance' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
-                            {doc.type === 'Tax' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
-                            {doc.type === 'PUC' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
-                            {doc.type === 'Fitness' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
-                            {doc.type === 'GPS' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
-                          </div>
-                          <div>
-                            <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
-                            <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase'>{doc.vehicleNumber}</p>
-                          </div>
-                        </div>
-                        <div className={`rounded-full bg-${doc.color}-50 px-2.5 py-1 text-[10px] font-bold text-${doc.color}-700 border border-${doc.color}-100 shadow-sm`}>
-                          {doc.daysLeft} days left
-                        </div>
-                      </div>
+              {(() => {
+                const filteredDocs = realExpiringDocs.filter(doc => 
+                  (doc.vehicleNumber.toUpperCase().includes(searchQuery.toUpperCase()) || 
+                   doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && 
+                  doc.daysLeft <= expiryFilter
+                )
 
-                      <div className='flex items-center justify-between border-t border-slate-50 pt-2.5'>
-                        <div className='flex gap-6'>
-                          <div>
-                            <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>From</p>
-                            <p className='text-[11px] font-semibold text-slate-700'>{doc.validFrom}</p>
-                          </div>
-                          <div>
-                            <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>To</p>
-                            <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
-                          </div>
+                return (
+                  <>
+                    {/* Responsive View (Mobile Cards) */}
+                    <div className='lg:hidden space-y-3'>
+                      {loadingDocs ? (
+                        <div className='text-center py-8'>
+                          <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
+                          <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Scanning Documents...</p>
                         </div>
-                        <button className='rounded-lg bg-slate-50 p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-colors'>
-                          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-                          </svg>
-                        </button>
+                      ) : filteredDocs.length === 0 ? (
+                        <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
+                          <p className='text-sm text-slate-500 font-bold'>No documents expiring soon.</p>
+                        </div>
+                      ) : (
+                        filteredDocs.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm hover:border-blue-400 transition-all'
+                          >
+                            <div className='flex items-center gap-3'>
+                              <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-${doc.color}-50 text-${doc.color}-600`}>
+                                {doc.type === 'Insurance' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
+                                {doc.type === 'Tax' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
+                                {doc.type === 'PUC' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
+                                {doc.type === 'Fitness' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
+                                {doc.type === 'GPS' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
+                                {doc.type === 'Permit' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
+                              </div>
+                              <div className='min-w-0 flex-1'>
+                                <h3 className='text-sm font-bold text-slate-900 truncate'>{doc.type}</h3>
+                                <p className='text-[10px] font-mono text-slate-500'>{doc.vehicleNumber}</p>
+                              </div>
+                              <div className='text-right'>
+                                <p className={`text-[11px] font-black ${doc.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'}`}>
+                                  {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
+                                </p>
+                                <p className='text-[10px] text-slate-400'>{doc.validTo}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Desktop View (Table) */}
+                    <div className='hidden lg:block'>
+                      <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white'>
+                        <table className='w-full text-left'>
+                          <thead>
+                            <tr className='bg-slate-50/50 border-b border-slate-100'>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Expiry Date</th>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className='divide-y divide-slate-50'>
+                            {loadingDocs ? (
+                              <tr>
+                                <td colSpan='4' className='px-6 py-12 text-center'>
+                                  <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
+                                  <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Synchronizing Data...</p>
+                                </td>
+                              </tr>
+                            ) : filteredDocs.length === 0 ? (
+                              <tr>
+                                <td colSpan='4' className='px-6 py-12 text-center text-slate-500 font-bold'>No documents expiring soon.</td>
+                              </tr>
+                            ) : (
+                              filteredDocs.map((doc) => (
+                                <tr key={doc.id} className='group hover:bg-slate-50/50 transition-colors'>
+                                  <td className='px-6 py-4'>
+                                    <div className='flex items-center gap-3'>
+                                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>
+                                        {doc.type === 'Insurance' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
+                                        {doc.type === 'Tax' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
+                                        {doc.type === 'PUC' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
+                                        {doc.type === 'Fitness' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
+                                        {doc.type === 'GPS' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
+                                        {doc.type === 'Permit' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
+                                      </div>
+                                      <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
+                                    </div>
+                                  </td>
+                                  <td className='px-6 py-4'>
+                                    <span className='text-xs font-mono font-bold text-slate-600'>{doc.vehicleNumber}</span>
+                                  </td>
+                                  <td className='px-6 py-4 text-xs text-slate-500 font-medium'>{doc.validTo}</td>
+                                  <td className='px-6 py-4 text-right'>
+                                    <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>
+                                      {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Desktop Table View */}
-              <div className='hidden lg:block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
-                <table className='w-full text-left border-collapse'>
-                  <thead>
-                    <tr className='bg-slate-50/80 backdrop-blur-sm border-b border-slate-200'>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Vehicle No.</th>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Document Type</th>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Valid From</th>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Valid To</th>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider'>Days Left</th>
-                      <th className='px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right'>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-slate-100'>
-                    {demoExpiringDocs
-                      .filter(doc => (doc.vehicleNumber.includes(searchQuery.toUpperCase()) || doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && doc.daysLeft <= expiryFilter)
-                      .map((doc) => (
-                      <tr 
-                        key={doc.id}
-                        className='group hover:bg-slate-50 transition-colors'
-                      >
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <span className='text-sm font-black text-slate-900 tracking-wider'>{doc.vehicleNumber}</span>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex items-center gap-3'>
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600 shadow-sm border border-${doc.color}-100`}>
-                              {doc.type === 'Insurance' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
-                              {doc.type === 'Tax' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
-                              {doc.type === 'PUC' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
-                              {doc.type === 'Fitness' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
-                              {doc.type === 'GPS' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
-                            </div>
-                            <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
-                          </div>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium'>
-                          {doc.validFrom}
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-bold'>
-                          {doc.validTo}
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-${doc.color}-50 text-${doc.color}-700 border border-${doc.color}-100`}>
-                            {doc.daysLeft} days left
-                          </span>
-                        </td>
-                        <td className='px-6 py-4 whitespace-nowrap text-right'>
-                          <button className='text-slate-400 group-hover:text-blue-600 transition-colors'>
-                            <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  </>
+                )
+              })()}
             </div>
           </div>
         </section>
@@ -294,7 +321,10 @@ return (
             setShowAddFitnessModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddFitnessModal(false)}
+          onSubmit={() => {
+            setShowAddFitnessModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -306,7 +336,10 @@ return (
             setShowAddTaxModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddTaxModal(false)}
+          onSubmit={() => {
+            setShowAddTaxModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -318,7 +351,10 @@ return (
             setShowAddPucModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddPucModal(false)}
+          onSubmit={() => {
+            setShowAddPucModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -330,7 +366,10 @@ return (
             setShowAddGpsModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddGpsModal(false)}
+          onSubmit={() => {
+            setShowAddGpsModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -342,7 +381,10 @@ return (
             setShowAddInsuranceModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddInsuranceModal(false)}
+          onSubmit={() => {
+            setShowAddInsuranceModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -354,7 +396,10 @@ return (
             setShowAddPermitModal(false)
             setInitialExtractionFile(null)
           }}
-          onSubmit={() => setShowAddPermitModal(false)}
+          onSubmit={() => {
+            setShowAddPermitModal(false)
+            fetchExpiringDocs()
+          }}
           initialExtractionFile={initialExtractionFile}
         />
       )}
@@ -380,4 +425,3 @@ return (
 }
 
 export default Home
-

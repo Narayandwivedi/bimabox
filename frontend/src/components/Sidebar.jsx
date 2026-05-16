@@ -58,7 +58,7 @@ const Sidebar = ({ show, onHide, onAddVehicle, onAddFitness, onAddTax, onAddPuc,
       />
 
       {/* Sidebar Container */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white/95 p-6 shadow-2xl backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${show ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white/95 p-6 shadow-2xl backdrop-blur-xl transition-transform duration-300 ${show ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className='flex h-full flex-col'>
           <div className='mb-8 flex items-center justify-between'>
             <div className='flex items-center gap-3'>

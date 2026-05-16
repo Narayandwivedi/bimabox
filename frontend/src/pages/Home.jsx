@@ -134,7 +134,7 @@ const Home = () => {
         onAddPermit={() => setShowAddPermitModal(true)}
       />
       
-      <main className='pl-2 pr-4 pt-3 pb-32 lg:ml-64 lg:pl-3 lg:pr-8 lg:pt-4'>
+      <main className='pl-2 pr-4 pt-3 pb-32 lg:pl-3 lg:pr-8 lg:pt-4'>
         <section className='w-full'>
           <div className='max-w-6xl mx-auto'>
             {/* Header and Search removed as requested */}

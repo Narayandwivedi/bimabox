@@ -73,7 +73,7 @@ const RTODocuments = () => {
     setIsDeleting(true)
     const typeLower = deletingDoc.type.toLowerCase()
     try {
-      const res = await axios.delete(`${API_URL}/api/${typeLower}/id/${deletingDoc.id}`, { withCredentials: true })
+      const res = await axios.delete(`${API_URL}/api/${typeLower}/${deletingDoc.id}`, { withCredentials: true })
       if (res.data.success) {
         toast.success(`${deletingDoc.type} record deleted successfully`)
         setDeletingDoc(null)
@@ -92,7 +92,7 @@ const RTODocuments = () => {
     if (!editingDoc) return
     const typeLower = editingDoc.type.toLowerCase()
     try {
-      await axios.put(`${API_URL}/api/${typeLower}/id/${editingDoc.id}`, formData, { withCredentials: true })
+      await axios.put(`${API_URL}/api/${typeLower}/${editingDoc.id}`, formData, { withCredentials: true })
       toast.success('Record updated successfully')
       setEditingDoc(null)
       fetchAllDocuments()

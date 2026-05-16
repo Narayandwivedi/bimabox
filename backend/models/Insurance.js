@@ -58,6 +58,10 @@ const InsuranceSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  documentName: {
+    type: String,
+    trim: true
+  },
 
   totalFee: {
     type: Number,

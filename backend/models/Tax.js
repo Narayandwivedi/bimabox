@@ -31,6 +31,10 @@ const taxSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  documentName: {
+    type: String,
+    trim: true
+  },
   taxAmount: {
     type: Number,
     default: 0

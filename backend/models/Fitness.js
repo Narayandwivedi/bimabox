@@ -30,6 +30,10 @@ const fitnessSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  documentName: {
+    type: String,
+    trim: true
+  },
   validFrom: {
     type: String,
     required: true

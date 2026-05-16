@@ -43,6 +43,17 @@ const normalizeNumber = (value, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+const generateDocumentName = (label, vehicleNumber) => {
+  const now = new Date()
+  const dd = String(now.getDate()).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const yy = String(now.getFullYear()).slice(-2)
+  const hh = String(now.getHours()).padStart(2, '0')
+  const min = String(now.getMinutes()).padStart(2, '0')
+  const vehicle = (vehicleNumber || 'UNKNOWN').toString().trim().toUpperCase()
+  return `${label}_${vehicle}_${dd}-${mm}-${yy}_${hh}:${min}`
+}
+
 const buildPayload = (body, config, userId, isCreate = false) => {
   const payload = {}
 
@@ -76,6 +87,9 @@ const buildPayload = (body, config, userId, isCreate = false) => {
 
   if (config.documentField && body[config.documentDataField]) {
     payload[config.documentField] = body[config.documentDataField]
+    // Auto-generate document name: Label_VehicleNo_DD-MM-YY_HH:MM
+    const vehicleNo = payload.vehicleNumber || body.vehicleNumber || ''
+    payload.documentName = generateDocumentName(config.label, vehicleNo)
   } else if (config.documentField && Object.prototype.hasOwnProperty.call(body, config.documentField)) {
     payload[config.documentField] = body[config.documentField]
   }
@@ -86,6 +100,7 @@ const buildPayload = (body, config, userId, isCreate = false) => {
 
   return payload
 }
+
 
 const createRecordController = (config) => {
   const {

@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
+import EditFitnessModal from './Fitness/components/EditFitnessModal'
+import EditPucModal from './Puc/components/EditPucModal'
+import EditGpsModal from './Gps/components/EditGpsModal'
+import EditTaxModal from './Tax/components/EditTaxModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -95,8 +100,29 @@ const RTODocumentDetail = () => {
   const [error, setError] = useState('')
   const [pdfError, setPdfError] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
+  const [previewTab, setPreviewTab] = useState('image') // 'image' | 'pdf'
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const config = TYPE_CONFIG[type]
+
+  const fetchRecord = async () => {
+    if (!config) return
+    setLoading(true)
+    try {
+      const res = await axios.get(`${API_URL}/api/${config.apiPath}/id/${id}`, { withCredentials: true })
+      if (res.data?.success) {
+        setRecord(res.data.data)
+      } else {
+        setError('Record not found.')
+      }
+    } catch {
+      setError('Failed to load record. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!config) {
@@ -104,25 +130,47 @@ const RTODocumentDetail = () => {
       setLoading(false)
       return
     }
-
-    const fetchRecord = async () => {
-      setLoading(true)
-      try {
-        const res = await axios.get(`${API_URL}/api/${config.apiPath}/id/${id}`, { withCredentials: true })
-        if (res.data?.success) {
-          setRecord(res.data.data)
-        } else {
-          setError('Record not found.')
-        }
-      } catch {
-        setError('Failed to load record. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchRecord()
-  }, [type, id, config])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, id])
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const res = await axios.delete(`${API_URL}/api/${config.apiPath}/id/${id}`, { withCredentials: true })
+      if (res.data.success) {
+        toast.success(`${config.label || type} record deleted`)
+        navigate('/rto-documents')
+      } else {
+        toast.error('Failed to delete record')
+      }
+    } catch {
+      toast.error('Failed to delete record')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleEditSubmit = async (updatedData) => {
+    try {
+      await axios.put(`${API_URL}/api/${config.apiPath}/id/${id}`, updatedData, { withCredentials: true })
+      toast.success('Record updated successfully')
+      setShowEditModal(false)
+      fetchRecord()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update record')
+    }
+  }
+
+  const handleEditClick = () => {
+    if (type === 'Insurance') {
+      navigate('/insurance') // No edit modal exists for insurance
+      toast.info('Please edit this record from the Insurance module')
+    } else {
+      setShowEditModal(true)
+    }
+  }
 
   if (!config) {
     return (
@@ -150,21 +198,18 @@ const RTODocumentDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-white px-4 pb-32 pt-4 md:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl">
 
-        {/* Back Button + Header */}
-        <div className="mb-5 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center justify-center h-9 w-9 rounded-xl bg-white border-2 border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-900 transition-all shadow-sm shrink-0"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 leading-tight">{type} Document</h1>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Record Details</p>
+          {/* Header Action / Breadcrumb */}
+          <div className="flex items-center justify-between bg-slate-50 px-4 py-3 md:px-6 mb-5 rounded-xl border border-slate-200">
+            <button
+              onClick={() => navigate('/rto-documents')}
+              className="flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-800"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Documents
+            </button>
           </div>
-        </div>
 
         {/* Loading State */}
         {loading && (
@@ -264,14 +309,68 @@ const RTODocumentDetail = () => {
 
             {/* Document Viewer */}
             <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm">
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Uploaded Document</p>
+              {/* Header + Tabs */}
+              <div className="mb-3 flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Uploaded Document</p>
+                  {record.documentName && (
+                    <p className="text-[11px] font-bold text-slate-700 truncate mt-0.5 font-mono">{record.documentName}</p>
+                  )}
+                </div>
+                {fullDocUrl && (
+                  <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 shrink-0">
+                    <button
+                      onClick={() => setPreviewTab('image')}
+                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                        previewTab === 'image' ? `${col.iconBg} text-white shadow-sm` : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      🖼️ Image
+                    </button>
+                    <button
+                      onClick={() => setPreviewTab('pdf')}
+                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                        previewTab === 'pdf' ? `${col.iconBg} text-white shadow-sm` : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      📄 PDF
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {!fullDocUrl ? (
                 <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 py-10 gap-3">
                   <span className="text-4xl grayscale opacity-40">📄</span>
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">No document uploaded</p>
                 </div>
-              ) : isPdf(fullDocUrl) ? (
+              ) : previewTab === 'image' ? (
+                /* ── Image Preview ── */
+                <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                  {!imgLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent" />
+                    </div>
+                  )}
+                  <img
+                    src={fullDocUrl}
+                    alt="Uploaded document"
+                    className={`w-full object-contain rounded-xl transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ maxHeight: '480px' }}
+                    onLoad={() => setImgLoaded(true)}
+                    onError={() => setImgLoaded(true)}
+                  />
+                  <a
+                    href={fullDocUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`absolute top-2 right-2 flex items-center gap-1.5 rounded-lg ${col.iconBg} px-3 py-1.5 text-[10px] font-bold text-white shadow-md`}
+                  >
+                    Full Size ↗
+                  </a>
+                </div>
+              ) : (
+                /* ── PDF Preview ── */
                 <div className="rounded-xl overflow-hidden border border-slate-200">
                   {pdfError ? (
                     <div className="flex flex-col items-center justify-center py-10 gap-3 bg-slate-50">
@@ -306,30 +405,6 @@ const RTODocumentDetail = () => {
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-                  {!imgLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent" />
-                    </div>
-                  )}
-                  <img
-                    src={fullDocUrl}
-                    alt="Uploaded document"
-                    className={`w-full object-contain rounded-xl transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ maxHeight: '480px' }}
-                    onLoad={() => setImgLoaded(true)}
-                    onError={() => setImgLoaded(true)}
-                  />
-                  <a
-                    href={fullDocUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`absolute top-2 right-2 flex items-center gap-1.5 rounded-lg ${col.iconBg} px-3 py-1.5 text-[10px] font-bold text-white shadow-md`}
-                  >
-                    Full Size ↗
-                  </a>
-                </div>
               )}
             </div>
 
@@ -337,6 +412,75 @@ const RTODocumentDetail = () => {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3 text-red-600">
+              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-xl font-bold text-slate-800">Delete Record</h3>
+            </div>
+            <p className="mb-6 text-sm text-slate-600">
+              Are you sure you want to delete this {config.label} record for <span className="font-bold">{record?.vehicleNumber}</span>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-50"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && type === 'Fitness' && (
+        <EditFitnessModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => {
+            setShowEditModal(false)
+            fetchRecord()
+          }}
+          fitness={record}
+        />
+      )}
+      {showEditModal && type === 'Tax' && (
+        <EditTaxModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditSubmit}
+          tax={record}
+        />
+      )}
+      {showEditModal && type === 'PUC' && (
+        <EditPucModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditSubmit}
+          puc={record}
+        />
+      )}
+      {showEditModal && type === 'GPS' && (
+        <EditGpsModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditSubmit}
+          gps={record}
+        />
+      )}
     </div>
   )
 }

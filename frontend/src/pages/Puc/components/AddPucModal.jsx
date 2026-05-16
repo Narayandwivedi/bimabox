@@ -7,8 +7,9 @@ import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
-const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '' }) => {
+const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
   const isOcrUpdate = useRef(false)
+  const processedInitialFile = useRef(false)
   const dropdownItemRefs = useRef([])
   const [formData, setFormData] = useState({
     vehicleNumber: prefilledVehicleNumber,
@@ -55,8 +56,22 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
         return null
       })
       setUploadedPucFile(null)
+      processedInitialFile.current = false
     }
   }, [isOpen, prefilledVehicleNumber, prefilledOwnerName])
+
+  useEffect(() => {
+    if (isOpen && initialExtractionFile && !processedInitialFile.current) {
+      processedInitialFile.current = true
+      if (initialExtractionFile.type === 'application/pdf') {
+        setUploadedPucFile(initialExtractionFile)
+        processExtraction(initialExtractionFile)
+      } else if (initialExtractionFile.type.startsWith('image/')) {
+        setUploadedPucFile(initialExtractionFile)
+        setScanningFile(initialExtractionFile)
+      }
+    }
+  }, [isOpen, initialExtractionFile])
 
   useEffect(() => {
     if (isOpen && (prefilledVehicleNumber || prefilledOwnerName)) {
@@ -201,7 +216,7 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   const handleChange = (e) => {
     const { name, value } = e.target
     if (name === 'vehicleNumber') {
-      const upperValue = value.toUpperCase()
+      const upperValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
       const validation = (upperValue.length === 9 || upperValue.length === 10)
         ? validateVehicleNumberRealtime(upperValue)
         : { isValid: false, message: '' }
@@ -380,7 +395,7 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   return (
     <>
       {scanningFile && <DocumentScannerPreview file={scanningFile} onCancel={() => setScanningFile(null)} onConfirm={handleScannerConfirm} />}
-      <div className='fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 md:p-4'>
+      <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 pb-20 md:pb-4 md:p-4'>
         <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col'>
           <div className='bg-gradient-to-r from-green-600 to-emerald-600 p-2 md:p-3 text-white flex-shrink-0'>
             <div className='flex justify-between items-center'>
@@ -388,35 +403,28 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                 <h2 className='text-lg md:text-2xl font-bold'>Add New PUC Certificate</h2>
                 <p className='text-green-100 text-xs md:text-sm mt-1'>Add Pollution Under Control certificate record</p>
               </div>
-              <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
-                <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-                </svg>
-              </button>
+              <div className='flex items-center gap-3'>
+                <div className='relative overflow-hidden'>
+                  <button type='button' disabled={isExtractingPuc} className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 flex items-center gap-2 max-w-full'>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    {isExtractingPuc ? 'Extracting...' : 'AI Upload'}
+                  </button>
+                  <input type='file' accept='image/*, application/pdf' disabled={isExtractingPuc} onChange={handlePucExtractionUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed' />
+                </div>
+                <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
+                  <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className='flex flex-col flex-1 overflow-hidden'>
             <div className='flex-1 overflow-y-auto p-3 md:p-6'>
-              <div className='mb-4 md:mb-6 p-4 bg-gradient-to-r from-cyan-50 to-emerald-50 rounded-xl border-2 border-dashed border-cyan-200'>
-                <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
-                  <div>
-                    <h3 className='text-sm md:text-base font-bold text-cyan-800 flex items-center gap-2'>
-                      <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
-                      </svg>
-                      AI Fast Extraction
-                    </h3>
-                    <p className='text-xs text-cyan-700 mt-1'>Upload a PUC document in image or PDF format to auto-fill vehicle number, owner name, valid from, and valid to.</p>
-                  </div>
-                  <div className='relative overflow-hidden'>
-                    <button type='button' disabled={isExtractingPuc} className='relative px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-700 transition disabled:opacity-50 flex items-center gap-2 text-sm max-w-full'>
-                      {isExtractingPuc ? 'Extracting...' : 'Upload PUC Document'}
-                    </button>
-                    <input type='file' accept='image/*, application/pdf' disabled={isExtractingPuc} onChange={handlePucExtractionUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed' />
-                  </div>
-                </div>
-              </div>
+
 
               <div className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-emerald-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                 <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>

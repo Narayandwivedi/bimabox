@@ -119,6 +119,14 @@ ${jsonTemplate}`
       })
     }
 
+    // Normalize vehicle number formats (e.g., "CG-23-J-8800" -> "CG23J8800")
+    if (extractedData.vehicleNumber) {
+      extractedData.vehicleNumber = extractedData.vehicleNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    }
+    if (extractedData.registrationNumber) {
+      extractedData.registrationNumber = extractedData.registrationNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    }
+
     return res.json({
       success: true,
       data: extractedData,

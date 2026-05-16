@@ -28,6 +28,7 @@ const Home = () => {
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [expiryFilter, setExpiryFilter] = useState(15)
+  const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   
   const demoExpiringDocs = [
     { id: 1, type: 'Insurance', vehicleNumber: 'MH01AB1234', validFrom: '01-05-2023', validTo: '30-04-2024', daysLeft: 2, color: 'blue' },
@@ -289,50 +290,60 @@ return (
       {showAddFitnessModal && (
         <AddFitnessModal
           isOpen={showAddFitnessModal}
-          onClose={() => setShowAddFitnessModal(false)}
-          onSubmit={() => {
+          onClose={() => {
             setShowAddFitnessModal(false)
+            setInitialExtractionFile(null)
           }}
+          onSubmit={() => setShowAddFitnessModal(false)}
+          initialExtractionFile={initialExtractionFile}
         />
       )}
 
       {showAddTaxModal && (
         <AddTaxModal
           isOpen={showAddTaxModal}
-          onClose={() => setShowAddTaxModal(false)}
-          onSubmit={() => {
+          onClose={() => {
             setShowAddTaxModal(false)
+            setInitialExtractionFile(null)
           }}
+          onSubmit={() => setShowAddTaxModal(false)}
+          initialExtractionFile={initialExtractionFile}
         />
       )}
 
       {showAddPucModal && (
         <AddPucModal
           isOpen={showAddPucModal}
-          onClose={() => setShowAddPucModal(false)}
-          onSubmit={() => {
+          onClose={() => {
             setShowAddPucModal(false)
+            setInitialExtractionFile(null)
           }}
+          onSubmit={() => setShowAddPucModal(false)}
+          initialExtractionFile={initialExtractionFile}
         />
       )}
 
       {showAddGpsModal && (
         <AddGpsModal
           isOpen={showAddGpsModal}
-          onClose={() => setShowAddGpsModal(false)}
-          onSubmit={() => {
+          onClose={() => {
             setShowAddGpsModal(false)
+            setInitialExtractionFile(null)
           }}
+          onSubmit={() => setShowAddGpsModal(false)}
+          initialExtractionFile={initialExtractionFile}
         />
       )}
 
       {showAddInsuranceModal && (
         <AddInsuranceModal
           isOpen={showAddInsuranceModal}
-          onClose={() => setShowAddInsuranceModal(false)}
-          onSubmit={() => {
+          onClose={() => {
             setShowAddInsuranceModal(false)
+            setInitialExtractionFile(null)
           }}
+          onSubmit={() => setShowAddInsuranceModal(false)}
+          initialExtractionFile={initialExtractionFile}
         />
       )}
 
@@ -340,6 +351,15 @@ return (
         <ImportModal
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
+          onProceed={(type, method, file) => {
+            setShowImportModal(false)
+            setInitialExtractionFile(method === 'ai' ? file : null)
+            if (type === 'insurance') setShowAddInsuranceModal(true)
+            else if (type === 'puc') setShowAddPucModal(true)
+            else if (type === 'fitness') setShowAddFitnessModal(true)
+            else if (type === 'tax') setShowAddTaxModal(true)
+            else if (type === 'gps') setShowAddGpsModal(true)
+          }}
         />
       )}
     </div>

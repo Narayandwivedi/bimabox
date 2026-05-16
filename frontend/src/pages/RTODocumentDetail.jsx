@@ -76,7 +76,6 @@ const TYPE_CONFIG = {
       { label: 'Policy Number', key: 'policyNumber' },
       { label: 'Policy Holder', key: 'policyHolderName' },
       { label: 'Mobile Number', key: 'mobileNumber' },
-      { label: 'Issue Date', key: 'issueDate' },
       { label: 'Remarks', key: 'remarks' },
     ],
   },

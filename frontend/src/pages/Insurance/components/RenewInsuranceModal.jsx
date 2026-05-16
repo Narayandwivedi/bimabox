@@ -101,11 +101,7 @@ const RenewInsuranceModal = ({ isOpen, onClose, onSubmit, insuranceData }) => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault()
-        document.querySelector('form')?.requestSubmit()
-      }
-      if (e.key === 'Escape') {
+if (e.key === 'Escape') {
         onClose()
       }
     }
@@ -357,7 +353,7 @@ const RenewInsuranceModal = ({ isOpen, onClose, onSubmit, insuranceData }) => {
                 Validity Period (1 Year)
               </h3>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+              <div className='grid grid-cols-2 gap-3 md:gap-4'>
                 {/* Valid From */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -505,9 +501,7 @@ const RenewInsuranceModal = ({ isOpen, onClose, onSubmit, insuranceData }) => {
 
           {/* Footer Actions */}
           <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
-            <div className='text-xs md:text-sm text-gray-600'>
-              <kbd className='px-2 py-1 bg-gray-200 rounded text-xs font-mono'>Ctrl+Enter</kbd> to submit quickly
-            </div>
+
 
             <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
               <button

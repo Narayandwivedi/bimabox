@@ -180,7 +180,7 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
               </div>
               Tax Period
             </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div className='grid grid-cols-2 gap-3 md:gap-4'>
               <div className='bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200'>
                 <p className='text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'>Tax From</p>
                 <div className='flex items-center text-green-700'>

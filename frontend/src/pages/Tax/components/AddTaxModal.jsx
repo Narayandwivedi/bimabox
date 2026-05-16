@@ -594,7 +594,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 pb-20 md:pb-4 md:p-4'>
+    <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
       <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col'>
         {/* Header */}
         <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-2 md:p-3 text-white flex-shrink-0'>
@@ -856,7 +856,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                 </div>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
+              <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4'>
                 {/* Tax From */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -959,9 +959,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
 
           {/* Footer Actions */}
           <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
-            <div className='text-xs md:text-sm text-gray-600'>
-              <kbd className='px-2 py-1 bg-gray-200 rounded text-xs font-mono'>Ctrl+Enter</kbd> to submit quickly
-            </div>
+
 
             <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
               <button

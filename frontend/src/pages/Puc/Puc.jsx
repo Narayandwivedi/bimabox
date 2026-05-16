@@ -845,7 +845,7 @@ const Puc = () => {
                             No PUC records found
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            Click &quot;Add New PUC Certificate&quot; to add
+                            Click &quot;Add New PUC&quot; to add
                             your first record
                           </p>
                         </div>

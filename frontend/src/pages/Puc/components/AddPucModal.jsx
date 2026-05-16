@@ -187,11 +187,7 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
         return
       }
 
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault()
-        document.querySelector('form')?.requestSubmit()
-      }
-      if (e.key === 'Escape') onClose()
+if (e.key === 'Escape') onClose()
     }
 
     if (isOpen) {
@@ -395,13 +391,13 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   return (
     <>
       {scanningFile && <DocumentScannerPreview file={scanningFile} onCancel={() => setScanningFile(null)} onConfirm={handleScannerConfirm} />}
-      <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 pb-20 md:pb-4 md:p-4'>
+      <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
         <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col'>
           <div className='bg-gradient-to-r from-green-600 to-emerald-600 p-2 md:p-3 text-white flex-shrink-0'>
             <div className='flex justify-between items-center'>
               <div>
-                <h2 className='text-lg md:text-2xl font-bold'>Add New PUC Certificate</h2>
-                <p className='text-green-100 text-xs md:text-sm mt-1'>Add Pollution Under Control certificate record</p>
+                <h2 className='text-lg md:text-2xl font-bold'>Add New PUC</h2>
+                <p className='text-green-100 text-xs md:text-sm mt-1'>Add new PUC record</p>
               </div>
               <div className='flex items-center gap-3'>
                 <div className='relative overflow-hidden'>
@@ -462,7 +458,7 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                   <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
                   Validity Period
                 </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+                <div className='grid grid-cols-2 gap-3 md:gap-4'>
                   <div>
                     <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid From <span className='text-red-500'>*</span></label>
                     <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onBlur={handleDateBlur} placeholder='DD-MM-YYYY' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' required />
@@ -498,7 +494,7 @@ const AddPucModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
             </div>
 
             <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
-              <div className='text-xs md:text-sm text-gray-600'><kbd className='px-2 py-1 bg-gray-200 rounded text-xs font-mono'>Ctrl+Enter</kbd> to submit quickly</div>
+
               <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
                 <button type='button' onClick={onClose} className='flex-1 md:flex-none px-4 md:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-semibold transition cursor-pointer'>Cancel</button>
                 <button type='submit' disabled={isSubmitting} className='flex-1 md:flex-none px-6 md:px-8 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg font-semibold transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>{isSubmitting ? 'Adding...' : 'Add PUC'}</button>

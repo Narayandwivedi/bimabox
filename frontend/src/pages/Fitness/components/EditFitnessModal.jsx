@@ -445,8 +445,8 @@ const EditFitnessModal = ({ isOpen, onClose, onSuccess, fitness }) => {
         <div className='bg-gradient-to-r from-green-600 to-emerald-600 p-2 md:p-3 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold'>Edit Fitness Certificate</h2>
-              <p className='text-green-100 text-xs md:text-sm mt-1'>Update vehicle fitness certificate record</p>
+              <h2 className='text-lg md:text-2xl font-bold'>Edit Fitness</h2>
+              <p className='text-green-100 text-xs md:text-sm mt-1'>Update vehicle fitness record</p>
             </div>
             <button
               onClick={onClose}
@@ -600,7 +600,7 @@ const EditFitnessModal = ({ isOpen, onClose, onSuccess, fitness }) => {
                 Validity Period
               </h3>
 
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+              <div className='grid grid-cols-2 gap-3 md:gap-4'>
                 {/* Valid From */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -784,9 +784,7 @@ const EditFitnessModal = ({ isOpen, onClose, onSuccess, fitness }) => {
 
           {/* Footer Actions */}
           <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
-            <div className='text-xs md:text-sm text-gray-600'>
-              <kbd className='px-2 py-1 bg-gray-200 rounded text-xs font-mono'>Ctrl+Enter</kbd> to save quickly
-            </div>
+
 
             <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
               <button

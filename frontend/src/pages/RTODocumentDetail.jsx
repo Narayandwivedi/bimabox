@@ -195,22 +195,8 @@ const RTODocumentDetail = () => {
   const fullDocUrl = documentUrl ? (documentUrl.startsWith('http') ? documentUrl : `${API_URL}${documentUrl}`) : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-white px-4 pb-32 pt-4 md:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-100 px-3 pb-24 pt-3 md:px-6 lg:px-8">
       <div className="mx-auto max-w-2xl">
-
-          {/* Header Action / Breadcrumb */}
-          <div className="flex items-center justify-between bg-slate-50 px-4 py-3 md:px-6 mb-5 rounded-xl border border-slate-200">
-            <button
-              onClick={() => navigate('/rto-documents')}
-              className="flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-slate-800"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Documents
-            </button>
-          </div>
-
         {/* Loading State */}
         {loading && (
           <div className="mt-20 flex flex-col items-center gap-4">
@@ -232,58 +218,53 @@ const RTODocumentDetail = () => {
 
         {/* Record Loaded */}
         {!loading && !error && record && (
-          <div className="space-y-4">
+          <div className="space-y-3">
 
             {/* Hero Card */}
-            <div className={`rounded-2xl border-2 ${col.border} ${col.bg} p-4 shadow-sm`}>
+            <div className={`rounded-xl border border-slate-200 ${col.bg} p-3 shadow-sm`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${col.iconBg} text-white shadow-lg text-2xl`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${col.iconBg} text-white shadow text-xl`}>
                     {config.icon}
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Document Type</p>
-                    <h2 className={`text-lg font-black ${col.text}`}>{type}</h2>
+                    <h2 className={`text-base font-black leading-tight ${col.text}`}>{type} Document</h2>
+                    <p className="text-[11px] font-black tracking-widest text-slate-900 mt-0.5">{record.vehicleNumber}</p>
                   </div>
                 </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold ${statusStyle.badge}`}>
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-bold ${statusStyle.badge}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
                   {statusStyle.label}
                 </span>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-white/60">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Vehicle Number</p>
-                <p className="text-2xl font-black tracking-widest text-slate-900">{record.vehicleNumber}</p>
-              </div>
             </div>
 
             {/* Validity Period */}
-            <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm">
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Validity Period</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
-                  <p className="text-[9px] font-bold uppercase tracking-tight text-slate-400 mb-1">Valid From</p>
-                  <p className="text-base font-black text-slate-700">{record[config.fromField] || '—'}</p>
+            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+              <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">Validity Period</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-slate-50 p-2 border border-slate-100 flex justify-between items-center">
+                  <p className="text-[9px] font-bold uppercase tracking-tight text-slate-400">From</p>
+                  <p className="text-sm font-black text-slate-700">{record[config.fromField] || '—'}</p>
                 </div>
-                <div className={`rounded-xl ${col.bg} p-3 border ${col.border}`}>
-                  <p className="text-[9px] font-bold uppercase tracking-tight text-slate-400 mb-1">Valid To</p>
-                  <p className={`text-base font-black ${col.text}`}>{record[config.toField] || '—'}</p>
+                <div className={`rounded-lg ${col.bg} p-2 border ${col.border} flex justify-between items-center`}>
+                  <p className="text-[9px] font-bold uppercase tracking-tight text-slate-400">To</p>
+                  <p className={`text-sm font-black ${col.text}`}>{record[config.toField] || '—'}</p>
                 </div>
               </div>
             </div>
 
             {/* Extra Fields */}
             {config.extraFields.filter(f => record[f.key] !== undefined && record[f.key] !== null && record[f.key] !== '').length > 0 && (
-              <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Record Details</p>
-                <div className="divide-y divide-slate-50">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">Record Details</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {config.extraFields
                     .filter(f => record[f.key] !== undefined && record[f.key] !== null && record[f.key] !== '')
                     .map(({ label, key, prefix }) => (
-                      <div key={key} className="flex items-center justify-between py-2.5">
-                        <p className="text-[11px] font-semibold text-slate-400">{label}</p>
-                        <p className="text-[12px] font-bold text-slate-900">
+                      <div key={key} className="flex flex-col rounded-lg bg-slate-50 p-2 border border-slate-100">
+                        <p className="text-[9px] font-semibold text-slate-400">{label}</p>
+                        <p className="text-[11px] font-black text-slate-800">
                           {prefix ? `${prefix}${record[key]}` : record[key]}
                         </p>
                       </div>
@@ -294,121 +275,84 @@ const RTODocumentDetail = () => {
 
             {/* Fee Breakup (if present) */}
             {Array.isArray(record.feeBreakup) && record.feeBreakup.length > 0 && (
-              <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Fee Breakup</p>
-                <div className="divide-y divide-slate-50">
+              <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">Fee Breakup</p>
+                <div className="divide-y divide-slate-100">
                   {record.feeBreakup.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-2.5">
-                      <p className="text-[11px] font-semibold text-slate-500">{item.name}</p>
-                      <p className="text-[12px] font-bold text-slate-900">₹{item.amount}</p>
+                    <div key={i} className="flex items-center justify-between py-1.5">
+                      <p className="text-[11px] font-semibold text-slate-600">{item.name}</p>
+                      <p className="text-[11px] font-black text-slate-800">₹{item.amount}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Document Viewer */}
-            <div className="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm">
-              {/* Header + Tabs */}
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Uploaded Document</p>
+            {/* Document Preview Section */}
+            {fullDocUrl ? (
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+                <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      Attached Document
+                    </h3>
+                    <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
+                      <button 
+                        onClick={() => setPreviewTab('image')} 
+                        className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${previewTab === 'image' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        Image
+                      </button>
+                      <button 
+                        onClick={() => setPreviewTab('pdf')} 
+                        className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${previewTab === 'pdf' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                      >
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+                  {/* Generated Filename Display */}
                   {record.documentName && (
-                    <p className="text-[11px] font-bold text-slate-700 truncate mt-0.5 font-mono">{record.documentName}</p>
+                    <div className="bg-white rounded-md border border-slate-200 px-2.5 py-1.5 flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                      <span className="font-mono text-[10px] font-semibold text-slate-600 truncate">{record.documentName}</span>
+                    </div>
                   )}
                 </div>
-                {fullDocUrl && (
-                  <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 shrink-0">
-                    <button
-                      onClick={() => setPreviewTab('image')}
-                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        previewTab === 'image' ? `${col.iconBg} text-white shadow-sm` : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      🖼️ Image
-                    </button>
-                    <button
-                      onClick={() => setPreviewTab('pdf')}
-                      className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        previewTab === 'pdf' ? `${col.iconBg} text-white shadow-sm` : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      📄 PDF
-                    </button>
+
+                {previewTab === 'image' ? (
+                  <div className="relative rounded-b-xl overflow-hidden bg-slate-50 min-h-[200px] flex items-center justify-center p-2">
+                    {!imgLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-50">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-r-transparent" />
+                      </div>
+                    )}
+                    <img
+                      src={fullDocUrl}
+                      alt="Uploaded document"
+                      className={`w-full object-contain rounded-lg transition-opacity duration-300 ${imgLoaded ? 'opacity-100 block' : 'opacity-0 hidden'}`}
+                      style={{ maxHeight: '480px' }}
+                      onLoad={() => setImgLoaded(true)}
+                      onError={() => setImgLoaded(true)}
+                    />
+                  </div>
+                ) : (
+                  <div className="relative bg-slate-50 rounded-b-xl overflow-hidden">
+                    <iframe
+                      src={fullDocUrl}
+                      title="Document PDF"
+                      className="w-full h-[480px] border-none"
+                    />
                   </div>
                 )}
               </div>
-
-              {!fullDocUrl ? (
-                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 py-10 gap-3">
-                  <span className="text-4xl grayscale opacity-40">📄</span>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">No document uploaded</p>
-                </div>
-              ) : previewTab === 'image' ? (
-                /* ── Image Preview ── */
-                <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-                  {!imgLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent" />
-                    </div>
-                  )}
-                  <img
-                    src={fullDocUrl}
-                    alt="Uploaded document"
-                    className={`w-full object-contain rounded-xl transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ maxHeight: '480px' }}
-                    onLoad={() => setImgLoaded(true)}
-                    onError={() => setImgLoaded(true)}
-                  />
-                  <a
-                    href={fullDocUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`absolute top-2 right-2 flex items-center gap-1.5 rounded-lg ${col.iconBg} px-3 py-1.5 text-[10px] font-bold text-white shadow-md`}
-                  >
-                    Full Size ↗
-                  </a>
-                </div>
-              ) : (
-                /* ── PDF Preview ── */
-                <div className="rounded-xl overflow-hidden border border-slate-200">
-                  {pdfError ? (
-                    <div className="flex flex-col items-center justify-center py-10 gap-3 bg-slate-50">
-                      <span className="text-4xl">📄</span>
-                      <p className="text-xs font-semibold text-slate-500">Cannot preview PDF inline.</p>
-                      <a
-                        href={fullDocUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`rounded-xl ${col.iconBg} px-5 py-2.5 text-xs font-bold text-white shadow-md`}
-                      >
-                        Open PDF ↗
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <iframe
-                        src={fullDocUrl}
-                        title="Document PDF"
-                        className="w-full rounded-xl"
-                        style={{ height: '480px', border: 'none' }}
-                        onError={() => setPdfError(true)}
-                      />
-                      <a
-                        href={fullDocUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`absolute top-2 right-2 flex items-center gap-1.5 rounded-lg ${col.iconBg} px-3 py-1.5 text-[10px] font-bold text-white shadow-md`}
-                      >
-                        Open ↗
-                      </a>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 border border-dashed border-slate-300 py-10 gap-3 shadow-sm">
+                <span className="text-4xl grayscale opacity-40">📄</span>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">No document uploaded</p>
+              </div>
+            )}
           </div>
         )}
       </div>

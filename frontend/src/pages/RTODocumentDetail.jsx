@@ -191,7 +191,11 @@ const RTODocumentDetail = () => {
   const status = record?.status || 'unknown'
   const statusStyle = STATUS_STYLES[status] || STATUS_STYLES.unknown
   const documentUrl = record ? record[config.documentField] : null
-  const fullDocUrl = documentUrl ? (documentUrl.startsWith('http') ? documentUrl : `${API_URL}${documentUrl}`) : null
+  const fullDocUrl = documentUrl 
+    ? (documentUrl.startsWith('http') || documentUrl.startsWith('data:') ? documentUrl : `${API_URL}${documentUrl}`) 
+    : null
+
+  const displayFilename = record?.documentName || (fullDocUrl && !fullDocUrl.startsWith('data:') ? fullDocUrl.split('/').pop() : null)
 
   return (
     <div className="min-h-screen bg-slate-100 px-3 pb-24 pt-3 md:px-6 lg:px-8">
@@ -311,11 +315,11 @@ const RTODocumentDetail = () => {
                       </button>
                     </div>
                   </div>
-                  {/* Generated Filename Display */}
-                  {record.documentName && (
+                  {/* Filename Display */}
+                  {displayFilename && (
                     <div className="bg-white rounded-md border border-slate-200 px-2.5 py-1.5 flex items-center gap-2">
                       <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                      <span className="font-mono text-[10px] font-semibold text-slate-600 truncate">{record.documentName}</span>
+                      <span className="font-mono text-[10px] font-semibold text-slate-600 truncate">{displayFilename}</span>
                     </div>
                   )}
                 </div>

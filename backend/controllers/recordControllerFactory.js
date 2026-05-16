@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const expiryReminderService = require('../services/expiryReminderService')
 
 const parseDateString = (dateStr) => {
@@ -87,9 +89,6 @@ const buildPayload = (body, config, userId, isCreate = false) => {
 
   if (config.documentField && body[config.documentDataField]) {
     payload[config.documentField] = body[config.documentDataField]
-    // Auto-generate document name: Label_VehicleNo_DD-MM-YY_HH:MM
-    const vehicleNo = payload.vehicleNumber || body.vehicleNumber || ''
-    payload.documentName = generateDocumentName(config.label, vehicleNo)
   } else if (config.documentField && Object.prototype.hasOwnProperty.call(body, config.documentField)) {
     payload[config.documentField] = body[config.documentField]
   }
@@ -101,6 +100,35 @@ const buildPayload = (body, config, userId, isCreate = false) => {
   return payload
 }
 
+const processDocumentData = async (payload, config, docName) => {
+  if (payload[config.documentField] && payload[config.documentField].startsWith('data:')) {
+    const dataStr = payload[config.documentField]
+    const matches = dataStr.match(/^data:([^;]+);base64,(.+)$/)
+    
+    if (matches && matches.length === 3) {
+      const mimeType = matches[1]
+      const base64Data = matches[2]
+      
+      let ext = 'pdf'
+      if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg'
+      else if (mimeType.includes('png')) ext = 'png'
+      else if (mimeType.includes('pdf')) ext = 'pdf'
+      
+      const fileName = `${docName || Date.now()}.${ext}`
+      const uploadDir = path.join(__dirname, '..', 'uploads', 'rto_docs')
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true })
+      }
+      
+      const filePath = path.join(uploadDir, fileName)
+      fs.writeFileSync(filePath, base64Data, 'base64')
+      
+      // Store the relative path to be served statically
+      payload[config.documentField] = `/uploads/rto_docs/${fileName}`
+    }
+  }
+}
 
 const createRecordController = (config) => {
   const {
@@ -199,6 +227,10 @@ const createRecordController = (config) => {
         payload[balanceField] = Math.max(normalizeNumber(payload.totalFee || payload.totalAmount, 0) - normalizeNumber(payload[paidField], 0), 0)
       }
 
+      const vehicleNo = payload.vehicleNumber || ''
+      const docName = generateDocumentName(config.label, vehicleNo)
+      await processDocumentData(payload, config, docName)
+
       const record = await Model.create(payload)
       expiryReminderService.runOnce().catch((error) => {
         console.error(`Post-create ${config.name} reminder run failed:`, error.message)
@@ -213,6 +245,9 @@ const createRecordController = (config) => {
   const update = async (req, res) => {
     try {
       const payload = buildPayload(req.body, config, req.user._id, false)
+      const vehicleNo = payload.vehicleNumber || ''
+      const docName = generateDocumentName(config.label, vehicleNo)
+      await processDocumentData(payload, config, docName)
       const record = await Model.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, payload, {
         returnDocument: 'after',
         runValidators: true,
@@ -237,6 +272,13 @@ const createRecordController = (config) => {
       const record = await Model.findOneAndDelete({ _id: req.params.id, userId: req.user._id }).lean()
       if (!record) {
         return res.status(404).json({ success: false, message: `${config.label} record not found` })
+      }
+
+      if (record[config.documentField] && typeof record[config.documentField] === 'string' && record[config.documentField].startsWith('/uploads/')) {
+        const filePath = path.join(__dirname, '..', record[config.documentField])
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
       }
 
       res.json({ success: true, message: `${config.label} record deleted successfully` })

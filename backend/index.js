@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
+const path = require('path')
 const vehicleRoutes = require('./routes/vehicleRoutes')
 const fitnessRoutes = require('./routes/fitnessRoutes')
 const taxRoutes = require('./routes/taxRoutes')
@@ -48,6 +49,8 @@ app.use((req, res, next) => {
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, message: 'Backend is running' })
 })
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)

@@ -153,8 +153,8 @@ const Search = () => {
     <div className='min-h-screen bg-slate-50 px-4 pb-32 pt-4 md:px-6 lg:px-8'>
       <div className='mx-auto max-w-4xl'>
         <div className='mb-6'>
-          <h1 className='text-2xl font-black text-slate-900'>Global Search</h1>
-          <p className='text-xs font-bold text-slate-500 uppercase tracking-widest'>Search across all your documents</p>
+          <h1 className='text-lg md:text-2xl font-black text-slate-900'>Global Search</h1>
+          <p className='text-[8px] md:text-xs font-bold text-slate-500 uppercase tracking-widest'>Search across all your documents</p>
         </div>
 
         {/* Search & Filter Bar */}

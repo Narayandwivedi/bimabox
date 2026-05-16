@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -13,6 +13,80 @@ import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
 
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
+
+const CustomDropdown = ({ value, onChange, options, label, icon }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  return (
+    <div className="relative flex-1 min-w-[120px]" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex w-full items-center justify-between rounded-xl border-2 transition-all duration-200 px-3 py-2.5 text-[11px] font-black focus:outline-none ${
+          isOpen ? 'border-indigo-500 bg-white shadow-lg ring-4 ring-indigo-500/10' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-1.5 truncate">
+          {icon && <span className={isOpen ? 'text-indigo-500' : 'text-slate-400'}>{icon}</span>}
+          <span className="truncate">{label}: {selectedOption.label}</span>
+        </div>
+        <svg
+          className={`h-3 w-3 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 z-[70] mt-2 max-h-64 overflow-y-auto rounded-xl border border-slate-100 bg-white py-1.5 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="px-3 py-1.5 mb-1 border-b border-slate-50">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select {label}</span>
+          </div>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`flex w-full items-center px-4 py-4.5 text-[11px] font-bold transition-all duration-150 ${
+                value === option.value
+                  ? 'bg-indigo-50 text-indigo-600'
+                  : 'text-slate-600 hover:bg-indigo-50/50 hover:text-indigo-600'
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span>{option.label}</span>
+                {value === option.value && (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const RTODocuments = () => {
   const navigate = useNavigate()
@@ -178,64 +252,88 @@ const RTODocuments = () => {
           </div>
 
           {/* Filters Row */}
-          <div className='flex flex-wrap gap-2'>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value)
-                setCompanyFilter('All') // Reset company filter when type changes
-              }}
-              className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
-            >
-              <option value='All'>Type: All</option>
-              <option value='Tax'>Tax</option>
-              <option value='PUC'>PUC</option>
-              <option value='GPS'>GPS</option>
-              <option value='Fitness'>Fitness</option>
-              <option value='Permit'>Permit</option>
-              <option value='Insurance'>Insurance</option>
-            </select>
+          <div className='flex flex-col gap-2'>
+            {/* Type & Status Row */}
+            <div className='flex gap-2'>
+              <CustomDropdown
+                label="Type"
+                value={typeFilter}
+                onChange={(val) => {
+                  setTypeFilter(val)
+                  setCompanyFilter('All')
+                }}
+                options={[
+                  { value: 'All', label: 'All' },
+                  { value: 'Tax', label: 'Tax' },
+                  { value: 'PUC', label: 'PUC' },
+                  { value: 'GPS', label: 'GPS' },
+                  { value: 'Fitness', label: 'Fitness' },
+                  { value: 'Permit', label: 'Permit' },
+                  { value: 'Insurance', label: 'Insurance' },
+                ]}
+                icon={
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                }
+              />
 
+              <CustomDropdown
+                label="Status"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { value: 'All', label: 'All Status' },
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Expiring Soon', label: 'Expiring' },
+                  { value: 'Expired', label: 'Expired' },
+                ]}
+                icon={
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                  </svg>
+                }
+              />
+            </div>
+
+            {/* Company Row (Full Width) */}
             {typeFilter === 'Insurance' && (
-              <select
-                value={companyFilter}
-                onChange={(e) => setCompanyFilter(e.target.value)}
-                className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
-              >
-                <option value='All'>Company: All</option>
-                <option value="HDFC ERGO">HDFC ERGO</option>
-                <option value="ICICI Lombard">ICICI Lombard</option>
-                <option value="Bajaj Allianz">Bajaj Allianz</option>
-                <option value="Tata AIG">Tata AIG</option>
-                <option value="Reliance General">Reliance General</option>
-                <option value="IFFCO Tokio">IFFCO Tokio</option>
-                <option value="National Insurance">National Insurance</option>
-                <option value="New India Assurance">New India Assurance</option>
-                <option value="Oriental Insurance">Oriental Insurance</option>
-                <option value="United India Insurance">United India Insurance</option>
-                <option value="Magma HDI">Magma HDI</option>
-                <option value="Go Digit">Go Digit</option>
-                <option value="Acko">Acko</option>
-                <option value="Cholamandalam MS">Cholamandalam MS</option>
-                <option value="Future Generali">Future Generali</option>
-                <option value="Royal Sundaram">Royal Sundaram</option>
-                <option value="SBI General">SBI General</option>
-                <option value="Shriram General">Shriram General</option>
-                <option value="Liberty General">Liberty General</option>
-                <option value="Universal Sompo">Universal Sompo</option>
-              </select>
+              <div className='w-full'>
+                <CustomDropdown
+                  label="Company"
+                  value={companyFilter}
+                  onChange={setCompanyFilter}
+                  options={[
+                    { value: 'All', label: 'All Companies' },
+                    { value: "HDFC ERGO", label: "HDFC ERGO" },
+                    { value: "ICICI Lombard", label: "ICICI Lombard" },
+                    { value: "Bajaj Allianz", label: "Bajaj Allianz" },
+                    { value: "Tata AIG", label: "Tata AIG" },
+                    { value: "Reliance General", label: "Reliance General" },
+                    { value: "IFFCO Tokio", label: "IFFCO Tokio" },
+                    { value: "National Insurance", label: "National Insurance" },
+                    { value: "New India Assurance", label: "New India Assurance" },
+                    { value: "Oriental Insurance", label: "Oriental Insurance" },
+                    { value: "United India Insurance", label: "United India Insurance" },
+                    { value: "Magma HDI", label: "Magma HDI" },
+                    { value: "Go Digit", label: "Go Digit" },
+                    { value: "Acko", label: "Acko" },
+                    { value: "Cholamandalam MS", label: "Cholamandalam MS" },
+                    { value: "Future Generali", label: "Future Generali" },
+                    { value: "Royal Sundaram", label: "Royal Sundaram" },
+                    { value: "SBI General", label: "SBI General" },
+                    { value: "Shriram General", label: "Shriram General" },
+                    { value: "Liberty General", label: "Liberty General" },
+                    { value: "Universal Sompo", label: "Universal Sompo" },
+                  ]}
+                  icon={
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  }
+                />
+              </div>
             )}
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className='flex-1 min-w-[120px] rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-[11px] font-black text-slate-700 focus:border-indigo-500 focus:outline-none appearance-none'
-            >
-              <option value='All'>Status: All</option>
-              <option value='Active'>Active</option>
-              <option value='Expiring Soon'>Expiring</option>
-              <option value='Expired'>Expired</option>
-            </select>
           </div>
         </div>
 

@@ -19,7 +19,6 @@ import Gps from './pages/Gps/Gps'
 import RTODocuments from './pages/RTODocuments'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
-import DocumentDetail from './pages/DocumentDetail'
 
 function AppContent() {
   const location = useLocation()
@@ -45,7 +44,6 @@ function AppContent() {
           <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
           <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
           <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
-          <Route path='/document/:type/:id' element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
         </Routes>
       </div>
       {showBottomNav && <BottomNavigation />}

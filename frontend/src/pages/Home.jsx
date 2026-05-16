@@ -165,8 +165,7 @@ return (
                   .map((doc) => (
                   <div
                     key={doc.id}
-                    onClick={() => navigate(`/document/${doc.id}`)}
-                    className='group relative cursor-pointer overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
+                    className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-slate-400 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5'
                   >
                     <div className='flex flex-col gap-2.5'>
                       <div className='flex items-center justify-between'>
@@ -229,8 +228,7 @@ return (
                       .map((doc) => (
                       <tr 
                         key={doc.id}
-                        onClick={() => navigate(`/document/${doc.id}`)}
-                        className='group hover:bg-slate-50 transition-colors cursor-pointer'
+                        className='group hover:bg-slate-50 transition-colors'
                       >
                         <td className='px-6 py-4 whitespace-nowrap'>
                           <span className='text-sm font-black text-slate-900 tracking-wider'>{doc.vehicleNumber}</span>

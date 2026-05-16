@@ -79,6 +79,17 @@ const TYPE_CONFIG = {
       { label: 'Remarks', key: 'remarks' },
     ],
   },
+  Permit: {
+    apiPath: 'permit',
+    documentField: 'permitDocument',
+    icon: '📜',
+    color: 'teal',
+    fromField: 'validFrom',
+    toField: 'validTo',
+    extraFields: [
+      { label: 'Name', key: 'name' }
+    ],
+  },
 }
 
 const STATUS_STYLES = {
@@ -88,7 +99,7 @@ const STATUS_STYLES = {
   unknown: { badge: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400', label: 'Unknown' },
 }
 
-const isPdf = (url) => url && url.toLowerCase().includes('.pdf')
+const isPdf = (url) => url && (url.toLowerCase().includes('.pdf') || url.startsWith('data:application/pdf'))
 
 // --- Component ---
 const RTODocumentDetail = () => {
@@ -99,7 +110,6 @@ const RTODocumentDetail = () => {
   const [error, setError] = useState('')
   const [pdfError, setPdfError] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
-  const [previewTab, setPreviewTab] = useState('image') // 'image' | 'pdf'
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -292,7 +302,7 @@ const RTODocumentDetail = () => {
             )}
 
             {/* Document Preview Section */}
-            {fullDocUrl ? (
+            {fullDocUrl && (
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
@@ -300,20 +310,6 @@ const RTODocumentDetail = () => {
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       Attached Document
                     </h3>
-                    <div className="flex bg-slate-200/60 p-0.5 rounded-lg border border-slate-200">
-                      <button 
-                        onClick={() => setPreviewTab('image')} 
-                        className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${previewTab === 'image' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        Image
-                      </button>
-                      <button 
-                        onClick={() => setPreviewTab('pdf')} 
-                        className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${previewTab === 'pdf' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                      >
-                        PDF
-                      </button>
-                    </div>
                   </div>
                   {/* Filename Display */}
                   {displayFilename && (
@@ -324,7 +320,7 @@ const RTODocumentDetail = () => {
                   )}
                 </div>
 
-                {previewTab === 'image' ? (
+                {!isPdf(fullDocUrl) ? (
                   <div className="relative rounded-b-xl overflow-hidden bg-slate-50 min-h-[200px] flex items-center justify-center p-2">
                     {!imgLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-50">
@@ -349,11 +345,6 @@ const RTODocumentDetail = () => {
                     />
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 border border-dashed border-slate-300 py-10 gap-3 shadow-sm">
-                <span className="text-4xl grayscale opacity-40">📄</span>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">No document uploaded</p>
               </div>
             )}
           </div>

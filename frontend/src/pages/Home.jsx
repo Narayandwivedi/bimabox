@@ -9,6 +9,7 @@ import AddTaxModal from './Tax/components/AddTaxModal'
 import AddPucModal from './Puc/components/AddPucModal'
 import AddGpsModal from './Gps/components/AddGpsModal'
 import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+import AddPermitModal from './Permit/components/AddPermitModal'
 import ImportModal from '../components/ImportModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -25,6 +26,7 @@ const Home = () => {
   const [showAddPucModal, setShowAddPucModal] = useState(false)
   const [showAddGpsModal, setShowAddGpsModal] = useState(false)
   const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
+  const [showAddPermitModal, setShowAddPermitModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [expiryFilter, setExpiryFilter] = useState(15)
@@ -345,6 +347,18 @@ return (
         />
       )}
 
+      {showAddPermitModal && (
+        <AddPermitModal
+          isOpen={showAddPermitModal}
+          onClose={() => {
+            setShowAddPermitModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => setShowAddPermitModal(false)}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
       {showImportModal && (
         <ImportModal
           isOpen={showImportModal}
@@ -357,6 +371,7 @@ return (
             else if (type === 'fitness') setShowAddFitnessModal(true)
             else if (type === 'tax') setShowAddTaxModal(true)
             else if (type === 'gps') setShowAddGpsModal(true)
+            else if (type === 'permit') setShowAddPermitModal(true)
           }}
         />
       )}

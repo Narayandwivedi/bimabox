@@ -8,6 +8,7 @@ import EditFitnessModal from './Fitness/components/EditFitnessModal'
 import EditPucModal from './Puc/components/EditPucModal'
 import EditGpsModal from './Gps/components/EditGpsModal'
 import EditTaxModal from './Tax/components/EditTaxModal'
+import EditPermitModal from './Permit/components/EditPermitModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
@@ -33,6 +34,7 @@ const RTODocuments = () => {
         { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo' },
+        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo' },
       ];
 
       const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 1000 } }));
@@ -357,6 +359,14 @@ const RTODocuments = () => {
           onClose={() => setEditingDoc(null)}
           onSubmit={handleEditSubmit}
           gps={editingDoc.rawRecord}
+        />
+      )}
+      {editingDoc?.type === 'Permit' && (
+        <EditPermitModal
+          isOpen={!!editingDoc}
+          onClose={() => setEditingDoc(null)}
+          onSubmit={handleEditSubmit}
+          permit={editingDoc.rawRecord}
         />
       )}
     </div>

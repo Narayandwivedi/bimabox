@@ -13,9 +13,9 @@ router.get('/pending', controller.getPendingPayment)
 router.get('/', controller.getAll)
 router.get('/id/:id', controller.getById)
 router.post('/', controller.create)
-router.put('/id/:id', controller.update)
-router.delete('/id/:id', controller.remove)
-router.patch('/id/:id/mark-as-paid', controller.markAsPaid)
-router.patch('/id/:id/whatsapp-increment', controller.incrementWhatsapp)
+router.put('/:id', controller.update)
+router.delete('/:id', controller.remove)
+router.patch('/:id/mark-as-paid', controller.markAsPaid)
+router.patch('/:id/whatsapp-increment', controller.incrementWhatsapp)
 
 module.exports = router

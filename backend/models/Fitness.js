@@ -61,11 +61,7 @@ const fitnessSchema = new mongoose.Schema({
     }
   }],
 
-  // Renewal status - set to true when this fitness has been renewed
-  isRenewed: {
-    type: Boolean,
-    default: false
-  },
+
 
   // WhatsApp message tracking
   whatsappMessageCount: {

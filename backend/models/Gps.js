@@ -47,11 +47,7 @@ const gpsSchema = new mongoose.Schema({
     default: 0
   },
 
-  // Renewal status - set to true when this GPS has been renewed
-  isRenewed: {
-    type: Boolean,
-    default: false
-  },
+
 
   // WhatsApp message tracking
   whatsappMessageCount: {

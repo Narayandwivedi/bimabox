@@ -464,7 +464,7 @@ if (e.key === 'Escape') onClose()
                     <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onBlur={handleDateBlur} placeholder='DD-MM-YYYY' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' required />
                   </div>
                   <div>
-                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated - 6 Months)</span></label>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-[10px] text-blue-500'>(Auto-calculated)</span></label>
                     <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onBlur={handleDateBlur} placeholder='DD-MM-YYYY' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
                   </div>
                 </div>

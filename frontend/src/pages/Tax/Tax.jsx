@@ -109,7 +109,6 @@ const Tax = () => {
           taxFrom: record.taxFrom,
           taxTo: record.taxTo,
           status: record.status,
-          isRenewed: record.isRenewed || false, // IMPORTANT: Include isRenewed field
           whatsappMessageCount: record.whatsappMessageCount || 0, // WhatsApp message count
           lastWhatsappSentAt: record.lastWhatsappSentAt, // Last WhatsApp sent time
         }));

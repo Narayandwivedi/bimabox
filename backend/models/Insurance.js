@@ -47,11 +47,7 @@ const InsuranceSchema = new mongoose.Schema({
     type: String
   },
 
-  // Renewal status - set to true when this insurance has been renewed
-  isRenewed: {
-    type: Boolean,
-    default: false
-  },
+
 
   // Insurance Document
   insuranceDocument: {

@@ -56,11 +56,7 @@ const taxSchema = new mongoose.Schema({
     required: true
   },
 
-  // Renewal status - set to true when this tax has been renewed
-  isRenewed: {
-    type: Boolean,
-    default: false
-  },
+
 
   // WhatsApp message tracking
   whatsappMessageCount: {

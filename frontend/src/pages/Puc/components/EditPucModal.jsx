@@ -481,9 +481,7 @@ const EditPucModal = ({ isOpen, onClose, onSubmit, puc }) => {
                   {!vehicleError && !fetchingVehicle && formData.vehicleNumber && vehicleValidation.isValid && !showVehicleDropdown && (
                     <p className='text-xs text-green-600 mt-1'>✓ Vehicle found - Details verified</p>
                   )}
-                  <p className='text-xs mt-1 text-gray-500'>
-                    Search by: Full number (CG04AA1234), Series (AA4793), or Last 4 digits (4793)
-                  </p>
+
                 </div>
 
                 {/* Owner Name */}
@@ -547,7 +545,7 @@ const EditPucModal = ({ isOpen, onClose, onSubmit, puc }) => {
                 {/* Valid To (Auto-calculated) */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Valid To <span className='text-xs text-blue-500'>(Auto-calculated - 6 Months)</span>
+                    Valid To <span className='text-[10px] text-blue-500'>(Auto-calculated)</span>
                   </label>
                   <input
                     type='text'

@@ -47,11 +47,7 @@ const pucSchema = new mongoose.Schema({
     default: 0
   },
 
-  // Renewal status - set to true when this PUC has been renewed
-  isRenewed: {
-    type: Boolean,
-    default: false
-  },
+
 
   // WhatsApp message tracking
   whatsappMessageCount: {

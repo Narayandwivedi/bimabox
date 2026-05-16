@@ -104,7 +104,6 @@ const Fitness = () => {
           balance: record.balance || 0,
           feeBreakup: record.feeBreakup || [],
           status: record.status,
-          isRenewed: record.isRenewed || false, // Include isRenewed field
           whatsappMessageCount: record.whatsappMessageCount || 0, // WhatsApp message count
           lastWhatsappSentAt: record.lastWhatsappSentAt, // Last WhatsApp sent time
         }));

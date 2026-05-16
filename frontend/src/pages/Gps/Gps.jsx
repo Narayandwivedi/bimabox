@@ -845,7 +845,7 @@ const Gps = () => {
                             No GPS records found
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            Click &quot;Add New GPS Certificate&quot; to add
+                            Click &quot;Add New GPS&quot; to add
                             your first record
                           </p>
                         </div>

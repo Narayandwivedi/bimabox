@@ -377,9 +377,7 @@ const RenewGpsModal = ({ isOpen, onClose, onSubmit, oldGps }) => {
         <div className='bg-gradient-to-r from-blue-600 to-cyan-600 p-2 md:p-3 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold'>
-                Renew GPS Certificate
-              </h2>
+              <h2 className='text-lg md:text-2xl font-bold'>Renew GPS</h2>
               <p className='text-blue-100 text-xs md:text-sm mt-1'>
                 Renew GPS certificate for same vehicle
               </p>

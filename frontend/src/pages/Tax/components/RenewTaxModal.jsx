@@ -281,9 +281,7 @@ const RenewTaxModal = ({ isOpen, onClose, onSubmit, oldTax }) => {
         <div className='bg-gradient-to-r from-purple-600 to-pink-600 p-2 md:p-3 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold'>
-                Renew Tax Record
-              </h2>
+              <h2 className='text-lg md:text-2xl font-bold'>Renew Tax</h2>
               <p className='text-purple-100 text-xs md:text-sm mt-1'>
                 Renew tax for {oldTax?.vehicleNumber}
               </p>

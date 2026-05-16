@@ -358,8 +358,8 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
         <div className='bg-gradient-to-r from-green-600 to-emerald-600 p-3 md:p-4 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold'>Edit Tax Record</h2>
-              <p className='text-green-100 text-xs md:text-sm mt-1'>Update vehicle tax payment record</p>
+              <h2 className='text-lg md:text-2xl font-bold'>Edit Tax</h2>
+              <p className='text-green-100 text-xs md:text-sm mt-1'>Update vehicle tax record</p>
             </div>
             <button
               onClick={onClose}

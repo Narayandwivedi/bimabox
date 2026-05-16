@@ -601,10 +601,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
           <div className='flex justify-between items-center'>
             <div>
               <h2 className='text-lg md:text-2xl font-bold'>
-                Add New Tax Record
+                Add New Tax
               </h2>
               <p className='text-blue-100 text-xs md:text-sm mt-1'>
-                Quarterly vehicle tax payment record (3 months)
+                Add new tax record
               </p>
             </div>
             <div className='flex items-center gap-3'>

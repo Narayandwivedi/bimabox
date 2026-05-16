@@ -363,8 +363,8 @@ if (e.key === 'Escape') onClose()
           <div className='bg-gradient-to-r from-blue-600 to-cyan-600 p-2 md:p-3 text-white flex-shrink-0'>
             <div className='flex justify-between items-center'>
               <div>
-                <h2 className='text-lg md:text-2xl font-bold'>Add New GPS Tracking</h2>
-                <p className='text-blue-100 text-xs md:text-sm mt-1'>Add GPS tracking system record</p>
+                <h2 className='text-lg md:text-2xl font-bold'>Add New GPS</h2>
+                <p className='text-blue-100 text-xs md:text-sm mt-1'>Add new GPS record</p>
               </div>
               <div className='flex items-center gap-3'>
                 <div className='relative overflow-hidden'>

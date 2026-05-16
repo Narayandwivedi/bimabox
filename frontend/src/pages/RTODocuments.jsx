@@ -16,6 +16,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
 const CustomDropdown = ({ value, onChange, options, label, icon }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -27,6 +28,15 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Reset search when opening/closing
+  useEffect(() => {
+    if (!isOpen) setSearchTerm('');
+  }, [isOpen]);
+
+  const filteredOptions = options.filter(opt => 
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const selectedOption = options.find(opt => opt.value === value) || options[0];
 
@@ -54,34 +64,57 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-[70] mt-2 max-h-80 overflow-y-auto rounded-xl border border-slate-100 bg-white py-1.5 shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="px-3 py-1.5 mb-1 border-b border-slate-50">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select {label}</span>
-          </div>
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              className={`flex w-full items-center px-4 py-4.5 text-[11px] font-bold transition-all duration-150 ${
-                value === option.value
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-slate-600 hover:bg-indigo-50/50 hover:text-indigo-600'
-              }`}
-            >
-              <div className="flex items-center justify-between w-full">
-                <span>{option.label}</span>
-                {value === option.value && (
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+        <div className="absolute left-0 right-0 z-[70] mt-2 max-h-80 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-2xl ring-1 ring-black/5 animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col">
+          <div className="p-2 border-b border-slate-50">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                <svg className="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-            </button>
-          ))}
+              <input
+                type="text"
+                autoFocus
+                placeholder={`Search ${label.toLowerCase()}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-50 border-none rounded-lg py-1.5 pl-8 pr-2 text-[10px] font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+              />
+            </div>
+          </div>
+          
+          <div className="overflow-y-auto flex-1">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`flex w-full items-center px-4 py-4.5 text-[11px] font-bold transition-all duration-150 ${
+                    value === option.value
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'text-slate-600 hover:bg-indigo-50/50 hover:text-indigo-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span>{option.label}</span>
+                    {value === option.value && (
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center">
+                <p className="text-[10px] font-bold text-slate-400">No {label.toLowerCase()} found</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

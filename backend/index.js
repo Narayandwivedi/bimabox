@@ -25,6 +25,10 @@ const ALLOWED_ORIGINS = new Set([
   'https://transporteradmin.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://bimabox.in',
+  'https://api.bimabox.in',
+  'http://bimabox.in',
+  'http://api.bimabox.in',
 ])
 
 app.use(express.json({ limit: '25mb' }))

@@ -267,9 +267,9 @@ const RTODocuments = () => {
         </div>
 
         {/* Search & Filters Bar */}
-        <div className='mb-6 flex flex-col gap-3'>
+        <div className='mb-6 flex flex-col md:flex-row md:items-center gap-3 w-full'>
           {/* Search Row */}
-          <div className='relative w-full'>
+          <div className='relative w-full md:w-80 md:flex-shrink-0'>
             <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
               <svg className='w-4 h-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
@@ -280,14 +280,14 @@ const RTODocuments = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder='Search by vehicle or type...'
-              className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] placeholder:text-slate-400 placeholder:font-semibold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase'
+              className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] md:placeholder:text-xs placeholder:text-slate-400 placeholder:font-semibold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase'
             />
           </div>
 
           {/* Filters Row */}
-          <div className='flex flex-col gap-2'>
+          <div className='flex flex-col md:flex-row gap-2 flex-1 w-full'>
             {/* Type & Status Row */}
-            <div className='flex gap-2'>
+            <div className='flex gap-2 flex-1 md:flex-initial md:w-96'>
               <CustomDropdown
                 label="Type"
                 value={typeFilter}
@@ -331,7 +331,7 @@ const RTODocuments = () => {
 
             {/* Company Row (Full Width) */}
             {typeFilter === 'Insurance' && (
-              <div className='w-full'>
+              <div className='w-full md:w-56 md:flex-shrink-0'>
                 <CustomDropdown
                   label="Company"
                   value={companyFilter}

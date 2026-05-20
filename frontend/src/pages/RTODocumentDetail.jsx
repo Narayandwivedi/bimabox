@@ -22,7 +22,6 @@ const TYPE_CONFIG = {
     fromField: 'taxFrom',
     toField: 'taxTo',
     extraFields: [
-      { label: 'Receipt No.', key: 'receiptNo' },
       { label: 'Owner Name', key: 'ownerName' },
       { label: 'Mobile Number', key: 'mobileNumber' },
       { label: 'Tax Amount', key: 'taxAmount', prefix: '₹' },

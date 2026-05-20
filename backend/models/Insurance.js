@@ -1,5 +1,34 @@
 const mongoose = require('mongoose')
 
+const INSURANCE_COMPANIES = [
+  'HDFC ERGO',
+  'ICICI Lombard',
+  'Bajaj Allianz',
+  'Tata AIG',
+  'Reliance General',
+  'IFFCO Tokio',
+  'National Insurance',
+  'New India Assurance',
+  'Oriental Insurance',
+  'United India Insurance',
+  'Magma HDI',
+  'Go Digit',
+  'Acko',
+  'Cholamandalam MS',
+  'Future Generali',
+  'Royal Sundaram',
+  'SBI General',
+  'Shriram General',
+  'Liberty General',
+  'Universal Sompo',
+  'Kotak General',
+  'Zuno General',
+  'Raheja QBE',
+  'Navi General',
+  'Star Health',
+  '' // Allow empty string
+]
+
 const InsuranceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -26,7 +55,8 @@ const InsuranceSchema = new mongoose.Schema({
 
   insuranceCompany: {
     type: String,
-    trim: true
+    trim: true,
+    enum: INSURANCE_COMPANIES
   },
 
   // Vehicle Information

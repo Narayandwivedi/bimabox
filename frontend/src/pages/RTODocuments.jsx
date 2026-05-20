@@ -14,6 +14,35 @@ import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
 
+const INSURANCE_COMPANIES = [
+  'HDFC ERGO',
+  'ICICI Lombard',
+  'Bajaj Allianz',
+  'Tata AIG',
+  'Reliance General',
+  'IFFCO Tokio',
+  'National Insurance',
+  'New India Assurance',
+  'Oriental Insurance',
+  'United India Insurance',
+  'Magma HDI',
+  'Go Digit',
+  'Acko',
+  'Cholamandalam MS',
+  'Future Generali',
+  'Royal Sundaram',
+  'SBI General',
+  'Shriram General',
+  'Liberty General',
+  'Universal Sompo',
+  'Kotak General',
+  'Zuno General',
+  'Raheja QBE',
+  'Navi General',
+  'Star Health'
+]
+
+
 const CustomDropdown = ({ value, onChange, options, label, icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,26 +367,7 @@ const RTODocuments = () => {
                   onChange={setCompanyFilter}
                   options={[
                     { value: 'All', label: 'All Companies' },
-                    { value: "HDFC ERGO", label: "HDFC ERGO" },
-                    { value: "ICICI Lombard", label: "ICICI Lombard" },
-                    { value: "Bajaj Allianz", label: "Bajaj Allianz" },
-                    { value: "Tata AIG", label: "Tata AIG" },
-                    { value: "Reliance General", label: "Reliance General" },
-                    { value: "IFFCO Tokio", label: "IFFCO Tokio" },
-                    { value: "National Insurance", label: "National Insurance" },
-                    { value: "New India Assurance", label: "New India Assurance" },
-                    { value: "Oriental Insurance", label: "Oriental Insurance" },
-                    { value: "United India Insurance", label: "United India Insurance" },
-                    { value: "Magma HDI", label: "Magma HDI" },
-                    { value: "Go Digit", label: "Go Digit" },
-                    { value: "Acko", label: "Acko" },
-                    { value: "Cholamandalam MS", label: "Cholamandalam MS" },
-                    { value: "Future Generali", label: "Future Generali" },
-                    { value: "Royal Sundaram", label: "Royal Sundaram" },
-                    { value: "SBI General", label: "SBI General" },
-                    { value: "Shriram General", label: "Shriram General" },
-                    { value: "Liberty General", label: "Liberty General" },
-                    { value: "Universal Sompo", label: "Universal Sompo" },
+                    ...INSURANCE_COMPANIES.map(company => ({ value: company, label: company }))
                   ]}
                   icon={
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,8 +401,15 @@ const RTODocuments = () => {
                         <span className='text-xl'>{getDocTypeIcon(doc.type)}</span>
                       </div>
                       <div>
-                        <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
-                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase'>{doc.vehicleNumber}</p>
+                        <div className='flex items-center gap-1.5'>
+                          <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
+                          {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                            <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
+                              {doc.rawRecord.insuranceCompany}
+                            </span>
+                          )}
+                        </div>
+                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase mt-0.5'>{doc.vehicleNumber}</p>
                       </div>
                     </div>
                     <div className='flex items-center justify-between'>

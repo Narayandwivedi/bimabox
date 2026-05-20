@@ -31,7 +31,7 @@ const sectionConfig = [
     dateToLabel: 'Tax To',
     accent: 'amber',
     emptyText: 'No tax records found for this vehicle.',
-    extraFields: ['receiptNo', 'ownerName', 'taxAmount', 'totalAmount', 'paidAmount', 'balanceAmount'],
+    extraFields: ['ownerName', 'taxAmount', 'totalAmount', 'paidAmount', 'balanceAmount'],
   },
   {
     key: 'puc',
@@ -258,7 +258,7 @@ const RecordSection = ({ title, records, dateFromKey, dateToKey, dateFromLabel, 
                   <div>
                     <p className='text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500'>Record {index + 1}</p>
                     <p className='mt-1 text-sm font-semibold text-slate-700'>
-                      {record.vehicleNumber || record.policyNumber || record.receiptNo || title}
+                      {record.vehicleNumber || record.policyNumber || title}
                     </p>
                   </div>
                   <span className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-bold ${status.className}`}>

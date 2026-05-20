@@ -20,7 +20,6 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
   const dropdownItemRefs = useRef([])
 
   const [formData, setFormData] = useState({
-    receiptNo: '',
     vehicleNumber: '',
     ownerName: '',
     mobileNumber: '',
@@ -50,7 +49,6 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
       const vehicleNum = tax.vehicleNumber || ''
 
       setFormData({
-        receiptNo: tax.receiptNo || '',
         vehicleNumber: vehicleNum,
         ownerName: tax.ownerName || '',
         mobileNumber: tax.mobileNumber || '',
@@ -292,16 +290,6 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
       return
     }
 
-    // Remove dashes from receipt number to store as uppercase
-    if (name === 'receiptNo') {
-      const cleanedValue = value.replace(/-/g, '').toUpperCase()
-      setFormData(prev => ({
-        ...prev,
-        [name]: cleanedValue
-      }))
-      return
-    }
-
     // Handle date fields with smart validation and formatting
     if (name === 'taxFrom' || name === 'taxTo') {
       const formatted = handleSmartDateInput(value, formData[name] || '')
@@ -379,10 +367,10 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
             <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
-                Vehicle & Receipt Details
+                Vehicle Details
               </h3>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
                 {/* Vehicle Number */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -472,21 +460,6 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
                       Search by: Full number (CG04AA1234), Series (AA4793), or Last 4 digits (4793)
                     </p>
                   )}
-                </div>
-
-                {/* Receipt Number */}
-                <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Receipt Number
-                  </label>
-                  <input
-                    type='text'
-                    name='receiptNo'
-                    value={formData.receiptNo}
-                    onChange={handleChange}
-                    placeholder='RCP001'
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono uppercase'
-                  />
                 </div>
 
                 {/* Owner Name */}

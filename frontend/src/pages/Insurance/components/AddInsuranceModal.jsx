@@ -7,11 +7,50 @@ import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
+const INSURANCE_COMPANIES = [
+  'HDFC ERGO',
+  'ICICI Lombard',
+  'Bajaj Allianz',
+  'Tata AIG',
+  'Reliance General',
+  'IFFCO Tokio',
+  'National Insurance',
+  'New India Assurance',
+  'Oriental Insurance',
+  'United India Insurance',
+  'Magma HDI',
+  'Go Digit',
+  'Acko',
+  'Cholamandalam MS',
+  'Future Generali',
+  'Royal Sundaram',
+  'SBI General',
+  'Shriram General',
+  'Liberty General',
+  'Universal Sompo',
+  'Kotak General',
+  'Zuno General',
+  'Raheja QBE',
+  'Navi General',
+  'Star Health'
+]
+
+
 const resolveStoredDocumentPreview = (documentPath) => {
   if (!documentPath) return null
   if (documentPath.startsWith('data:')) return documentPath
   if (documentPath.startsWith('http://') || documentPath.startsWith('https://')) return documentPath
   return `${API_URL}${documentPath}`
+}
+
+const normalizeInsuranceCompany = (companyName) => {
+  if (!companyName) return ''
+  const cleaned = companyName.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
+  const match = INSURANCE_COMPANIES.find(c => {
+    const cCleaned = c.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
+    return cleaned.includes(cCleaned) || cCleaned.includes(cleaned)
+  })
+  return match || ''
 }
 
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
@@ -281,6 +320,10 @@ if (e.key === 'Escape') onClose()
                   updated[key] = value.toUpperCase()
                   return
                 }
+                if (key === 'insuranceCompany') {
+                  updated[key] = normalizeInsuranceCompany(value)
+                  return
+                }
                 updated[key] = value
               })
 
@@ -476,26 +519,9 @@ if (e.key === 'Escape') onClose()
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Insurance Company</label>
                   <select name='insuranceCompany' value={formData.insuranceCompany} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                     <option value="">Select Company</option>
-                    <option value="HDFC ERGO">HDFC ERGO</option>
-                    <option value="ICICI Lombard">ICICI Lombard</option>
-                    <option value="Bajaj Allianz">Bajaj Allianz</option>
-                    <option value="Tata AIG">Tata AIG</option>
-                    <option value="Reliance General">Reliance General</option>
-                    <option value="IFFCO Tokio">IFFCO Tokio</option>
-                    <option value="National Insurance">National Insurance</option>
-                    <option value="New India Assurance">New India Assurance</option>
-                    <option value="Oriental Insurance">Oriental Insurance</option>
-                    <option value="United India Insurance">United India Insurance</option>
-                    <option value="Magma HDI">Magma HDI</option>
-                    <option value="Go Digit">Go Digit</option>
-                    <option value="Acko">Acko</option>
-                    <option value="Cholamandalam MS">Cholamandalam MS</option>
-                    <option value="Future Generali">Future Generali</option>
-                    <option value="Royal Sundaram">Royal Sundaram</option>
-                    <option value="SBI General">SBI General</option>
-                    <option value="Shriram General">Shriram General</option>
-                    <option value="Liberty General">Liberty General</option>
-                    <option value="Universal Sompo">Universal Sompo</option>
+                    {INSURANCE_COMPANIES.map(company => (
+                      <option key={company} value={company}>{company}</option>
+                    ))}
                   </select>
                 </div>
               </div>

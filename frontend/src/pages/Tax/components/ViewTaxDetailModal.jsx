@@ -40,7 +40,6 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
           <div className='flex justify-between items-start'>
             <div className='flex-1'>
               <h2 className='text-xl md:text-3xl font-bold mb-2'>Tax Record Details</h2>
-              <p className='text-indigo-100 text-sm md:text-base'>Receipt No: {tax.receiptNo}</p>
             </div>
             <button
               onClick={onClose}

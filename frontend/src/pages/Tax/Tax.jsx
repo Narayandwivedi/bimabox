@@ -97,8 +97,7 @@ const Tax = () => {
       if (response.data.success) {
         const transformedRecords = response.data.data.map((record) => ({
           id: record._id,
-          _id: record._id, // Keep _id for operations
-          receiptNo: record.receiptNo,
+          _id: record._id,
           vehicleNumber: record.vehicleNumber,
           ownerName: record.ownerName,
           mobileNumber: record.mobileNumber,
@@ -172,7 +171,6 @@ const Tax = () => {
     setLoading(true);
     try {
       const response = await axios.put(`${API_URL}/api/tax/${selectedTax.id}`, {
-        receiptNo: formData.receiptNo,
         vehicleNumber: formData.vehicleNumber,
         ownerName: formData.ownerName,
         mobileNumber: formData.mobileNumber,
@@ -264,8 +262,7 @@ const Tax = () => {
 
     if ((record.balanceAmount || 0) > 0) {
       message += `Your payment of ₹${(record.balanceAmount || 0).toLocaleString('en-IN')} is pending for Tax.\n`;
-      message += `Vehicle Number: ${record.vehicleNumber}\n`;
-      message += `Receipt No: ${record.receiptNo}\n\n`;
+      message += `Vehicle Number: ${record.vehicleNumber}\n\n`;
     }
 
     if (record.status === 'expiring_soon' || record.status === 'expired') {
@@ -321,7 +318,6 @@ const Tax = () => {
   const handleMarkAsPaid = async (record) => {
     const confirmPaid = window.confirm(
       `Are you sure you want to mark this payment as PAID?\n\n` +
-      `Receipt No: ${record.receiptNo}\n` +
       `Vehicle Number: ${record.vehicleNumber}\n` +
       `Total Amount: ₹${(record.totalAmount || 0).toLocaleString('en-IN')}\n` +
       `Current Balance: ₹${(record.balanceAmount || 0).toLocaleString('en-IN')}\n\n` +
@@ -573,17 +569,11 @@ const Tax = () => {
                   customFields: [
                     {
                       render: (record, { getStatusColor, getStatusText }) => (
-                        <div className='flex items-center justify-between gap-2 pb-2.5 border-b border-gray-100'>
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStatusColor(record.status)}`}>
-                            {getStatusText(record.status)}
-                          </span>
                           <div className='flex items-center gap-1.5'>
-                            <svg className='w-3.5 h-3.5 text-indigo-600 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-                            </svg>
-                            <span className='text-xs font-medium text-gray-700'>{record.receiptNo}</span>
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${getStatusColor(record.status)}`}>
+                                {getStatusText(record.status)}
+                              </span>
                           </div>
-                        </div>
                       ),
                     },
                   ],
@@ -792,12 +782,6 @@ const Tax = () => {
                                   </div>
                                 );
                               })()}
-                            </div>
-                            <div className="flex items-center mt-1.5 text-[10px] 2xl:text-xs text-indigo-600 font-medium">
-                              <svg className="w-3 h-3 2xl:w-3.5 2xl:h-3.5 mr-1 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              {record.receiptNo}
                             </div>
                           </div>
                         </td>

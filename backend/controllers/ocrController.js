@@ -127,6 +127,43 @@ ${jsonTemplate}`
       extractedData.registrationNumber = extractedData.registrationNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     }
 
+    // Normalize insurance company if extracted
+    if (extractedData.insuranceCompany) {
+      const companies = [
+        'HDFC ERGO',
+        'ICICI Lombard',
+        'Bajaj Allianz',
+        'Tata AIG',
+        'Reliance General',
+        'IFFCO Tokio',
+        'National Insurance',
+        'New India Assurance',
+        'Oriental Insurance',
+        'United India Insurance',
+        'Magma HDI',
+        'Go Digit',
+        'Acko',
+        'Cholamandalam MS',
+        'Future Generali',
+        'Royal Sundaram',
+        'SBI General',
+        'Shriram General',
+        'Liberty General',
+        'Universal Sompo',
+        'Kotak General',
+        'Zuno General',
+        'Raheja QBE',
+        'Navi General',
+        'Star Health'
+      ];
+      const cleaned = extractedData.insuranceCompany.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      const match = companies.find(c => {
+        const cCleaned = c.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+        return cleaned.includes(cCleaned) || cCleaned.includes(cleaned);
+      });
+      extractedData.insuranceCompany = match || '';
+    }
+
     return res.json({
       success: true,
       data: extractedData,
@@ -214,13 +251,14 @@ const gpsOcr = async (req, res) => {
 }
 
 const insuranceOcr = async (req, res) => {
-  const prompt = 'Extract the details from this vehicle insurance policy/document. Extract vehicle number, policy number, policy holder name, valid from date, and valid to date only. Map the insured or proposer name to policyHolderName. Do not invent values.'
+  const prompt = 'Extract the details from this vehicle insurance policy/document. Extract vehicle number, policy number, policy holder name, valid from date, valid to date, and insurance company name. Map the insured or proposer name to policyHolderName. For insuranceCompany, try to match or normalize the company name to one of these standard companies: "HDFC ERGO", "ICICI Lombard", "Bajaj Allianz", "Tata AIG", "Reliance General", "IFFCO Tokio", "National Insurance", "New India Assurance", "Oriental Insurance", "United India Insurance", "Magma HDI", "Go Digit", "Acko", "Cholamandalam MS", "Future Generali", "Royal Sundaram", "SBI General", "Shriram General", "Liberty General", "Universal Sompo", "Kotak General", "Zuno General", "Raheja QBE", "Navi General", "Star Health". If there is no clear match, use empty string "". Do not invent values.'
   const template = `{
   "vehicleNumber": "",
   "policyNumber": "",
   "policyHolderName": "",
   "validFrom": "",
-  "validTo": ""
+  "validTo": "",
+  "insuranceCompany": ""
 }`
   return processOcrRequest(req, res, prompt, template)
 }

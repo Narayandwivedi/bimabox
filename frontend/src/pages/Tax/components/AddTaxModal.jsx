@@ -7,7 +7,7 @@ import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
-const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', prefilledMobileNumber = '' }) => {
+const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', prefilledMobileNumber = '', initialExtractionFile = null }) => {
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
   const [dateError, setDateError] = useState({ taxFrom: '', taxTo: '' })
@@ -16,6 +16,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
   const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(0)
   const dropdownItemRefs = useRef([])
+  const processedInitialFile = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scanningFile, setScanningFile] = useState(null)
   const [isExtractingTax, setIsExtractingTax] = useState(false)
@@ -23,7 +24,6 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   const [uploadedTaxFile, setUploadedTaxFile] = useState(null)
 
   const [formData, setFormData] = useState({
-    receiptNo: '',
     vehicleNumber: prefilledVehicleNumber,
     ownerName: prefilledOwnerName,
     partyId: '',
@@ -55,7 +55,6 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        receiptNo: '',
         vehicleNumber: prefilledVehicleNumber,
         ownerName: prefilledOwnerName,
         partyId: '',
@@ -77,8 +76,27 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
         return null
       })
       setUploadedTaxFile(null)
+      processedInitialFile.current = false
     }
   }, [isOpen, prefilledVehicleNumber, prefilledOwnerName, prefilledMobileNumber])
+
+  useEffect(() => {
+    if (isOpen && initialExtractionFile && !processedInitialFile.current) {
+      processedInitialFile.current = true
+      if (initialExtractionFile.type === 'application/pdf') {
+        setUploadedTaxFile(initialExtractionFile)
+        setUploadedTaxDocument({
+          name: initialExtractionFile.name,
+          type: 'pdf',
+          previewUrl: URL.createObjectURL(initialExtractionFile)
+        })
+        processExtraction(initialExtractionFile)
+      } else if (initialExtractionFile.type.startsWith('image/')) {
+        setUploadedTaxFile(initialExtractionFile)
+        setScanningFile(initialExtractionFile)
+      }
+    }
+  }, [isOpen, initialExtractionFile])
 
   // Set prefilled values when modal opens
   useEffect(() => {
@@ -305,16 +323,6 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
       setFormData(prev => ({
         ...prev,
         [name]: upperValue
-      }))
-      return
-    }
-
-    // Remove dashes from receipt number to store as uppercase
-    if (name === 'receiptNo') {
-      const cleanedValue = value.replace(/-/g, '').toUpperCase()
-      setFormData(prev => ({
-        ...prev,
-        [name]: cleanedValue
       }))
       return
     }
@@ -549,7 +557,6 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
     }
 
     const dataToSubmit = {
-      receiptNo: formData.receiptNo,
       vehicleNumber: formData.vehicleNumber,
       ownerName: formData.ownerName,
       taxFrom: formData.taxFrom,
@@ -649,10 +656,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
             <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
-                Vehicle & Receipt Details
+                Vehicle Details
               </h3>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
                 {/* Vehicle Number */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -753,23 +760,6 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                     <p className='text-xs text-green-600 mt-1'>✓ Vehicle found - Owner name auto-filled</p>
                   )}
                  
-                </div>
-
-                {/* Receipt Number */}
-                <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Receipt Number
-                  </label>
-                  <input
-                    type='text'
-                    name='receiptNo'
-                    value={formData.receiptNo}
-                    onChange={handleChange}
-                    onKeyDown={handleInputKeyDown}
-                    placeholder='RCP001'
-                    tabIndex="2"
-                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono uppercase bg-white'
-                  />
                 </div>
 
                 {/* Owner Name */}

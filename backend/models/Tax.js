@@ -7,11 +7,7 @@ const taxSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  receiptNo: {
-    type: String,
-    trim: true,
-    uppercase: true
-  },
+
   vehicleNumber: {
     type: String,
     ref: 'VehicleRegistration',

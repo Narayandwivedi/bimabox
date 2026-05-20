@@ -18,6 +18,7 @@ const initialLoginForm = {
 
 const initialWhatsAppForm = {
   displayName: '',
+  phoneNumber: '',
 }
 
 function AppSecure() {
@@ -238,10 +239,13 @@ function AppSecure() {
   const createWhatsAppSession = async (e) => {
     e.preventDefault()
 
-    if (!whatsAppForm.displayName.trim()) {
+    const name = whatsAppForm.displayName.trim()
+    const phone = whatsAppForm.phoneNumber.trim()
+
+    if (!name && !phone) {
       setWhatsAppState((prev) => ({
         ...prev,
-        error: 'Session name is required',
+        error: 'Either mobile number or session name is required',
         result: '',
       }))
       return
@@ -261,7 +265,8 @@ function AppSecure() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          displayName: whatsAppForm.displayName.trim(),
+          displayName: name || phone,
+          phoneNumber: phone,
         }),
       })
 
@@ -894,243 +899,113 @@ function AppSecure() {
           </>
         ) : activeSection === 'whatsapp' ? (
           <>
-            <section className="panel panel-full">
-              <div className="panel-header panel-header-row">
+            <section className="panel panel-full" style={{ maxWidth: '600px', margin: '0 auto' }}>
+              <div className="panel-header panel-header-row" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '24px' }}>
                 <div>
-                  <h2>WhatsApp Setup</h2>
-                  <p className="section-text">See which number is connected, whether the session is active, and add more sessions for automatic WhatsApp sending.</p>
+                  <h2>WhatsApp Integration</h2>
+                  <p className="section-text">Connect your phone to enable automated document expiry alerts via WhatsApp.</p>
                 </div>
                 <div className="toolbar">
                   <button
                     type="button"
                     className="secondary-btn"
-                    onClick={() => {
-                      fetchWhatsAppStatus()
-                      fetchWhatsAppLogs()
-                    }}
+                    onClick={() => fetchWhatsAppStatus()}
                     disabled={whatsAppState.loading || whatsAppState.actionLoading}
                   >
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={runReminderNow}
-                    disabled={whatsAppState.actionLoading}
-                  >
-                    Send Reminders Now
+                    Refresh Status
                   </button>
                 </div>
               </div>
 
-              <div className="whatsapp-create-row">
-                <form className="whatsapp-create-form" onSubmit={createWhatsAppSession}>
-                  <label>
-                    <span>New Session Name</span>
-                    <input
-                      type="text"
-                      value={whatsAppForm.displayName}
-                      onChange={handleWhatsAppFormChange}
-                      placeholder="Example: Sales Team 1"
-                    />
-                  </label>
-                  <button type="submit" className="primary-btn small-btn" disabled={whatsAppState.actionLoading}>
-                    {whatsAppState.actionLoading ? 'Please wait...' : 'Add Session'}
-                  </button>
-                </form>
-              </div>
-
-              <div className="whatsapp-layout">
-                <div className="whatsapp-card">
-                  <div className="whatsapp-card-header">
-                    <div>
-                      <p className="eyebrow">All Sessions</p>
-                      <h3 className="subheading">Connected Accounts</h3>
+              {whatsAppState.loading ? (
+                <div className="empty-state">Loading WhatsApp status...</div>
+              ) : whatsAppState.sessions.length === 0 ? (
+                <div className="empty-state">Setting up connection... Please wait.</div>
+              ) : (() => {
+                const session = whatsAppState.sessions[0]
+                const isConnected = session.status === 'authenticated'
+                const isPending = session.status === 'qr_ready' || session.status === 'initializing'
+                
+                return (
+                  <div className="whatsapp-simple-container" style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <span className={`status-pill ${isConnected ? 'status-active' : isPending ? 'status-pending' : 'status-inactive'}`} style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 'bold' }}>
+                        {isConnected ? '● Connected' : isPending ? '● Waiting for Scan' : '● Disconnected'}
+                      </span>
+                      {session.phoneNumber && session.phoneNumber !== 'Not connected' && (
+                        <p className="section-text" style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>
+                          Connected Phone: +{session.phoneNumber}
+                        </p>
+                      )}
                     </div>
-                  </div>
 
-                  {whatsAppState.loading ? (
-                    <div className="empty-state">Loading WhatsApp status...</div>
-                  ) : whatsAppState.sessions.length === 0 ? (
-                    <div className="empty-state">No WhatsApp sessions found.</div>
-                  ) : (
-                    <div className="session-list">
-                      {whatsAppState.sessions.map((session) => (
+                    {isConnected ? (
+                      <div className="whatsapp-connected-success" style={{ margin: '40px 0' }}>
+                        <div style={{ fontSize: '48px', color: '#10b981', marginBottom: '16px' }}>✓</div>
+                        <h3>Your WhatsApp is successfully linked!</h3>
+                        <p className="section-text" style={{ maxWidth: '400px', margin: '8px auto 0' }}>
+                          BimaBox will now send automated reminders for document expiries to your customers.
+                        </p>
+                      </div>
+                    ) : session.qrCodeDataUrl ? (
+                      <div className="whatsapp-qr-container" style={{ margin: '30px 0' }}>
+                        <div style={{ display: 'inline-block', padding: '16px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', marginBottom: '16px' }}>
+                          <img src={session.qrCodeDataUrl} alt="WhatsApp QR Code" style={{ width: '250px', height: '250px', display: 'block' }} />
+                        </div>
+                        <p className="section-text" style={{ maxWidth: '400px', margin: '0 auto' }}>
+                          Open WhatsApp on your phone, go to <strong>Linked Devices</strong>, and scan the QR code above to connect.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="whatsapp-disconnected-state" style={{ margin: '40px 0' }}>
+                        <p className="section-text" style={{ marginBottom: '20px' }}>
+                          WhatsApp is currently disconnected. Click below to start the connection and generate a QR code.
+                        </p>
                         <button
                           type="button"
-                          key={session.sessionKey}
-                          className={`session-item ${whatsAppState.selectedSessionKey === session.sessionKey ? 'session-item-selected' : ''}`}
-                          onClick={() => setWhatsAppState((prev) => ({ ...prev, selectedSessionKey: session.sessionKey }))}
+                          className="primary-btn"
+                          style={{ margin: '0 auto' }}
+                          onClick={() => runWhatsAppAction(session.sessionKey, 'start', 'WhatsApp connection initiated')}
+                          disabled={whatsAppState.actionLoading}
                         >
-                          <div className="session-item-top">
-                            <strong>{session.displayName || session.sessionKey}</strong>
-                            <span className={`status-pill ${session.status === 'authenticated' ? 'status-active' : session.status === 'qr_ready' || session.status === 'initializing' ? 'status-pending' : 'status-inactive'}`}>
-                              {session.status === 'authenticated'
-                                ? 'Connected'
-                                : session.status === 'qr_ready'
-                                  ? 'Scan QR'
-                                  : session.status === 'initializing'
-                                    ? 'Connecting'
-                                    : session.status === 'auth_failure'
-                                      ? 'Auth Failed'
-                                      : session.status === 'disconnected'
-                                        ? 'Disconnected'
-                                        : 'Not Started'}
-                            </span>
-                          </div>
-                          <div className="session-item-meta">
-                            <span>{session.phoneNumber || 'No number connected'}</span>
-                            <span>{session.isActive ? 'Active sender' : 'Inactive sender'}</span>
-                          </div>
+                          {whatsAppState.actionLoading ? 'Initializing...' : 'Get QR Code'}
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    )}
 
-                <div className="whatsapp-card">
-                  <div className="whatsapp-card-header">
-                    <div>
-                      <p className="eyebrow">Selected Session</p>
-                      <h3 className="subheading">{selectedWhatsAppSession?.displayName || 'Select a session'}</h3>
-                    </div>
-                    {selectedWhatsAppSession ? (
-                      <span className={`status-pill ${whatsAppStatusClass}`}>{whatsAppStatusLabel}</span>
-                    ) : null}
-                  </div>
-
-                  {selectedWhatsAppSession ? (
-                    <div className="toolbar">
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() => setActiveWhatsAppSession(selectedWhatsAppSession.sessionKey)}
-                        disabled={whatsAppState.actionLoading}
-                      >
-                        {selectedWhatsAppSession.isActive ? 'Active Sender' : 'Set Active Sender'}
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() => runWhatsAppAction(selectedWhatsAppSession.sessionKey, 'stop', 'WhatsApp connection stopped')}
-                        disabled={whatsAppState.actionLoading}
-                      >
-                        Stop
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary-btn"
-                        onClick={() => runWhatsAppAction(selectedWhatsAppSession.sessionKey, 'reset', 'Saved session cleared. Scan QR again.')}
-                        disabled={whatsAppState.actionLoading}
-                      >
-                        Reset
-                      </button>
-                      <button
-                        type="button"
-                        className="primary-btn small-btn"
-                        onClick={() => runWhatsAppAction(selectedWhatsAppSession.sessionKey, 'start', 'WhatsApp session started')}
-                        disabled={whatsAppState.actionLoading}
-                      >
-                        {whatsAppState.actionLoading ? 'Please wait...' : 'Start WhatsApp'}
-                      </button>
-                    </div>
-                  ) : null}
-
-                  <div className="details-grid">
-                    <div className="detail-item">
-                      <span>Connected Number</span>
-                      <strong>{selectedWhatsAppSession?.phoneNumber || 'Not connected'}</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Last Connected</span>
-                      <strong>{selectedWhatsAppSession?.lastConnectedAt ? new Date(selectedWhatsAppSession.lastConnectedAt).toLocaleString() : 'N/A'}</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Session Key</span>
-                      <strong>{selectedWhatsAppSession?.sessionKey || 'N/A'}</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Automatic Sender</span>
-                      <strong>{selectedWhatsAppSession?.isActive ? 'Yes, this session sends reminders' : 'No, reminders use another session'}</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Saved Session</span>
-                      <strong>{selectedWhatsAppSession?.status === 'authenticated' ? 'Available' : 'Waiting for login'}</strong>
-                    </div>
-                    <div className="detail-item">
-                      <span>Auto Reminder Rule</span>
-                      <strong>7 days before, 2 days before, expiry day, 7 days after expiry</strong>
+                    <div style={{ marginTop: '32px', borderTop: '1px solid var(--border-color)', paddingTop: '24px', display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                      {isConnected && (
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          style={{ borderColor: '#fca5a5', color: '#b91c1c' }}
+                          onClick={() => runWhatsAppAction(session.sessionKey, 'reset', 'WhatsApp disconnected successfully')}
+                          disabled={whatsAppState.actionLoading}
+                        >
+                          Disconnect WhatsApp
+                        </button>
+                      )}
+                      {!isConnected && session.status !== 'disconnected' && (
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          onClick={() => runWhatsAppAction(session.sessionKey, 'reset', 'Session reset. Requesting new QR...')}
+                          disabled={whatsAppState.actionLoading}
+                        >
+                          Reset Connection
+                        </button>
+                      )}
                     </div>
                   </div>
+                )
+              })()}
 
-                  {selectedWhatsAppSession?.qrCodeDataUrl ? (
-                    <div className="qr-panel">
-                      <img src={selectedWhatsAppSession.qrCodeDataUrl} alt="WhatsApp QR Code" className="qr-image" />
-                      <p className="section-text">Open WhatsApp on your phone, scan this QR, and keep this backend running.</p>
-                    </div>
-                  ) : null}
-
-                  {selectedWhatsAppSession?.lastError ? (
-                    <div className="message message-error">{selectedWhatsAppSession.lastError}</div>
-                  ) : null}
-                  {whatsAppState.error ? (
-                    <div className="message message-error">{whatsAppState.error}</div>
-                  ) : null}
-                  {whatsAppState.result ? (
-                    <div className="message message-success">{whatsAppState.result}</div>
-                  ) : null}
-                </div>
-              </div>
-            </section>
-
-            <section className="panel panel-full">
-              <div className="panel-header panel-header-row">
-                <div>
-                  <h2>Reminder Logs</h2>
-                  <p className="section-text">Shows both sent and failed reminders for the 4 fixed alert stages.</p>
-                </div>
-              </div>
-
-              {whatsAppState.logsLoading ? (
-                <div className="empty-state">Loading reminder logs...</div>
-              ) : whatsAppState.logs.length === 0 ? (
-                <div className="empty-state">No reminder logs found yet.</div>
-              ) : (
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Type</th>
-                        <th>Vehicle No</th>
-                        <th>Mobile</th>
-                        <th>Expiry</th>
-                        <th>Alert</th>
-                        <th>Status</th>
-                        <th>Updated</th>
-                        <th>Error</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {whatsAppState.logs.map((log) => (
-                        <tr key={log._id}>
-                          <td>{log.recordType || 'N/A'}</td>
-                          <td>{log.vehicleNumber || 'N/A'}</td>
-                          <td>{log.mobileNumber || 'N/A'}</td>
-                          <td>{log.expiryDate || 'N/A'}</td>
-                          <td>{log.alertLabel || log.alertStage || 'N/A'}</td>
-                          <td>
-                            <span className={`status-pill ${log.status === 'sent' ? 'status-active' : 'status-inactive'}`}>
-                              {log.status === 'sent' ? 'Sent' : 'Failed'}
-                            </span>
-                          </td>
-                          <td>{log.updatedAt ? new Date(log.updatedAt).toLocaleString() : 'N/A'}</td>
-                          <td>{log.error || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {whatsAppState.error ? (
+                <div className="message message-error" style={{ marginTop: '20px' }}>{whatsAppState.error}</div>
+              ) : null}
+              {whatsAppState.result ? (
+                <div className="message message-success" style={{ marginTop: '20px' }}>{whatsAppState.result}</div>
+              ) : null}
             </section>
           </>
         ) : activeSection === 'settings' ? (

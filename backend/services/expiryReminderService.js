@@ -8,18 +8,15 @@ const WhatsAppReminderLog = require('../models/WhatsAppReminderLog')
 const whatsAppSessionManager = require('./whatsAppSessionManager')
 
 const ALERT_STAGES = {
-  2: 'before_2_days',
-  1: 'before_1_day',
-  0: 'on_expiry_day',
-  [-7]: 'after_7_days_expired',
+  window_14_to_8: 'window_14_to_8',
+  window_7_to_1: 'window_7_to_1',
+  on_expiry_day: 'on_expiry_day',
 }
 
 const ALERT_LABELS = {
-  within_30_days: 'within 30 days',
-  before_2_days: '2 days before expiry',
-  before_1_day: '1 day before expiry',
+  window_14_to_8: '14 to 8 days before expiry',
+  window_7_to_1: '7 to 1 days before expiry',
   on_expiry_day: 'today expiry alert',
-  after_7_days_expired: '7 days after expiry',
 }
 
 const parseDateString = (dateStr) => {
@@ -65,62 +62,43 @@ const daysUntil = (dateStr) => {
 const normalizeMobile = (mobile) => String(mobile || '').replace(/[^\d]/g, '')
 
 const getAlertStage = (daysRemaining) => {
-  if (ALERT_STAGES[daysRemaining]) {
-    return ALERT_STAGES[daysRemaining]
+  if (daysRemaining === 0) {
+    return 'on_expiry_day'
   }
-
-  // Catch-up behavior: if a record is added late while already inside
-  // the 30-day window and no prior reminder was sent, send one reminder.
-  if (daysRemaining <= 30 && daysRemaining > 2) {
-    return 'within_30_days'
+  if (daysRemaining >= 8 && daysRemaining <= 14) {
+    return 'window_14_to_8'
   }
-
+  if (daysRemaining >= 1 && daysRemaining <= 7) {
+    return 'window_7_to_1'
+  }
   return null
 }
 
-const buildMessage = ({ label, vehicleNumber, validTo, ownerName, daysRemaining }) => {
+const buildMessage = ({ label, vehicleNumber, validTo, ownerName, alertStage }) => {
   const recipient = ownerName ? `Dear ${ownerName},` : 'Dear Customer,'
 
-  if (daysRemaining <= 30 && daysRemaining > 2) {
+  if (alertStage === 'window_14_to_8') {
     return `${recipient}
 
-Your ${label} for vehicle ${vehicleNumber} will expire on ${validTo}.
-Please renew it before expiry to avoid issues.
+Your ${label} for vehicle ${vehicleNumber} is expiring soon on ${validTo}.
+Please renew it soon.
 
 Thank you.`
   }
 
-  if (daysRemaining === 2) {
+  if (alertStage === 'window_7_to_1') {
     return `${recipient}
 
-Your ${label} for vehicle ${vehicleNumber} will expire in 2 days on ${validTo}.
-Please renew it urgently.
+Your ${label} for vehicle ${vehicleNumber} will expire within 7 days on ${validTo}.
+Please renew it soon to avoid any disruptions.
 
 Thank you.`
   }
 
-  if (daysRemaining === 1) {
-    return `${recipient}
-
-Your ${label} for vehicle ${vehicleNumber} will expire tomorrow (${validTo}).
-Please renew it urgently.
-
-Thank you.`
-  }
-
-  if (daysRemaining === 0) {
+  if (alertStage === 'on_expiry_day') {
     return `${recipient}
 
 Your ${label} for vehicle ${vehicleNumber} is expiring today (${validTo}).
-Please renew it today to avoid issues.
-
-Thank you.`
-  }
-
-  if (daysRemaining === -7) {
-    return `${recipient}
-
-Your ${label} for vehicle ${vehicleNumber} expired on ${validTo}, and 7 days have already passed.
 Please renew it immediately.
 
 Thank you.`
@@ -192,7 +170,7 @@ class ExpiryReminderService {
         vehicleNumber: record.vehicleNumber || 'N/A',
         validTo: record[expiryField] || 'N/A',
         ownerName: record.ownerName || record.policyHolderName || '',
-        daysRemaining,
+        alertStage,
       })
 
       if (!mobile) {
@@ -251,10 +229,16 @@ class ExpiryReminderService {
   }
 
   async runOnce() {
-    const activeSession = await whatsAppSessionManager.getActiveSession()
-
-    if (this.running || !activeSession || !whatsAppSessionManager.hasClient(activeSession.sessionKey)) {
+    const hasApiKey = !!process.env.WHATSAPP_API_KEY
+    if (this.running) {
       return { skipped: true }
+    }
+
+    if (!hasApiKey) {
+      const activeSession = await whatsAppSessionManager.getActiveSession()
+      if (!activeSession || !whatsAppSessionManager.hasClient(activeSession.sessionKey)) {
+        return { skipped: true }
+      }
     }
 
     this.running = true

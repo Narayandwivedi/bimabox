@@ -16,6 +16,7 @@ const createSession = async (req, res) => {
     const session = await whatsAppSessionManager.createSession({
       sessionKey: req.body?.sessionKey,
       displayName: req.body?.displayName,
+      phoneNumber: req.body?.phoneNumber,
     })
     res.json({ success: true, data: session })
   } catch (error) {

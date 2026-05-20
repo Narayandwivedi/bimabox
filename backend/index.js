@@ -24,6 +24,7 @@ const ALLOWED_ORIGINS = new Set([
 
   'http://localhost:5173',
   'http://localhost:5174',
+  'http://localhost:5175',
   'https://bimabox.in',
   'https://www.bimabox.in',
   'https://api.bimabox.in',

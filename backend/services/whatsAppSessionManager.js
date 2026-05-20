@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs/promises')
 const QRCode = require('qrcode')
+const axios = require('axios')
 const { Client, LocalAuth } = require('whatsapp-web.js')
 const WhatsAppSession = require('../models/WhatsAppSession')
 
@@ -9,6 +10,7 @@ class WhatsAppSessionManager {
     this.clients = new Map()
     this.startingPromises = new Map()
     this.defaultSessionKey = 'primary'
+    this.qrCodesStore = new Map()
   }
 
   sanitizeSessionKey(value) {
@@ -76,7 +78,53 @@ class WhatsAppSessionManager {
     return session
   }
 
-  async createSession({ sessionKey, displayName }) {
+  async createSession({ sessionKey, displayName, phoneNumber }) {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://whatsappserver.softwarebytes.in/api/v1'
+
+    if (apiKey) {
+      try {
+        const response = await axios.post(`${apiUrl}/sessions/add`, {}, {
+          headers: { 'x-api-key': apiKey }
+        })
+        const result = response.data
+        if (result && result.success) {
+          const sessId = result.sessionId
+          if (result.qr) {
+            this.qrCodesStore.set(sessId, result.qr)
+          }
+
+          // Save a local shadow copy in our MongoDB to remember the user-entered phone number and displayName
+          try {
+            await WhatsAppSession.create({
+              sessionKey: sessId,
+              displayName: String(displayName || sessId).trim(),
+              phoneNumber: phoneNumber || null,
+              status: 'qr_ready',
+              qrCodeDataUrl: result.qr || null,
+              isActive: true,
+            })
+          } catch (dbErr) {
+            console.error('Failed to create local shadow copy of external session:', dbErr.message)
+          }
+
+          return {
+            sessionKey: sessId,
+            displayName: String(displayName || sessId).trim(),
+            status: 'qr_ready',
+            qrCodeDataUrl: result.qr || null,
+            phoneNumber: phoneNumber || null,
+            isActive: true
+          }
+        } else {
+          throw new Error(result.message || 'Failed to add external session')
+        }
+      } catch (error) {
+        console.error('Failed to create external session:', error.response?.data || error.message)
+        throw new Error(error.response?.data?.message || error.message || 'Failed to create external session')
+      }
+    }
+
     const normalizedKey = this.sanitizeSessionKey(sessionKey || displayName)
     const existing = await WhatsAppSession.findOne({ sessionKey: normalizedKey })
     if (existing) {
@@ -126,6 +174,77 @@ class WhatsAppSessionManager {
   }
 
   async getStatus() {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://whatsappserver.softwarebytes.in/api/v1'
+
+    if (apiKey) {
+      try {
+        const response = await axios.get(`${apiUrl}/sessions`, {
+          headers: { 'x-api-key': apiKey }
+        })
+        let extSessions = response.data?.sessions || []
+
+        if (extSessions.length === 0) {
+          try {
+            const responseAdd = await axios.post(`${apiUrl}/sessions/add`, {}, {
+              headers: { 'x-api-key': apiKey }
+            })
+            if (responseAdd.data && responseAdd.data.success) {
+              const sessId = responseAdd.data.sessionId
+              if (responseAdd.data.qr) {
+                this.qrCodesStore.set(sessId, responseAdd.data.qr)
+              }
+              await WhatsAppSession.create({
+                sessionKey: sessId,
+                displayName: 'Primary Session',
+                status: 'qr_ready',
+                qrCodeDataUrl: responseAdd.data.qr || null,
+                isActive: true,
+              }).catch(() => {})
+
+              extSessions.push({
+                sessionId: sessId,
+                connected: false
+              })
+            }
+          } catch (addErr) {
+            console.error('Failed to auto-create external session:', addErr.message)
+          }
+        }
+
+        // Fetch local shadow copies to merge user-entered names/phones
+        const locals = await WhatsAppSession.find({})
+        const localMap = new Map(locals.map(l => [l.sessionKey, l]))
+
+        const sessions = extSessions.map(s => {
+          const connected = s.connected
+          if (connected) {
+            this.qrCodesStore.delete(s.sessionId)
+          }
+
+          const local = localMap.get(s.sessionId)
+          const dispName = local?.displayName || s.sessionId
+          const phone = s.number ? s.number.split('@')[0] : (local?.phoneNumber || 'Not connected')
+
+          return {
+            sessionKey: s.sessionId,
+            displayName: dispName,
+            status: connected ? 'authenticated' : (this.qrCodesStore.has(s.sessionId) ? 'qr_ready' : 'disconnected'),
+            phoneNumber: phone,
+            isActive: true,
+            qrCodeDataUrl: this.qrCodesStore.get(s.sessionId) || null
+          }
+        })
+        return {
+          sessions,
+          activeSessionKey: sessions[0]?.sessionKey || null
+        }
+      } catch (error) {
+        console.error('Failed to fetch external WhatsApp sessions:', error.message)
+        return { sessions: [], activeSessionKey: null }
+      }
+    }
+
     const sessions = await this.listSessions()
     const activeSession = sessions.find((session) => session.isActive) || null
 
@@ -203,6 +322,36 @@ class WhatsAppSessionManager {
   }
 
   async startSession(sessionKey = this.defaultSessionKey) {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://whatsappserver.softwarebytes.in/api/v1'
+
+    if (apiKey) {
+      try {
+        const response = await axios.post(`${apiUrl}/sessions/${sessionKey}/reconnect`, {}, {
+          headers: { 'x-api-key': apiKey }
+        })
+        const result = response.data
+        if (result && result.success) {
+          if (result.qr) {
+            this.qrCodesStore.set(sessionKey, result.qr)
+          }
+          return {
+            sessionKey,
+            displayName: sessionKey,
+            status: 'qr_ready',
+            qrCodeDataUrl: result.qr || null,
+            phoneNumber: null,
+            isActive: true
+          }
+        } else {
+          throw new Error(result.message || 'Failed to reconnect external session')
+        }
+      } catch (error) {
+        console.error('Failed to reconnect external session:', error.response?.data || error.message)
+        throw new Error(error.response?.data?.message || error.message || 'Failed to reconnect external session')
+      }
+    }
+
     const normalizedKey = this.sanitizeSessionKey(sessionKey)
     if (this.startingPromises.has(normalizedKey)) {
       return this.startingPromises.get(normalizedKey)
@@ -292,6 +441,29 @@ class WhatsAppSessionManager {
   }
 
   async stopSession(sessionKey = this.defaultSessionKey) {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://whatsappserver.softwarebytes.in/api/v1'
+
+    if (apiKey) {
+      try {
+        await axios.delete(`${apiUrl}/sessions/${sessionKey}`, {
+          headers: { 'x-api-key': apiKey }
+        })
+        this.qrCodesStore.delete(sessionKey)
+        return {
+          sessionKey,
+          displayName: sessionKey,
+          status: 'disconnected',
+          qrCodeDataUrl: null,
+          phoneNumber: null,
+          isActive: true
+        }
+      } catch (error) {
+        console.error('Failed to delete external session:', error.response?.data || error.message)
+        throw new Error(error.response?.data?.message || error.message || 'Failed to delete external session')
+      }
+    }
+
     const normalizedKey = this.sanitizeSessionKey(sessionKey)
     const client = this.clients.get(normalizedKey)
 
@@ -314,6 +486,11 @@ class WhatsAppSessionManager {
   }
 
   async resetSession(sessionKey = this.defaultSessionKey) {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    if (apiKey) {
+      return this.stopSession(sessionKey)
+    }
+
     const normalizedKey = this.sanitizeSessionKey(sessionKey)
     await this.stopSession(normalizedKey)
 
@@ -379,6 +556,40 @@ class WhatsAppSessionManager {
   }
 
   async sendTextMessage(recipient, text, sessionKey) {
+    const apiKey = process.env.WHATSAPP_API_KEY
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://whatsappserver.softwarebytes.in/api/v1'
+
+    if (apiKey) {
+      try {
+        const response = await axios.post(
+          `${apiUrl}/messages/send`,
+          {
+            messages: [
+              {
+                number: recipient,
+                text: text
+              }
+            ]
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey
+            }
+          }
+        )
+
+        if (response.data && response.data.success) {
+          return response.data.jobId || 'success'
+        } else {
+          throw new Error(response.data?.message || 'External WhatsApp API returned success false')
+        }
+      } catch (error) {
+        console.error('External WhatsApp API error:', error.response?.data || error.message)
+        throw new Error(error.response?.data?.message || error.message || 'Failed to send message via External API')
+      }
+    }
+
     const { client, sessionKey: resolvedSessionKey } = await this.getSenderClient(sessionKey)
 
     try {

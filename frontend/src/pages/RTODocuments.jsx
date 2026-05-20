@@ -403,13 +403,15 @@ const RTODocuments = () => {
                       <div>
                         <div className='flex items-center gap-1.5'>
                           <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
-                          {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                        </div>
+                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase mt-0.5'>{doc.vehicleNumber}</p>
+                        {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                          <div className='mt-1'>
                             <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
                               {doc.rawRecord.insuranceCompany}
                             </span>
-                          )}
-                        </div>
-                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase mt-0.5'>{doc.vehicleNumber}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className='flex items-center justify-between'>

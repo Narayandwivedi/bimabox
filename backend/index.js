@@ -28,6 +28,7 @@ const ALLOWED_ORIGINS = new Set([
   'https://bimabox.in',
   'https://www.bimabox.in',
   'https://api.bimabox.in',
+  'https://adm.bimabox.in',
   'http://bimabox.in',
   'http://api.bimabox.in',
 ])

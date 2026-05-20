@@ -27,9 +27,19 @@ function AppSecure() {
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [formData, setFormData] = useState(initialForm)
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false)
+  const [resetPasswordUser, setResetPasswordUser] = useState(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetMessage, setResetMessage] = useState({ type: '', text: '' })
+  const [resettingPassword, setResettingPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [adminNewPassword, setAdminNewPassword] = useState('')
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('')
+  const [settingsMessage, setSettingsMessage] = useState({ type: '', text: '' })
+  const [changingPassword, setChangingPassword] = useState(false)
   const [loginForm, setLoginForm] = useState(initialLoginForm)
   const [loginState, setLoginState] = useState({
     checking: true,
@@ -430,6 +440,7 @@ function AppSecure() {
       setLoginForm(initialLoginForm)
     } catch (error) {
       console.error('Admin login error:', error)
+      alert(error.message || 'Login failed')
       setLoginState((prev) => ({
         ...prev,
         submitting: false,
@@ -448,6 +459,7 @@ function AppSecure() {
       console.error('Admin logout error:', error)
     }
 
+    setActiveSection('users')
     setLoginState({
       checking: false,
       submitting: false,
@@ -472,6 +484,10 @@ function AppSecure() {
       result: '',
       error: '',
     })
+    setCurrentPassword('')
+    setAdminNewPassword('')
+    setAdminConfirmPassword('')
+    setSettingsMessage({ type: '', text: '' })
   }
 
   const handleSubmit = async (e) => {
@@ -512,6 +528,92 @@ function AppSecure() {
       setMessage({ type: 'error', text: error.message || (isEditMode ? 'Failed to update user' : 'Failed to create user') })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const openResetPasswordModal = (user) => {
+    setResetPasswordUser(user)
+    setNewPassword('')
+    setResetMessage({ type: '', text: '' })
+    setShowResetPasswordModal(true)
+  }
+
+  const closeResetPasswordModal = () => {
+    setShowResetPasswordModal(false)
+    setResetPasswordUser(null)
+    setNewPassword('')
+    setResetMessage({ type: '', text: '' })
+  }
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault()
+    if (!newPassword.trim()) {
+      setResetMessage({ type: 'error', text: 'New password is required' })
+      return
+    }
+
+    try {
+      setResettingPassword(true)
+      await apiFetch(`/api/users/${resetPasswordUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: resetPasswordUser.name,
+          mobile: resetPasswordUser.mobile,
+          isActive: resetPasswordUser.isActive !== false,
+          password: newPassword.trim(),
+        }),
+      })
+
+      setResetMessage({ type: 'success', text: 'Password reset successfully!' })
+      setTimeout(() => {
+        closeResetPasswordModal()
+      }, 1500)
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      setResetMessage({ type: 'error', text: error.message || 'Failed to reset password' })
+    } finally {
+      setResettingPassword(false)
+    }
+  }
+
+  const handleAdminChangePassword = async (e) => {
+    e.preventDefault()
+    if (!currentPassword || !adminNewPassword || !adminConfirmPassword) {
+      setSettingsMessage({ type: 'error', text: 'All fields are required' })
+      return
+    }
+
+    if (adminNewPassword !== adminConfirmPassword) {
+      setSettingsMessage({ type: 'error', text: 'New passwords do not match' })
+      return
+    }
+
+    try {
+      setChangingPassword(true)
+      setSettingsMessage({ type: '', text: '' })
+      await apiFetch('/api/auth/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword: adminNewPassword,
+        }),
+      })
+
+      setSettingsMessage({ type: 'success', text: 'Password updated successfully!' })
+      setCurrentPassword('')
+      setAdminNewPassword('')
+      setAdminConfirmPassword('')
+    } catch (error) {
+      console.error('Error changing admin password:', error)
+      setSettingsMessage({ type: 'error', text: error.message || 'Failed to change password' })
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -612,6 +714,13 @@ function AppSecure() {
           >
             Add WhatsApp
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('settings')}
+            className={`sidebar-link ${activeSection === 'settings' ? 'sidebar-link-active' : ''}`}
+          >
+            Settings
+          </button>
         </nav>
 
         <button type="button" className="secondary-btn sidebar-logout" onClick={handleLogout}>
@@ -668,9 +777,14 @@ function AppSecure() {
                               </span>
                             </td>
                             <td>
-                              <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
-                                Edit
-                              </button>
+                              <div className="flex gap-2" style={{ display: 'flex', gap: '8px' }}>
+                                <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
+                                  Edit
+                                </button>
+                                <button type="button" className="secondary-btn table-btn" style={{ borderColor: '#fca5a5', color: '#b91c1c' }} onClick={() => openResetPasswordModal(user)}>
+                                  Reset Password
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -735,8 +849,50 @@ function AppSecure() {
                 </div>
               </div>
             ) : null}
+
+            {showResetPasswordModal ? (
+              <div className="modal-overlay">
+                <div className="modal-card">
+                  <div className="modal-header">
+                    <div>
+                      <p className="eyebrow">User Security</p>
+                      <h2>Reset Password</h2>
+                      <p className="section-text" style={{ fontSize: '12px', marginTop: '4px' }}>Resetting password for: <strong>{resetPasswordUser?.name}</strong> ({resetPasswordUser?.mobile})</p>
+                    </div>
+                    <button type="button" className="icon-btn" onClick={closeResetPasswordModal}>
+                      x
+                    </button>
+                  </div>
+
+                  <form className="user-form" onSubmit={handleResetPasswordSubmit}>
+                    <label>
+                      <span>New Password</span>
+                      <input type="password" name="newPassword" value={newPassword} onChange={(e) => {
+                        setNewPassword(e.target.value)
+                        if (resetMessage.text) setResetMessage({ type: '', text: '' })
+                      }} placeholder="Enter new password" />
+                    </label>
+
+                    {resetMessage.text ? (
+                      <div className={`message ${resetMessage.type === 'error' ? 'message-error' : 'message-success'}`}>
+                        {resetMessage.text}
+                      </div>
+                    ) : null}
+
+                    <div className="modal-actions">
+                      <button type="button" className="secondary-btn" onClick={closeResetPasswordModal}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="primary-btn" disabled={resettingPassword}>
+                        {resettingPassword ? 'Resetting...' : 'Reset Password'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            ) : null}
           </>
-        ) : (
+        ) : activeSection === 'whatsapp' ? (
           <>
             <section className="panel panel-full">
               <div className="panel-header panel-header-row">
@@ -977,7 +1133,81 @@ function AppSecure() {
               )}
             </section>
           </>
-        )}
+        ) : activeSection === 'settings' ? (
+          <>
+            <section className="panel panel-full" style={{ maxWidth: '600px' }}>
+              <div className="panel-header">
+                <h2>Account Settings</h2>
+                <p className="section-text">Update your administrator password and manage your session.</p>
+              </div>
+
+              <form className="user-form" onSubmit={handleAdminChangePassword}>
+                <label>
+                  <span>Current Password</span>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value)
+                      if (settingsMessage.text) setSettingsMessage({ type: '', text: '' })
+                    }}
+                    placeholder="Enter current password"
+                  />
+                </label>
+
+                <label>
+                  <span>New Password</span>
+                  <input
+                    type="password"
+                    value={adminNewPassword}
+                    onChange={(e) => {
+                      setAdminNewPassword(e.target.value)
+                      if (settingsMessage.text) setSettingsMessage({ type: '', text: '' })
+                    }}
+                    placeholder="Enter new password"
+                  />
+                </label>
+
+                <label>
+                  <span>Confirm New Password</span>
+                  <input
+                    type="password"
+                    value={adminConfirmPassword}
+                    onChange={(e) => {
+                      setAdminConfirmPassword(e.target.value)
+                      if (settingsMessage.text) setSettingsMessage({ type: '', text: '' })
+                    }}
+                    placeholder="Confirm new password"
+                  />
+                </label>
+
+                {settingsMessage.text ? (
+                  <div className={`message ${settingsMessage.type === 'error' ? 'message-error' : 'message-success'}`}>
+                    {settingsMessage.text}
+                  </div>
+                ) : null}
+
+                <div className="modal-actions" style={{ marginTop: '8px' }}>
+                  <button type="submit" className="primary-btn" disabled={changingPassword}>
+                    {changingPassword ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <section className="panel panel-full" style={{ maxWidth: '600px', marginTop: '24px' }}>
+              <div className="panel-header">
+                <h2>Logout</h2>
+                <p className="section-text">Sign out of the admin panel securely.</p>
+              </div>
+              <div style={{ padding: '16px 24px 24px' }}>
+                <button type="button" className="primary-btn" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }} onClick={handleLogout}>
+                  Sign Out
+                </button>
+              </div>
+            </section>
+          </>
+        ) : null}
       </div>
     </div>
   )

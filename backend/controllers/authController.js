@@ -1,5 +1,7 @@
 const User = require('../models/User')
 const Admin = require('../models/Admin')
+const { recordFailedAttempt } = require('../middleware/adminRateLimiter')
+const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const {
@@ -88,11 +90,15 @@ const adminLogin = async (req, res) => {
 
     const admin = await Admin.findOne({ email })
     if (!admin) {
+      const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      recordFailedAttempt(ip)
       return res.status(401).json({ success: false, message: 'Invalid credentials' })
     }
 
     const isValidPassword = await admin.comparePassword(password)
     if (!isValidPassword) {
+      const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      recordFailedAttempt(ip)
       return res.status(401).json({ success: false, message: 'Invalid credentials' })
     }
 
@@ -131,6 +137,35 @@ const logout = async (_req, res) => {
 const adminLogout = async (_req, res) => {
   res.setHeader('Set-Cookie', buildClearAdminAuthCookie())
   res.json({ success: true, message: 'Logged out successfully' })
+}
+
+const changeAdminPassword = async (req, res) => {
+  try {
+    const currentPassword = String(req.body.currentPassword || '')
+    const newPassword = String(req.body.newPassword || '')
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current password and new password are required' })
+    }
+
+    const admin = await Admin.findById(req.admin._id)
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin not found' })
+    }
+
+    const isValidPassword = await admin.comparePassword(currentPassword)
+    if (!isValidPassword) {
+      return res.status(400).json({ success: false, message: 'Invalid current password' })
+    }
+
+    admin.password = await bcrypt.hash(newPassword, 10)
+    await admin.save()
+
+    res.json({ success: true, message: 'Password changed successfully' })
+  } catch (error) {
+    console.error('Change admin password error:', error)
+    res.status(500).json({ success: false, message: 'Failed to change password' })
+  }
 }
 
 const googleLogin = async (req, res) => {
@@ -193,5 +228,6 @@ module.exports = {
   adminProfile,
   logout,
   adminLogout,
+  changeAdminPassword,
   googleLogin,
 }

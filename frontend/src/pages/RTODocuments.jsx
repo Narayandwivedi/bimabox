@@ -310,7 +310,7 @@ const RTODocuments = () => {
         <div className='mb-6 flex items-center gap-4'>
           <div>
             <h1 className='text-xl md:text-2xl font-black text-slate-900'>RTO Documents</h1>
-            <p className='text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>
+            <p className='text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>
           </div>
           <button
             type='button'

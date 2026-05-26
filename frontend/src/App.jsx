@@ -11,9 +11,6 @@ import Login from './pages/Login'
 import Setting from './pages/Setting'
 import VehicleRegistration from './pages/VehicleRegistration/VehicleRegistration'
 import VehicleDetailPage from './pages/VehicleRegistration/VehicleDetailPage'
-import Fitness from './pages/Fitness/Fitness'
-import Tax from './pages/Tax/Tax'
-import Gps from './pages/Gps/Gps'
 import RTODocuments from './pages/RTODocuments'
 import RTODocumentDetail from './pages/RTODocumentDetail'
 import BottomNavigation from './components/BottomNavigation'
@@ -56,9 +53,6 @@ function AppContent() {
             <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
             <Route path='/vehicle' element={<ProtectedRoute><VehicleRegistration /></ProtectedRoute>} />
             <Route path='/vehicle/:id/detail' element={<ProtectedRoute><VehicleDetailPage /></ProtectedRoute>} />
-            <Route path='/fitness' element={<ProtectedRoute><Fitness /></ProtectedRoute>} />
-            <Route path='/tax' element={<ProtectedRoute><Tax /></ProtectedRoute>} />
-            <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
             <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />

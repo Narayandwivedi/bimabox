@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import { handleDateBlur as utilHandleDateBlur, handleSmartDateInput } from '../../../utils/dateFormatter'
-import { validateVehicleNumberRealtime } from '../../../utils/vehicleNoCheck'
-import { handlePaymentCalculation } from '../../../utils/paymentValidation'
+import { handleDateBlur as utilHandleDateBlur, handleSmartDateInput } from '../../utils/dateFormatter'
+import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck'
+import { handlePaymentCalculation } from '../../utils/paymentValidation'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 

@@ -11,10 +11,8 @@ import Login from './pages/Login'
 import Setting from './pages/Setting'
 import VehicleRegistration from './pages/VehicleRegistration/VehicleRegistration'
 import VehicleDetailPage from './pages/VehicleRegistration/VehicleDetailPage'
-import Insurance from './pages/Insurance/Insurance'
 import Fitness from './pages/Fitness/Fitness'
 import Tax from './pages/Tax/Tax'
-import Puc from './pages/Puc/Puc'
 import Gps from './pages/Gps/Gps'
 import RTODocuments from './pages/RTODocuments'
 import RTODocumentDetail from './pages/RTODocumentDetail'
@@ -58,10 +56,8 @@ function AppContent() {
             <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
             <Route path='/vehicle' element={<ProtectedRoute><VehicleRegistration /></ProtectedRoute>} />
             <Route path='/vehicle/:id/detail' element={<ProtectedRoute><VehicleDetailPage /></ProtectedRoute>} />
-            <Route path='/insurance' element={<ProtectedRoute><Insurance /></ProtectedRoute>} />
             <Route path='/fitness' element={<ProtectedRoute><Fitness /></ProtectedRoute>} />
             <Route path='/tax' element={<ProtectedRoute><Tax /></ProtectedRoute>} />
-            <Route path='/puc' element={<ProtectedRoute><Puc /></ProtectedRoute>} />
             <Route path='/gps' element={<ProtectedRoute><Gps /></ProtectedRoute>} />
             <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtractedDate } from '../../../utils/dateFormatter'
-import { validateVehicleNumberRealtime } from '../../../utils/vehicleNoCheck'
-import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
+import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
+import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck'
+import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 

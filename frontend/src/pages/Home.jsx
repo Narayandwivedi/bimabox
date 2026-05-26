@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
-import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+import AddInsuranceModal from './Insurance/AddInsuranceModal'
 import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'

@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import EditFitnessModal from './Fitness/components/EditFitnessModal'
-import EditPucModal from './Puc/components/EditPucModal'
+import EditPucModal from './Puc/EditPucModal'
 import EditGpsModal from './Gps/components/EditGpsModal'
 import EditTaxModal from './Tax/components/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
-import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'

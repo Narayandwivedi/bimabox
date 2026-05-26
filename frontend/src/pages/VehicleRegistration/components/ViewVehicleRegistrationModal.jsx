@@ -2,9 +2,9 @@ import { useState } from 'react'
 import ImageViewer from '../../../components/ImageViewer'
 import AddFitnessModal from '../../Fitness/components/AddFitnessModal'
 import AddTaxModal from '../../Tax/components/AddTaxModal'
-import AddPucModal from '../../Puc/components/AddPucModal'
+import AddPucModal from '../../Puc/AddPucModal'
 import AddGpsModal from '../../Gps/components/AddGpsModal'
-import AddInsuranceModal from '../../Insurance/components/AddInsuranceModal'
+import AddInsuranceModal from '../../Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 

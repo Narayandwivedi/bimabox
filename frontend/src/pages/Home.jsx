@@ -1,15 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import SearchBar from '../components/SearchBar'
 import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
-import AddFitnessModal from './Fitness/components/AddFitnessModal'
-import AddTaxModal from './Tax/components/AddTaxModal'
-import AddPucModal from './Puc/components/AddPucModal'
-import AddGpsModal from './Gps/components/AddGpsModal'
 import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
-import AddPermitModal from './Permit/components/AddPermitModal'
-import ImportModal from '../components/ImportModal'
 import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -21,18 +14,14 @@ const Home = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
-  const [showAddFitnessModal, setShowAddFitnessModal] = useState(false)
-  const [showAddTaxModal, setShowAddTaxModal] = useState(false)
-  const [showAddPucModal, setShowAddPucModal] = useState(false)
-  const [showAddGpsModal, setShowAddGpsModal] = useState(false)
   const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
-  const [showAddPermitModal, setShowAddPermitModal] = useState(false)
-  const [showImportModal, setShowImportModal] = useState(false)
+  const [showUploadOptions, setShowUploadOptions] = useState(false)
   const [expiryFilter, setExpiryFilter] = useState(30)
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
   const [loadingDocs, setLoadingDocs] = useState(true)
   const [recentDocs, setRecentDocs] = useState([])
+  const fileInputRef = useRef(null)
   
   useEffect(() => {
     fetchVehicles()
@@ -194,7 +183,7 @@ const Home = () => {
 
                 <button
                   type='button'
-                  onClick={() => setShowImportModal(true)}
+                  onClick={() => setShowUploadOptions(true)}
                   className='flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-slate-300 hover:bg-slate-100/50 hover:shadow-xl group'
                 >
                   <div className='flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg shadow-slate-200 group-hover:scale-110 transition-transform'>
@@ -202,7 +191,7 @@ const Home = () => {
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
                     </svg>
                   </div>
-                  <span className='text-[10px] md:text-sm font-bold text-slate-900'>Upload Documents</span>
+                  <span className='text-[10px] md:text-sm font-bold text-slate-900'>Upload Insurance</span>
                 </button>
               </div>
 
@@ -435,66 +424,6 @@ const Home = () => {
         />
       )}
 
-      {showAddFitnessModal && (
-        <AddFitnessModal
-          isOpen={showAddFitnessModal}
-          onClose={() => {
-            setShowAddFitnessModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddFitnessModal(false)
-            fetchExpiringDocs()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
-      {showAddTaxModal && (
-        <AddTaxModal
-          isOpen={showAddTaxModal}
-          onClose={() => {
-            setShowAddTaxModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddTaxModal(false)
-            fetchExpiringDocs()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
-      {showAddPucModal && (
-        <AddPucModal
-          isOpen={showAddPucModal}
-          onClose={() => {
-            setShowAddPucModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddPucModal(false)
-            fetchExpiringDocs()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
-      {showAddGpsModal && (
-        <AddGpsModal
-          isOpen={showAddGpsModal}
-          onClose={() => {
-            setShowAddGpsModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddGpsModal(false)
-            fetchExpiringDocs()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
       {showAddInsuranceModal && (
         <AddInsuranceModal
           isOpen={showAddInsuranceModal}
@@ -510,36 +439,70 @@ const Home = () => {
         />
       )}
 
-      {showAddPermitModal && (
-        <AddPermitModal
-          isOpen={showAddPermitModal}
-          onClose={() => {
-            setShowAddPermitModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddPermitModal(false)
-            fetchExpiringDocs()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
-      {showImportModal && (
-        <ImportModal
-          isOpen={showImportModal}
-          onClose={() => setShowImportModal(false)}
-          onProceed={(type, method, file) => {
-            setShowImportModal(false)
-            setInitialExtractionFile(method === 'ai' ? file : null)
-            if (type === 'insurance') setShowAddInsuranceModal(true)
-            else if (type === 'puc') setShowAddPucModal(true)
-            else if (type === 'fitness') setShowAddFitnessModal(true)
-            else if (type === 'tax') setShowAddTaxModal(true)
-            else if (type === 'gps') setShowAddGpsModal(true)
-            else if (type === 'permit') setShowAddPermitModal(true)
-          }}
-        />
+      {showUploadOptions && (
+        <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4'>
+          <div className='bg-white rounded-2xl shadow-2xl max-w-md w-full p-6'>
+            <div className='flex justify-between items-center mb-6'>
+              <h2 className='text-xl font-bold text-slate-900'>Upload Insurance</h2>
+              <button onClick={() => setShowUploadOptions(false)} className='text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer'>
+                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                </svg>
+              </button>
+            </div>
+            <div className='space-y-4'>
+              <button
+                type='button'
+                onClick={() => fileInputRef.current?.click()}
+                className='w-full flex items-center gap-4 p-4 rounded-xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 transition-all group text-left'
+              >
+                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg group-hover:scale-110 transition-transform'>
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-base font-black text-slate-900'>AI Upload</p>
+                  <p className='text-xs text-slate-500 font-medium mt-0.5'>Upload document &amp; auto-fill details</p>
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*,application/pdf'
+                className='hidden'
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    setShowUploadOptions(false)
+                    setInitialExtractionFile(file)
+                    setShowAddInsuranceModal(true)
+                  }
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type='button'
+                onClick={() => {
+                  setShowUploadOptions(false)
+                  setInitialExtractionFile(null)
+                  setShowAddInsuranceModal(true)
+                }}
+                className='w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50 transition-all group text-left'
+              >
+                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 text-white shadow-lg group-hover:scale-110 transition-transform'>
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-base font-black text-slate-900'>Manual Upload</p>
+                  <p className='text-xs text-slate-500 font-medium mt-0.5'>Fill insurance details manually</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

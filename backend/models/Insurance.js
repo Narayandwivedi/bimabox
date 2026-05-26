@@ -65,7 +65,7 @@ const InsuranceSchema = new mongoose.Schema({
     enum: ['Private Car', 'Two Wheeler', 'Commercial Vehicle', 'Taxi/Cab', 'Three Wheeler', 'Tractor', 'Others', '']
   },
 
-  coverageType: {
+  insuranceClass: {
     type: String,
     trim: true,
     enum: ['Comprehensive', 'Third Party', '']

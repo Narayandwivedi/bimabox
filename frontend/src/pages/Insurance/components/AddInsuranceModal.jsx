@@ -67,7 +67,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     insuranceDocument: '',
     insuranceCompany: '',
     vehicleClass: '',
-    coverageType: ''
+    insuranceClass: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -101,7 +101,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
         vehicleClass: initialData.vehicleClass || '',
-        coverageType: initialData.coverageType || ''
+        insuranceClass: initialData.insuranceClass || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -125,7 +125,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: '',
         insuranceCompany: '',
         vehicleClass: '',
-        coverageType: ''
+        insuranceClass: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -426,7 +426,7 @@ if (e.key === 'Escape') onClose()
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
       insuranceCompany: formData.insuranceCompany,
       vehicleClass: formData.vehicleClass,
-      coverageType: formData.coverageType
+      insuranceClass: formData.insuranceClass
     }
 
     if (uploadedInsuranceFile) {
@@ -546,8 +546,8 @@ if (e.key === 'Escape') onClose()
                   </select>
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Type of Insurance</label>
-                  <select name='coverageType' value={formData.coverageType} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Insurance</label>
+                  <select name='insuranceClass' value={formData.insuranceClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                     <option value="">Select Type</option>
                     <option value="Comprehensive">Comprehensive</option>
                     <option value="Third Party">Third Party</option>

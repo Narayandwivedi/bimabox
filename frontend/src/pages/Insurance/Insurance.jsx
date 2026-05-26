@@ -888,12 +888,12 @@ const Insurance = () => {
                                 {insurance.vehicleClass && (
                                   <span className='text-[11px] 2xl:text-[13px] font-semibold text-gray-800'>{insurance.vehicleClass}</span>
                                 )}
-                                {insurance.coverageType && (
-                                  <span className={`text-[10px] 2xl:text-[11px] font-bold px-1.5 py-0.5 rounded inline-block w-fit ${insurance.coverageType === 'Comprehensive' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                                    {insurance.coverageType}
+                                {insurance.insuranceClass && (
+                                  <span className={`text-[10px] 2xl:text-[11px] font-bold px-1.5 py-0.5 rounded inline-block w-fit ${insurance.insuranceClass === 'Comprehensive' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                                    {insurance.insuranceClass}
                                   </span>
                                 )}
-                                {!insurance.vehicleClass && !insurance.coverageType && (
+                                {!insurance.vehicleClass && !insurance.insuranceClass && (
                                   <span className='text-[11px] 2xl:text-[13px] text-gray-400'>—</span>
                                 )}
                               </div>

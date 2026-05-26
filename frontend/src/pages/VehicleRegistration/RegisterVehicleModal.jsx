@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { validateVehicleNumberRealtime, enforceVehicleNumberFormat } from '../../../utils/vehicleNoCheck'
-import { handleSmartDateInput, normalizeAIExtractedDate } from '../../../utils/dateFormatter'
-import ImageViewer from '../../../components/ImageViewer'
-import DocumentScannerPreview from '../../../components/DocumentScannerPreview'
+import { validateVehicleNumberRealtime, enforceVehicleNumberFormat } from '../../utils/vehicleNoCheck'
+import { handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
+import ImageViewer from '../../components/ImageViewer'
+import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 

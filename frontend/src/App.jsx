@@ -9,8 +9,6 @@ import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import Setting from './pages/Setting'
-import VehicleRegistration from './pages/VehicleRegistration/VehicleRegistration'
-import VehicleDetailPage from './pages/VehicleRegistration/VehicleDetailPage'
 import RTODocuments from './pages/RTODocuments'
 import RTODocumentDetail from './pages/RTODocumentDetail'
 import BottomNavigation from './components/BottomNavigation'
@@ -51,8 +49,6 @@ function AppContent() {
             <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
-            <Route path='/vehicle' element={<ProtectedRoute><VehicleRegistration /></ProtectedRoute>} />
-            <Route path='/vehicle/:id/detail' element={<ProtectedRoute><VehicleDetailPage /></ProtectedRoute>} />
             <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />

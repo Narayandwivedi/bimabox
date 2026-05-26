@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
+import AddVehicleModal from './VehicleRegistration/AddVehicleModal'
 import AddInsuranceModal from './Insurance/AddInsuranceModal'
 import { parseDate } from '../utils/dateFormatter'
 

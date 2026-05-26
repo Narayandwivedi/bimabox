@@ -62,7 +62,7 @@ const InsuranceSchema = new mongoose.Schema({
   vehicleClass: {
     type: String,
     trim: true,
-    enum: ['Private Car', 'Two Wheeler', 'Commercial Vehicle', 'Taxi/Cab', 'Three Wheeler', 'Tractor', 'Others', '']
+    enum: ['PRIVATE CAR', '2W SCOOTER/ MOTORCYCLE', 'GCV - Public Carriers Othr Than 3W', 'TAXI 4W <=6 Psgr', '3W GCV - Public Carriers', '3W PCV <=6 Psgr', 'BUS & MAXI >= 4W & >6 Psgr', '3WH PCV >6 & <17 Psgr', 'Misc-D Special Vehicles', '']
   },
 
   insuranceClass: {
@@ -71,11 +71,16 @@ const InsuranceSchema = new mongoose.Schema({
     enum: ['Comprehensive', 'Third Party', '']
   },
 
+  insuranceType: {
+    type: String,
+    trim: true,
+    enum: ['Motor', 'Health', 'Life', 'Fire', 'Travel', 'Home Insurance', 'Crop Insurance', 'Property Insurance', '']
+  },
+
   // Vehicle Information
   vehicleNumber: {
     type: String,
     ref: 'VehicleRegistration',
-    required: true,
     trim: true,
     uppercase: true,
   },

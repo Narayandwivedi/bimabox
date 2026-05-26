@@ -67,7 +67,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     insuranceDocument: '',
     insuranceCompany: '',
     vehicleClass: '',
-    insuranceClass: ''
+    insuranceClass: '',
+    insuranceType: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -101,7 +102,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
         vehicleClass: initialData.vehicleClass || '',
-        insuranceClass: initialData.insuranceClass || ''
+        insuranceClass: initialData.insuranceClass || '',
+        insuranceType: initialData.insuranceType || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -125,7 +127,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: '',
         insuranceCompany: '',
         vehicleClass: '',
-        insuranceClass: ''
+        insuranceClass: '',
+        insuranceType: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -426,7 +429,8 @@ if (e.key === 'Escape') onClose()
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
       insuranceCompany: formData.insuranceCompany,
       vehicleClass: formData.vehicleClass,
-      insuranceClass: formData.insuranceClass
+      insuranceClass: formData.insuranceClass,
+      insuranceType: formData.insuranceType
     }
 
     if (uploadedInsuranceFile) {
@@ -497,9 +501,9 @@ if (e.key === 'Escape') onClose()
               </h3>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number <span className='text-red-500'>*</span></label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number</label>
                   <div className='relative'>
-                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='CG04AA1234 or 4793' maxLength='10' tabIndex='1' className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono bg-white ${formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : formData.vehicleNumber && vehicleValidation.isValid ? 'border-green-500 focus:ring-green-500' : 'border-gray-300 focus:ring-indigo-500'}`} autoFocus required />
+                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='CG04AA1234 or 4793' maxLength='10' tabIndex='1' className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono bg-white ${formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : formData.vehicleNumber && vehicleValidation.isValid ? 'border-green-500 focus:ring-green-500' : 'border-gray-300 focus:ring-indigo-500'}`} autoFocus />
                     {showVehicleDropdown && vehicleMatches.length > 0 && (
                       <div className='absolute z-50 w-full mt-1 bg-white border border-indigo-300 rounded-lg shadow-xl max-h-60 overflow-y-auto'>
                         <div className='p-2 bg-indigo-50 border-b border-indigo-200 text-xs font-semibold text-indigo-800'>{vehicleMatches.length} vehicles found</div>
@@ -536,13 +540,15 @@ if (e.key === 'Escape') onClose()
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Vehicle</label>
                   <select name='vehicleClass' value={formData.vehicleClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                     <option value="">Select Class</option>
-                    <option value="Private Car">Private Car</option>
-                    <option value="Two Wheeler">Two Wheeler</option>
-                    <option value="Commercial Vehicle">Commercial Vehicle</option>
-                    <option value="Taxi/Cab">Taxi/Cab</option>
-                    <option value="Three Wheeler">Three Wheeler</option>
-                    <option value="Tractor">Tractor</option>
-                    <option value="Others">Others</option>
+                    <option value="GCV - Public Carriers Othr Than 3W">GCV - Public Carriers Othr Than 3W</option>
+                    <option value="3W GCV - Public Carriers">3W GCV - Public Carriers</option>
+                    <option value="PRIVATE CAR">PRIVATE CAR</option>
+                    <option value="2W SCOOTER/ MOTORCYCLE">2W SCOOTER/ MOTORCYCLE</option>
+                    <option value="TAXI 4W <=6 Psgr">TAXI 4W &lt;=6 Psgr</option>
+                    <option value="3W PCV <=6 Psgr">3W PCV &lt;=6 Psgr</option>
+                    <option value="BUS & MAXI >= 4W & >6 Psgr">BUS &amp; MAXI &gt;= 4W &amp; &gt;6 Psgr</option>
+                    <option value="3WH PCV >6 & <17 Psgr">3WH PCV &gt;6 &amp; &lt;17 Psgr</option>
+                    <option value="Misc-D Special Vehicles">Misc-D Special Vehicles</option>
                   </select>
                 </div>
                 <div>
@@ -551,6 +557,20 @@ if (e.key === 'Escape') onClose()
                     <option value="">Select Type</option>
                     <option value="Comprehensive">Comprehensive</option>
                     <option value="Third Party">Third Party</option>
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Type of Insurance</label>
+                  <select name='insuranceType' value={formData.insuranceType} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Type</option>
+                    <option value="Motor">Motor</option>
+                    <option value="Health">Health</option>
+                    <option value="Life">Life</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Home Insurance">Home Insurance</option>
+                    <option value="Crop Insurance">Crop Insurance</option>
+                    <option value="Property Insurance">Property Insurance</option>
                   </select>
                 </div>
               </div>

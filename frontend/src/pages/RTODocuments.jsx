@@ -307,7 +307,7 @@ const RTODocuments = () => {
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-4 pb-32 pt-4 md:px-6 lg:px-8'>
       <div className='mx-auto max-w-6xl'>
         {/* Header Section */}
-        <div className='mb-6 flex items-center justify-between'>
+        <div className='mb-6 flex items-center gap-4'>
           <div>
             <h1 className='text-xl md:text-2xl font-black text-slate-900'>RTO Documents</h1>
             <p className='text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>

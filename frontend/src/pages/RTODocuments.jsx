@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import SearchBar from '../components/SearchBar'
-import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
+import AddFitnessModal from './Fitness/components/AddFitnessModal'
+import AddPucModal from './Puc/components/AddPucModal'
+import AddGpsModal from './Gps/components/AddGpsModal'
+import AddTaxModal from './Tax/components/AddTaxModal'
+import AddPermitModal from './Permit/components/AddPermitModal'
+import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
 import EditFitnessModal from './Fitness/components/EditFitnessModal'
 import EditPucModal from './Puc/components/EditPucModal'
 import EditGpsModal from './Gps/components/EditGpsModal'
 import EditTaxModal from './Tax/components/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
-import AddInsuranceModal from './Insurance/components/AddInsuranceModal'
+import ImportModal from '../components/ImportModal'
 
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
@@ -156,7 +161,14 @@ const RTODocuments = () => {
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
   const [companyFilter, setCompanyFilter] = useState('All')
-  const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
+  const [showAddFitnessModal, setShowAddFitnessModal] = useState(false)
+  const [showAddPucModal, setShowAddPucModal] = useState(false)
+  const [showAddGpsModal, setShowAddGpsModal] = useState(false)
+  const [showAddTaxModal, setShowAddTaxModal] = useState(false)
+  const [showAddPermitModal, setShowAddPermitModal] = useState(false)
+  const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   
@@ -290,9 +302,21 @@ const RTODocuments = () => {
     <div className='min-h-screen bg-slate-100 px-4 pb-32 pt-4 md:px-6 lg:px-8'>
       <div className='mx-auto max-w-6xl'>
         {/* Header Section */}
-        <div className='mb-4'>
-          <h1 className='text-lg md:text-xl font-black text-slate-900'>RTO Documents</h1>
-          <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>see all your record here</p>
+        <div className='mb-4 flex items-center justify-between'>
+          <div>
+            <h1 className='text-lg md:text-xl font-black text-slate-900'>RTO Documents</h1>
+            <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>see all your record here</p>
+          </div>
+          <button
+            type='button'
+            onClick={() => setShowImportModal(true)}
+            className='flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-xl active:scale-95'
+          >
+            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
+            </svg>
+            Add
+          </button>
         </div>
 
         {/* Search & Filters Bar */}
@@ -470,14 +494,6 @@ const RTODocuments = () => {
         )}
       </div>
 
-      {showAddVehicleModal && (
-        <AddVehicleModal
-          isOpen={showAddVehicleModal}
-          onClose={() => setShowAddVehicleModal(false)}
-          onSuccess={() => setShowAddVehicleModal(false)}
-        />
-      )}
-
       {deletingDoc && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={(e) => e.stopPropagation()}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -563,6 +579,116 @@ const RTODocuments = () => {
           }}
           initialData={editingDoc.rawRecord}
           isEditMode={true}
+        />
+      )}
+
+      {showAddFitnessModal && (
+        <AddFitnessModal
+          isOpen={showAddFitnessModal}
+          onClose={() => {
+            setShowAddFitnessModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddFitnessModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showAddTaxModal && (
+        <AddTaxModal
+          isOpen={showAddTaxModal}
+          onClose={() => {
+            setShowAddTaxModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddTaxModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showAddPucModal && (
+        <AddPucModal
+          isOpen={showAddPucModal}
+          onClose={() => {
+            setShowAddPucModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddPucModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showAddGpsModal && (
+        <AddGpsModal
+          isOpen={showAddGpsModal}
+          onClose={() => {
+            setShowAddGpsModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddGpsModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showAddInsuranceModal && (
+        <AddInsuranceModal
+          isOpen={showAddInsuranceModal}
+          onClose={() => {
+            setShowAddInsuranceModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddInsuranceModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showAddPermitModal && (
+        <AddPermitModal
+          isOpen={showAddPermitModal}
+          onClose={() => {
+            setShowAddPermitModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddPermitModal(false)
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onProceed={(type, method, file) => {
+            setShowImportModal(false)
+            setInitialExtractionFile(method === 'ai' ? file : null)
+            const modalMap = {
+              insurance: () => setShowAddInsuranceModal(true),
+              puc: () => setShowAddPucModal(true),
+              fitness: () => setShowAddFitnessModal(true),
+              tax: () => setShowAddTaxModal(true),
+              gps: () => setShowAddGpsModal(true),
+              permit: () => setShowAddPermitModal(true),
+            }
+            modalMap[type]?.()
+          }}
         />
       )}
     </div>

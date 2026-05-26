@@ -128,7 +128,7 @@ const Login = () => {
               <img 
                 src='/bimabox-Photoroom.avif' 
                 alt='BimaBox Logo' 
-                className='h-12 mx-auto drop-shadow-md'
+                className='h-16 mx-auto drop-shadow-md'
               />
             </div>
             <h1 className='text-2xl font-black text-slate-800 mb-1'>Sign In</h1>

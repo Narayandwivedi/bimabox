@@ -221,7 +221,7 @@ const PremiumCalculator = () => {
               </div>
 
               <div>
-                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Coverage Type</label>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Class of Insurance</label>
                 <div className='grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2'>
                   <button
                     onClick={() => setCoverageType('comprehensive')}

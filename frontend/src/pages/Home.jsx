@@ -32,10 +32,12 @@ const Home = () => {
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
   const [loadingDocs, setLoadingDocs] = useState(true)
+  const [recentDocs, setRecentDocs] = useState([])
   
   useEffect(() => {
     fetchVehicles()
     fetchExpiringDocs()
+    fetchRecentDocs()
   }, [])
 
   const calculateDaysLeft = (validTo) => {
@@ -46,6 +48,21 @@ const Home = () => {
     today.setHours(0, 0, 0, 0)
     const diffTime = expiryDate.getTime() - today.getTime()
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  }
+
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return ''
+    const now = new Date()
+    const date = new Date(dateStr)
+    const diffMs = now - date
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 30) return `${diffDays}d ago`
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
   const fetchExpiringDocs = async () => {
@@ -92,6 +109,41 @@ const Home = () => {
       console.error('Error fetching expiring documents:', error)
     } finally {
       setLoadingDocs(false)
+    }
+  }
+
+  const fetchRecentDocs = async () => {
+    try {
+      const endpoints = [
+        { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald' },
+        { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo', color: 'amber' },
+        { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo', color: 'indigo' },
+        { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo', color: 'rose' },
+        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo', color: 'blue' },
+        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo', color: 'teal' },
+      ]
+      const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 5 } }))
+      const responses = await Promise.allSettled(requests)
+      let allDocs = []
+      responses.forEach((response, index) => {
+        if (response.status === 'fulfilled' && response.value.data.success) {
+          const ep = endpoints[index]
+          const records = response.value.data.data.map(record => ({
+            id: record._id,
+            type: ep.type,
+            vehicleNumber: record.vehicleNumber || 'N/A',
+            validFrom: record[ep.fromField] || 'N/A',
+            validTo: record[ep.toField] || 'N/A',
+            createdAt: record.createdAt,
+            color: ep.color,
+          }))
+          allDocs = [...allDocs, ...records]
+        }
+      })
+      allDocs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      setRecentDocs(allDocs.slice(0, 5))
+    } catch (error) {
+      console.error('Error fetching recent documents:', error)
     }
   }
 
@@ -283,6 +335,89 @@ const Home = () => {
                   </>
                 )
               })()}
+            </div>
+
+            {/* Recently Added */}
+            <div className='mt-6 rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
+              <h2 className='mb-6 text-lg font-black text-slate-900'>Recently Added</h2>
+              {recentDocs.length === 0 ? (
+                <div className='rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center'>
+                  <p className='text-sm font-bold text-slate-500'>No recently added documents.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile Cards */}
+                  <div className='space-y-2 lg:hidden'>
+                    {recentDocs.map((doc) => {
+                      const dotColor = ({ emerald: '#10B981', amber: '#F59E0B', indigo: '#6366F1', rose: '#F43F5E', blue: '#3B82F6', teal: '#14B8A6' })[doc.color] || '#3B82F6'
+                      return (
+                        <div key={doc.id} className='rounded-xl border border-slate-100 px-4 py-3 transition-all hover:border-blue-200 hover:bg-blue-50/30'>
+                          <div className='flex items-center gap-3'>
+                            <div className='h-2.5 w-2.5 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
+                            <div className='min-w-0 flex-1'>
+                              <p className='text-sm font-bold text-slate-800'>{doc.type}</p>
+                              <p className='font-mono text-[11px] text-slate-500'>{doc.vehicleNumber}</p>
+                            </div>
+                            <p className='whitespace-nowrap text-[11px] font-semibold text-blue-600'>{timeAgo(doc.createdAt)}</p>
+                          </div>
+                          <div className='mt-2 flex items-center gap-4 border-t border-slate-50 pt-2'>
+                            <div className='text-[10px] text-slate-400'>
+                              <span className='font-semibold text-slate-500'>From:</span> {doc.validFrom}
+                            </div>
+                            <div className='text-[10px] text-slate-400'>
+                              <span className='font-semibold text-slate-500'>To:</span> {doc.validTo}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Desktop Table */}
+                  <div className='hidden lg:block'>
+                    <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white'>
+                      <table className='w-full text-left'>
+                        <thead>
+                          <tr className='border-b border-slate-100 bg-slate-50/50'>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Added</th>
+                          </tr>
+                        </thead>
+                        <tbody className='divide-y divide-slate-50'>
+                          {recentDocs.map((doc) => (
+                            <tr key={doc.id} className='transition-colors hover:bg-slate-50/50 group'>
+                              <td className='px-6 py-4'>
+                                <div className='flex items-center gap-3'>
+                                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>
+                                    {doc.type === 'Insurance' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
+                                    {doc.type === 'Tax' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
+                                    {doc.type === 'PUC' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
+                                    {doc.type === 'Fitness' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
+                                    {doc.type === 'GPS' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
+                                    {doc.type === 'Permit' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
+                                  </div>
+                                  <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
+                                </div>
+                              </td>
+                              <td className='px-6 py-4'>
+                                <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
+                              </td>
+                              <td className='px-6 py-4 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
+                              <td className='px-6 py-4 text-xs font-medium text-slate-500'>{doc.validTo}</td>
+                              <td className='px-6 py-4 text-right'>
+                                <span className='rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black uppercase text-blue-600'>{timeAgo(doc.createdAt)}</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </section>

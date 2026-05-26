@@ -59,6 +59,18 @@ const InsuranceSchema = new mongoose.Schema({
     enum: INSURANCE_COMPANIES
   },
 
+  vehicleClass: {
+    type: String,
+    trim: true,
+    enum: ['Private Car', 'Two Wheeler', 'Commercial Vehicle', 'Taxi/Cab', 'Three Wheeler', 'Tractor', 'Others', '']
+  },
+
+  coverageType: {
+    type: String,
+    trim: true,
+    enum: ['Comprehensive', 'Third Party', '']
+  },
+
   // Vehicle Information
   vehicleNumber: {
     type: String,

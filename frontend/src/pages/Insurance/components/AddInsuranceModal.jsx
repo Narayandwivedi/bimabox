@@ -65,7 +65,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     validFrom: '',
     validTo: '',
     insuranceDocument: '',
-    insuranceCompany: ''
+    insuranceCompany: '',
+    vehicleClass: '',
+    coverageType: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -97,7 +99,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
         insuranceDocument: initialData.insuranceDocument || '',
-        insuranceCompany: initialData.insuranceCompany || ''
+        insuranceCompany: initialData.insuranceCompany || '',
+        vehicleClass: initialData.vehicleClass || '',
+        coverageType: initialData.coverageType || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -119,7 +123,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validFrom: '',
         validTo: '',
         insuranceDocument: '',
-        insuranceCompany: ''
+        insuranceCompany: '',
+        vehicleClass: '',
+        coverageType: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -418,7 +424,9 @@ if (e.key === 'Escape') onClose()
       validTo: formData.validTo,
       issueDate: formData.validFrom,
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
-      insuranceCompany: formData.insuranceCompany
+      insuranceCompany: formData.insuranceCompany,
+      vehicleClass: formData.vehicleClass,
+      coverageType: formData.coverageType
     }
 
     if (uploadedInsuranceFile) {
@@ -522,6 +530,27 @@ if (e.key === 'Escape') onClose()
                     {INSURANCE_COMPANIES.map(company => (
                       <option key={company} value={company}>{company}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Vehicle</label>
+                  <select name='vehicleClass' value={formData.vehicleClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Class</option>
+                    <option value="Private Car">Private Car</option>
+                    <option value="Two Wheeler">Two Wheeler</option>
+                    <option value="Commercial Vehicle">Commercial Vehicle</option>
+                    <option value="Taxi/Cab">Taxi/Cab</option>
+                    <option value="Three Wheeler">Three Wheeler</option>
+                    <option value="Tractor">Tractor</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Type of Insurance</label>
+                  <select name='coverageType' value={formData.coverageType} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Type</option>
+                    <option value="Comprehensive">Comprehensive</option>
+                    <option value="Third Party">Third Party</option>
                   </select>
                 </div>
               </div>

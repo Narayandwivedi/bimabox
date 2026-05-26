@@ -307,16 +307,7 @@ const RTODocuments = () => {
             <h1 className='text-lg md:text-xl font-black text-slate-900'>RTO Documents</h1>
             <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>see all your record here</p>
           </div>
-          <button
-            type='button'
-            onClick={() => setShowImportModal(true)}
-            className='flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 hover:shadow-xl active:scale-95'
-          >
-            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
-            </svg>
-            Add
-          </button>
+
         </div>
 
         {/* Search & Filters Bar */}

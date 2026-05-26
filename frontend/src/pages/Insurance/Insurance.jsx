@@ -779,6 +779,9 @@ const Insurance = () => {
                           Policy Holder
                         </th>
                         <th className="px-4 2xl:px-6 py-3 2xl:py-4 text-left text-[10px] 2xl:text-xs font-bold text-white uppercase tracking-wider">
+                          Class / Type
+                        </th>
+                        <th className="px-4 2xl:px-6 py-3 2xl:py-4 text-left text-[10px] 2xl:text-xs font-bold text-white uppercase tracking-wider">
                           Valid From
                         </th>
                         <th className="px-4 2xl:px-6 py-3 2xl:py-4 text-left text-[10px] 2xl:text-xs font-bold text-white uppercase tracking-wider">
@@ -878,6 +881,21 @@ const Insurance = () => {
                                     </div>
                                   )}
                                 </div>
+                              </div>
+                            </td>
+                            <td className='px-4 2xl:px-6 py-3 2xl:py-5'>
+                              <div className='flex flex-col gap-1'>
+                                {insurance.vehicleClass && (
+                                  <span className='text-[11px] 2xl:text-[13px] font-semibold text-gray-800'>{insurance.vehicleClass}</span>
+                                )}
+                                {insurance.coverageType && (
+                                  <span className={`text-[10px] 2xl:text-[11px] font-bold px-1.5 py-0.5 rounded inline-block w-fit ${insurance.coverageType === 'Comprehensive' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                                    {insurance.coverageType}
+                                  </span>
+                                )}
+                                {!insurance.vehicleClass && !insurance.coverageType && (
+                                  <span className='text-[11px] 2xl:text-[13px] text-gray-400'>—</span>
+                                )}
                               </div>
                             </td>
                             <td className="px-0.5 2xl:px-1 py-3 2xl:py-5 pl-8 2xl:pl-12">

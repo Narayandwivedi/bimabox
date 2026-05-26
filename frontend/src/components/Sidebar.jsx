@@ -1,113 +1,105 @@
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { getTheme } from '../context/ThemeContext'
 
-const sidebarItems = [
-  { id: 'vehicle', title: 'Add Vehicle', icon: (
+const navIcons = {
+  home: (
     <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' />
     </svg>
-  ), color: 'blue' },
-  { id: 'fitness', title: 'Add Fitness', icon: (
-    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' />
-    </svg>
-  ), color: 'rose' },
-  { id: 'tax', title: 'Add Tax', icon: (
+  ),
+  premium: (
     <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
     </svg>
-  ), color: 'emerald' },
-  { id: 'puc', title: 'Add PUC', icon: (
+  ),
+  settings: (
     <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' />
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
     </svg>
-  ), color: 'amber' },
-  { id: 'gps', title: 'Add GPS', icon: (
-    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
-    </svg>
-  ), color: 'indigo' },
-  { id: 'insurance', title: 'Add Insurance', icon: (
-    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
-    </svg>
-  ), color: 'blue' },
-  { id: 'permit', title: 'Add Permit', icon: (
-    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-    </svg>
-  ), color: 'teal' },
+  ),
+}
+
+const mainNavItems = [
+  { name: 'Home', path: '/', icon: navIcons.home },
+  { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
+  { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]
 
-const Sidebar = ({ show, onHide, onAddVehicle, onAddFitness, onAddTax, onAddPuc, onAddGps, onAddInsurance, onAddPermit }) => {
-  const handlers = {
-    vehicle: onAddVehicle,
-    fitness: onAddFitness,
-    tax: onAddTax,
-    puc: onAddPuc,
-    gps: onAddGps,
-    insurance: onAddInsurance,
-    permit: onAddPermit
-  }
+const NavLink = ({ item, isActive, children }) => (
+  <Link
+    to={item.path}
+    className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
+      isActive
+        ? 'bg-blue-50 text-blue-600 shadow-sm'
+        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+    }`}
+  >
+    {children}
+  </Link>
+)
+
+const Sidebar = () => {
+  const location = useLocation()
+  const theme = getTheme()
 
   return (
-    <>
-      {/* Mobile Overlay */}
-      <div 
-        className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${show ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
-        onClick={onHide}
-      />
+    <aside
+      className={`fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200/70 bg-white/90 backdrop-blur-sm lg:flex ${theme.navbar}`}
+    >
+      <div className='flex h-full flex-col'>
+        <div className='flex-none border-b border-slate-100 px-4 py-4'>
+          <Link to='/' className='flex items-center justify-center gap-2'>
+            <img
+              src='/bimabox-Photoroom.avif'
+              alt='BimaBox'
+              className='h-10 w-auto drop-shadow-sm'
+            />
+          </Link>
+        </div>
 
-      {/* Sidebar Container */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform bg-white/95 p-6 shadow-2xl backdrop-blur-xl transition-transform duration-300 ${show ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className='flex h-full flex-col'>
-          <div className='mb-8 flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <div className='h-10 w-10 overflow-hidden rounded-2xl bg-blue-600 p-1 shadow-lg shadow-blue-200'>
-                <img src='/logo.png' alt='BimaBox' className='h-full w-full object-contain brightness-0 invert' />
-              </div>
-              <div>
-                <h1 className='text-lg font-black text-slate-900'>BimaBox</h1>
-                <p className='text-[10px] font-bold uppercase tracking-widest text-slate-400'>Menu</p>
-              </div>
-            </div>
-            <button onClick={onHide} className='rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 lg:hidden'>
-              <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-              </svg>
-            </button>
+        <div className='flex-1 overflow-y-auto px-3 py-4 scrollbar-thin'>
+          <div className='mb-8'>
+            <p className='mb-3 flex items-center gap-2 px-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400'>
+              <span className='h-px flex-1 bg-slate-200' />
+              <span>Navigation</span>
+              <span className='h-px flex-1 bg-slate-200' />
+            </p>
+            <nav className='space-y-0.5'>
+              {mainNavItems.map((item) => {
+                const isActive = location.pathname === item.path
+                return (
+                  <NavLink key={item.path} item={item} isActive={isActive}>
+                    <span
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-100 text-blue-600'
+                          : 'text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-600'
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span>{item.name}</span>
+                  </NavLink>
+                )
+              })}
+            </nav>
           </div>
+        </div>
 
-          <nav className='flex-1 space-y-2'>
-            <p className='mb-4 px-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400'>Management</p>
-            {sidebarItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (handlers[item.id]) handlers[item.id]()
-                  if (onHide) onHide()
-                }}
-                className='group flex w-full items-center gap-4 rounded-2xl border border-transparent bg-white px-4 py-3.5 text-left transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-lg hover:shadow-slate-100'
-              >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-${item.color}-50 text-${item.color}-600 shadow-sm group-hover:scale-110 transition-transform`}>
-                  {item.icon}
-                </div>
-                <span className='text-sm font-bold text-slate-700 group-hover:text-slate-900'>{item.title}</span>
-              </button>
-            ))}
-          </nav>
-
-          <div className='mt-auto pt-6 border-t border-slate-100'>
-            <div className='rounded-3xl bg-slate-900 p-6 shadow-2xl'>
-              <p className='text-xs font-bold text-slate-400 uppercase tracking-widest mb-1'>Support</p>
-              <p className='text-sm font-black text-white mb-4'>Need assistance?</p>
-              <button className='w-full rounded-xl bg-white py-2.5 text-xs font-bold text-slate-900 shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]'>
-                Contact Helpdesk
-              </button>
+        <div className='flex-none border-t border-slate-100 p-4'>
+          <div className='flex items-center gap-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2.5'>
+            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600'>
+              BB
+            </div>
+            <div className='flex-1 min-w-0'>
+              <p className='truncate text-sm font-semibold text-slate-700'>BimaBox</p>
+              <p className='truncate text-[11px] text-slate-400'>v1.0.0</p>
             </div>
           </div>
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   )
 }
 

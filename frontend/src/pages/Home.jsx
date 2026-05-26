@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import Sidebar from '../components/Sidebar'
 import SearchBar from '../components/SearchBar'
 import AddVehicleModal from './VehicleRegistration/components/AddVehicleModal'
 import AddFitnessModal from './Fitness/components/AddFitnessModal'
@@ -29,7 +28,6 @@ const Home = () => {
   const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
   const [showAddPermitModal, setShowAddPermitModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [expiryFilter, setExpiryFilter] = useState(30)
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
@@ -122,19 +120,7 @@ const Home = () => {
 
   return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
-      <Sidebar 
-        show={showMobileSidebar} 
-        onHide={() => setShowMobileSidebar(false)}
-        onAddVehicle={() => setShowAddVehicleModal(true)}
-        onAddFitness={() => setShowAddFitnessModal(true)}
-        onAddTax={() => setShowAddTaxModal(true)}
-        onAddPuc={() => setShowAddPucModal(true)}
-        onAddGps={() => setShowAddGpsModal(true)}
-        onAddInsurance={() => setShowAddInsuranceModal(true)}
-        onAddPermit={() => setShowAddPermitModal(true)}
-      />
-      
-      <main className='pl-2 pr-4 pt-3 pb-32 lg:pl-3 lg:pr-8 lg:pt-4'>
+      <main className='px-4 pt-3 pb-32 lg:px-8 lg:pt-4'>
         <section className='w-full'>
           <div className='max-w-6xl mx-auto'>
             {/* Header and Search removed as requested */}

@@ -43,7 +43,7 @@ function AppContent() {
             <img
               src='/bimabox-Photoroom.avif'
               alt='BimaBox'
-              className='h-10 w-auto drop-shadow-md'
+              className='h-12 w-auto drop-shadow-md'
             />
           </Link>
         </nav>

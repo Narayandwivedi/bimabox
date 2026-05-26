@@ -395,83 +395,159 @@ const RTODocuments = () => {
           </div>
         </div>
 
-        {/* Document Cards List */}
+        {/* Document List */}
         {loading ? (
           <div className='mt-12 flex justify-center items-center flex-col gap-4'>
             <div className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'></div>
             <p className='text-sm font-semibold text-slate-500'>Loading documents...</p>
           </div>
         ) : (
-          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-            {filteredDocuments.map((doc) => (
-              <div
-                key={doc.id}
-                onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
-                className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-indigo-300 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 cursor-pointer'
-              >
-                <div className='flex flex-col gap-2.5'>
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-600 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform'>
-                        <span className='text-xl'>{getDocTypeIcon(doc.type)}</span>
-                      </div>
-                      <div>
-                        <div className='flex items-center gap-1.5'>
-                          <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
-                        </div>
-                        <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase mt-0.5'>{doc.vehicleNumber}</p>
-                        {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
-                          <div className='mt-1'>
-                            <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
-                              {doc.rawRecord.insuranceCompany}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+          <>
+            {/* Mobile View (Cards) */}
+            <div className='grid gap-4 sm:grid-cols-2 lg:hidden'>
+              {filteredDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                  className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] transition-all hover:border-indigo-300 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 cursor-pointer'
+                >
+                  <div className='flex flex-col gap-2.5'>
                     <div className='flex items-center justify-between'>
-                      <div className={`rounded-full px-2.5 py-1 text-[10px] font-bold border shadow-sm ${getStatusColor(doc.status)}`}>
-                        {doc.status}
+                      <div className='flex items-center gap-3'>
+                        <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-slate-600 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform'>
+                          <span className='text-xl'>{getDocTypeIcon(doc.type)}</span>
+                        </div>
+                        <div>
+                          <div className='flex items-center gap-1.5'>
+                            <h3 className='text-sm font-bold text-slate-900'>{doc.type}</h3>
+                          </div>
+                          <p className='text-[10px] font-black tracking-wider text-slate-500 uppercase mt-0.5'>{doc.vehicleNumber}</p>
+                          {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                            <div className='mt-1'>
+                              <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
+                                {doc.rawRecord.insuranceCompany}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className='flex items-center justify-between'>
+                        <div className={`rounded-full px-2.5 py-1 text-[10px] font-bold border shadow-sm ${getStatusColor(doc.status)}`}>
+                          {doc.status}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className='flex items-center justify-between border-t border-slate-50 pt-2.5 mt-1.5'>
-                    <div className='flex gap-6'>
-                      <div>
-                        <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>From</p>
-                        <p className='text-[11px] font-semibold text-slate-700'>{doc.validFrom}</p>
+                    <div className='flex items-center justify-between border-t border-slate-50 pt-2.5 mt-1.5'>
+                      <div className='flex gap-6'>
+                        <div>
+                          <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>From</p>
+                          <p className='text-[11px] font-semibold text-slate-700'>{doc.validFrom}</p>
+                        </div>
+                        <div>
+                          <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>To</p>
+                          <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className='text-[9px] font-bold uppercase tracking-tight text-slate-400'>To</p>
-                        <p className='text-[11px] font-bold text-slate-900'>{doc.validTo}</p>
+                      <div className='flex items-center gap-1.5'>
+                        <button
+                          onClick={(e) => handleEditClick(e, doc)}
+                          className='rounded-lg bg-blue-50 p-1.5 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors'
+                          title="Edit Record"
+                        >
+                          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
+                          className='rounded-lg bg-red-50 p-1.5 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors'
+                          title="Delete Record"
+                        >
+                          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
-                    </div>
-                    <div className='flex items-center gap-1.5'>
-                      <button
-                        onClick={(e) => handleEditClick(e, doc)}
-                        className='rounded-lg bg-blue-50 p-1.5 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors'
-                        title="Edit Record"
-                      >
-                        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
-                        className='rounded-lg bg-red-50 p-1.5 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors'
-                        title="Delete Record"
-                      >
-                        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Desktop View (Table) */}
+            <div className='hidden lg:block'>
+              <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white'>
+                <table className='w-full text-left'>
+                  <thead>
+                    <tr className='bg-slate-50/50 border-b border-slate-100'>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Type</th>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Status</th>
+                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className='divide-y divide-slate-50'>
+                    {filteredDocuments.map((doc) => (
+                      <tr
+                        key={doc.id}
+                        onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                        className='group hover:bg-slate-50/50 transition-colors cursor-pointer'
+                      >
+                        <td className='px-6 py-4'>
+                          <div className='flex items-center gap-3'>
+                            <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-600 group-hover:scale-110 transition-transform'>
+                              <span className='text-sm'>{getDocTypeIcon(doc.type)}</span>
+                            </div>
+                            <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
+                            {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                              <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
+                                {doc.rawRecord.insuranceCompany}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className='px-6 py-4'>
+                          <span className='text-xs font-mono font-bold text-slate-600'>{doc.vehicleNumber}</span>
+                        </td>
+                        <td className='px-6 py-4 text-xs text-slate-500 font-medium'>{doc.validFrom}</td>
+                        <td className='px-6 py-4 text-xs text-slate-500 font-medium'>{doc.validTo}</td>
+                        <td className='px-6 py-4 text-right'>
+                          <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg border shadow-sm ${getStatusColor(doc.status)}`}>
+                            {doc.status}
+                          </span>
+                        </td>
+                        <td className='px-6 py-4 text-right'>
+                          <div className='flex items-center justify-end gap-1.5'>
+                            <button
+                              onClick={(e) => handleEditClick(e, doc)}
+                              className='rounded-lg bg-blue-50 p-1.5 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors'
+                              title="Edit Record"
+                            >
+                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
+                              className='rounded-lg bg-red-50 p-1.5 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors'
+                              title="Delete Record"
+                            >
+                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
+            </div>
+          </>
         )}
 
         {!loading && filteredDocuments.length === 0 && (

@@ -66,7 +66,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     validTo: '',
     insuranceDocument: '',
     insuranceCompany: '',
-    insuranceClass: ''
+    insuranceClass: '',
+    product: '',
+    remarks: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -99,7 +101,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validTo: initialData.validTo || '',
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
-        insuranceClass: initialData.insuranceClass || ''
+        insuranceClass: initialData.insuranceClass || '',
+        product: initialData.product || '',
+        remarks: initialData.remarks || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -122,7 +126,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validTo: '',
         insuranceDocument: '',
         insuranceCompany: '',
-        insuranceClass: ''
+        insuranceClass: '',
+        product: '',
+        remarks: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -422,7 +428,9 @@ if (e.key === 'Escape') onClose()
       issueDate: formData.validFrom,
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
       insuranceCompany: formData.insuranceCompany,
-      insuranceClass: formData.insuranceClass
+      insuranceClass: formData.insuranceClass,
+      product: formData.product,
+      remarks: formData.remarks
     }
 
     if (uploadedInsuranceFile) {
@@ -536,6 +544,36 @@ if (e.key === 'Escape') onClose()
                     <option value="Comprehensive">Comprehensive</option>
                     <option value="Third Party">Third Party</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product</label>
+                  <select name='product' value={formData.product} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Product</option>
+                    <option value="GCV">GCV</option>
+                    <option value="GCV-3W">GCV-3W</option>
+                    <option value="Pvt. Car">Pvt. Car</option>
+                    <option value="Taxi">Taxi</option>
+                    <option value="Two Wheeler">Two Wheeler</option>
+                    <option value="Mis-D">Mis-D</option>
+                    <option value="PCV">PCV</option>
+                    <option value="PCV-3W">PCV-3W</option>
+                    <option value="Health">Health</option>
+                    <option value="Life">Life</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Burglary">Burglary</option>
+                    <option value="WC">WC</option>
+                    <option value="CPM">CPM</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Marine">Marine</option>
+                    <option value="GPA">GPA</option>
+                    <option value="GMC">GMC</option>
+                  </select>
+                </div>
+
+                <div className='md:col-span-3'>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Notes</label>
+                  <textarea name='remarks' value={formData.remarks} onChange={handleChange} rows='2' placeholder='Any additional notes...' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white resize-none' />
                 </div>
 
               </div>

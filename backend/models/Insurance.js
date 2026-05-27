@@ -65,6 +65,12 @@ const InsuranceSchema = new mongoose.Schema({
     enum: ['Comprehensive', 'Third Party', '']
   },
 
+  product: {
+    type: String,
+    trim: true,
+    enum: ['GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W', 'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC', '']
+  },
+
   // Vehicle Information
   vehicleNumber: {
     type: String,

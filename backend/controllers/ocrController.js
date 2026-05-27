@@ -259,9 +259,7 @@ const insuranceOcr = async (req, res) => {
   "validFrom": "",
   "validTo": "",
   "insuranceCompany": "",
-  "vehicleClass": "",
-  "insuranceClass": "",
-  "insuranceType": ""
+  "insuranceClass": ""
 }`
   return processOcrRequest(req, res, prompt, template)
 }

@@ -66,9 +66,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     validTo: '',
     insuranceDocument: '',
     insuranceCompany: '',
-    vehicleClass: '',
-    insuranceClass: '',
-    insuranceType: ''
+    insuranceClass: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
@@ -101,9 +99,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validTo: initialData.validTo || '',
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
-        vehicleClass: initialData.vehicleClass || '',
-        insuranceClass: initialData.insuranceClass || '',
-        insuranceType: initialData.insuranceType || ''
+        insuranceClass: initialData.insuranceClass || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -126,9 +122,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validTo: '',
         insuranceDocument: '',
         insuranceCompany: '',
-        vehicleClass: '',
-        insuranceClass: '',
-        insuranceType: ''
+        insuranceClass: ''
       })
       setFetchingVehicle(false)
       setVehicleValidation({ isValid: false, message: '' })
@@ -428,9 +422,7 @@ if (e.key === 'Escape') onClose()
       issueDate: formData.validFrom,
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
       insuranceCompany: formData.insuranceCompany,
-      vehicleClass: formData.vehicleClass,
-      insuranceClass: formData.insuranceClass,
-      insuranceType: formData.insuranceType
+      insuranceClass: formData.insuranceClass
     }
 
     if (uploadedInsuranceFile) {
@@ -536,21 +528,7 @@ if (e.key === 'Escape') onClose()
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Vehicle</label>
-                  <select name='vehicleClass' value={formData.vehicleClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                    <option value="">Select Class</option>
-                    <option value="GCV - Public Carriers Othr Than 3W">GCV - Public Carriers Othr Than 3W</option>
-                    <option value="3W GCV - Public Carriers">3W GCV - Public Carriers</option>
-                    <option value="PRIVATE CAR">PRIVATE CAR</option>
-                    <option value="2W SCOOTER/ MOTORCYCLE">2W SCOOTER/ MOTORCYCLE</option>
-                    <option value="TAXI 4W <=6 Psgr">TAXI 4W &lt;=6 Psgr</option>
-                    <option value="3W PCV <=6 Psgr">3W PCV &lt;=6 Psgr</option>
-                    <option value="BUS & MAXI >= 4W & >6 Psgr">BUS &amp; MAXI &gt;= 4W &amp; &gt;6 Psgr</option>
-                    <option value="3WH PCV >6 & <17 Psgr">3WH PCV &gt;6 &amp; &lt;17 Psgr</option>
-                    <option value="Misc-D Special Vehicles">Misc-D Special Vehicles</option>
-                  </select>
-                </div>
+
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Insurance</label>
                   <select name='insuranceClass' value={formData.insuranceClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
@@ -559,20 +537,7 @@ if (e.key === 'Escape') onClose()
                     <option value="Third Party">Third Party</option>
                   </select>
                 </div>
-                <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Type of Insurance</label>
-                  <select name='insuranceType' value={formData.insuranceType} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                    <option value="">Select Type</option>
-                    <option value="Motor">Motor</option>
-                    <option value="Health">Health</option>
-                    <option value="Life">Life</option>
-                    <option value="Fire">Fire</option>
-                    <option value="Travel">Travel</option>
-                    <option value="Home Insurance">Home Insurance</option>
-                    <option value="Crop Insurance">Crop Insurance</option>
-                    <option value="Property Insurance">Property Insurance</option>
-                  </select>
-                </div>
+
               </div>
             </div>
 

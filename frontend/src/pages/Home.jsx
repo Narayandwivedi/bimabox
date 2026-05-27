@@ -292,7 +292,7 @@ const Home = () => {
                             ) : (
                               filteredDocs.map((doc) => (
                                 <tr key={doc.id} className='group hover:bg-slate-50/50 transition-colors'>
-                                  <td className='px-6 py-4'>
+                                  <td className='px-6 py-3'>
                                     <div className='flex items-center gap-3'>
                                       <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>
                                         {doc.type === 'Insurance' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
@@ -305,11 +305,11 @@ const Home = () => {
                                       <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
                                     </div>
                                   </td>
-                                  <td className='px-6 py-4'>
+                                  <td className='px-6 py-3'>
                                     <span className='text-xs font-mono font-bold text-slate-600'>{doc.vehicleNumber}</span>
                                   </td>
-                                  <td className='px-6 py-4 text-xs text-slate-500 font-medium'>{doc.validTo}</td>
-                                  <td className='px-6 py-4 text-right'>
+                                  <td className='px-6 py-3 text-xs text-slate-500 font-medium'>{doc.validTo}</td>
+                                  <td className='px-6 py-3 text-right'>
                                     <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>
                                       {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
                                     </span>
@@ -378,7 +378,7 @@ const Home = () => {
                         <tbody className='divide-y divide-slate-50'>
                           {recentDocs.map((doc) => (
                             <tr key={doc.id} className='transition-colors hover:bg-slate-50/50 group'>
-                              <td className='px-6 py-4'>
+                              <td className='px-6 py-3'>
                                 <div className='flex items-center gap-3'>
                                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>
                                     {doc.type === 'Insurance' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
@@ -391,12 +391,12 @@ const Home = () => {
                                   <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
                                 </div>
                               </td>
-                              <td className='px-6 py-4'>
+                              <td className='px-6 py-3'>
                                 <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
                               </td>
-                              <td className='px-6 py-4 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
-                              <td className='px-6 py-4 text-xs font-medium text-slate-500'>{doc.validTo}</td>
-                              <td className='px-6 py-4 text-right'>
+                              <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
+                              <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validTo}</td>
+                              <td className='px-6 py-3 text-right'>
                                 <span className='rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black uppercase text-blue-600'>{timeAgo(doc.createdAt)}</span>
                               </td>
                             </tr>

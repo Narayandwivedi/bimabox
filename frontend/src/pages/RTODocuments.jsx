@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import SearchBar from '../components/SearchBar'
 import AddFitnessModal from './Fitness/AddFitnessModal'
 import AddPucModal from './Puc/AddPucModal'
 import AddGpsModal from './Gps/AddGpsModal'
@@ -63,7 +62,6 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Reset search when opening/closing
   useEffect(() => {
     if (!isOpen) setSearchTerm('');
   }, [isOpen]);
@@ -80,15 +78,15 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`flex w-full items-center justify-between rounded-xl border-2 transition-all duration-200 px-3 py-2.5 text-[11px] font-black focus:outline-none ${
-          isOpen ? 'border-indigo-500 bg-white shadow-lg ring-4 ring-indigo-500/10' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+          isOpen ? 'border-blue-500 bg-white shadow-lg ring-4 ring-blue-500/10' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-1.5 truncate">
-          {icon && <span className={isOpen ? 'text-indigo-500' : 'text-slate-400'}>{icon}</span>}
+          {icon && <span className={isOpen ? 'text-blue-500' : 'text-slate-400'}>{icon}</span>}
           <span className="truncate">{label}: {selectedOption.label}</span>
         </div>
         <svg
-          className={`h-3 w-3 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500' : ''}`}
+          className={`h-3 w-3 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-500' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -112,7 +110,7 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
                 placeholder={`Search ${label.toLowerCase()}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-50 border-none rounded-lg py-1.5 pl-8 pr-2 text-[10px] font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="w-full bg-slate-50 border-none rounded-lg py-1.5 pl-8 pr-2 text-[10px] font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 outline-none"
               />
             </div>
           </div>
@@ -129,8 +127,8 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
                   }}
                   className={`flex w-full items-center px-4 py-4.5 text-[11px] font-bold transition-all duration-150 ${
                     value === option.value
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-slate-600 hover:bg-indigo-50/50 hover:text-indigo-600'
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-slate-600 hover:bg-blue-50/50 hover:text-blue-600'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
@@ -304,308 +302,307 @@ const RTODocuments = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-4 pb-32 pt-4 md:px-6 lg:px-8'>
-      <div className='mx-auto max-w-6xl'>
-        {/* Header Section */}
-        <div className='mb-6 flex items-center gap-4'>
-          <div>
-            <h1 className='text-xl md:text-2xl font-black text-slate-900'>RTO Documents</h1>
-            <p className='text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>
-          </div>
-          <button
-            type='button'
-            onClick={() => setShowImportModal(true)}
-            className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-indigo-200 transition-all hover:from-indigo-700 hover:to-blue-700 hover:shadow-xl hover:shadow-indigo-300 hover:-translate-y-0.5 active:scale-95'
-          >
-            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
-            </svg>
-            Import
-          </button>
-        </div>
-
-        {/* Stats Summary */}
-        {!loading && documents.length > 0 && (
-          <div className='mb-6 grid grid-cols-2 gap-3 md:grid-cols-4'>
-            {[
-              { label: 'Total Documents', value: totalDocs, color: 'bg-slate-900', textColor: 'text-slate-900', iconBg: 'bg-slate-100', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-              { label: 'Active', value: activeDocs, color: 'bg-emerald-600', textColor: 'text-emerald-700', iconBg: 'bg-emerald-100', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-              { label: 'Expiring Soon', value: expiringDocs, color: 'bg-amber-500', textColor: 'text-amber-700', iconBg: 'bg-amber-100', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-              { label: 'Expired', value: expiredDocs, color: 'bg-rose-600', textColor: 'text-rose-700', iconBg: 'bg-rose-100', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
-            ].map((stat) => (
-              <div key={stat.label} className='relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md'>
-                <div className='flex items-center gap-3'>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.iconBg}`}>
-                    <svg className={`h-5 w-5 ${stat.textColor}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d={stat.icon} />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className='text-xs font-bold text-slate-400 uppercase tracking-wide'>{stat.label}</p>
-                    <p className={`text-lg font-black ${stat.textColor}`}>{stat.value}</p>
-                  </div>
+    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
+      <main className='px-4 pt-3 pb-32 lg:px-8 lg:pt-4'>
+        <section className='w-full'>
+          <div className='max-w-6xl mx-auto'>
+            {/* Quick Action Buttons */}
+            <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
+              <div className='mb-6 flex items-center justify-between'>
+                <div>
+                  <h1 className='text-xl md:text-2xl font-black text-slate-900'>RTO Documents</h1>
+                  <p className='text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>
                 </div>
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.color} opacity-30`} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Search & Filters Bar */}
-        <div className='mb-6 flex flex-col md:flex-row md:items-center gap-3 w-full'>
-          {/* Search Row */}
-          <div className='relative w-full md:w-80 md:flex-shrink-0'>
-            <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-              <svg className='w-4 h-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
-              </svg>
-            </div>
-            <input
-              type='text'
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder='Search by vehicle or type...'
-              className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] md:placeholder:text-xs placeholder:text-slate-400 placeholder:font-semibold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all uppercase'
-            />
-          </div>
-
-          {/* Filters Row */}
-          <div className='flex flex-col md:flex-row gap-2 flex-1 w-full'>
-            {/* Type & Status Row */}
-            <div className='flex gap-2 flex-1 md:flex-initial md:w-96'>
-              <CustomDropdown
-                label="Type"
-                value={typeFilter}
-                onChange={(val) => {
-                  setTypeFilter(val)
-                  setCompanyFilter('All')
-                }}
-                options={[
-                  { value: 'All', label: 'All' },
-                  { value: 'Tax', label: 'Tax' },
-                  { value: 'PUC', label: 'PUC' },
-                  { value: 'GPS', label: 'GPS' },
-                  { value: 'Fitness', label: 'Fitness' },
-                  { value: 'Permit', label: 'Permit' },
-                  { value: 'Insurance', label: 'Insurance' },
-                ]}
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-              />
-
-              <CustomDropdown
-                label="Status"
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { value: 'All', label: 'All Status' },
-                  { value: 'Active', label: 'Active' },
-                  { value: 'Expiring Soon', label: 'Expiring' },
-                  { value: 'Expired', label: 'Expired' },
-                ]}
-                icon={
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
-                  </svg>
-                }
-              />
-            </div>
-
-            {/* Company Row (Full Width) */}
-            {typeFilter === 'Insurance' && (
-              <div className='w-full md:w-56 md:flex-shrink-0'>
-                <CustomDropdown
-                  label="Company"
-                  value={companyFilter}
-                  onChange={setCompanyFilter}
-                  options={[
-                    { value: 'All', label: 'All Companies' },
-                    ...INSURANCE_COMPANIES.map(company => ({ value: company, label: company }))
-                  ]}
-                  icon={
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  }
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Document List */}
-        {loading ? (
-          <div className='mt-12 flex justify-center items-center flex-col gap-4'>
-            <div className='inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'></div>
-            <p className='text-sm font-semibold text-slate-500'>Loading documents...</p>
-          </div>
-        ) : (
-          <>
-            {/* Mobile View (Cards) */}
-            <div className='grid gap-4 sm:grid-cols-2 lg:hidden'>
-              {filteredDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
-                  className='group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-100/50 hover:-translate-y-0.5 cursor-pointer'
+                <button
+                  type='button'
+                  onClick={() => setShowImportModal(true)}
+                  className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-blue-200 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95'
                 >
-                  <div className='absolute right-0 top-0 h-16 w-16 translate-x-6 -translate-y-6 opacity-[0.04]'>
-                    <div className={`h-full w-full rounded-full ${doc.status === 'Active' ? 'bg-emerald-600' : doc.status === 'Expiring Soon' ? 'bg-amber-500' : 'bg-rose-600'}`} />
-                  </div>
-                  <div className='flex items-start justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 group-hover:scale-110 group-hover:ring-indigo-200 transition-all'>
-                        <span className='text-lg'>{getDocTypeIcon(doc.type)}</span>
-                      </div>
-                      <div>
-                        <h3 className='text-sm font-black text-slate-900'>{doc.type}</h3>
-                        <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono'>{doc.vehicleNumber}</p>
-                        {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
-                          <span className='mt-1.5 inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[8px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap'>
-                            {doc.rawRecord.insuranceCompany}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className={`shrink-0 rounded-lg px-2 py-1 text-[9px] font-black uppercase leading-none tracking-wider shadow-sm ring-1 ring-inset ${getStatusColor(doc.status)}`}>
-                      {doc.status === 'Expiring Soon' ? 'Expiring' : doc.status}
-                    </span>
-                  </div>
-                  <div className='mt-4 flex items-center justify-between border-t border-slate-100 pt-3'>
-                    <div className='flex gap-5'>
-                      <div>
-                        <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>From</p>
-                        <p className='text-xs font-bold text-slate-700'>{doc.validFrom}</p>
-                      </div>
-                      <div>
-                        <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>To</p>
-                        <p className='text-xs font-black text-slate-900'>{doc.validTo}</p>
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      <button
-                        onClick={(e) => handleEditClick(e, doc)}
-                        className='rounded-lg bg-blue-50/80 p-1.5 text-blue-500 opacity-0 group-hover:opacity-100 hover:bg-blue-100 hover:text-blue-700 transition-all'
-                        title="Edit Record"
-                      >
-                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
-                        className='rounded-lg bg-red-50/80 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-700 transition-all'
-                        title="Delete Record"
-                      >
-                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
+                  </svg>
+                  Add
+                </button>
+              </div>
 
-            {/* Desktop View (Table) */}
-            <div className='hidden lg:block'>
-              <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm'>
-                <table className='w-full text-left'>
-                  <thead>
-                    <tr className='bg-slate-50/80 border-b border-slate-100'>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400'>Type</th>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400'>Vehicle</th>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400'>Valid From</th>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400'>Valid To</th>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 text-right'>Status</th>
-                      <th className='px-6 py-4 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 text-right'>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-slate-100/50'>
-                    {filteredDocuments.map((doc, idx) => (
-                      <tr
+              {/* Stats Summary */}
+              {!loading && documents.length > 0 && (
+                <div className='mb-6 grid grid-cols-2 gap-3 md:grid-cols-4'>
+                  {[
+                    { label: 'Total Documents', value: totalDocs, color: 'bg-slate-900', textColor: 'text-slate-900', iconBg: 'bg-slate-100', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+                    { label: 'Active', value: activeDocs, color: 'bg-emerald-600', textColor: 'text-emerald-700', iconBg: 'bg-emerald-100', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+                    { label: 'Expiring Soon', value: expiringDocs, color: 'bg-amber-500', textColor: 'text-amber-700', iconBg: 'bg-amber-100', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+                    { label: 'Expired', value: expiredDocs, color: 'bg-rose-600', textColor: 'text-rose-700', iconBg: 'bg-rose-100', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
+                  ].map((stat) => (
+                    <div key={stat.label} className='relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 md:p-4 shadow-sm transition-all hover:shadow-md'>
+                      <div className='flex items-center gap-2 md:gap-3'>
+                        <div className={`flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl ${stat.iconBg}`}>
+                          <svg className={`h-4 w-4 md:h-5 md:w-5 ${stat.textColor}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d={stat.icon} />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className='text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wide'>{stat.label}</p>
+                          <p className={`text-sm md:text-lg font-black ${stat.textColor}`}>{stat.value}</p>
+                        </div>
+                      </div>
+                      <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${stat.color} opacity-30`} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Search & Filters */}
+              <div className='mb-6 flex flex-col md:flex-row md:items-center gap-3 w-full'>
+                <div className='relative w-full md:w-80 md:flex-shrink-0'>
+                  <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+                    <svg className='w-4 h-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
+                    </svg>
+                  </div>
+                  <input
+                    type='text'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder='Search by vehicle or type...'
+                    className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] md:placeholder:text-xs placeholder:text-slate-400 placeholder:font-semibold focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all uppercase'
+                  />
+                </div>
+
+                <div className='flex flex-col md:flex-row gap-2 flex-1 w-full'>
+                  <div className='flex gap-2 flex-1 md:flex-initial md:w-96'>
+                    <CustomDropdown
+                      label="Type"
+                      value={typeFilter}
+                      onChange={(val) => {
+                        setTypeFilter(val)
+                        setCompanyFilter('All')
+                      }}
+                      options={[
+                        { value: 'All', label: 'All' },
+                        { value: 'Tax', label: 'Tax' },
+                        { value: 'PUC', label: 'PUC' },
+                        { value: 'GPS', label: 'GPS' },
+                        { value: 'Fitness', label: 'Fitness' },
+                        { value: 'Permit', label: 'Permit' },
+                        { value: 'Insurance', label: 'Insurance' },
+                      ]}
+                      icon={
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      }
+                    />
+
+                    <CustomDropdown
+                      label="Status"
+                      value={statusFilter}
+                      onChange={setStatusFilter}
+                      options={[
+                        { value: 'All', label: 'All Status' },
+                        { value: 'Active', label: 'Active' },
+                        { value: 'Expiring Soon', label: 'Expiring' },
+                        { value: 'Expired', label: 'Expired' },
+                      ]}
+                      icon={
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                      }
+                    />
+                  </div>
+
+                  {typeFilter === 'Insurance' && (
+                    <div className='w-full md:w-56 md:flex-shrink-0'>
+                      <CustomDropdown
+                        label="Company"
+                        value={companyFilter}
+                        onChange={setCompanyFilter}
+                        options={[
+                          { value: 'All', label: 'All Companies' },
+                          ...INSURANCE_COMPANIES.map(company => ({ value: company, label: company }))
+                        ]}
+                        icon={
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Document List */}
+              {loading ? (
+                <div className='mt-6 text-center py-12 bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200'>
+                  <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
+                  <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Loading documents...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile View (Cards) */}
+                  <div className='grid gap-4 sm:grid-cols-2 lg:hidden'>
+                    {filteredDocuments.map((doc) => (
+                      <div
                         key={doc.id}
                         onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
-                        className='group cursor-pointer transition-all hover:bg-indigo-50/40'
-                        style={{ animationDelay: `${idx * 30}ms` }}
+                        className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-400 hover:shadow-xl hover:shadow-blue-100/50 hover:-translate-y-0.5 cursor-pointer'
                       >
-                        <td className='px-6 py-4'>
+                        <div className='flex items-start justify-between'>
                           <div className='flex items-center gap-3'>
-                            <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 group-hover:ring-indigo-200 group-hover:scale-110 transition-all'>
-                              <span className='text-sm'>{getDocTypeIcon(doc.type)}</span>
+                            <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 group-hover:scale-110 group-hover:ring-blue-200 transition-all'>
+                              <span className='text-lg'>{getDocTypeIcon(doc.type)}</span>
                             </div>
                             <div>
-                              <span className='text-sm font-extrabold text-slate-800'>{doc.type}</span>
+                              <h3 className='text-sm font-black text-slate-900'>{doc.type}</h3>
+                              <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono'>{doc.vehicleNumber}</p>
                               {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
-                                <span className='ml-2 inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[8px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 align-middle'>
+                                <span className='mt-1.5 inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap'>
                                   {doc.rawRecord.insuranceCompany}
                                 </span>
                               )}
                             </div>
                           </div>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <span className='font-mono text-xs font-extrabold text-slate-600'>{doc.vehicleNumber}</span>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <span className='text-xs font-semibold text-slate-500'>{doc.validFrom}</span>
-                        </td>
-                        <td className='px-6 py-4'>
-                          <span className='text-xs font-bold text-slate-700'>{doc.validTo}</span>
-                        </td>
-                        <td className='px-6 py-4 text-right'>
-                          <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] font-black uppercase leading-none tracking-wider shadow-sm ring-1 ring-inset ${getStatusColor(doc.status)}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${doc.status === 'Active' ? 'bg-emerald-500' : doc.status === 'Expiring Soon' ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                          <span className={`shrink-0 rounded-lg px-2 py-1 text-[9px] font-black uppercase leading-none tracking-wider shadow-sm ring-1 ring-inset ${getStatusColor(doc.status)}`}>
                             {doc.status === 'Expiring Soon' ? 'Expiring' : doc.status}
                           </span>
-                        </td>
-                        <td className='px-6 py-4 text-right'>
-                          <div className='flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity'>
+                        </div>
+                        <div className='mt-4 flex items-center justify-between border-t border-slate-100 pt-3'>
+                          <div className='flex gap-5'>
+                            <div>
+                              <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>From</p>
+                              <p className='text-xs font-bold text-slate-700'>{doc.validFrom}</p>
+                            </div>
+                            <div>
+                              <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>To</p>
+                              <p className='text-xs font-black text-slate-900'>{doc.validTo}</p>
+                            </div>
+                          </div>
+                          <div className='flex items-center gap-1'>
                             <button
                               onClick={(e) => handleEditClick(e, doc)}
-                              className='rounded-lg bg-blue-50 p-1.5 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-all hover:scale-110'
+                              className='rounded-lg bg-blue-50/80 p-1.5 text-blue-500 opacity-0 group-hover:opacity-100 hover:bg-blue-100 hover:text-blue-700 transition-all'
                               title="Edit Record"
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                               </svg>
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
-                              className='rounded-lg bg-red-50 p-1.5 text-red-500 hover:bg-red-100 hover:text-red-700 transition-all hover:scale-110'
+                              className='rounded-lg bg-red-50/80 p-1.5 text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-700 transition-all'
                               title="Delete Record"
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
+                  </div>
 
-        {!loading && filteredDocuments.length === 0 && (
-          <div className='mt-12 text-center'>
-            <div className='mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-slate-50 to-slate-100 shadow-inner'>
-              <svg className='h-10 w-10 text-slate-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M12 11v4m0 2h.01' opacity='0.5' />
-              </svg>
+                  {/* Desktop View (Table) */}
+                  <div className='hidden lg:block'>
+                    <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white'>
+                      <table className='w-full text-left'>
+                        <thead>
+                          <tr className='bg-slate-50/50 border-b border-slate-100'>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Type</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Status</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className='divide-y divide-slate-50'>
+                          {filteredDocuments.map((doc, idx) => (
+                            <tr
+                              key={doc.id}
+                              onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                              className='group cursor-pointer transition-all hover:bg-blue-50/40'
+                              style={{ animationDelay: `${idx * 30}ms` }}
+                            >
+                              <td className='px-6 py-4'>
+                                <div className='flex items-center gap-3'>
+                                  <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 group-hover:ring-blue-200 group-hover:scale-110 transition-all'>
+                                    <span className='text-sm'>{getDocTypeIcon(doc.type)}</span>
+                                  </div>
+                                  <div>
+                                    <span className='text-sm font-extrabold text-slate-800'>{doc.type}</span>
+                                    {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
+                                      <span className='ml-2 inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold text-blue-700 ring-1 ring-inset ring-blue-700/10 align-middle'>
+                                        {doc.rawRecord.insuranceCompany}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className='px-6 py-4'>
+                                <span className='font-mono text-xs font-extrabold text-slate-600'>{doc.vehicleNumber}</span>
+                              </td>
+                              <td className='px-6 py-4'>
+                                <span className='text-xs font-semibold text-slate-500'>{doc.validFrom}</span>
+                              </td>
+                              <td className='px-6 py-4'>
+                                <span className='text-xs font-bold text-slate-700'>{doc.validTo}</span>
+                              </td>
+                              <td className='px-6 py-4 text-right'>
+                                <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[9px] font-black uppercase leading-none tracking-wider shadow-sm ring-1 ring-inset ${getStatusColor(doc.status)}`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full ${doc.status === 'Active' ? 'bg-emerald-500' : doc.status === 'Expiring Soon' ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                                  {doc.status === 'Expiring Soon' ? 'Expiring' : doc.status}
+                                </span>
+                              </td>
+                              <td className='px-6 py-4 text-right'>
+                                <div className='flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                  <button
+                                    onClick={(e) => handleEditClick(e, doc)}
+                                    className='rounded-lg bg-blue-50 p-1.5 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-all hover:scale-110'
+                                    title="Edit Record"
+                                  >
+                                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setDeletingDoc(doc) }}
+                                    className='rounded-lg bg-red-50 p-1.5 text-red-500 hover:bg-red-100 hover:text-red-700 transition-all hover:scale-110'
+                                    title="Delete Record"
+                                  >
+                                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!loading && filteredDocuments.length === 0 && (
+                <div className='mt-6 text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
+                  <div className='mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-slate-50 to-slate-100 shadow-inner'>
+                    <svg className='h-10 w-10 text-slate-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M12 11v4m0 2h.01' opacity='0.5' />
+                    </svg>
+                  </div>
+                  <h3 className='text-lg font-black text-slate-800'>No Documents Found</h3>
+                  <p className='mt-1 text-xs font-semibold text-slate-400'>Try adjusting your search or filter to find what you're looking for.</p>
+                </div>
+              )}
             </div>
-            <h3 className='text-xl font-black text-slate-800'>No Documents Found</h3>
-            <p className='mt-1 text-sm font-semibold text-slate-400'>Try adjusting your search or filter to find what you're looking for.</p>
           </div>
-        )}
-      </div>
+        </section>
+      </main>
 
       {deletingDoc && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={(e) => e.stopPropagation()}>

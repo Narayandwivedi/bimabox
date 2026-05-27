@@ -42,7 +42,7 @@ function AppContent() {
         </nav>
       )}
 
-      <div className={showNav ? 'lg:ml-64' : ''}>
+      <div className={showNav ? 'lg:ml-[230px]' : ''}>
         <div className={showNav ? 'pt-16 pb-20 lg:pt-0 lg:pb-0' : ''}>
           <Routes>
             <Route path='/login' element={<Login />} />

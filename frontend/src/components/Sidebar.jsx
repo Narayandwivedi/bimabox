@@ -51,7 +51,7 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200/70 bg-white/90 backdrop-blur-sm lg:flex ${theme.navbar}`}
+      className={`fixed inset-y-0 left-0 z-30 hidden w-[230px] flex-col border-r border-slate-200/70 bg-white/90 backdrop-blur-sm lg:flex ${theme.navbar}`}
     >
       <div className='flex h-full flex-col'>
         <div className='flex-none border-b border-slate-100 px-5 py-5'>

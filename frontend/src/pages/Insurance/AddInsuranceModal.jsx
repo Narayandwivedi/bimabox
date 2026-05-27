@@ -538,15 +538,6 @@ if (e.key === 'Escape') onClose()
                 </div>
 
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Insurance</label>
-                  <select name='insuranceClass' value={formData.insuranceClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                    <option value="">Select Type</option>
-                    <option value="Comprehensive">Comprehensive</option>
-                    <option value="Third Party">Third Party</option>
-                  </select>
-                </div>
-
-                <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product</label>
                   <select name='product' value={formData.product} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                     <option value="">Select Product</option>
@@ -568,6 +559,15 @@ if (e.key === 'Escape') onClose()
                     <option value="Marine">Marine</option>
                     <option value="GPA">GPA</option>
                     <option value="GMC">GMC</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Insurance</label>
+                  <select name='insuranceClass' value={formData.insuranceClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                    <option value="">Select Type</option>
+                    <option value="Comprehensive">Comprehensive</option>
+                    <option value="Third Party">Third Party</option>
                   </select>
                 </div>
 

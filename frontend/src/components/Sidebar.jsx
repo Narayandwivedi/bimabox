@@ -27,7 +27,7 @@ const navIcons = {
 
 const mainNavItems = [
   { name: 'Home', path: '/', icon: navIcons.home },
-  { name: 'Search', path: '/rto-documents', icon: navIcons.search },
+  { name: 'Search', path: '/search', icon: navIcons.search },
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
   { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]

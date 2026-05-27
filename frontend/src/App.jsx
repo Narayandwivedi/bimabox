@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Setting from './pages/Setting'
 import RTODocuments from './pages/RTODocuments'
 import RTODocumentDetail from './pages/RTODocumentDetail'
+import Search from './pages/Search'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
 import { getTheme } from './context/ThemeContext'
@@ -49,6 +50,7 @@ function AppContent() {
             <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
+            <Route path='/search' element={<ProtectedRoute><Search /></ProtectedRoute>} />
             <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />

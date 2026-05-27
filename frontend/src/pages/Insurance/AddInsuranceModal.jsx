@@ -68,6 +68,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     insuranceCompany: '',
     insuranceClass: '',
     product: '',
+    vehicleClass: '',
     remarks: ''
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
@@ -103,6 +104,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceCompany: initialData.insuranceCompany || '',
         insuranceClass: initialData.insuranceClass || '',
         product: initialData.product || '',
+        vehicleClass: initialData.vehicleClass || '',
         remarks: initialData.remarks || ''
       })
       setUploadedInsuranceDocument(
@@ -128,6 +130,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceCompany: '',
         insuranceClass: '',
         product: '',
+        vehicleClass: '',
         remarks: ''
       })
       setFetchingVehicle(false)
@@ -430,6 +433,7 @@ if (e.key === 'Escape') onClose()
       insuranceCompany: formData.insuranceCompany,
       insuranceClass: formData.insuranceClass,
       product: formData.product,
+      vehicleClass: formData.vehicleClass,
       remarks: formData.remarks
     }
 
@@ -538,9 +542,9 @@ if (e.key === 'Escape') onClose()
                 </div>
 
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product Type</label>
                   <select name='product' value={formData.product} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                    <option value="">Select Product</option>
+                    <option value="">Select Product Type</option>
                     <option value="GCV">GCV</option>
                     <option value="GCV-3W">GCV-3W</option>
                     <option value="Pvt. Car">Pvt. Car</option>
@@ -562,10 +566,27 @@ if (e.key === 'Escape') onClose()
                   </select>
                 </div>
 
+                {['GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W'].includes(formData.product) && (
+                  <div>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Vehicle</label>
+                    <select name='vehicleClass' value={formData.vehicleClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
+                      <option value="">Select Class</option>
+                      <option value="GCV">GCV</option>
+                      <option value="GCV-3W">GCV-3W</option>
+                      <option value="Pvt. Car">Pvt. Car</option>
+                      <option value="Taxi">Taxi</option>
+                      <option value="Two Wheeler">Two Wheeler</option>
+                      <option value="Mis-D">Mis-D</option>
+                      <option value="PCV">PCV</option>
+                      <option value="PCV-3W">PCV-3W</option>
+                    </select>
+                  </div>
+                )}
+
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Insurance</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Type</label>
                   <select name='insuranceClass' value={formData.insuranceClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                    <option value="">Select Type</option>
+                    <option value="">Select Policy Type</option>
                     <option value="Comprehensive">Comprehensive</option>
                     <option value="Third Party">Third Party</option>
                   </select>

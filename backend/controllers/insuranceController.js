@@ -9,7 +9,7 @@ module.exports = createRecordController({
   requiredDateField: 'validFrom',
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber'],
-  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'remarks'],
+  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'remarks'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
   numberFields: ['totalFee', 'paid', 'balance'],
   arrayField: 'feeBreakup',

@@ -59,7 +59,7 @@ const Sidebar = () => {
             <img
               src='/bimabox-Photoroom.avif'
               alt='BimaBox'
-              className='h-12 w-auto drop-shadow-sm'
+              className='h-14 w-auto drop-shadow-sm'
             />
           </Link>
         </div>

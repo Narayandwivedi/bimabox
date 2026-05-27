@@ -6,7 +6,6 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 const PAGE_SIZE = 40
 
 const Search = () => {
-  const [searchMode, setSearchMode] = useState('name')
   const [searchQuery, setSearchQuery] = useState('')
   const [inputValue, setInputValue] = useState('')
   const [records, setRecords] = useState([])
@@ -16,12 +15,6 @@ const Search = () => {
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searched, setSearched] = useState(false)
-
-  const searchModes = [
-    { key: 'name', label: 'Name' },
-    { key: 'vehicle', label: 'Vehicle No.' },
-    { key: 'mobile', label: 'Mobile No.' },
-  ]
 
   const fetchRecords = useCallback(async (pageNum, append = false) => {
     if (!inputValue.trim()) return
@@ -96,25 +89,6 @@ const Search = () => {
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
               <div className='mb-6'>
                 <h1 className='text-xl md:text-2xl font-black text-slate-900'>Search Insurance</h1>
-                <p className='text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Find insurance records by name, vehicle, or mobile number</p>
-              </div>
-
-              <div className='mb-4'>
-                <div className='flex items-center gap-1.5 rounded-xl bg-slate-100 p-1 w-fit'>
-                  {searchModes.map((mode) => (
-                    <button
-                      key={mode.key}
-                      onClick={() => setSearchMode(mode.key)}
-                      className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        searchMode === mode.key
-                          ? 'bg-white text-blue-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      {mode.label}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className='flex gap-2'>
@@ -129,7 +103,7 @@ const Search = () => {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={`Search by ${searchModes.find(m => m.key === searchMode)?.label.toLowerCase()}...`}
+                    placeholder='Search by name or vehicle number...'
                     className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] md:placeholder:text-xs placeholder:text-slate-400 placeholder:font-semibold focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all uppercase'
                   />
                 </div>
@@ -261,7 +235,7 @@ const Search = () => {
                     </svg>
                   </div>
                   <h3 className='text-lg font-black text-slate-800'>Search Insurance Records</h3>
-                  <p className='mt-1 text-xs font-semibold text-slate-400'>Enter a name, vehicle number, or mobile number to search.</p>
+                  <p className='mt-1 text-xs font-semibold text-slate-400'>Enter a name or vehicle number to search.</p>
                 </div>
               )}
             </div>

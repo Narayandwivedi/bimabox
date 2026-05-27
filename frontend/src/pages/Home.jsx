@@ -336,20 +336,20 @@ const Home = () => {
               ) : (
                 <>
                   {/* Mobile Cards */}
-                  <div className='space-y-2 lg:hidden'>
+                  <div className='space-y-3 lg:hidden'>
                     {recentDocs.map((doc) => {
                       const dotColor = ({ emerald: '#10B981', amber: '#F59E0B', indigo: '#6366F1', rose: '#F43F5E', blue: '#3B82F6', teal: '#14B8A6' })[doc.color] || '#3B82F6'
                       return (
-                        <div key={doc.id} className='rounded-xl border border-slate-100 px-4 py-3 transition-all hover:border-blue-200 hover:bg-blue-50/30'>
+                        <div key={doc.id} className='rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-[0_4px_16px_-6px_rgba(15,23,42,0.08)] transition-all hover:border-blue-300 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)]'>
                           <div className='flex items-center gap-3'>
-                            <div className='h-2.5 w-2.5 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
+                            <div className='h-2 w-2 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
                             <div className='min-w-0 flex-1'>
                               <p className='text-sm font-bold text-slate-800'>{doc.type}</p>
                               <p className='font-mono text-[11px] text-slate-500'>{doc.vehicleNumber}</p>
                             </div>
                             <p className='whitespace-nowrap text-[11px] font-semibold text-blue-600'>{timeAgo(doc.createdAt)}</p>
                           </div>
-                          <div className='mt-2 flex items-center gap-4 border-t border-slate-50 pt-2'>
+                          <div className='mt-2.5 flex items-center gap-4 border-t border-slate-100 pt-2.5'>
                             <div className='text-[10px] text-slate-400'>
                               <span className='font-semibold text-slate-500'>From:</span> {doc.validFrom}
                             </div>

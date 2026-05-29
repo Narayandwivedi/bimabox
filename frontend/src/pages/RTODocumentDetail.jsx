@@ -78,8 +78,11 @@ const TYPE_CONFIG = {
       { label: 'Policy Number', key: 'policyNumber' },
       { label: 'Policy Holder', key: 'policyHolderName' },
       { label: 'Insurance Company', key: 'insuranceCompany' },
+      { label: 'Product', key: 'product' },
+      { label: 'Premium', key: 'premium', prefix: '₹' },
       { label: 'Mobile Number', key: 'mobileNumber' },
       { label: 'Remarks', key: 'remarks' },
+      { label: 'Notes', key: 'notes' },
     ],
   },
   Permit: {
@@ -123,7 +126,7 @@ const RTODocumentDetail = () => {
     if (!config) return
     setLoading(true)
     try {
-      const res = await axios.get(`${API_URL}/api/${config.apiPath}/id/${id}`, { withCredentials: true })
+      const res = await axios.get(`${API_URL}/api/${config.apiPath}/${id}`, { withCredentials: true })
       if (res.data?.success) {
         setRecord(res.data.data)
       } else {
@@ -149,7 +152,7 @@ const RTODocumentDetail = () => {
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      const res = await axios.delete(`${API_URL}/api/${config.apiPath}/id/${id}`, { withCredentials: true })
+      const res = await axios.delete(`${API_URL}/api/${config.apiPath}/${id}`, { withCredentials: true })
       if (res.data.success) {
         toast.success(`${config.label || type} record deleted`)
         navigate('/rto-documents')
@@ -166,7 +169,7 @@ const RTODocumentDetail = () => {
 
   const handleEditSubmit = async (updatedData) => {
     try {
-      await axios.put(`${API_URL}/api/${config.apiPath}/id/${id}`, updatedData, { withCredentials: true })
+      await axios.put(`${API_URL}/api/${config.apiPath}/${id}`, updatedData, { withCredentials: true })
       toast.success('Record updated successfully')
       setShowEditModal(false)
       fetchRecord()

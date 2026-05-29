@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -24,6 +25,7 @@ const POLICY_TYPES = [
 ]
 
 const Search = () => {
+  const navigate = useNavigate()
   const [inputValue, setInputValue] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [records, setRecords] = useState([])
@@ -210,143 +212,161 @@ const Search = () => {
 
                   {/* Filter Dropdown Panel */}
                   {showFilterPanel && (
-                    <div className='absolute right-0 top-12 z-50 w-72 bg-white rounded-2xl border border-slate-200 shadow-2xl shadow-slate-300/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150'>
-                      {/* Panel Header */}
-                      <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white'>
-                        <div className='flex items-center gap-2'>
-                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
-                          </svg>
-                          <span className='text-sm font-bold'>Filters</span>
-                        </div>
-                        {activeFilterCount > 0 && (
-                          <button
-                            onClick={handleClearFilters}
-                            className='text-[10px] font-bold text-white/80 hover:text-white transition-colors underline underline-offset-2'
-                          >
-                            Clear all
-                          </button>
-                        )}
-                      </div>
+                    <>
+                      {/* Overlay backdrop */}
+                      <div
+                        className='fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:bg-black/20'
+                        onClick={() => setShowFilterPanel(false)}
+                      />
 
-                      <div className='p-4 space-y-4'>
-
-                        {/* Insurance Company */}
-                        <div>
-                          <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                            Insurance Company
-                          </label>
-                          <div className='relative'>
-                            <select
-                              value={filterCompany}
-                              onChange={(e) => setFilterCompany(e.target.value)}
-                              className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                            >
-                              <option value=''>All Companies</option>
-                              {INSURANCE_COMPANIES.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                              ))}
-                            </select>
-                            <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                              <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                              </svg>
-                            </div>
-                          </div>
-                          {filterCompany && (
-                            <div className='mt-1.5 flex items-center justify-between'>
-                              <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterCompany}</span>
-                              <button onClick={() => setFilterCompany('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Product Type */}
-                        <div>
-                          <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                            Product Type
-                          </label>
-                          <div className='relative'>
-                            <select
-                              value={filterProductType}
-                              onChange={(e) => setFilterProductType(e.target.value)}
-                              className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                            >
-                              <option value=''>All Product Types</option>
-                              {PRODUCT_TYPES.map(p => (
-                                <option key={p} value={p}>{p}</option>
-                              ))}
-                            </select>
-                            <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                              <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                              </svg>
-                            </div>
-                          </div>
-                          {filterProductType && (
-                            <div className='mt-1.5 flex items-center justify-between'>
-                              <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterProductType}</span>
-                              <button onClick={() => setFilterProductType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Policy Type */}
-                        <div>
-                          <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                            Policy Type
-                          </label>
-                          <div className='relative'>
-                            <select
-                              value={filterPolicyType}
-                              onChange={(e) => setFilterPolicyType(e.target.value)}
-                              className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                            >
-                              <option value=''>All Policy Types</option>
-                              {POLICY_TYPES.map(p => (
-                                <option key={p} value={p}>{p}</option>
-                              ))}
-                            </select>
-                            <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                              <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                              </svg>
-                            </div>
-                          </div>
-                          {filterPolicyType && (
-                            <div className='mt-1.5 flex items-center justify-between'>
-                              <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterPolicyType}</span>
-                              <button onClick={() => setFilterPolicyType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                </svg>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Close button */}
-                        <button
-                          onClick={() => setShowFilterPanel(false)}
-                          className='w-full py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 active:scale-95'
+                      <div className='fixed inset-0 z-50 flex items-center justify-center'>
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className={`
+                            bg-white lg:bg-white/80 lg:backdrop-blur-xl
+                            rounded-2xl border border-slate-200 shadow-2xl shadow-slate-300/50
+                            overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150
+                            w-72 lg:w-[30rem]
+                          `}
                         >
-                          Apply Filters
-                          {activeFilterCount > 0 && (
-                            <span className='ml-2 bg-white/30 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md'>
-                              {activeFilterCount} active
-                            </span>
-                          )}
-                        </button>
+                          {/* Panel Header */}
+                          <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white'>
+                            <div className='flex items-center gap-2'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
+                              </svg>
+                              <span className='text-sm font-bold'>Filters</span>
+                            </div>
+                            {activeFilterCount > 0 && (
+                              <button
+                                onClick={handleClearFilters}
+                                className='text-[10px] font-bold text-white/80 hover:text-white transition-colors underline underline-offset-2'
+                              >
+                                Clear all
+                              </button>
+                            )}
+                          </div>
+
+                          <div className='p-4 lg:p-6 space-y-4 lg:space-y-5'>
+
+                            {/* Insurance Company */}
+                            <div>
+                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                Insurance Company
+                              </label>
+                              <div className='relative'>
+                                <select
+                                  value={filterCompany}
+                                  onChange={(e) => setFilterCompany(e.target.value)}
+                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                >
+                                  <option value=''>All Companies</option>
+                                  {INSURANCE_COMPANIES.map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                  </svg>
+                                </div>
+                              </div>
+                              {filterCompany && (
+                                <div className='mt-1.5 flex items-center justify-between'>
+                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterCompany}</span>
+                                  <button onClick={() => setFilterCompany('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Product Type */}
+                            <div>
+                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                Product Type
+                              </label>
+                              <div className='relative'>
+                                <select
+                                  value={filterProductType}
+                                  onChange={(e) => setFilterProductType(e.target.value)}
+                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                >
+                                  <option value=''>All Product Types</option>
+                                  {PRODUCT_TYPES.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                  ))}
+                                </select>
+                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                  </svg>
+                                </div>
+                              </div>
+                              {filterProductType && (
+                                <div className='mt-1.5 flex items-center justify-between'>
+                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterProductType}</span>
+                                  <button onClick={() => setFilterProductType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Policy Type */}
+                            <div>
+                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                Policy Type
+                              </label>
+                              <div className='relative'>
+                                <select
+                                  value={filterPolicyType}
+                                  onChange={(e) => setFilterPolicyType(e.target.value)}
+                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                >
+                                  <option value=''>All Policy Types</option>
+                                  {POLICY_TYPES.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                  ))}
+                                </select>
+                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                  </svg>
+                                </div>
+                              </div>
+                              {filterPolicyType && (
+                                <div className='mt-1.5 flex items-center justify-between'>
+                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterPolicyType}</span>
+                                  <button onClick={() => setFilterPolicyType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Close button */}
+                            <button
+                              onClick={() => setShowFilterPanel(false)}
+                              className='w-full py-2 lg:py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs lg:text-sm font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 active:scale-95'
+                            >
+                              Apply Filters
+                              {activeFilterCount > 0 && (
+                                <span className='ml-2 bg-white/30 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md'>
+                                  {activeFilterCount} active
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -444,7 +464,8 @@ const Search = () => {
                       return (
                         <div
                           key={record._id}
-                          className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-500 hover:shadow-xl hover:shadow-blue-100/40 hover:-translate-y-0.5'
+                          onClick={() => navigate(`/rto-documents/Insurance/${record._id}`)}
+                          className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-500 hover:shadow-xl hover:shadow-blue-100/40 hover:-translate-y-0.5 cursor-pointer'
                         >
                           <div className='flex items-start justify-between'>
                             <div className='flex-1 min-w-0'>

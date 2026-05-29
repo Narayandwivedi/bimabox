@@ -73,7 +73,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   })
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
-  const [vehicleValidation, setVehicleValidation] = useState({ isValid: false, message: '' })
+  const [vehicleValidation, setVehicleValidation] = useState({ isValid: !prefilledVehicleNumber, message: '' })
   const [vehicleMatches, setVehicleMatches] = useState([])
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
   const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(0)
@@ -134,7 +134,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         remarks: ''
       })
       setFetchingVehicle(false)
-      setVehicleValidation({ isValid: false, message: '' })
+      setVehicleValidation({ isValid: !prefilledVehicleNumber, message: '' })
       setVehicleError('')
       setVehicleMatches([])
       setShowVehicleDropdown(false)
@@ -283,7 +283,11 @@ if (e.key === 'Escape') onClose()
     const { name, value } = e.target
     if (name === 'vehicleNumber') {
       const upperValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
-      const validation = (upperValue.length === 9 || upperValue.length === 10) ? validateVehicleNumberRealtime(upperValue) : { isValid: false, message: '' }
+      const validation = upperValue.length === 0 
+        ? { isValid: true, message: '' } 
+        : (upperValue.length === 9 || upperValue.length === 10) 
+          ? validateVehicleNumberRealtime(upperValue) 
+          : { isValid: false, message: 'Invalid vehicle number format' }
       setVehicleValidation(validation)
       setFormData(prev => ({ ...prev, [name]: upperValue }))
       return
@@ -570,22 +574,7 @@ if (e.key === 'Escape') onClose()
                   </select>
                 </div>
 
-                {['GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W'].includes(formData.product) && (
-                  <div>
-                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Class of Vehicle</label>
-                    <select name='vehicleClass' value={formData.vehicleClass} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
-                      <option value="">Select Class</option>
-                      <option value="GCV">GCV</option>
-                      <option value="GCV-3W">GCV-3W</option>
-                      <option value="Pvt. Car">Pvt. Car</option>
-                      <option value="Taxi">Taxi</option>
-                      <option value="Two Wheeler">Two Wheeler</option>
-                      <option value="Mis-D">Mis-D</option>
-                      <option value="PCV">PCV</option>
-                      <option value="PCV-3W">PCV-3W</option>
-                    </select>
-                  </div>
-                )}
+
 
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Type</label>

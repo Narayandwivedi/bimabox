@@ -219,8 +219,8 @@ const createRecordController = (config) => {
   const create = async (req, res) => {
     try {
       const payload = buildPayload(req.body, config, req.user._id, true)
-      if (!payload.vehicleNumber || !payload[config.requiredDateField]) {
-        return res.status(400).json({ success: false, message: `vehicleNumber and ${config.requiredDateField} are required` })
+      if (!payload[config.requiredDateField]) {
+        return res.status(400).json({ success: false, message: `${config.requiredDateField} is required` })
       }
 
       if (!Object.prototype.hasOwnProperty.call(payload, balanceField) && Object.prototype.hasOwnProperty.call(payload, paidField)) {

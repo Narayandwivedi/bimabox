@@ -163,7 +163,7 @@ const Home = () => {
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
       <main className='px-4 pt-3 pb-32 lg:px-8 lg:pt-4'>
         <section className='w-full'>
-          <div className='max-w-6xl mx-auto'>
+          <div className='max-w-4xl mx-auto'>
             {/* Header and Search removed as requested */}
 
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>

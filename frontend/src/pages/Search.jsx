@@ -509,7 +509,7 @@ const Search = () => {
                               </div>
                             </div>
                             {record.policyNumber && (
-                              <span className='text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
+                              <span className='self-start sm:self-auto -mt-1 sm:mt-0 text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
                                 <span className='sm:hidden'>{record.policyNumber.slice(0, 10)}</span>
                                 <span className='hidden sm:inline'>{record.policyNumber}</span>
                               </span>

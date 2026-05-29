@@ -7,6 +7,39 @@ import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
+const colorMap = {
+  emerald: {
+    strip: 'bg-emerald-500',
+    light: 'bg-emerald-50',
+    text: 'text-emerald-600'
+  },
+  amber: {
+    strip: 'bg-amber-500',
+    light: 'bg-amber-50',
+    text: 'text-amber-600'
+  },
+  indigo: {
+    strip: 'bg-indigo-500',
+    light: 'bg-indigo-50',
+    text: 'text-indigo-600'
+  },
+  rose: {
+    strip: 'bg-rose-500',
+    light: 'bg-rose-50',
+    text: 'text-rose-600'
+  },
+  blue: {
+    strip: 'bg-blue-500',
+    light: 'bg-blue-50',
+    text: 'text-blue-600'
+  },
+  teal: {
+    strip: 'bg-teal-500',
+    light: 'bg-teal-50',
+    text: 'text-teal-600'
+  }
+}
+
 const Home = () => {
   const navigate = useNavigate()
   const [vehicles, setVehicles] = useState([])
@@ -278,46 +311,49 @@ const Home = () => {
                         </div>
                       ) : (
                         <div className='grid grid-cols-4 gap-4'>
-                          {filteredDocs.map((doc) => (
-                            <div
-                              key={doc.id}
-                              className='group relative overflow-hidden rounded-2xl border border-slate-150 bg-slate-50/30 p-4 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:border-blue-300 hover:shadow-[0_20px_50px_-20px_rgba(59,130,246,0.15)]'
-                            >
-                              {/* Color bar at top for premium feel */}
-                              <div className={`absolute top-0 left-0 right-0 h-1 bg-${doc.color}-500`} />
-                              
-                              <div className='flex items-start justify-between mb-3 mt-1'>
-                                <div className='flex items-center gap-2.5'>
-                                  <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-${doc.color}-50 text-${doc.color}-600 shadow-sm`}>
-                                    {doc.type === 'Insurance' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
-                                    {doc.type === 'Tax' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
-                                    {doc.type === 'PUC' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
-                                    {doc.type === 'Fitness' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
-                                    {doc.type === 'GPS' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
-                                    {doc.type === 'Permit' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
+                          {filteredDocs.map((doc) => {
+                            const colors = colorMap[doc.color] || colorMap.blue
+                            return (
+                              <div
+                                key={doc.id}
+                                className='group relative overflow-hidden rounded-xl border border-slate-150 bg-slate-50/30 p-4 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:border-blue-300 hover:shadow-[0_20px_50px_-20px_rgba(59,130,246,0.15)]'
+                              >
+                                {/* Color bar at top for premium feel */}
+                                <div className={`absolute top-0 left-0 right-0 h-1 ${colors.strip}`} />
+                                
+                                <div className='flex items-start justify-between mb-3 mt-1'>
+                                  <div className='flex items-center gap-2.5'>
+                                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ${colors.light} ${colors.text}`}>
+                                      {doc.type === 'Insurance' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
+                                      {doc.type === 'Tax' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
+                                      {doc.type === 'PUC' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' /></svg>}
+                                      {doc.type === 'Fitness' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>}
+                                      {doc.type === 'GPS' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
+                                      {doc.type === 'Permit' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
+                                    </div>
+                                    <div>
+                                      <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type}</h3>
+                                      <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type}</h3>
-                                    <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
-                                  </div>
+                                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                    {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
+                                  </span>
                                 </div>
-                                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
-                                  {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
-                                </span>
-                              </div>
 
-                              <div className='mt-4 pt-3 border-t border-slate-100/80 flex flex-col gap-1 text-[11px] text-slate-500'>
-                                <div className='flex justify-between'>
-                                  <span className='font-medium text-slate-400'>Valid From:</span>
-                                  <span className='font-semibold text-slate-700'>{doc.validFrom}</span>
-                                </div>
-                                <div className='flex justify-between'>
-                                  <span className='font-medium text-slate-400'>Valid To:</span>
-                                  <span className='font-semibold text-slate-700'>{doc.validTo}</span>
+                                <div className='mt-4 pt-3 border-t border-slate-100/80 flex flex-col gap-1 text-[11px] text-slate-500'>
+                                  <div className='flex justify-between'>
+                                    <span className='font-medium text-slate-400'>Valid From:</span>
+                                    <span className='font-semibold text-slate-700'>{doc.validFrom}</span>
+                                  </div>
+                                  <div className='flex justify-between'>
+                                    <span className='font-medium text-slate-400'>Valid To:</span>
+                                    <span className='font-semibold text-slate-700'>{doc.validTo}</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
                     </div>

@@ -160,6 +160,18 @@ const createRecordController = (config) => {
           if (filterType === 'pending') return normalizeNumber(record[balanceField], 0) > 0
           return true
         })
+        .filter((record) => {
+          if (req.query.insuranceCompany && record.insuranceCompany !== req.query.insuranceCompany) {
+            return false
+          }
+          if (req.query.product && record.product !== req.query.product) {
+            return false
+          }
+          if (req.query.insuranceClass && record.insuranceClass !== req.query.insuranceClass) {
+            return false
+          }
+          return true
+        })
 
       const totalRecords = enriched.length
       const data = enriched.slice((page - 1) * limit, page * limit)

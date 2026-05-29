@@ -380,22 +380,26 @@ if (e.key === 'Escape') onClose()
     }
   }
 
-  const handleInsuranceExtractionUpload = async (e) => {
+  const handleManualDocumentUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.type === 'application/pdf') {
+    
+    if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
       setUploadedInsuranceFile(file)
+      setUploadedInsuranceDocument(prev => {
+        if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
+        return {
+          name: file.name || 'insurance-document',
+          type: file.type === 'application/pdf' ? 'pdf' : 'image',
+          previewUrl: URL.createObjectURL(file),
+          revokeOnCleanup: true
+        }
+      })
+      toast.success('Document attached successfully!', { position: 'top-right', autoClose: 2000 })
       e.target.value = ''
-      await processExtraction(file)
       return
     }
-    if (file.type.startsWith('image/')) {
-      setUploadedInsuranceFile(file)
-      setScanningFile(file)
-      e.target.value = ''
-      return
-    }
-    toast.error('Please upload an image or PDF file for extraction.', { position: 'top-right', autoClose: 3000 })
+    toast.error('Please upload an image or PDF file.', { position: 'top-right', autoClose: 3000 })
   }
 
   const handleScannerConfirm = async (processedImageFile) => {
@@ -477,13 +481,13 @@ if (e.key === 'Escape') onClose()
             </div>
             <div className='flex items-center gap-3'>
               <div className='relative overflow-hidden'>
-                <button type='button' disabled={isExtractingInsurance} className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition disabled:opacity-50 flex items-center gap-2 max-w-full'>
+                <button type='button' className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 max-w-full'>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  {isExtractingInsurance ? 'Extracting...' : 'AI Upload'}
+                  Upload Document
                 </button>
-                <input type='file' accept='image/*, application/pdf' disabled={isExtractingInsurance} onChange={handleInsuranceExtractionUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed' />
+                <input type='file' accept='image/*, application/pdf' onChange={handleManualDocumentUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
               </div>
               <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
                 <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

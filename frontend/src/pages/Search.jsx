@@ -54,8 +54,8 @@ const Search = () => {
     try {
       const params = { search: q, limit: PAGE_SIZE, page: pageNum }
       if (company) params.insuranceCompany = company
-      if (productType) params.productType = productType
-      if (policyType) params.policyType = policyType
+      if (productType) params.product = productType
+      if (policyType) params.insuranceClass = policyType
 
       const res = await axios.get(`${API_URL}/api/insurance`, {
         withCredentials: true,
@@ -434,33 +434,40 @@ const Search = () => {
                       return (
                         <div
                           key={record._id}
-                          className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-400 hover:shadow-xl hover:shadow-blue-100/50 hover:-translate-y-0.5'
+                          className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-500 hover:shadow-xl hover:shadow-blue-100/40 hover:-translate-y-0.5'
                         >
                           <div className='flex items-start justify-between'>
                             <div className='flex-1 min-w-0'>
-                              <h3 className='text-sm font-black text-slate-900 truncate'>
-                                {record.policyHolderName || 'Unknown'}
-                              </h3>
-                              <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono'>
+                              <div className='flex items-center gap-2 flex-wrap'>
+                                <h3 className='text-sm font-black text-slate-900 truncate max-w-[200px]'>
+                                  {record.policyHolderName || 'Unknown Holder'}
+                                </h3>
+                                {record.premium != null && (
+                                  <span className='inline-flex items-center rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm'>
+                                    ₹{record.premium.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                  </span>
+                                )}
+                              </div>
+                              <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono mt-0.5'>
                                 {record.vehicleNumber || 'N/A'}
                               </p>
                               {record.mobileNumber && (
                                 <p className='text-[10px] font-bold text-slate-400 mt-0.5'>{record.mobileNumber}</p>
                               )}
-                              <div className='mt-1.5 flex flex-wrap gap-1'>
+                              <div className='mt-2.5 flex flex-wrap gap-1.5'>
                                 {record.insuranceCompany && (
-                                  <span className='inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap'>
+                                  <span className='inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-[9px] font-black text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap shadow-sm'>
                                     {record.insuranceCompany}
                                   </span>
                                 )}
-                                {record.productType && (
-                                  <span className='inline-flex items-center rounded-md bg-purple-50 px-1.5 py-0.5 text-[8px] font-extrabold text-purple-700 ring-1 ring-inset ring-purple-700/10 whitespace-nowrap'>
-                                    {record.productType}
+                                {record.product && (
+                                  <span className='inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[9px] font-black text-purple-700 ring-1 ring-inset ring-purple-700/10 whitespace-nowrap shadow-sm'>
+                                    {record.product}
                                   </span>
                                 )}
-                                {record.policyType && (
-                                  <span className='inline-flex items-center rounded-md bg-indigo-50 px-1.5 py-0.5 text-[8px] font-extrabold text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap'>
-                                    {record.policyType}
+                                {record.insuranceClass && (
+                                  <span className='inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[9px] font-black text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
+                                    {record.insuranceClass}
                                   </span>
                                 )}
                               </div>
@@ -483,7 +490,7 @@ const Search = () => {
                               </div>
                             </div>
                             {record.policyNumber && (
-                              <span className='text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate max-w-[100px]'>
+                              <span className='text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate max-w-[130px] shadow-sm'>
                                 {record.policyNumber}
                               </span>
                             )}

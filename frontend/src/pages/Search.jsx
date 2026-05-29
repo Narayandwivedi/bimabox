@@ -140,8 +140,8 @@ const Search = () => {
               {/* Header */}
               <div className='mb-6 flex items-center justify-between'>
                 <div>
-                  <h1 className='text-xl md:text-2xl font-black text-slate-900'>Search Insurance</h1>
-                  <p className='text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5'>Browse all insurance records</p>
+                  <h1 className='text-lg md:text-2xl font-black text-slate-900'>Search Insurance</h1>
+                  <p className='text-[8px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5'>Browse all insurance records</p>
                 </div>
                 {activeFilterCount > 0 && (
                   <button

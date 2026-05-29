@@ -439,7 +439,7 @@ const Search = () => {
                           <div className='flex items-start justify-between'>
                             <div className='flex-1 min-w-0'>
                               <div className='flex items-center gap-2 flex-wrap'>
-                                <h3 className='text-xs sm:text-sm font-black text-slate-900 truncate max-w-[200px]'>
+                                <h3 className='text-xs sm:text-sm font-black text-slate-900 truncate sm:overflow-visible sm:whitespace-normal max-w-[200px] sm:max-w-none'>
                                   {record.policyHolderName || 'Unknown Holder'}
                                 </h3>
                                 {record.premium != null && (
@@ -490,7 +490,7 @@ const Search = () => {
                               </div>
                             </div>
                             {record.policyNumber && (
-                              <span className='text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate max-w-[130px] shadow-sm'>
+                              <span className='text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
                                 <span className='sm:hidden'>{record.policyNumber.slice(0, 10)}</span>
                                 <span className='hidden sm:inline'>{record.policyNumber}</span>
                               </span>

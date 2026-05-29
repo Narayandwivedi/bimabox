@@ -273,21 +273,22 @@ const Home = () => {
                             <tr className='bg-slate-50/50 border-b border-slate-100'>
                               <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
                               <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
-                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Expiry Date</th>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
+                              <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                               <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Status</th>
                             </tr>
                           </thead>
                           <tbody className='divide-y divide-slate-50'>
                             {loadingDocs ? (
                               <tr>
-                                <td colSpan='4' className='px-6 py-12 text-center'>
+                                <td colSpan='5' className='px-6 py-12 text-center'>
                                   <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
-                                  <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Synchronizing Data...</p>
+                                  <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Scanning Documents...</p>
                                 </td>
                               </tr>
                             ) : filteredDocs.length === 0 ? (
                               <tr>
-                                <td colSpan='4' className='px-6 py-12 text-center text-slate-500 font-bold'>No documents expiring soon.</td>
+                                <td colSpan='5' className='px-6 py-12 text-center text-slate-500 font-bold'>No documents expiring soon.</td>
                               </tr>
                             ) : (
                               filteredDocs.map((doc) => (
@@ -308,6 +309,7 @@ const Home = () => {
                                   <td className='px-6 py-3'>
                                     <span className='text-xs font-mono font-bold text-slate-600'>{doc.vehicleNumber}</span>
                                   </td>
+                                  <td className='px-6 py-3 text-xs text-slate-500 font-medium'>{doc.validFrom}</td>
                                   <td className='px-6 py-3 text-xs text-slate-500 font-medium'>{doc.validTo}</td>
                                   <td className='px-6 py-3 text-right'>
                                     <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'}`}>

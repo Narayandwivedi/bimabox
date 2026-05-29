@@ -64,6 +64,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     policyHolderName: prefilledOwnerName,
     validFrom: '',
     validTo: '',
+    premium: '',
     insuranceDocument: '',
     insuranceCompany: '',
     insuranceClass: '',
@@ -100,6 +101,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: initialData.policyHolderName || '',
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
+        premium: initialData.premium != null ? String(initialData.premium) : '',
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
         insuranceClass: initialData.insuranceClass || '',
@@ -126,6 +128,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: prefilledOwnerName,
         validFrom: '',
         validTo: '',
+        premium: '',
         insuranceDocument: '',
         insuranceCompany: '',
         insuranceClass: '',
@@ -436,6 +439,7 @@ if (e.key === 'Escape') onClose()
       policyHolderName: formData.policyHolderName,
       validFrom: formData.validFrom,
       validTo: formData.validTo,
+      premium: formData.premium !== '' ? Number(formData.premium) : 0,
       issueDate: formData.validFrom,
       insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
       insuranceCompany: formData.insuranceCompany,
@@ -596,9 +600,9 @@ if (e.key === 'Escape') onClose()
             <div className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-                Validity Period
+                Validity & Premium
               </h3>
-              <div className='grid grid-cols-2 gap-3 md:gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid From <span className='text-red-500'>*</span></label>
                   <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='4' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
@@ -606,6 +610,25 @@ if (e.key === 'Escape') onClose()
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated)</span></label>
                   <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='5' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
+                    Premium (₹)
+                    <span className='ml-1 text-xs text-purple-500 font-normal'>Annual amount</span>
+                  </label>
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
+                    <input
+                      type='number'
+                      name='premium'
+                      value={formData.premium}
+                      onChange={handleChange}
+                      placeholder='0'
+                      min='0'
+                      tabIndex='6'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                    />
+                  </div>
                 </div>
               </div>
             </div>

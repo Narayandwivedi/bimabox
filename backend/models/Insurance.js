@@ -107,33 +107,10 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
-  totalFee: {
+  premium: {
     type: Number,
     default: 0
   },
-
-  paid: {
-    type: Number,
-    default: 0
-  },
-
-  balance: {
-    type: Number,
-    default: 0
-  },
-
-  feeBreakup: [
-    {
-      name: {
-        type: String,
-        trim: true
-      },
-      amount: {
-        type: Number,
-        default: 0
-      }
-    }
-  ],
 
   // Additional Information
   remarks: {

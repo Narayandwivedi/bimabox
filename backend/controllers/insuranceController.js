@@ -11,11 +11,7 @@ module.exports = createRecordController({
   searchFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber'],
   stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'remarks'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
-  numberFields: ['totalFee', 'paid', 'balance'],
-  arrayField: 'feeBreakup',
+  numberFields: ['premium'],
   documentField: 'insuranceDocument',
   documentDataField: 'insuranceDocumentData',
-  totalField: 'totalFee',
-  paidField: 'paid',
-  balanceField: 'balance',
 })

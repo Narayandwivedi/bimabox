@@ -251,13 +251,14 @@ const gpsOcr = async (req, res) => {
 }
 
 const insuranceOcr = async (req, res) => {
-  const prompt = 'Extract the details from this vehicle insurance policy/document. Extract vehicle number, policy number, policy holder name, valid from date, valid to date, insurance company name, class of insurance (Comprehensive or Third Party), and product (GCV, GCV-3W, Pvt. Car, Taxi, Two Wheeler, Mis-D, PCV, PCV-3W, Health, Life, Fire, Burglary, WC, CPM, Travel, Marine, GPA, GMC). Map the insured or proposer name to policyHolderName. For insuranceCompany, try to match or normalize the company name to one of these standard companies: "HDFC ERGO", "ICICI Lombard", "Bajaj Allianz", "Tata AIG", "Reliance General", "IFFCO Tokio", "National Insurance", "New India Assurance", "Oriental Insurance", "United India Insurance", "Magma HDI", "Go Digit", "Acko", "Cholamandalam MS", "Future Generali", "Royal Sundaram", "SBI General", "Shriram General", "Liberty General", "Universal Sompo", "Kotak General", "Zuno General", "Raheja QBE", "Navi General", "Star Health". If there is no clear match, use empty string "". Do not invent values.'
+  const prompt = 'Extract the details from this vehicle insurance policy/document. Extract vehicle number, policy number, policy holder name, valid from date, valid to date, premium amount (net premium or total premium amount paid in rupees/INR. You MUST extract the exact decimal value including paise/cents if present on the document, e.g., 1182.71 instead of 1182. Do not omit the decimal or round the value. Return it strictly as a number or decimal string without commas, currency symbols, or GST/taxes if separated), insurance company name, class of insurance (Comprehensive or Third Party), and product (GCV, GCV-3W, Pvt. Car, Taxi, Two Wheeler, Mis-D, PCV, PCV-3W, Health, Life, Fire, Burglary, WC, CPM, Travel, Marine, GPA, GMC). Map the insured or proposer name to policyHolderName. Map the premium amount to premium. For insuranceCompany, try to match or normalize the company name to one of these standard companies: "HDFC ERGO", "ICICI Lombard", "Bajaj Allianz", "Tata AIG", "Reliance General", "IFFCO Tokio", "National Insurance", "New India Assurance", "Oriental Insurance", "United India Insurance", "Magma HDI", "Go Digit", "Acko", "Cholamandalam MS", "Future Generali", "Royal Sundaram", "SBI General", "Shriram General", "Liberty General", "Universal Sompo", "Kotak General", "Zuno General", "Raheja QBE", "Navi General", "Star Health". If there is no clear match, use empty string "". Do not invent values.'
   const template = `{
   "vehicleNumber": "",
   "policyNumber": "",
   "policyHolderName": "",
   "validFrom": "",
   "validTo": "",
+  "premium": "",
   "insuranceCompany": "",
   "insuranceClass": "",
   "product": ""

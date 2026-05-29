@@ -343,6 +343,10 @@ if (e.key === 'Escape') onClose()
                   updated[key] = normalizeInsuranceCompany(value)
                   return
                 }
+                if (key === 'premium') {
+                  updated[key] = String(value).replace(/[^0-9.]/g, '')
+                  return
+                }
                 updated[key] = value
               })
 
@@ -625,6 +629,7 @@ if (e.key === 'Escape') onClose()
                       onChange={handleChange}
                       placeholder='0'
                       min='0'
+                      step='any'
                       tabIndex='6'
                       className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
                     />

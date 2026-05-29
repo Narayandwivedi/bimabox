@@ -16,9 +16,8 @@ const Search = () => {
   const [loadingMore, setLoadingMore] = useState(false)
   const [searched, setSearched] = useState(false)
 
-  const fetchRecords = useCallback(async (pageNum, append = false) => {
-    if (!inputValue.trim()) return
-    const q = inputValue.trim()
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '') => {
+    const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
     else setLoadingMore(true)
@@ -51,16 +50,20 @@ const Search = () => {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [inputValue])
+  }, [])
+
+  useEffect(() => {
+    fetchRecords(1, false, '')
+  }, [fetchRecords])
 
   const handleSearch = () => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false)
+    fetchRecords(1, false, inputValue)
   }
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true)
+    fetchRecords(page + 1, true, searchQuery)
   }
 
   const handleKeyDown = (e) => {
@@ -109,7 +112,7 @@ const Search = () => {
                 </div>
                 <button
                   onClick={handleSearch}
-                  disabled={loading || !inputValue.trim()}
+                  disabled={loading}
                   className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-blue-200 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0'
                 >
                   <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

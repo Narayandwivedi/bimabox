@@ -104,26 +104,26 @@ const processDocumentData = async (payload, config, docName) => {
   if (payload[config.documentField] && payload[config.documentField].startsWith('data:')) {
     const dataStr = payload[config.documentField]
     const matches = dataStr.match(/^data:([^;]+);base64,(.+)$/)
-    
+
     if (matches && matches.length === 3) {
       const mimeType = matches[1]
       const base64Data = matches[2]
-      
+
       let ext = 'pdf'
       if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg'
       else if (mimeType.includes('png')) ext = 'png'
       else if (mimeType.includes('pdf')) ext = 'pdf'
-      
+
       const fileName = `${docName || Date.now()}.${ext}`
       const uploadDir = path.join(__dirname, '..', 'uploads', 'rto_docs')
-      
+
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true })
       }
-      
+
       const filePath = path.join(uploadDir, fileName)
       fs.writeFileSync(filePath, base64Data, 'base64')
-      
+
       // Store the relative path to be served statically
       payload[config.documentField] = `/uploads/rto_docs/${fileName}`
     }

@@ -117,6 +117,17 @@ const Search = () => {
     setFilterPolicyType('')
   }
 
+  const getDaysLeft = (dateStr) => {
+    if (!dateStr) return null
+    const parts = dateStr.split('-')
+    if (parts.length !== 3) return null
+    const expiry = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+    return diff
+  }
+
   const getStatusBadge = (record) => {
     if (!record.validTo) return null
     const parts = record.validTo.split('-')
@@ -181,14 +192,13 @@ const Search = () => {
                 <div className='relative' ref={filterPanelRef}>
                   <button
                     onClick={() => setShowFilterPanel(prev => !prev)}
-                    className={`relative flex items-center justify-center w-10 h-10 rounded-xl border-2 transition-all ${
-                      showFilterPanel || activeFilterCount > 0
+                    className={`relative flex items-center justify-center w-10 h-10 rounded-xl border-2 transition-all ${showFilterPanel || activeFilterCount > 0
                         ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-200'
                         : 'border-slate-200 bg-white text-slate-500 hover:border-blue-400 hover:text-blue-500 hover:shadow-md'
-                    }`}
+                      }`}
                     title='Filter'
                   >
-                    <svg className='w-4.5 h-4.5' style={{width:'18px',height:'18px'}} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <svg className='w-4.5 h-4.5' style={{ width: '18px', height: '18px' }} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
                     </svg>
                     {activeFilterCount > 0 && (
@@ -486,7 +496,16 @@ const Search = () => {
                               </div>
                               <div>
                                 <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>To</p>
-                                <p className='text-xs font-black text-slate-900'>{record.validTo || 'N/A'}</p>
+                                <p className='text-xs font-black text-slate-900'>
+                                  {record.validTo || 'N/A'}
+                                  {(() => {
+                                    const days = getDaysLeft(record.validTo)
+                                    if (days === null) return null
+                                    return (
+                                      <span className='text-rose-600 ml-1'>{'('}{days}d{')'}</span>
+                                    )
+                                  })()}
+                                </p>
                               </div>
                             </div>
                             {record.policyNumber && (

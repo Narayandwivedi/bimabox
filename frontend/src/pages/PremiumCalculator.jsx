@@ -55,12 +55,9 @@ const TARIFF = {
     },
   },
   gcv_3w: {
-    // Sub-types: public A2, e-rick GCV, private A3, e-rick private
     subtypes: [
-      { id: 'public', label: '3W GCV Public (A2)', tp: 4492 },
+      { id: 'public', label: '3W GCV (A2)', tp: 4492 },
       { id: 'erickshaw_gcv', label: '3W e-Rickshaw GCV', tp: 3139 },
-      { id: 'private', label: '3Wh GCV Private (A3)', tp: 3922 },
-      { id: 'erickshaw_private', label: '3Wh e-Rickshaw Private', tp: 3211 },
     ],
     odRates: {
       upto_5: { A: 1.751, B: 1.743, C: 1.726 },

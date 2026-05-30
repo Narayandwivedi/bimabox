@@ -256,8 +256,8 @@ const PremiumCalculator = () => {
         } else {
           const ccBracket = get2WCCBracket(ccVal)
           const odBracket = get2WODBracket(ccVal)
-          if (policyTerm === '5yr' && TARIFF.two_wheeler.tpLongTerm[ccBracket]) {
-            tpPremium = TARIFF.two_wheeler.tpLongTerm[ccBracket]
+          if (policyType === 'bundle') {
+            tpPremium = TARIFF.two_wheeler.tpLongTerm[ccBracket] || TARIFF.two_wheeler.tpByCC[ccBracket]
           } else {
             tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket]
           }
@@ -339,7 +339,7 @@ const PremiumCalculator = () => {
 
     let odPremium = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
-    if (vehicleType === 'private_car') {
+    if (vehicleType === 'private_car' || (vehicleType === 'two_wheeler' && !isElectric)) {
       if (policyType !== 'tp' && idvVal > 0) {
         odPremium = idvVal * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
@@ -452,11 +452,12 @@ const PremiumCalculator = () => {
 
   // ─── COVERAGE TYPE / POLICY TYPE ───────────────────────────────────────────
   const PolicyTypeSelector = () => {
+    const is2W = vehicleType === 'two_wheeler'
     const policies = [
       { id: 'od', label: 'Own Damage (OD)', desc: 'Damages to your own vehicle' },
       { id: 'tp', label: 'Third Party (TP)', desc: 'Mandatory third party liability' },
       { id: 'comprehensive', label: 'Comprehensive', desc: 'Own Damage + Third Party' },
-      { id: 'bundle', label: 'Bundle Policy', desc: '1-Year OD + 3-Year TP' },
+      { id: 'bundle', label: 'Bundle Policy', desc: is2W ? '1-Year OD + 5-Year TP' : '1-Year OD + 3-Year TP' },
     ]
     return (
       <div>
@@ -633,7 +634,11 @@ const PremiumCalculator = () => {
 
           {showTP && (
             <div className='flex items-center justify-between text-xs border-b border-dashed border-slate-200 pb-2'>
-              <p className='font-bold text-slate-700'>{isBundle ? '3-Year TP Premium (Bundle)' : '1-Year TP Premium'}</p>
+              <p className='font-bold text-slate-700'>
+                {isBundle
+                  ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium (Bundle)' : '3-Year TP Premium (Bundle)')
+                  : '1-Year TP Premium'}
+              </p>
               <p className='font-black text-slate-900'>₹{fmtD(result.tpPremium)}</p>
             </div>
           )}
@@ -738,6 +743,7 @@ const PremiumCalculator = () => {
             </div>
             {!isElectric ? (
               <>
+                <PolicyTypeSelector />
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <ZoneSelector zones={['A', 'B']} />
                   <AgeSelector />
@@ -751,20 +757,9 @@ const PremiumCalculator = () => {
                   </div>
                   <IDVInput idv={idv} setIdv={setIdv} />
                 </div>
-                <div>
-                  <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Policy Term</label>
-                  <div className='flex gap-1.5 rounded-2xl bg-slate-200 p-1'>
-                    {[['1yr', '1 Year'], ['5yr', '5 Years (Long Term)']].map(([val, label]) => (
-                      <button key={val} onClick={() => setPolicyTerm(val)}
-                        className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${policyTerm === val ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <CoverageSelector />
-                <NCBSelector />
-                {coverageType !== 'tp' && <ODDiscountInput />}
+                {policyType !== 'tp' && <NCBSelector />}
+                {policyType !== 'tp' && <ODDiscountInput />}
+                <GSTToggle />
               </>
             ) : (
               <>

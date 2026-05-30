@@ -141,6 +141,11 @@ const VEHICLE_CATEGORIES = [
 
 // ─── HELPER ─────────────────────────────────────────────────────────────────
 const fmt = (n) => Math.round(n).toLocaleString('en-IN')
+// Exact 2-decimal formatter for breakup lines (always shows paise)
+const fmtD = (n) => {
+  const num = typeof n === 'number' ? n : parseFloat(n) || 0
+  return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 
 const getCCBracket = (cc) => {
   if (cc <= 1000) return 0
@@ -173,6 +178,7 @@ const PremiumCalculator = () => {
   const [coverageType, setCoverageType] = useState('comprehensive') // kept for other vehicle classes
   const [policyType, setPolicyType] = useState('comprehensive') // 'od' | 'tp' | 'comprehensive' | 'bundle'
   const [gstEnabled, setGstEnabled] = useState(true)
+  const [odDiscount, setOdDiscount] = useState(0)
 
   // Vehicle-specific
   const [cc, setCc] = useState('')             // Private Car / Taxi / 2W
@@ -200,6 +206,7 @@ const PremiumCalculator = () => {
     setCoverageType('comprehensive')
     setPolicyType('comprehensive')
     setGstEnabled(true)
+    setOdDiscount(0)
     setPolicyTerm('1yr')
   }
 
@@ -331,10 +338,12 @@ const PremiumCalculator = () => {
     }
 
     let odPremium = 0
+    const odDiscountVal = parseFloat(odDiscount) || 0
     if (vehicleType === 'private_car') {
       if (policyType !== 'tp' && idvVal > 0) {
         odPremium = idvVal * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
+        odPremium = odPremium * (1 - odDiscountVal / 100)
       }
       if (policyType === 'od') {
         tpPremium = 0
@@ -343,6 +352,7 @@ const PremiumCalculator = () => {
       if (coverageType === 'comprehensive' && idvVal > 0) {
         odPremium = idvVal * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
+        odPremium = odPremium * (1 - odDiscountVal / 100)
       }
       if (coverageType === 'tp') {
         odPremium = 0
@@ -354,12 +364,13 @@ const PremiumCalculator = () => {
     const totalPremium = netPremium + gst
 
     setResult({
-      odPremium: Math.round(odPremium),
-      tpPremium: Math.round(tpPremium),
-      gst: Math.round(gst),
-      totalPremium: Math.round(totalPremium),
+      odPremium,                          // raw – shown exact in breakup
+      tpPremium,                          // raw
+      gst,                                // raw
+      totalPremium: Math.round(totalPremium), // rounded for payable amount
       odRate,
       details,
+      odDiscountVal,
     })
   }
 
@@ -368,7 +379,7 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm])
 
   // ─── ZONE SELECTOR ─────────────────────────────────────────────────────────
   const ZoneSelector = ({ zones = ['A', 'B'] }) => (
@@ -483,6 +494,54 @@ const PremiumCalculator = () => {
     </div>
   )
 
+  // ─── OD DISCOUNT INPUT ─────────────────────────────────────────────────────
+  const ODDiscountInput = () => (
+    <div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>
+        OD Discount
+        <span className='ml-2 text-orange-500 font-black text-[10px] sm:text-[11px]'>{odDiscount}%</span>
+      </label>
+      <div className='rounded-2xl border border-slate-200 bg-white p-3 space-y-2'>
+        <input
+          type='range'
+          min={0}
+          max={80}
+          step={1}
+          value={odDiscount}
+          onChange={e => setOdDiscount(Number(e.target.value))}
+          className='w-full h-2 rounded-full appearance-none cursor-pointer accent-orange-500'
+        />
+        <div className='flex items-center justify-between'>
+          <div className='flex gap-1 flex-wrap'>
+            {[0, 5, 10, 15, 20, 25, 30].map(v => (
+              <button
+                key={v}
+                type='button'
+                onClick={() => setOdDiscount(v)}
+                className={`rounded-lg px-2 py-1 text-[9px] sm:text-[10px] font-bold transition-all border ${
+                  odDiscount === v
+                    ? 'border-orange-400 bg-orange-50 text-orange-600'
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                {v}%
+              </button>
+            ))}
+          </div>
+          <input
+            type='number'
+            min={0}
+            max={80}
+            value={odDiscount}
+            onChange={e => setOdDiscount(Math.min(80, Math.max(0, Number(e.target.value))))}
+            className='w-14 rounded-xl border border-slate-200 bg-white px-2 py-1 text-center text-xs font-black text-orange-600 focus:border-orange-400 focus:outline-none'
+          />
+        </div>
+        <p className='text-[8px] text-slate-400 font-medium'>Insurer/channel OD discount applied after NCB • Max 80%</p>
+      </div>
+    </div>
+  )
+
   const CoverageSelector = () => (
     <div>
       <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Class of Insurance</label>
@@ -511,6 +570,8 @@ const PremiumCalculator = () => {
 
     const odBase = showOD ? (parseFloat(idv) || 0) * (result.odRate / 100) : 0
     const ncbDiscount = showOD ? odBase * (ncb / 100) : 0
+    const afterNcbOD = odBase - ncbDiscount
+    const odDiscountAmt = showOD ? afterNcbOD * ((result.odDiscountVal || 0) / 100) : 0
 
     return (
       <div className='border-t border-slate-200 pt-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
@@ -521,7 +582,7 @@ const PremiumCalculator = () => {
             <>
               <div className='flex items-center justify-between text-xs'>
                 <p className='font-bold text-slate-500'>Insured Declared Value (IDV)</p>
-                <p className='font-black text-slate-800'>₹{fmt(parseFloat(idv) || 0)}</p>
+                <p className='font-black text-slate-800'>₹{fmtD(parseFloat(idv) || 0)}</p>
               </div>
               <div className='flex items-center justify-between text-xs'>
                 <p className='font-bold text-slate-500'>Selected OD Rate</p>
@@ -529,7 +590,7 @@ const PremiumCalculator = () => {
               </div>
               <div className='flex items-center justify-between text-xs'>
                 <p className='font-bold text-slate-500'>Calculated OD Premium</p>
-                <p className='font-black text-slate-800'>₹{fmt(odBase)}</p>
+                <p className='font-black text-slate-800'>₹{fmtD(odBase)}</p>
               </div>
               {ncb > 0 && (
                 <>
@@ -539,13 +600,33 @@ const PremiumCalculator = () => {
                   </div>
                   <div className='flex items-center justify-between text-xs text-emerald-600'>
                     <p className='font-bold'>NCB Discount Amount</p>
-                    <p className='font-black'>- ₹{fmt(ncbDiscount)}</p>
+                    <p className='font-black'>- ₹{fmtD(ncbDiscount)}</p>
+                  </div>
+                </>
+              )}
+              {(result.odDiscountVal || 0) > 0 && (
+                <>
+                  <div className='flex items-center justify-between text-xs text-orange-600'>
+                    <p className='font-bold'>OD Discount</p>
+                    <p className='font-black'>{result.odDiscountVal}%</p>
+                  </div>
+                  <div className='flex items-center justify-between text-xs text-orange-600'>
+                    <p className='font-bold'>OD Discount Amount</p>
+                    <p className='font-black'>- ₹{fmtD(odDiscountAmt)}</p>
                   </div>
                 </>
               )}
               <div className='flex items-center justify-between text-xs border-b border-dashed border-slate-200 pb-2'>
-                <p className='font-bold text-slate-700'>Final OD Premium (After NCB)</p>
-                <p className='font-black text-slate-900'>₹{fmt(result.odPremium)}</p>
+                <p className='font-bold text-slate-700'>
+                  Final OD Premium
+                  {(ncb > 0 || (result.odDiscountVal || 0) > 0) && (
+                    <span className='text-slate-400 font-normal'>
+                      {ncb > 0 && (result.odDiscountVal || 0) > 0 ? ' (After NCB + Discount)' :
+                       ncb > 0 ? ' (After NCB)' : ' (After Discount)'}
+                    </span>
+                  )}
+                </p>
+                <p className='font-black text-slate-900'>₹{fmtD(result.odPremium)}</p>
               </div>
             </>
           )}
@@ -553,18 +634,18 @@ const PremiumCalculator = () => {
           {showTP && (
             <div className='flex items-center justify-between text-xs border-b border-dashed border-slate-200 pb-2'>
               <p className='font-bold text-slate-700'>{isBundle ? '3-Year TP Premium (Bundle)' : '1-Year TP Premium'}</p>
-              <p className='font-black text-slate-900'>₹{fmt(result.tpPremium)}</p>
+              <p className='font-black text-slate-900'>₹{fmtD(result.tpPremium)}</p>
             </div>
           )}
 
           <div className='flex items-center justify-between text-xs pt-1'>
             <p className='font-bold text-slate-500'>Premium Before GST</p>
-            <p className='font-black text-slate-800'>₹{fmt(result.odPremium + result.tpPremium)}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium)}</p>
           </div>
 
           <div className='flex items-center justify-between text-xs'>
             <p className='font-bold text-slate-500'>GST Amount {gstEnabled ? '(18%)' : '(0% - Toggle Off)'}</p>
-            <p className='font-black text-slate-800'>₹{fmt(result.gst)}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
           </div>
 
           <div className='mt-2 flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 p-4 text-white shadow-xl shadow-indigo-200'>
@@ -633,6 +714,7 @@ const PremiumCalculator = () => {
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             {policyType !== 'tp' && <NCBSelector />}
+            {policyType !== 'tp' && <ODDiscountInput />}
             <GSTToggle />
           </div>
         )
@@ -682,6 +764,7 @@ const PremiumCalculator = () => {
                 </div>
                 <CoverageSelector />
                 <NCBSelector />
+                {coverageType !== 'tp' && <ODDiscountInput />}
               </>
             ) : (
               <>
@@ -732,6 +815,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 
@@ -758,6 +842,7 @@ const PremiumCalculator = () => {
             <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 
@@ -812,6 +897,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 
@@ -852,6 +938,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 
@@ -887,6 +974,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 
@@ -913,6 +1001,7 @@ const PremiumCalculator = () => {
             <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
+            <ODDiscountInput />
           </div>
         )
 

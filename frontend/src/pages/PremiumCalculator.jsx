@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react'
 
+const IDVInput = ({ idv, setIdv }) => (
+  <div>
+    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IDV – Insured Declared Value (₹)</label>
+    <input
+      type='number'
+      value={idv}
+      onChange={e => setIdv(e.target.value)}
+      placeholder='e.g. 500000'
+      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300'
+    />
+  </div>
+)
+
 // ─── IMT TARIFF DATA (WEF 1st June 2022) ───────────────────────────────────
 const TARIFF = {
   private_car: {
@@ -398,20 +411,6 @@ const PremiumCalculator = () => {
     </div>
   )
 
-  // ─── IDV INPUT ─────────────────────────────────────────────────────────────
-  const IDVInput = () => (
-    <div>
-      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IDV – Insured Declared Value (₹)</label>
-      <input
-        type='number'
-        value={idv}
-        onChange={e => setIdv(e.target.value)}
-        placeholder='e.g. 500000'
-        className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300'
-      />
-    </div>
-  )
-
   // ─── NCB ───────────────────────────────────────────────────────────────────
   const NCBSelector = () => {
     const slabs = [
@@ -633,7 +632,7 @@ const PremiumCalculator = () => {
                 <input type='number' value={cc} onChange={e => setCc(e.target.value)} placeholder='Or enter CC e.g. 1197'
                   className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
               </div>
-              <IDVInput />
+              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             {policyType !== 'tp' && <NCBSelector />}
             <GSTToggle />
@@ -670,7 +669,7 @@ const PremiumCalculator = () => {
                       className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
                     <p className='mt-1 text-[8px] text-slate-400'>≤75 / 76–150 / 151–350 / {'>'}350 CC</p>
                   </div>
-                  <IDVInput />
+                  <IDVInput idv={idv} setIdv={setIdv} />
                 </div>
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Policy Term</label>
@@ -694,7 +693,7 @@ const PremiumCalculator = () => {
                     className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
                   <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
                 </div>
-                <IDVInput />
+                <IDVInput idv={idv} setIdv={setIdv} />
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Policy Term</label>
                   <div className='flex gap-1.5 rounded-2xl bg-slate-200 p-1'>
@@ -731,7 +730,7 @@ const PremiumCalculator = () => {
                   className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
                 <p className='mt-1 text-[8px] text-slate-400'>≤7500 / 7501–12000 / 12001–20000 / 20001–40000 / {'>'}40000</p>
               </div>
-              <IDVInput />
+              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             <CoverageSelector />
             <NCBSelector />
@@ -758,7 +757,7 @@ const PremiumCalculator = () => {
               <ZoneSelector zones={['A', 'B', 'C']} />
               <AgeSelector />
             </div>
-            <IDVInput />
+            <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
           </div>
@@ -811,7 +810,7 @@ const PremiumCalculator = () => {
                 <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 4' min={1} max={6}
                   className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
               </div>
-              <IDVInput />
+              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             <CoverageSelector />
             <NCBSelector />
@@ -851,7 +850,7 @@ const PremiumCalculator = () => {
                   className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
                 <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
               </div>
-              <IDVInput />
+              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             <CoverageSelector />
             <NCBSelector />
@@ -886,7 +885,7 @@ const PremiumCalculator = () => {
                 <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 3'
                   className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
               </div>
-              <IDVInput />
+              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             <CoverageSelector />
             <NCBSelector />
@@ -913,7 +912,7 @@ const PremiumCalculator = () => {
                 ))}
               </div>
             </div>
-            <IDVInput />
+            <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
           </div>

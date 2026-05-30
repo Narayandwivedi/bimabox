@@ -247,21 +247,32 @@ const Search = () => {
                           `}
                         >
                           {/* Panel Header */}
-                          <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white'>
+                           <div className='flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white'>
                             <div className='flex items-center gap-2'>
                               <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
                               </svg>
                               <span className='text-sm font-bold'>Filters</span>
                             </div>
-                            {activeFilterCount > 0 && (
+                            <div className='flex items-center gap-3'>
+                              {activeFilterCount > 0 && (
+                                <button
+                                  onClick={handleClearFilters}
+                                  className='text-[10px] font-bold text-white/85 hover:text-white transition-colors underline underline-offset-2'
+                                >
+                                  Clear all
+                                </button>
+                              )}
                               <button
-                                onClick={handleClearFilters}
-                                className='text-[10px] font-bold text-white/80 hover:text-white transition-colors underline underline-offset-2'
+                                onClick={() => setShowFilterPanel(false)}
+                                className='text-white/85 hover:text-white transition-colors p-0.5 rounded-lg hover:bg-white/10'
+                                title='Close'
                               >
-                                Clear all
+                                <svg className='w-4.5 h-4.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
+                                </svg>
                               </button>
-                            )}
+                            </div>
                           </div>
 
                           <div className='p-4 lg:p-6 space-y-4 lg:space-y-5'>

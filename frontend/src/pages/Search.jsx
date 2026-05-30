@@ -592,29 +592,29 @@ const Search = () => {
                             )}
                           </div>
                           <div className='mt-4 flex items-center justify-between border-t border-slate-100 pt-3'>
-                            <div className='flex gap-5'>
-                              <div>
-                                <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>From</p>
-                                <p className='text-xs font-bold text-slate-700'>{record.validFrom || 'N/A'}</p>
-                              </div>
-                              <div>
-                                <p className='text-[8px] font-black uppercase tracking-wider text-slate-400'>To</p>
-                                <p className='text-xs font-black text-slate-900'>
+                            <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-slate-500'>
+                              <span className='whitespace-nowrap'>
+                                <span className='text-[8px] font-black uppercase tracking-wider text-slate-400 mr-1'>From</span>
+                                <span className='text-slate-700 font-semibold'>{record.validFrom || 'N/A'}</span>
+                              </span>
+                              <span className='text-slate-300 hidden min-[320px]:inline'>•</span>
+                              <span className='whitespace-nowrap'>
+                                <span className='text-[8px] font-black uppercase tracking-wider text-slate-400 mr-1'>To</span>
+                                <span className='font-black text-slate-900'>
                                   {record.validTo || 'N/A'}
                                   {(() => {
                                     const days = getDaysLeft(record.validTo)
                                     if (days === null) return null
                                     return (
-                                      <span className='text-rose-600 ml-1'>{'('}{days}d{')'}</span>
+                                      <span className='text-rose-600 ml-1'>({days}d)</span>
                                     )
                                   })()}
-                                </p>
-                              </div>
+                                </span>
+                              </span>
                             </div>
                             {record.policyNumber && (
-                              <span className='self-start sm:self-auto -mt-1 sm:mt-0 text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
-                                <span className='sm:hidden'>{record.policyNumber.slice(0, 10)}</span>
-                                <span className='hidden sm:inline'>{record.policyNumber}</span>
+                              <span className='hidden sm:inline-block self-start sm:self-auto -mt-1 sm:mt-0 text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
+                                {record.policyNumber}
                               </span>
                             )}
                           </div>

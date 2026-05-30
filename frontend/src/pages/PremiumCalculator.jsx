@@ -582,6 +582,352 @@ const PremiumCalculator = () => {
     const afterNcbOD = odBase - ncbDiscount
     const odDiscountAmt = showOD ? afterNcbOD * ((result.odDiscountVal || 0) / 100) : 0
 
+    const shareQuotation = () => {
+      const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
+      const dateStr = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+
+      const printWindow = window.open('', '_blank')
+      if (!printWindow) {
+        alert('Please allow popups to share/print the quotation.')
+        return
+      }
+
+      const vehicleSpec = isElectric
+        ? `${kwPower || 0} KW (Electric)`
+        : `${cc || 0} CC (Petrol/Diesel/CNG)`
+
+      const policyLabel = policyType === 'od' ? 'Own Damage Only' :
+                          policyType === 'tp' ? 'Third Party Only' :
+                          policyType === 'comprehensive' ? 'Comprehensive Cover' :
+                          (vehicleType === 'two_wheeler' ? '1-Year OD + 5-Year TP Bundle' : '1-Year OD + 3-Year TP Bundle')
+
+      const tpLabel = isBundle
+        ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium' : '3-Year TP Premium')
+        : '1-Year TP Premium'
+
+      let tableRows = ''
+      if (showOD) {
+        tableRows += `
+          <tr>
+            <td>Basic Own Damage (OD) Premium</td>
+            <td class="text-right">${result.odRate}%</td>
+            <td class="text-right">₹${fmtD(odBase)}</td>
+          </tr>
+        `
+        if (ncb > 0) {
+          tableRows += `
+            <tr class="discount-text">
+              <td>No Claim Bonus (NCB) Discount</td>
+              <td class="text-right">-${ncb}%</td>
+              <td class="text-right">- ₹${fmtD(ncbDiscount)}</td>
+            </tr>
+          `
+        }
+        if (result.odDiscountVal > 0) {
+          tableRows += `
+            <tr class="discount-text">
+              <td>Insurer OD Discount</td>
+              <td class="text-right">-${result.odDiscountVal}%</td>
+              <td class="text-right">- ₹${fmtD(odDiscountAmt)}</td>
+            </tr>
+          `
+        }
+        tableRows += `
+          <tr style="font-weight: bold; background-color: #f8fafc;">
+            <td>Final Own Damage (OD) Premium</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.odPremium)}</td>
+          </tr>
+        `
+      }
+
+      if (showTP) {
+        tableRows += `
+          <tr>
+            <td>Third Party Liability (TP) Premium (${tpLabel})</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.tpPremium)}</td>
+          </tr>
+        `
+      }
+
+      const netPremium = result.odPremium + result.tpPremium
+      const exactTotal = netPremium + result.gst
+
+      tableRows += `
+        <tr style="border-top: 2px solid #e2e8f0;">
+          <td>Premium Before Taxes</td>
+          <td class="text-right">-</td>
+          <td class="text-right">₹${fmtD(netPremium)}</td>
+        </tr>
+        <tr>
+          <td>Goods and Services Tax (GST ${gstEnabled ? '18%' : '0%'})</td>
+          <td class="text-right">${gstEnabled ? '18%' : '0%'}</td>
+          <td class="text-right">₹${fmtD(result.gst)}</td>
+        </tr>
+        <tr class="total-row">
+          <td>Total Payable Premium (Exact)</td>
+          <td class="text-right">-</td>
+          <td class="text-right">₹${fmtD(exactTotal)}</td>
+        </tr>
+      `
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Insurance Quotation ${quoteId}</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              color: #1e293b;
+              margin: 0;
+              padding: 40px;
+              font-size: 14px;
+              line-height: 1.5;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #6366f1;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .logo {
+              font-size: 24px;
+              font-weight: 800;
+              color: #4f46e5;
+              letter-spacing: -0.5px;
+            }
+            .quote-title {
+              text-align: right;
+            }
+            .quote-title h1 {
+              margin: 0;
+              font-size: 20px;
+              color: #1e1b4b;
+              font-weight: 900;
+            }
+            .quote-title p {
+              margin: 5px 0 0;
+              font-size: 12px;
+              color: #64748b;
+              font-weight: 600;
+            }
+            .details-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 40px;
+              margin-bottom: 30px;
+            }
+            .details-box {
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              padding: 20px;
+            }
+            .details-box h3 {
+              margin: 0 0 12px;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #4f46e5;
+              border-bottom: 1px dashed #cbd5e1;
+              padding-bottom: 8px;
+            }
+            .detail-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              font-size: 13px;
+            }
+            .detail-row:last-child {
+              margin-bottom: 0;
+            }
+            .detail-label {
+              color: #64748b;
+              font-weight: 500;
+            }
+            .detail-value {
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .table-title {
+              font-size: 14px;
+              font-weight: 800;
+              text-transform: uppercase;
+              color: #1e293b;
+              margin-bottom: 12px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+            }
+            th {
+              background-color: #f1f5f9;
+              color: #475569;
+              font-weight: 700;
+              text-align: left;
+              padding: 12px;
+              font-size: 12px;
+              text-transform: uppercase;
+              border-bottom: 2px solid #cbd5e1;
+            }
+            td {
+              padding: 12px;
+              border-bottom: 1px solid #e2e8f0;
+              font-size: 13px;
+            }
+            .text-right {
+              text-align: right;
+            }
+            .discount-text {
+              color: #16a34a;
+              font-weight: 600;
+            }
+            .total-row {
+              background-color: #e0e7ff;
+              font-weight: 900;
+              font-size: 16px;
+              color: #312e81;
+            }
+            .total-row td {
+              border-top: 2px solid #4f46e5;
+              border-bottom: 2px solid #4f46e5;
+              padding: 16px 12px;
+            }
+            .disclaimer {
+              font-size: 11px;
+              color: #94a3b8;
+              text-align: center;
+              margin-top: 50px;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+            }
+            .actions {
+              margin-top: 20px;
+              text-align: center;
+            }
+            @media print {
+              .no-print {
+                display: none;
+              }
+              body {
+                padding: 0;
+              }
+            }
+            .btn {
+              background-color: #4f46e5;
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              font-size: 14px;
+              font-weight: 700;
+              border-radius: 8px;
+              cursor: pointer;
+              box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+              transition: all 0.2s;
+            }
+            .btn:hover {
+              background-color: #4338ca;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print actions" style="margin-bottom: 20px;">
+            <button class="btn" onclick="window.print()">Print or Save as PDF</button>
+          </div>
+          
+          <div class="header">
+            <div class="logo">BIMABOX</div>
+            <div class="quote-title">
+              <h1>INSURANCE QUOTATION</h1>
+              <p>ID: ${quoteId} • Date: ${dateStr}</p>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="details-box">
+              <h3>Vehicle Details</h3>
+              <div class="detail-row">
+                <span class="detail-label">Vehicle Category</span>
+                <span class="detail-value">${selectedCategory ? selectedCategory.label : 'N/A'}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Specification</span>
+                <span class="detail-value">${vehicleSpec}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">RTO Zone</span>
+                <span class="detail-value">Zone ${zone}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Vehicle Age</span>
+                <span class="detail-value">${vehicleAge === 'upto_5' ? 'Upto 5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs'}</span>
+              </div>
+            </div>
+
+            <div class="details-box">
+              <h3>Quotation Details</h3>
+              <div class="detail-row">
+                <span class="detail-label">Policy Type</span>
+                <span class="detail-value">${policyLabel}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Insured Declared Value (IDV)</span>
+                <span class="detail-value">₹${fmtD(parseFloat(idv) || 0)}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">No Claim Bonus (NCB)</span>
+                <span class="detail-value">${ncb}%</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Insurer OD Discount</span>
+                <span class="detail-value">${result.odDiscountVal}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-title">Premium Calculation Breakup</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th class="text-right">Rate / Percentage</th>
+                <th class="text-right">Amount (INR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+
+
+          <div class="disclaimer">
+            This is an indicative system-generated insurance quotation prepared under the Indian Motor Tariff guidelines. The final premium is subject to actual verification of vehicle registration details, previous policy claim history, and underwriting guidelines of the respective insurance company.
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 300);
+            }
+          </script>
+        </body>
+        </html>
+      `
+
+      printWindow.document.write(htmlContent)
+      printWindow.document.close()
+    }
+
     return (
       <div className='border-t border-slate-200 pt-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
         <div className='rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3'>
@@ -679,6 +1025,16 @@ const PremiumCalculator = () => {
               </svg>
             </div>
           </div>
+
+          <button
+            onClick={shareQuotation}
+            className='mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-indigo-600 bg-white py-3.5 text-[11px] sm:text-xs font-black uppercase tracking-widest text-indigo-600 transition-all hover:bg-indigo-50 active:scale-[0.98] cursor-pointer'
+          >
+            <svg className='h-4.5 w-4.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
+            </svg>
+            Share / Print Quotation
+          </button>
         </div>
       </div>
     )

@@ -34,6 +34,18 @@ const calculateStatus = (record, expiryField, expiringDays) => {
   return 'active'
 }
 
+const getDaysToExpiry = (record, expiryField) => {
+  const expiryDate = parseDateString(record[expiryField])
+  if (!expiryDate) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  expiryDate.setHours(0, 0, 0, 0)
+
+  const diffMs = expiryDate.getTime() - today.getTime()
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+}
+
 const buildSearchMatcher = (searchFields, search) => {
   if (!search || !search.trim()) return () => true
   const normalized = search.trim().toLowerCase()
@@ -169,6 +181,15 @@ const createRecordController = (config) => {
           }
           if (req.query.insuranceClass && record.insuranceClass !== req.query.insuranceClass) {
             return false
+          }
+          if (req.query.validity) {
+            const days = getDaysToExpiry(record, expiryField)
+            if (req.query.validity === 'expired') {
+              if (days === null || days >= 0) return false
+            } else {
+              const limitDays = parseInt(req.query.validity, 10)
+              if (days === null || days < 0 || days > limitDays) return false
+            }
           }
           return true
         })

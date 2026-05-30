@@ -41,12 +41,13 @@ const Search = () => {
   const [filterCompany, setFilterCompany] = useState('')
   const [filterProductType, setFilterProductType] = useState('')
   const [filterPolicyType, setFilterPolicyType] = useState('')
+  const [filterValidity, setFilterValidity] = useState('')
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
-  const activeFilterCount = [filterCompany, filterProductType, filterPolicyType].filter(Boolean).length
+  const activeFilterCount = [filterCompany, filterProductType, filterPolicyType, filterValidity].filter(Boolean).length
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', company = '', productType = '', policyType = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', company = '', productType = '', policyType = '', validity = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -58,6 +59,7 @@ const Search = () => {
       if (company) params.insuranceCompany = company
       if (productType) params.product = productType
       if (policyType) params.insuranceClass = policyType
+      if (validity) params.validity = validity
 
       const res = await axios.get(`${API_URL}/api/insurance`, {
         withCredentials: true,
@@ -84,7 +86,7 @@ const Search = () => {
 
   // Initial load
   useEffect(() => {
-    fetchRecords(1, false, '', '', '', '')
+    fetchRecords(1, false, '', '', '', '', '')
   }, [fetchRecords])
 
   // Debounced search on input change
@@ -93,10 +95,10 @@ const Search = () => {
     debounceRef.current = setTimeout(() => {
       setRecords([])
       setPage(1)
-      fetchRecords(1, false, inputValue, filterCompany, filterProductType, filterPolicyType)
+      fetchRecords(1, false, inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity)
     }, 350)
     return () => clearTimeout(debounceRef.current)
-  }, [inputValue, filterCompany, filterProductType, filterPolicyType, fetchRecords])
+  }, [inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity, fetchRecords])
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -110,14 +112,29 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterCompany, filterProductType, filterPolicyType)
+    fetchRecords(page + 1, true, searchQuery, filterCompany, filterProductType, filterPolicyType, filterValidity)
   }
 
   const handleClearFilters = () => {
     setFilterCompany('')
     setFilterProductType('')
     setFilterPolicyType('')
+    setFilterValidity('')
   }
+
+  // Validity filter applied client-side on loaded records
+
+  const getValidityDays = (rec) => {
+    if (!rec.validTo) return null
+    const parts = rec.validTo.split('-')
+    if (parts.length !== 3) return null
+    const expiry = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24))
+  }
+
+  const filteredRecords = records
 
   const getDaysLeft = (dateStr) => {
     if (!dateStr) return null
@@ -351,6 +368,44 @@ const Search = () => {
                               )}
                             </div>
 
+                            {/* Validity */}
+                            <div>
+                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                Validity Period
+                              </label>
+                              <div className='relative'>
+                                <select
+                                  value={filterValidity}
+                                  onChange={(e) => setFilterValidity(e.target.value)}
+                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                >
+                                  <option value=''>All — Any Validity</option>
+                                  <option value='expired'>❌ Expired</option>
+                                  <option value='7'>⚠️ Expires in 7 Days</option>
+                                  <option value='30'>🔔 Expires in 30 Days</option>
+                                  <option value='45'>🔔 Expires in 45 Days</option>
+                                  <option value='60'>✅ Expires in 60 Days</option>
+                                </select>
+                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                  </svg>
+                                </div>
+                              </div>
+                              {filterValidity && (
+                                <div className='mt-1.5 flex items-center justify-between'>
+                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>
+                                    {filterValidity === 'expired' ? 'Expired' : `Expires in ${filterValidity} Days`}
+                                  </span>
+                                  <button onClick={() => setFilterValidity('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
                             {/* Close button */}
                             <button
                               onClick={() => setShowFilterPanel(false)}
@@ -413,6 +468,19 @@ const Search = () => {
                       </button>
                     </span>
                   )}
+                  {filterValidity && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 ring-1 ring-inset ring-rose-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                      </svg>
+                      {filterValidity === 'expired' ? 'Expired' : `Expires in ${filterValidity} Days`}
+                      <button onClick={() => setFilterValidity('')} className='ml-0.5 hover:text-rose-700 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -449,7 +517,7 @@ const Search = () => {
                 <>
                   <div className='mt-6 mb-3 flex items-center justify-between'>
                     <p className='text-xs font-bold text-slate-500'>
-                      Showing <span className='text-slate-800'>{records.length}</span> of <span className='text-slate-800'>{totalRecords}</span> results
+                      Showing <span className='text-slate-800'>{filteredRecords.length}</span> of <span className='text-slate-800'>{totalRecords}</span> results
                     </p>
                     {activeFilterCount > 0 && (
                       <span className='text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg'>
@@ -458,8 +526,15 @@ const Search = () => {
                     )}
                   </div>
 
+                  {filteredRecords.length === 0 && filterValidity && (
+                    <div className='text-center py-10 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
+                      <p className='text-sm font-black text-slate-400'>No records match the validity filter</p>
+                      <button onClick={() => setFilterValidity('')} className='mt-2 text-xs font-bold text-blue-600 hover:text-blue-700 underline underline-offset-2'>Clear validity filter</button>
+                    </div>
+                  )}
+
                   <div className='grid gap-4 sm:grid-cols-2'>
-                    {records.map((record) => {
+                    {filteredRecords.map((record) => {
                       const badge = getStatusBadge(record)
                       return (
                         <div

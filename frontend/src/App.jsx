@@ -57,7 +57,7 @@ function AppContent() {
           </Routes>
         </div>
       </div>
-       {<Agentation />}
+      {/* {<Agentation />} */}
       {showNav && <BottomNavigation />}
     </>
   )

@@ -793,7 +793,7 @@ const PremiumCalculator = () => {
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/30 to-slate-100 px-3 pb-24 pt-4 sm:px-4 md:px-6'>
-      <div className='mx-auto max-w-2xl'>
+      <div className='mx-auto max-w-5xl'>
 
         {/* Header */}
         <div className='mb-5'>
@@ -806,7 +806,7 @@ const PremiumCalculator = () => {
           <div className='animate-in fade-in zoom-in-95 duration-300'>
             <div className='rounded-[28px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_10px_40px_-20px_rgba(15,23,42,0.12)]'>
               <h2 className='mb-4 text-center text-base sm:text-lg font-black text-slate-800'>Select Vehicle Category</h2>
-              <div className='grid grid-cols-2 gap-3 sm:grid-cols-2'>
+              <div className='grid grid-cols-2 gap-3 md:grid-cols-3'>
                 {VEHICLE_CATEGORIES.map(v => (
                   <button
                     key={v.id}

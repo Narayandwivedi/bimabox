@@ -24,6 +24,9 @@ const TARIFF = {
       '5_to_7': { A: [3.283, 3.447, 3.612], B: [3.191, 3.351, 3.510] },
       above_7: { A: [3.362, 3.529, 3.698], B: [3.267, 3.430, 3.596] },
     },
+    // Electric: KW brackets: 0=<30KW, 1=30-65KW, 2=>65KW
+    electricTP1yr: [1780, 2904, 6712],
+    electricTP3yr: [5543, 9044, 20907],
   },
   two_wheeler: {
     // CC brackets: 0=<=75, 1=76-150, 2=151-350, 3=>350
@@ -38,9 +41,6 @@ const TARIFF = {
     // Electric: KW brackets: 0=<3KW, 1=3-7KW, 2=7-16KW, 3=>16KW
     electricTP1yr: [457, 607, 1161, 2383],
     electricTP5yr: [2466, 3273, 6260, 12849],
-    // Non-electric <30KW/30-65KW/>65KW
-    nonElectricTP1yr: [1780, 2904, 6712],
-    nonElectricTP3yr: [5543, 9044, 20907],
   },
   gcv: {
     // GVW brackets (kg): <=7500, 7501-12000, 12001-20000, 20001-40000, >40001
@@ -234,14 +234,25 @@ const PremiumCalculator = () => {
     switch (vehicleType) {
       // ── PRIVATE CAR ────────────────────────────────────────────────────
       case 'private_car': {
-        const bracket = getCCBracket(ccVal)
-        if (policyType === 'bundle') {
-          tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
+        if (isElectric) {
+          const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
+          if (policyType === 'bundle') {
+            tpPremium = TARIFF.private_car.electricTP3yr[kwBracket]
+          } else {
+            tpPremium = TARIFF.private_car.electricTP1yr[kwBracket]
+          }
+          odRate = TARIFF.private_car.odRates[vehicleAge][zone][kwBracket]
+          details = { label: kwVal < 30 ? '<30 KW' : kwVal <= 65 ? '30–65 KW' : '>65 KW', isElec: true }
         } else {
-          tpPremium = TARIFF.private_car.tpByCC[bracket]
+          const bracket = getCCBracket(ccVal)
+          if (policyType === 'bundle') {
+            tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
+          } else {
+            tpPremium = TARIFF.private_car.tpByCC[bracket]
+          }
+          odRate = TARIFF.private_car.odRates[vehicleAge][zone][bracket]
+          details = { label: ccVal <= 1000 ? '≤1000 CC' : ccVal <= 1500 ? '1001–1500 CC' : '>1500 CC' }
         }
-        odRate = TARIFF.private_car.odRates[vehicleAge][zone][bracket]
-        details = { label: ccVal <= 1000 ? '≤1000 CC' : ccVal <= 1500 ? '1001–1500 CC' : '>1500 CC' }
         break
       }
       // ── TWO WHEELER ────────────────────────────────────────────────────
@@ -685,37 +696,59 @@ const PremiumCalculator = () => {
         const ccVal = parseFloat(cc) || 0
         return (
           <div className='space-y-4'>
+            <div>
+              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Fuel Type</label>
+              <div className='grid grid-cols-2 gap-2'>
+                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>⛽ Petrol / Diesel / CNG</p>
+                  <p className='text-[9px] text-slate-500'>ICE Vehicle</p>
+                </button>
+                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>⚡ Electric</p>
+                  <p className='text-[9px] text-slate-500'>EV Private Car</p>
+                </button>
+              </div>
+            </div>
             <PolicyTypeSelector />
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
               <ZoneSelector zones={['A', 'B']} />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-              <div>
-                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine Capacity (CC)</label>
-                <div className='grid grid-cols-3 gap-1 rounded-2xl bg-slate-200 p-1 mb-2'>
-                  {[
-                    { label: '≤1000 CC', val: 999 },
-                    { label: '1001–1500', val: 1200 },
-                    { label: 'Above 1500', val: 1600 },
-                  ].map(item => (
-                    <button
-                      key={item.label}
-                      type='button'
-                      onClick={() => setCc(item.val)}
-                      className={`rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${
-                        (item.val === 999 && ccVal <= 1000 && ccVal > 0) ||
-                        (item.val === 1200 && ccVal > 1000 && ccVal <= 1500) ||
-                        (item.val === 1600 && ccVal > 1500)
-                          ? 'bg-white text-indigo-600 shadow-sm'
-                          : 'text-slate-500'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+              {!isElectric ? (
+                <div>
+                  <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine Capacity (CC)</label>
+                  <div className='grid grid-cols-3 gap-1 rounded-2xl bg-slate-200 p-1 mb-2'>
+                    {[
+                      { label: '≤1000 CC', val: 999 },
+                      { label: '1001–1500', val: 1200 },
+                      { label: 'Above 1500', val: 1600 },
+                    ].map(item => (
+                      <button
+                        key={item.label}
+                        type='button'
+                        onClick={() => setCc(item.val)}
+                        className={`rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${
+                          (item.val === 999 && ccVal <= 1000 && ccVal > 0) ||
+                          (item.val === 1200 && ccVal > 1000 && ccVal <= 1500) ||
+                          (item.val === 1600 && ccVal > 1500)
+                            ? 'bg-white text-indigo-600 shadow-sm'
+                            : 'text-slate-500'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
+                  <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 45'
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                  <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;30 / 30–65 / {'>'}65 KW</p>
+                </div>
+              )}
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
             {policyType !== 'tp' && <NCBSelector />}

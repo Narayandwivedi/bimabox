@@ -1015,11 +1015,13 @@ const PremiumCalculator = () => {
     <div className='min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/30 to-slate-100 px-3 pb-24 pt-4 sm:px-4 md:px-6'>
       <div className='mx-auto max-w-5xl'>
 
-        {/* Header */}
-        <div className='mb-4'>
-          <h1 className='text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
-          <p className='mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
-        </div>
+        {/* Header — only shown on vehicle selection screen */}
+        {step === 1 && (
+          <div className='mb-4'>
+            <h1 className='text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
+            <p className='mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
+          </div>
+        )}
 
         {/* Step 1 — Select Vehicle */}
         {step === 1 && (

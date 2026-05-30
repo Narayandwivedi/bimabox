@@ -89,15 +89,11 @@ const Search = () => {
     fetchRecords(1, false, '', '', '', '', '')
   }, [fetchRecords])
 
-  // Debounced search on input change
+  // Trigger search immediately on input change (each keystroke) and filter changes
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setRecords([])
-      setPage(1)
-      fetchRecords(1, false, inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity)
-    }, 350)
-    return () => clearTimeout(debounceRef.current)
+    setRecords([])
+    setPage(1)
+    fetchRecords(1, false, inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity)
   }, [inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity, fetchRecords])
 
   // Close filter panel on outside click

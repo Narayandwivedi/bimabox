@@ -118,6 +118,11 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  reference: {
+    type: String,
+    trim: true
+  },
+
   // WhatsApp message tracking
   whatsappMessageCount: {
     type: Number,

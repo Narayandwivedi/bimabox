@@ -81,6 +81,7 @@ const TYPE_CONFIG = {
       { label: 'Product', key: 'product' },
       { label: 'Premium', key: 'premium', prefix: '₹' },
       { label: 'Mobile Number', key: 'mobileNumber' },
+      { label: 'Reference', key: 'reference' },
       { label: 'Remarks', key: 'remarks' },
       { label: 'Notes', key: 'notes' },
     ],

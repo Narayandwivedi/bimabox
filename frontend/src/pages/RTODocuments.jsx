@@ -303,7 +303,7 @@ const RTODocuments = () => {
 
   return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
-      <main className='px-4 pt-3 pb-32 lg:px-8 lg:pt-4'>
+      <main className='px-2 pt-3 pb-32 lg:px-8 lg:pt-4'>
         <section className='w-full'>
           <div className='max-w-6xl mx-auto'>
             {/* Quick Action Buttons */}

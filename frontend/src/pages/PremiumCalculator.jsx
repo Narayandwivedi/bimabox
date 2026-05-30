@@ -60,9 +60,9 @@ const TARIFF = {
       { id: 'erickshaw_gcv', label: '3W e-Rickshaw GCV', tp: 3139 },
     ],
     odRates: {
-      upto_5: { A: 1.751, B: 1.743, C: 1.726 },
-      '5_to_7': { A: 1.795, B: 1.787, C: 1.770 },
-      above_7: { A: 1.839, B: 1.830, C: 1.812 },
+      upto_5: { A: 1.664, B: 1.656, C: 1.640 },
+      '5_to_7': { A: 1.706, B: 1.697, C: 1.681 },
+      above_7: { A: 1.747, B: 1.739, C: 1.722 },
     },
   },
   taxi: {

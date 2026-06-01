@@ -7,7 +7,6 @@ import AddPucModal from './Puc/AddPucModal'
 import AddGpsModal from './Gps/AddGpsModal'
 import AddTaxModal from './Tax/AddTaxModal'
 import AddPermitModal from './Permit/components/AddPermitModal'
-import AddInsuranceModal from './Insurance/AddInsuranceModal'
 import EditFitnessModal from './Fitness/EditFitnessModal'
 import EditPucModal from './Puc/EditPucModal'
 import EditGpsModal from './Gps/EditGpsModal'
@@ -17,34 +16,6 @@ import ImportModal from '../components/ImportModal'
 
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
-
-const INSURANCE_COMPANIES = [
-  'HDFC ERGO',
-  'ICICI Lombard',
-  'Bajaj Allianz',
-  'Tata AIG',
-  'Reliance General',
-  'IFFCO Tokio',
-  'National Insurance',
-  'New India Assurance',
-  'Oriental Insurance',
-  'United India Insurance',
-  'Magma HDI',
-  'Go Digit',
-  'Acko',
-  'Cholamandalam MS',
-  'Future Generali',
-  'Royal Sundaram',
-  'SBI General',
-  'Shriram General',
-  'Liberty General',
-  'Universal Sompo',
-  'Kotak General',
-  'Zuno General',
-  'Raheja QBE',
-  'Navi General',
-  'Star Health'
-]
 
 
 const CustomDropdown = ({ value, onChange, options, label, icon }) => {
@@ -158,13 +129,11 @@ const RTODocuments = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
-  const [companyFilter, setCompanyFilter] = useState('All')
   const [showAddFitnessModal, setShowAddFitnessModal] = useState(false)
   const [showAddPucModal, setShowAddPucModal] = useState(false)
   const [showAddGpsModal, setShowAddGpsModal] = useState(false)
   const [showAddTaxModal, setShowAddTaxModal] = useState(false)
   const [showAddPermitModal, setShowAddPermitModal] = useState(false)
-  const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [documents, setDocuments] = useState([])
@@ -182,7 +151,6 @@ const RTODocuments = () => {
         { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo' },
-        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo' },
       ];
 
@@ -270,8 +238,7 @@ const RTODocuments = () => {
                           doc.type.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'All' || doc.status === statusFilter
       const matchesType = typeFilter === 'All' || doc.type === typeFilter
-      const matchesCompany = typeFilter === 'Insurance' ? (companyFilter === 'All' || doc.rawRecord.insuranceCompany === companyFilter) : true
-      return matchesSearch && matchesStatus && matchesType && matchesCompany
+      return matchesSearch && matchesStatus && matchesType
     })
     .sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
 
@@ -296,7 +263,6 @@ const RTODocuments = () => {
       )
       case 'Fitness': return '🔧'
       case 'Permit': return '📜'
-      case 'Insurance': return '🛡️'
       default: return '📄'
     }
   }
@@ -376,7 +342,6 @@ const RTODocuments = () => {
                       value={typeFilter}
                       onChange={(val) => {
                         setTypeFilter(val)
-                        setCompanyFilter('All')
                       }}
                       options={[
                         { value: 'All', label: 'All' },
@@ -385,7 +350,6 @@ const RTODocuments = () => {
                         { value: 'GPS', label: 'GPS' },
                         { value: 'Fitness', label: 'Fitness' },
                         { value: 'Permit', label: 'Permit' },
-                        { value: 'Insurance', label: 'Insurance' },
                       ]}
                       icon={
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,25 +375,6 @@ const RTODocuments = () => {
                       }
                     />
                   </div>
-
-                  {typeFilter === 'Insurance' && (
-                    <div className='w-full md:w-56 md:flex-shrink-0'>
-                      <CustomDropdown
-                        label="Company"
-                        value={companyFilter}
-                        onChange={setCompanyFilter}
-                        options={[
-                          { value: 'All', label: 'All Companies' },
-                          ...INSURANCE_COMPANIES.map(company => ({ value: company, label: company }))
-                        ]}
-                        icon={
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        }
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -457,11 +402,6 @@ const RTODocuments = () => {
                             <div>
                               <h3 className='text-sm font-black text-slate-900'>{doc.type}</h3>
                               <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono'>{doc.vehicleNumber}</p>
-                              {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
-                                <span className='mt-1.5 inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap'>
-                                  {doc.rawRecord.insuranceCompany}
-                                </span>
-                              )}
                             </div>
                           </div>
                           <span className={`shrink-0 rounded-lg px-2 py-1 text-[9px] font-black uppercase leading-none tracking-wider shadow-sm ring-1 ring-inset ${getStatusColor(doc.status)}`}>
@@ -533,11 +473,6 @@ const RTODocuments = () => {
                                   </div>
                                   <div>
                                     <span className='text-sm font-extrabold text-slate-800'>{doc.type}</span>
-                                    {doc.type === 'Insurance' && doc.rawRecord.insuranceCompany && (
-                                      <span className='ml-2 inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold text-blue-700 ring-1 ring-inset ring-blue-700/10 align-middle'>
-                                        {doc.rawRecord.insuranceCompany}
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
                               </td>
@@ -679,19 +614,6 @@ const RTODocuments = () => {
           permit={editingDoc.rawRecord}
         />
       )}
-      {editingDoc?.type === 'Insurance' && (
-        <AddInsuranceModal
-          isOpen={!!editingDoc}
-          onClose={() => setEditingDoc(null)}
-          onSubmit={async () => {
-            setEditingDoc(null)
-            await fetchAllDocuments()
-          }}
-          initialData={editingDoc.rawRecord}
-          isEditMode={true}
-        />
-      )}
-
       {showAddFitnessModal && (
         <AddFitnessModal
           isOpen={showAddFitnessModal}
@@ -752,21 +674,6 @@ const RTODocuments = () => {
         />
       )}
 
-      {showAddInsuranceModal && (
-        <AddInsuranceModal
-          isOpen={showAddInsuranceModal}
-          onClose={() => {
-            setShowAddInsuranceModal(false)
-            setInitialExtractionFile(null)
-          }}
-          onSubmit={() => {
-            setShowAddInsuranceModal(false)
-            fetchAllDocuments()
-          }}
-          initialExtractionFile={initialExtractionFile}
-        />
-      )}
-
       {showAddPermitModal && (
         <AddPermitModal
           isOpen={showAddPermitModal}
@@ -790,7 +697,6 @@ const RTODocuments = () => {
             setShowImportModal(false)
             setInitialExtractionFile(method === 'ai' ? file : null)
             const modalMap = {
-              insurance: () => setShowAddInsuranceModal(true),
               puc: () => setShowAddPucModal(true),
               fitness: () => setShowAddFitnessModal(true),
               tax: () => setShowAddTaxModal(true),

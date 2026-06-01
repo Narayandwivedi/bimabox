@@ -236,7 +236,7 @@ const Home = () => {
             {/* Header and Search removed as requested */}
 
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
-              <div className='mb-6 grid grid-cols-2 gap-4'>
+              <div className='mb-6 grid grid-cols-3 gap-4'>
                 <button
                   type='button'
                   onClick={() => navigate('/rto-documents')}
@@ -248,6 +248,19 @@ const Home = () => {
                     </svg>
                   </div>
                   <span className='text-[10px] md:text-sm font-bold text-blue-900'>RTO Documents</span>
+                </button>
+
+                <button
+                  type='button'
+                  onClick={() => navigate('/kyc')}
+                  className='flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-emerald-100 bg-emerald-50/50 p-4 transition-all hover:border-emerald-300 hover:bg-emerald-100/50 hover:shadow-xl group'
+                >
+                  <div className='flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform'>
+                    <svg className='h-5 w-5 md:h-6 md:w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2' />
+                    </svg>
+                  </div>
+                  <span className='text-[10px] md:text-sm font-bold text-emerald-900'>KYC</span>
                 </button>
 
                 <button

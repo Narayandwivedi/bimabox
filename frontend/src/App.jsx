@@ -14,6 +14,7 @@ import RTODocumentDetail from './pages/RTODocumentDetail'
 import Search from './pages/Search'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
+import KycPage from './pages/Kyc/KycPage'
 import { getTheme } from './context/ThemeContext'
 
 import { Agentation } from "agentation";
@@ -54,6 +55,7 @@ function AppContent() {
             <Route path='/rto-documents' element={<ProtectedRoute><RTODocuments /></ProtectedRoute>} />
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
+            <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
           </Routes>
         </div>
       </div>

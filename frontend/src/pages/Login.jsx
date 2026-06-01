@@ -228,7 +228,7 @@ const Login = () => {
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
                     </svg>
                   </div>
-                  <input type='text' name='identifier' value={formData.identifier} onChange={handleChange} placeholder='10-digit mobile number' className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium' disabled={loading} />
+                  <input type='text' name='identifier' value={formData.identifier} onChange={handleChange} placeholder='Email or Mobile' className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium' disabled={loading} />
                 </div>
               </div>
             )}

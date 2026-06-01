@@ -155,12 +155,12 @@ const Home = () => {
   const fetchRecentDocs = async () => {
     try {
       const endpoints = [
-        { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald' },
-        { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo', color: 'amber' },
-        { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo', color: 'indigo' },
-        { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo', color: 'rose' },
-        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo', color: 'blue' },
-        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo', color: 'teal' },
+        { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald', nameField: 'ownerName' },
+        { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo', color: 'amber', nameField: 'ownerName' },
+        { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo', color: 'indigo', nameField: 'ownerName' },
+        { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo', color: 'rose', nameField: 'ownerName' },
+        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo', color: 'blue', nameField: 'policyHolderName' },
+        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo', color: 'teal', nameField: 'name' },
       ]
       const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 5 } }))
       const responses = await Promise.allSettled(requests)
@@ -172,6 +172,7 @@ const Home = () => {
             id: record._id,
             type: ep.type,
             vehicleNumber: record.vehicleNumber || 'N/A',
+            insuredName: record[ep.nameField] || '',
             validFrom: record[ep.fromField] || 'N/A',
             validTo: record[ep.toField] || 'N/A',
             createdAt: record.createdAt,
@@ -417,6 +418,7 @@ const Home = () => {
                             <div className='min-w-0 flex-1'>
                               <p className='text-sm font-bold text-slate-800'>{doc.type}</p>
                               <p className='font-mono text-[11px] text-slate-500'>{doc.vehicleNumber}</p>
+                              {doc.insuredName && <p className='text-[10px] text-slate-400 truncate'>{doc.insuredName}</p>}
                             </div>
                             <p className='whitespace-nowrap text-[11px] font-semibold text-blue-600'>{timeAgo(doc.createdAt)}</p>
                           </div>
@@ -441,6 +443,7 @@ const Home = () => {
                           <tr className='border-b border-slate-100 bg-slate-50/50'>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Insured</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Added</th>
@@ -465,6 +468,7 @@ const Home = () => {
                               <td className='px-6 py-3'>
                                 <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
                               </td>
+                              <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.insuredName || '—'}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validTo}</td>
                               <td className='px-6 py-3 text-right'>

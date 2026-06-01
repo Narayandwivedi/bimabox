@@ -57,6 +57,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const dropdownItemRefs = useRef([])
   const isOcrUpdate = useRef(false)
   const processedInitialFile = useRef(false)
+  const userEditedValidTo = useRef(false)
   const getTodayDate = () => utilGetTodayDate()
   const [formData, setFormData] = useState({
     vehicleNumber: prefilledVehicleNumber,
@@ -122,6 +123,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           : null
       )
       setUploadedInsuranceFile(null)
+      userEditedValidTo.current = true
       if (vehicleNum) setVehicleValidation(validateVehicleNumberRealtime(vehicleNum))
     } else if (!isOpen) {
       setFormData({
@@ -153,6 +155,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       })
       setUploadedInsuranceFile(null)
       processedInitialFile.current = false
+      userEditedValidTo.current = false
     }
   }, [initialData, isOpen, prefilledVehicleNumber, prefilledOwnerName])
 
@@ -220,7 +223,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   }, [formData.vehicleNumber])
 
   useEffect(() => {
-    if (isOcrUpdate.current || !formData.validFrom) return
+    if (isOcrUpdate.current || userEditedValidTo.current || !formData.validFrom) return
     const parts = formData.validFrom.trim().split(/[/-]/)
     if (parts.length !== 3) return
     const day = parseInt(parts[0], 10)
@@ -303,6 +306,7 @@ if (e.key === 'Escape') onClose()
       return
     }
     if (name === 'validFrom' || name === 'validTo') {
+      if (name === 'validTo') userEditedValidTo.current = true
       const formatted = handleSmartDateInput(value, formData[name] || '')
       if (formatted !== null) setFormData(prev => ({ ...prev, [name]: formatted }))
       return
@@ -621,7 +625,7 @@ if (e.key === 'Escape') onClose()
                   <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='4' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated)</span></label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated, editable)</span></label>
                   <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='5' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
                 </div>
                 <div>

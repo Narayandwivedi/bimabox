@@ -240,8 +240,8 @@ const Login = () => {
 
           {/* Footer */}
           <div className='mt-4 text-center'>
-            <p className='text-xs text-slate-400 font-medium uppercase tracking-widest'>
-              © {new Date().getFullYear()} BimaBox
+            <p className='text-xs text-slate-400 font-semibold'>
+              All your policies. One Smart Place.
             </p>
           </div>
         </div>

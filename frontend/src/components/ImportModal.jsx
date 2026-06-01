@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 
 const ImportModal = ({ isOpen, onClose, onProceed }) => {
   const [dataTypes] = useState([
-    { value: 'insurance', label: 'Insurance' },
     { value: 'puc', label: 'PUC' },
     { value: 'fitness', label: 'Fitness' },
     { value: 'tax', label: 'Tax' },

@@ -33,7 +33,6 @@ const navIcons = {
 const mainNavItems = [
   { name: 'Home', path: '/', icon: navIcons.home },
   { name: 'Search', path: '/search', icon: navIcons.search },
-  { name: 'KYC', path: '/kyc', icon: navIcons.kyc },
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
   { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]

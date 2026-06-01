@@ -168,6 +168,56 @@ const changeAdminPassword = async (req, res) => {
   }
 }
 
+const register = async (req, res) => {
+  try {
+    const name = String(req.body.name || '').trim()
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const mobile = String(req.body.mobile || '').trim()
+    const password = String(req.body.password || '')
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email, and password are required' })
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
+    }
+
+    const existing = await User.findOne({ email })
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Email already registered' })
+    }
+
+    const userData = {
+      name,
+      email,
+      password: await bcrypt.hash(password, 10),
+      isActive: true,
+      lastLogin: new Date()
+    }
+    if (mobile && /^\d{10}$/.test(mobile)) {
+      const mobileExists = await User.findOne({ mobile })
+      if (mobileExists) {
+        return res.status(409).json({ success: false, message: 'Mobile number already registered' })
+      }
+      userData.mobile = mobile
+    }
+    const user = new User(userData)
+    await user.save()
+
+    const token = signToken({ userId: String(user._id), type: 'user' })
+    res.setHeader('Set-Cookie', buildAuthCookie(token))
+
+    res.status(201).json({
+      success: true,
+      data: { user: sanitizeUser(user) },
+    })
+  } catch (error) {
+    console.error('Register error:', error)
+    res.status(500).json({ success: false, message: 'Failed to register' })
+  }
+}
+
 const googleLogin = async (req, res) => {
   try {
     const { credential } = req.body
@@ -221,9 +271,40 @@ const googleLogin = async (req, res) => {
   }
 }
 
+const updateMobile = async (req, res) => {
+  try {
+    const mobile = String(req.body.mobile || '').trim()
+
+    if (!/^\d{10}$/.test(mobile)) {
+      return res.status(400).json({ success: false, message: 'Mobile number must be 10 digits' })
+    }
+
+    const existing = await User.findOne({ mobile, _id: { $ne: req.user._id } })
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'Mobile number already registered' })
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { mobile },
+      { new: true }
+    )
+
+    res.json({
+      success: true,
+      data: { user: sanitizeUser(updatedUser) },
+    })
+  } catch (error) {
+    console.error('Update mobile error:', error)
+    res.status(500).json({ success: false, message: 'Failed to update mobile number' })
+  }
+}
+
 module.exports = {
   login,
+  register,
   profile,
+  updateMobile,
   adminLogin,
   adminProfile,
   logout,

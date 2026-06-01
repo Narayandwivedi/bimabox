@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import AddVehicleModal from './VehicleRegistration/AddVehicleModal'
 import AddInsuranceModal from './Insurance/AddInsuranceModal'
+import { useAuth } from '../context/AuthContext'
 import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -42,6 +43,7 @@ const colorMap = {
 
 const Home = () => {
   const navigate = useNavigate()
+  const { user, setUser } = useAuth()
   const [vehicles, setVehicles] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -54,13 +56,29 @@ const Home = () => {
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
   const [loadingDocs, setLoadingDocs] = useState(true)
   const [recentDocs, setRecentDocs] = useState([])
+  const [showMobilePrompt, setShowMobilePrompt] = useState(false)
+  const [promptMobile, setPromptMobile] = useState('')
+  const [submittingMobile, setSubmittingMobile] = useState(false)
   const fileInputRef = useRef(null)
+  const promptRef = useRef(null)
   
   useEffect(() => {
     fetchVehicles()
     fetchExpiringDocs()
     fetchRecentDocs()
   }, [])
+
+  useEffect(() => {
+    if (user && !user.mobile) {
+      setShowMobilePrompt(true)
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (showMobilePrompt && promptRef.current) {
+      promptRef.current.focus()
+    }
+  }, [showMobilePrompt])
 
   const calculateDaysLeft = (validTo) => {
     if (!validTo || validTo === 'N/A' || validTo === 'None') return 9999
@@ -189,6 +207,23 @@ const Home = () => {
       setError('Failed to fetch registered vehicles.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleMobileSubmit = async () => {
+    if (!/^\d{10}$/.test(promptMobile)) {
+      return
+    }
+    setSubmittingMobile(true)
+    try {
+      const response = await axios.put(`${API_URL}/api/auth/mobile`, { mobile: promptMobile }, { withCredentials: true })
+      if (response.data.success) {
+        setUser(response.data.data.user)
+        setShowMobilePrompt(false)
+      }
+    } catch (_err) {
+    } finally {
+      setSubmittingMobile(false)
     }
   }
 
@@ -537,6 +572,40 @@ const Home = () => {
                 </div>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showMobilePrompt && (
+        <div className='fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4'>
+          <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm'>
+            <div className='text-center mb-6'>
+              <div className='w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <svg className='w-7 h-7 text-indigo-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z' />
+                </svg>
+              </div>
+              <h3 className='text-lg font-bold text-slate-800'>Almost done!</h3>
+              <p className='text-sm text-slate-500 mt-1'>Please enter your mobile number to complete registration</p>
+            </div>
+            <input
+              ref={promptRef}
+              type='text'
+              value={promptMobile}
+              onChange={(e) => { setPromptMobile(e.target.value.replace(/\D/g, '').slice(0, 10)) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleMobileSubmit() }}
+              placeholder='10-digit mobile number'
+              className='w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm text-center font-medium tracking-widest'
+              disabled={submittingMobile}
+            />
+            <button
+              type='button'
+              onClick={handleMobileSubmit}
+              disabled={submittingMobile || promptMobile.length !== 10}
+              className='w-full mt-4 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-lg transition disabled:opacity-50 cursor-pointer'
+            >
+              {submittingMobile ? 'Saving...' : 'Continue'}
+            </button>
           </div>
         </div>
       )}

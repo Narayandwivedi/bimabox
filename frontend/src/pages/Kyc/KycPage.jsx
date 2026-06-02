@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from 'react-toastify'
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -111,8 +112,10 @@ const KycPage = () => {
 
       setShowModal(false)
       fetchRecords()
+      toast.success(editingRecord ? 'KYC updated successfully!' : 'KYC added successfully!', { autoClose: 1500 })
     } catch (error) {
       console.error('Error saving KYC record:', error)
+      toast.error(error.response?.data?.message || 'Failed to save KYC record', { autoClose: 1500 })
     }
   }
 

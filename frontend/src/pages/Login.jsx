@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
@@ -152,7 +152,15 @@ const Login = () => {
         <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/20'>
           <div className='text-center mb-6'>
             <div className='mb-4'>
-              <img src='/bimabox-Photoroom.avif' alt='BimaBox Logo' className='h-16 mx-auto drop-shadow-md' />
+              <Link to='/' className='inline-flex items-center gap-1'>
+                <img src='/bimalogo.png' alt='BimaBox' className='h-16 w-auto' />
+                <div className='flex flex-col'>
+                  <span className='text-2xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
+                  </span>
+                  <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+                </div>
+              </Link>
             </div>
 
             {/* Login / Sign Up Tabs */}

@@ -127,14 +127,14 @@ const TARIFF = {
 
 // ─── VEHICLE CATEGORIES ─────────────────────────────────────────────────────
 const VEHICLE_CATEGORIES = [
-  { id: 'private_car', label: 'Private Car', icon: <FaCar className='h-7 w-7 sm:h-8 sm:w-8 text-blue-600' />, desc: 'Personal 4-Wheeler', gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50 border-blue-200 hover:border-blue-400' },
-  { id: 'two_wheeler', label: '2W / Motorcycle', icon: <FaMotorcycle className='h-7 w-7 sm:h-8 sm:w-8 text-purple-600' />, desc: 'Scooter & Motorcycle', gradient: 'from-purple-500 to-violet-600', light: 'bg-purple-50 border-purple-200 hover:border-purple-400' },
-  { id: 'gcv', label: 'GCV', icon: <FaTruck className='h-7 w-7 sm:h-8 sm:w-8 text-orange-600' />, desc: 'Goods Carrying Vehicle', gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50 border-orange-200 hover:border-orange-400' },
-  { id: 'gcv_3w', label: '3W GCV', icon: <FaTruckPickup className='h-7 w-7 sm:h-8 sm:w-8 text-amber-600' />, desc: '3-Wheeler Goods Vehicle', gradient: 'from-yellow-500 to-orange-500', light: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400' },
-  { id: 'pcv', label: 'BUS & MAXI (C2)', icon: <FaBus className='h-7 w-7 sm:h-8 sm:w-8 text-green-600' />, desc: '≥4W & >6 Passengers', gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50 border-green-200 hover:border-green-400' },
-  { id: 'pcv_3w', label: '3W PCV', icon: <FaVanShuttle className='h-7 w-7 sm:h-8 sm:w-8 text-teal-600' />, desc: '3-Wheeler Passenger Vehicle', gradient: 'from-teal-500 to-cyan-600', light: 'bg-teal-50 border-teal-200 hover:border-teal-400' },
-  { id: 'taxi', label: 'Taxi (C1 A)', icon: <FaTaxi className='h-7 w-7 sm:h-8 sm:w-8 text-rose-600' />, desc: '4W ≤6 Passengers', gradient: 'from-red-500 to-rose-600', light: 'bg-red-50 border-red-200 hover:border-red-400' },
-  { id: 'misc_d', label: 'Misc-D Special', icon: <FaTractor className='h-7 w-7 sm:h-8 sm:w-8 text-slate-600' />, desc: 'Special Vehicles & Tractors', gradient: 'from-slate-500 to-gray-600', light: 'bg-slate-50 border-slate-200 hover:border-slate-400' },
+  { id: 'private_car', label: 'Private Car', icon: <FaCar className='h-7 w-7 sm:h-8 sm:w-8 text-blue-600' />, image: '/calculator/private%20car_converted.avif', desc: 'Personal 4-Wheeler', gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50 border-blue-200 hover:border-blue-400' },
+  { id: 'two_wheeler', label: '2W / Motorcycle', icon: <FaMotorcycle className='h-7 w-7 sm:h-8 sm:w-8 text-purple-600' />, image: '/calculator/2%20wheeler_converted.avif', desc: 'Scooter & Motorcycle', gradient: 'from-purple-500 to-violet-600', light: 'bg-purple-50 border-purple-200 hover:border-purple-400' },
+  { id: 'gcv', label: 'GCV', icon: <FaTruck className='h-7 w-7 sm:h-8 sm:w-8 text-orange-600' />, image: '/calculator/gcv_converted.avif', desc: 'Goods Carrying Vehicle', gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50 border-orange-200 hover:border-orange-400' },
+  { id: 'gcv_3w', label: '3W GCV', icon: <FaTruckPickup className='h-7 w-7 sm:h-8 sm:w-8 text-amber-600' />, image: '/calculator/gcv_converted.avif', desc: '3-Wheeler Goods Vehicle', gradient: 'from-yellow-500 to-orange-500', light: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400' },
+  { id: 'pcv', label: 'BUS & MAXI (C2)', icon: <FaBus className='h-7 w-7 sm:h-8 sm:w-8 text-green-600' />, image: '/calculator/pcv_converted.avif', desc: '≥4W & >6 Passengers', gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50 border-green-200 hover:border-green-400' },
+  { id: 'pcv_3w', label: '3W PCV', icon: <FaVanShuttle className='h-7 w-7 sm:h-8 sm:w-8 text-teal-600' />, image: '/calculator/3w%20pcv_converted.avif', desc: '3-Wheeler Passenger Vehicle', gradient: 'from-teal-500 to-cyan-600', light: 'bg-teal-50 border-teal-200 hover:border-teal-400' },
+  { id: 'taxi', label: 'Taxi (C1 A)', icon: <FaTaxi className='h-7 w-7 sm:h-8 sm:w-8 text-rose-600' />, image: '/calculator/taxi_converted.avif', desc: '4W ≤6 Passengers', gradient: 'from-red-500 to-rose-600', light: 'bg-red-50 border-red-200 hover:border-red-400' },
+  { id: 'misc_d', label: 'Misc-D Special', icon: <FaTractor className='h-7 w-7 sm:h-8 sm:w-8 text-slate-600' />, image: '/calculator/miscl%20d_converted.avif', desc: 'Special Vehicles & Tractors', gradient: 'from-slate-500 to-gray-600', light: 'bg-slate-50 border-slate-200 hover:border-slate-400' },
 ]
 
 // ─── HELPER ─────────────────────────────────────────────────────────────────
@@ -1515,14 +1515,14 @@ const PremiumCalculator = () => {
               <h2 className='mb-4 text-center text-base sm:text-lg font-black text-slate-800'>Select Vehicle Category</h2>
               <div className='grid grid-cols-2 gap-3 md:grid-cols-3'>
                 {VEHICLE_CATEGORIES.map(v => (
-                  <button
+                    <button
                     key={v.id}
                     onClick={() => handleVehicleSelect(v.id)}
-                    className={`group relative overflow-hidden rounded-2xl border-2 bg-white p-4 text-left transition-all hover:shadow-lg active:scale-[0.98] ${v.light}`}
+                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-3 sm:py-5 md:py-3 text-center transition-all hover:shadow-lg active:scale-[0.98] ${v.light}`}
                   >
-                    <div className={`absolute -right-3 -top-3 h-14 w-14 rounded-full bg-gradient-to-br ${v.gradient} opacity-10 transition-all group-hover:opacity-20 group-hover:scale-110`} />
-                    <span className='text-2xl sm:text-3xl'>{v.icon}</span>
-                    <h3 className='mt-2 text-[11px] sm:text-sm font-black text-slate-900 leading-tight'>{v.label}</h3>
+                    <div className={`absolute -right-4 -top-4 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br ${v.gradient} opacity-10 transition-all group-hover:opacity-20 group-hover:scale-110`} />
+                    <span className='flex-1 flex items-center justify-center mb-4'>{v.image ? <img src={v.image} alt={v.label} className='h-36 w-36 sm:h-44 sm:w-44 md:h-56 md:w-56 object-contain' /> : <span className='text-5xl sm:text-6xl'>{v.icon}</span>}</span>
+                    <h3 className='text-[11px] sm:text-sm font-black text-slate-900 leading-tight'>{v.label}</h3>
                     <p className='mt-0.5 text-[9px] sm:text-[10px] font-bold text-slate-400'>{v.desc}</p>
                   </button>
                 ))}
@@ -1547,7 +1547,7 @@ const PremiumCalculator = () => {
                   </svg>
                 </button>
                 <div className='flex items-center gap-2'>
-                  <span className='text-lg'>{selectedCategory.icon}</span>
+                  <span className='text-lg'>{selectedCategory.image ? <img src={selectedCategory.image} alt={selectedCategory.label} className='h-7 w-7 object-contain' /> : selectedCategory.icon}</span>
                   <div>
                     <h2 className='text-sm sm:text-base font-black text-slate-800 leading-tight'>{selectedCategory.label}</h2>
                     <p className='text-[9px] text-slate-400 font-medium'>{selectedCategory.desc}</p>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { FaCar, FaMotorcycle, FaTruck, FaTruckPickup, FaBus, FaVanShuttle, FaTaxi, FaTractor, FaGasPump, FaBolt } from 'react-icons/fa6'
 
 const IDVInput = ({ idv, setIdv }) => (
   <div>
@@ -8,7 +9,7 @@ const IDVInput = ({ idv, setIdv }) => (
       value={idv}
       onChange={e => setIdv(e.target.value)}
       placeholder='e.g. 500000'
-      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300'
+      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300'
     />
   </div>
 )
@@ -126,14 +127,14 @@ const TARIFF = {
 
 // ─── VEHICLE CATEGORIES ─────────────────────────────────────────────────────
 const VEHICLE_CATEGORIES = [
-  { id: 'private_car', label: 'Private Car', icon: '🚗', desc: 'Personal 4-Wheeler', gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50 border-blue-200 hover:border-blue-400' },
-  { id: 'two_wheeler', label: '2W / Motorcycle', icon: '🏍️', desc: 'Scooter & Motorcycle', gradient: 'from-purple-500 to-violet-600', light: 'bg-purple-50 border-purple-200 hover:border-purple-400' },
-  { id: 'gcv', label: 'GCV', icon: '🚛', desc: 'Goods Carrying Vehicle', gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50 border-orange-200 hover:border-orange-400' },
-  { id: 'gcv_3w', label: '3W GCV', icon: '🛺', desc: '3-Wheeler Goods Vehicle', gradient: 'from-yellow-500 to-orange-500', light: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400' },
-  { id: 'pcv', label: 'BUS & MAXI (C2)', icon: '🚌', desc: '≥4W & >6 Passengers', gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50 border-green-200 hover:border-green-400' },
-  { id: 'pcv_3w', label: '3W PCV', icon: '🛺', desc: '3-Wheeler Passenger Vehicle', gradient: 'from-teal-500 to-cyan-600', light: 'bg-teal-50 border-teal-200 hover:border-teal-400' },
-  { id: 'taxi', label: 'Taxi (C1 A)', icon: '🚕', desc: '4W ≤6 Passengers', gradient: 'from-red-500 to-rose-600', light: 'bg-red-50 border-red-200 hover:border-red-400' },
-  { id: 'misc_d', label: 'Misc-D Special', icon: '🚜', desc: 'Special Vehicles & Tractors', gradient: 'from-slate-500 to-gray-600', light: 'bg-slate-50 border-slate-200 hover:border-slate-400' },
+  { id: 'private_car', label: 'Private Car', icon: <FaCar className='h-7 w-7 sm:h-8 sm:w-8 text-blue-600' />, desc: 'Personal 4-Wheeler', gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50 border-blue-200 hover:border-blue-400' },
+  { id: 'two_wheeler', label: '2W / Motorcycle', icon: <FaMotorcycle className='h-7 w-7 sm:h-8 sm:w-8 text-purple-600' />, desc: 'Scooter & Motorcycle', gradient: 'from-purple-500 to-violet-600', light: 'bg-purple-50 border-purple-200 hover:border-purple-400' },
+  { id: 'gcv', label: 'GCV', icon: <FaTruck className='h-7 w-7 sm:h-8 sm:w-8 text-orange-600' />, desc: 'Goods Carrying Vehicle', gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50 border-orange-200 hover:border-orange-400' },
+  { id: 'gcv_3w', label: '3W GCV', icon: <FaTruckPickup className='h-7 w-7 sm:h-8 sm:w-8 text-amber-600' />, desc: '3-Wheeler Goods Vehicle', gradient: 'from-yellow-500 to-orange-500', light: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400' },
+  { id: 'pcv', label: 'BUS & MAXI (C2)', icon: <FaBus className='h-7 w-7 sm:h-8 sm:w-8 text-green-600' />, desc: '≥4W & >6 Passengers', gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50 border-green-200 hover:border-green-400' },
+  { id: 'pcv_3w', label: '3W PCV', icon: <FaVanShuttle className='h-7 w-7 sm:h-8 sm:w-8 text-teal-600' />, desc: '3-Wheeler Passenger Vehicle', gradient: 'from-teal-500 to-cyan-600', light: 'bg-teal-50 border-teal-200 hover:border-teal-400' },
+  { id: 'taxi', label: 'Taxi (C1 A)', icon: <FaTaxi className='h-7 w-7 sm:h-8 sm:w-8 text-rose-600' />, desc: '4W ≤6 Passengers', gradient: 'from-red-500 to-rose-600', light: 'bg-red-50 border-red-200 hover:border-red-400' },
+  { id: 'misc_d', label: 'Misc-D Special', icon: <FaTractor className='h-7 w-7 sm:h-8 sm:w-8 text-slate-600' />, desc: 'Special Vehicles & Tractors', gradient: 'from-slate-500 to-gray-600', light: 'bg-slate-50 border-slate-200 hover:border-slate-400' },
 ]
 
 // ─── HELPER ─────────────────────────────────────────────────────────────────
@@ -398,7 +399,7 @@ const PremiumCalculator = () => {
           <button
             key={z}
             onClick={() => setZone(z)}
-            className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${zone === z ? `bg-white shadow-sm text-indigo-600` : 'text-slate-500'}`}
+            className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${zone === z ? `bg-white shadow-sm text-blue-600` : 'text-slate-500'}`}
           >
             Zone {z}
           </button>
@@ -421,7 +422,7 @@ const PremiumCalculator = () => {
           <button
             key={val}
             onClick={() => setVehicleAge(val)}
-            className={`flex-1 rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${vehicleAge === val ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+            className={`flex-1 rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${vehicleAge === val ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}
           >
             {label}
           </button>
@@ -448,7 +449,7 @@ const PremiumCalculator = () => {
             <button
               key={slab.years}
               onClick={() => setNcb(slab.pct)}
-              className={`rounded-xl border py-2 text-[10px] sm:text-xs font-bold transition-all ${ncb === slab.pct ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
+              className={`rounded-xl border py-2 text-[10px] sm:text-xs font-bold transition-all ${ncb === slab.pct ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
             >
               {slab.years} Yr ({slab.pct}%)
             </button>
@@ -475,7 +476,7 @@ const PremiumCalculator = () => {
             <button
               key={p.id}
               onClick={() => setPolicyType(p.id)}
-              className={`rounded-2xl border-2 p-3 text-left transition-all ${policyType === p.id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              className={`rounded-2xl border-2 p-3 text-left transition-all ${policyType === p.id ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
             >
               <p className='text-[11px] sm:text-xs font-black text-slate-900'>{p.label}</p>
               <p className='mt-0.5 text-[9px] sm:text-[10px] text-slate-500 font-medium leading-tight'>{p.desc}</p>
@@ -494,7 +495,7 @@ const PremiumCalculator = () => {
       </div>
       <button
         onClick={() => setGstEnabled(prev => !prev)}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${gstEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${gstEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
       >
         <span
           className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${gstEnabled ? 'translate-x-5' : 'translate-x-0'}`}
@@ -559,7 +560,7 @@ const PremiumCalculator = () => {
           <button
             key={val}
             onClick={() => setCoverageType(val)}
-            className={`rounded-2xl border-2 p-3 text-left transition-all ${coverageType === val ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+            className={`rounded-2xl border-2 p-3 text-left transition-all ${coverageType === val ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
           >
             <p className='text-[11px] sm:text-xs font-black text-slate-900'>{title}</p>
             <p className='mt-0.5 text-[9px] sm:text-[10px] text-slate-500 font-medium'>{sub}</p>
@@ -1007,7 +1008,7 @@ const PremiumCalculator = () => {
             <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
           </div>
 
-          <div className='mt-2 flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 p-4 text-white shadow-xl shadow-indigo-200'>
+          <div className='mt-2 flex items-center justify-between rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white shadow-xl shadow-blue-200'>
             <div>
               <p className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-80'>Final Payable Premium</p>
               <p className='text-2xl sm:text-3xl font-black tracking-tight'>₹{fmt(result.totalPremium)}</p>
@@ -1100,7 +1101,7 @@ const PremiumCalculator = () => {
                     navigator.clipboard.writeText(shareText).then(() => alert('Quotation text copied! Paste it to share.'))
                   }
                 }}
-                className='flex flex-col items-center gap-1.5 rounded-2xl border-2 border-indigo-200 bg-indigo-50 py-3 text-indigo-700 hover:bg-indigo-100 active:scale-[0.97] transition-all'
+                className='flex flex-col items-center gap-1.5 rounded-2xl border-2 border-blue-200 bg-blue-50 py-3 text-blue-700 hover:bg-blue-100 active:scale-[0.97] transition-all'
               >
                 <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
@@ -1137,12 +1138,18 @@ const PremiumCalculator = () => {
             <div>
               <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Fuel Type</label>
               <div className='grid grid-cols-2 gap-2'>
-                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⛽ Petrol / Diesel / CNG</p>
+                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaGasPump className='inline-block h-4 w-4 mr-1 -mt-0.5 text-amber-500' />
+                    Petrol / Diesel / CNG
+                  </p>
                   <p className='text-[9px] text-slate-500'>ICE Vehicle</p>
                 </button>
-                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⚡ Electric</p>
+                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaBolt className='inline-block h-4 w-4 mr-1 -mt-0.5 text-yellow-500' />
+                    Electric
+                  </p>
                   <p className='text-[9px] text-slate-500'>EV Private Car</p>
                 </button>
               </div>
@@ -1170,7 +1177,7 @@ const PremiumCalculator = () => {
                           (item.val === 999 && ccVal <= 1000 && ccVal > 0) ||
                           (item.val === 1200 && ccVal > 1000 && ccVal <= 1500) ||
                           (item.val === 1600 && ccVal > 1500)
-                            ? 'bg-white text-indigo-600 shadow-sm'
+                            ? 'bg-white text-blue-600 shadow-sm'
                             : 'text-slate-500'
                         }`}
                       >
@@ -1183,7 +1190,7 @@ const PremiumCalculator = () => {
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                   <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 45'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                   <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;30 / 30–65 / {'>'}65 KW</p>
                 </div>
               )}
@@ -1202,12 +1209,18 @@ const PremiumCalculator = () => {
             <div>
               <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle Type</label>
               <div className='grid grid-cols-2 gap-2'>
-                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⛽ Petrol / CNG</p>
+                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaGasPump className='inline-block h-4 w-4 mr-1 -mt-0.5 text-amber-500' />
+                    Petrol / CNG
+                  </p>
                   <p className='text-[9px] text-slate-500'>ICE Vehicle</p>
                 </button>
-                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⚡ Electric</p>
+                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaBolt className='inline-block h-4 w-4 mr-1 -mt-0.5 text-yellow-500' />
+                    Electric
+                  </p>
                   <p className='text-[9px] text-slate-500'>EV / E-Scooter</p>
                 </button>
               </div>
@@ -1223,7 +1236,7 @@ const PremiumCalculator = () => {
                   <div>
                     <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
                     <input type='number' value={cc} onChange={e => setCc(e.target.value)} placeholder='e.g. 125'
-                      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                     <p className='mt-1 text-[8px] text-slate-400'>≤75 / 76–150 / 151–350 / {'>'}350 CC</p>
                   </div>
                   <IDVInput idv={idv} setIdv={setIdv} />
@@ -1237,7 +1250,7 @@ const PremiumCalculator = () => {
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                   <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 5'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                   <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
                 </div>
                 <IDVInput idv={idv} setIdv={setIdv} />
@@ -1246,7 +1259,7 @@ const PremiumCalculator = () => {
                   <div className='flex gap-1.5 rounded-2xl bg-slate-200 p-1'>
                     {[['1yr', '1 Year'], ['5yr', '5 Years (Long Term)']].map(([val, label]) => (
                       <button key={val} onClick={() => setPolicyTerm(val)}
-                        className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${policyTerm === val ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}>
+                        className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${policyTerm === val ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>
                         {label}
                       </button>
                     ))}
@@ -1274,7 +1287,7 @@ const PremiumCalculator = () => {
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GVW (Gross Vehicle Weight in Kg)</label>
                 <input type='number' value={gvw} onChange={e => setGvw(e.target.value)} placeholder='e.g. 8000'
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                 <p className='mt-1 text-[8px] text-slate-400'>≤7500 / 7501–12000 / 12001–20000 / 20001–40000 / {'>'}40000</p>
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
@@ -1294,9 +1307,9 @@ const PremiumCalculator = () => {
               <div className='grid grid-cols-1 gap-2'>
                 {TARIFF.gcv_3w.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                     <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
-                    <span className='text-[10px] font-bold text-indigo-600'>TP: ₹{fmt(st.tp)}</span>
+                    <span className='text-[10px] font-bold text-blue-600'>TP: ₹{fmt(st.tp)}</span>
                   </button>
                 ))}
               </div>
@@ -1322,11 +1335,17 @@ const PremiumCalculator = () => {
             <div>
               <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Fuel Type</label>
               <div className='grid grid-cols-2 gap-2'>
-                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⛽ Petrol / CNG / Diesel</p>
+                <button onClick={() => setIsElectric(false)} className={`rounded-2xl border-2 p-3 text-left transition-all ${!isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaGasPump className='inline-block h-4 w-4 mr-1 -mt-0.5 text-amber-500' />
+                    Petrol / CNG / Diesel
+                  </p>
                 </button>
-                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                  <p className='text-[11px] font-black text-slate-900'>⚡ Electric Taxi</p>
+                <button onClick={() => setIsElectric(true)} className={`rounded-2xl border-2 p-3 text-left transition-all ${isElectric ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <p className='text-[11px] font-black text-slate-900'>
+                    <FaBolt className='inline-block h-4 w-4 mr-1 -mt-0.5 text-yellow-500' />
+                    Electric Taxi
+                  </p>
                 </button>
               </div>
             </div>
@@ -1340,7 +1359,7 @@ const PremiumCalculator = () => {
                 <div className='col-span-2'>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                   <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 40'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                   <p className='mt-1 text-[8px] text-slate-400'>&lt;30 / 30–65 / {'>'}65 KW</p>
                 </div>
               )}
@@ -1350,14 +1369,14 @@ const PremiumCalculator = () => {
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
                   <input type='number' value={cc} onChange={e => setCc(e.target.value)} placeholder='e.g. 1200'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                   <p className='mt-1 text-[8px] text-slate-400'>≤1000 / 1001–1500 / {'>'}1500 CC</p>
                 </div>
               )}
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers (excl. driver)</label>
                 <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 4' min={1} max={6}
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
@@ -1379,7 +1398,7 @@ const PremiumCalculator = () => {
               <div className='grid grid-cols-1 gap-2'>
                 {TARIFF.pcv.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                     <div>
                       <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
                       <p className='text-[8px] text-slate-500'>Base ₹{fmt(st.tpBase)} + ₹{fmt(st.tpPerPsgr)}/psgr</p>
@@ -1397,7 +1416,7 @@ const PremiumCalculator = () => {
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers (Seating Capacity)</label>
                 <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 36'
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                 <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
@@ -1417,7 +1436,7 @@ const PremiumCalculator = () => {
               <div className='grid grid-cols-1 gap-2'>
                 {TARIFF.pcv_3w.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                     <div>
                       <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
                       <p className='text-[8px] text-slate-500'>Base ₹{fmt(st.tpBase)} + ₹{fmt(st.tpPerPsgr)}/psgr</p>
@@ -1434,7 +1453,7 @@ const PremiumCalculator = () => {
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers</label>
                 <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 3'
-                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 placeholder:text-slate-300' />
+                  className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
@@ -1457,9 +1476,9 @@ const PremiumCalculator = () => {
               <div className='grid grid-cols-1 gap-2'>
                 {TARIFF.misc_d.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
-                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                    className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                     <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
-                    <span className='text-[10px] font-bold text-indigo-600'>TP: ₹{fmt(st.tp)}</span>
+                    <span className='text-[10px] font-bold text-blue-600'>TP: ₹{fmt(st.tp)}</span>
                   </button>
                 ))}
               </div>
@@ -1478,8 +1497,8 @@ const PremiumCalculator = () => {
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-100 via-indigo-50/30 to-slate-100 px-3 pb-24 pt-4 sm:px-4 md:px-6'>
-      <div className='mx-auto max-w-5xl'>
+    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-3 pb-24 pt-4 sm:px-4 md:px-6'>
+      <div className='mx-auto max-w-6xl'>
 
         {/* Header — only shown on vehicle selection screen */}
         {step === 1 && (
@@ -1492,7 +1511,7 @@ const PremiumCalculator = () => {
         {/* Step 1 — Select Vehicle */}
         {step === 1 && (
           <div className='animate-in fade-in zoom-in-95 duration-300'>
-            <div className='rounded-[28px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_10px_40px_-20px_rgba(15,23,42,0.12)]'>
+            <div className='rounded-[32px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
               <h2 className='mb-4 text-center text-base sm:text-lg font-black text-slate-800'>Select Vehicle Category</h2>
               <div className='grid grid-cols-2 gap-3 md:grid-cols-3'>
                 {VEHICLE_CATEGORIES.map(v => (
@@ -1515,7 +1534,7 @@ const PremiumCalculator = () => {
         {/* Step 2 — Calculator Form */}
         {step === 2 && selectedCategory && (
           <div className='animate-in fade-in slide-in-from-right-6 duration-300'>
-            <div className='rounded-[28px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_10px_40px_-20px_rgba(15,23,42,0.12)]'>
+            <div className='rounded-[32px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
 
               {/* Back + Title */}
               <div className='mb-4 flex items-center gap-3'>
@@ -1543,7 +1562,7 @@ const PremiumCalculator = () => {
                 {/* Calculate Button */}
                 <button
                   onClick={calculatePremium}
-                  className='mt-2 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 text-[11px] sm:text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all hover:opacity-90 active:scale-[0.98]'
+                  className='mt-2 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-[11px] sm:text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-blue-200 transition-all hover:opacity-90 active:scale-[0.98]'
                 >
                   Calculate Premium →
                 </button>
@@ -1557,7 +1576,7 @@ const PremiumCalculator = () => {
 
         {/* Disclaimer */}
         <p className='mt-4 text-center text-[8px] text-slate-400 px-4'>
-          ⚠️ For indicative purposes only. Premiums may vary based on insurer loading, add-ons & discounts. Ref: IRDAI website irdai.gov.in
+          <svg className='inline-block h-3 w-3 mr-1 -mt-0.5 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24' strokeWidth={2}><path d='M12 9v2m0 4h.01M10.29 3.86l-8.1 14c-.6 1.04.15 2.14 1.21 2.14h16.2c1.06 0 1.81-1.1 1.21-2.14l-8.1-14c-.6-1.04-1.82-1.04-2.42 0z' /></svg>For indicative purposes only. Premiums may vary based on insurer loading, add-ons & discounts. Ref: IRDAI website irdai.gov.in
         </p>
       </div>
     </div>

@@ -85,6 +85,11 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [isExtractingInsurance, setIsExtractingInsurance] = useState(false)
   const [uploadedInsuranceDocument, setUploadedInsuranceDocument] = useState(null)
   const [uploadedInsuranceFile, setUploadedInsuranceFile] = useState(null)
+  const [references, setReferences] = useState([])
+  const [referenceDropdownOpen, setReferenceDropdownOpen] = useState(false)
+  const [referenceSearch, setReferenceSearch] = useState('')
+  const [showAddReference, setShowAddReference] = useState(false)
+  const [newReferenceName, setNewReferenceName] = useState('')
 
   useEffect(() => {
     return () => {
@@ -158,6 +163,46 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       userEditedValidTo.current = false
     }
   }, [initialData, isOpen, prefilledVehicleNumber, prefilledOwnerName])
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchReferences = async () => {
+        try {
+          const res = await axios.get(`${API_URL}/api/references`, { withCredentials: true })
+          if (res.data.success) setReferences(res.data.data)
+        } catch { }
+      }
+      fetchReferences()
+    }
+  }, [isOpen])
+
+  const handleReferenceSelect = (name) => {
+    setFormData(prev => ({ ...prev, reference: name }))
+    setReferenceDropdownOpen(false)
+    setReferenceSearch('')
+  }
+
+  const handleAddReference = async () => {
+    const name = newReferenceName.trim()
+    if (!name) return
+    try {
+      const res = await axios.post(`${API_URL}/api/references`, { name }, { withCredentials: true })
+      if (res.data.success) {
+        setReferences(prev => {
+          const exists = prev.find(r => r.name === name)
+          return exists ? prev : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
+        })
+        setFormData(prev => ({ ...prev, reference: name }))
+        setNewReferenceName('')
+        setShowAddReference(false)
+        setReferenceDropdownOpen(false)
+      }
+    } catch { }
+  }
+
+  const filteredReferences = references.filter(r =>
+    !referenceSearch || r.name.toLowerCase().includes(referenceSearch.toLowerCase())
+  )
 
   useEffect(() => {
     if (isOpen && initialExtractionFile && !processedInitialFile.current) {
@@ -601,14 +646,67 @@ if (e.key === 'Escape') onClose()
                   </select>
                 </div>
 
-                <div className='md:col-span-3'>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Reference</label>
-                  <input type='text' name='reference' value={formData.reference} onChange={handleChange} placeholder='Enter reference text (e.g. agent name, reference source)' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
-                </div>
+                <div className='md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+                  <div className='relative'>
+                    <div className='flex items-center gap-1.5 mb-1'>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>Reference</label>
+                      <button
+                        type='button'
+                        onClick={() => { setShowAddReference(true); setNewReferenceName('') }}
+                        className='text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center cursor-pointer'
+                      >
+                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 4v16m8-8H4' />
+                        </svg>
+                        Add
+                      </button>
+                    </div>
+                    <div className='relative'>
+                      <input
+                        type='text'
+                        value={referenceDropdownOpen ? referenceSearch : formData.reference}
+                        onFocus={() => { setReferenceSearch(''); setReferenceDropdownOpen(true) }}
+                        onChange={(e) => { setReferenceSearch(e.target.value); setReferenceDropdownOpen(true) }}
+                        onBlur={() => setTimeout(() => setReferenceDropdownOpen(false), 200)}
+                        placeholder='Select or type reference...'
+                        className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white pr-10'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => setReferenceDropdownOpen(prev => !prev)}
+                        className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer'
+                      >
+                        <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                        </svg>
+                      </button>
+                    </div>
+                    {referenceDropdownOpen && (
+                      <div className='absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {filteredReferences.length > 0 ? (
+                          filteredReferences.map((ref) => (
+                            <button
+                              key={ref._id}
+                              type='button'
+                              onMouseDown={() => handleReferenceSelect(ref.name)}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition cursor-pointer ${formData.reference === ref.name ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-700'}`}
+                            >
+                              {ref.name}
+                            </button>
+                          ))
+                        ) : (
+                          <div className='px-3 py-2 text-sm text-gray-400'>
+                            {referenceSearch ? 'No matching reference found' : 'No references yet'}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-                <div className='md:col-span-3'>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Notes</label>
-                  <textarea name='remarks' value={formData.remarks} onChange={handleChange} rows='2' placeholder='Any additional notes...' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white resize-none' />
+                  <div>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Notes</label>
+                    <textarea name='remarks' value={formData.remarks} onChange={handleChange} rows='2' placeholder='Any additional notes...' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white resize-none' />
+                  </div>
                 </div>
 
               </div>
@@ -689,6 +787,27 @@ if (e.key === 'Escape') onClose()
           onCancel={() => setScanningFile(null)}
           onConfirm={handleScannerConfirm}
         />
+      )}
+
+      {showAddReference && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName('') }}>
+          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
+            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Reference</h3>
+            <input
+              type='text'
+              value={newReferenceName}
+              onChange={(e) => setNewReferenceName(e.target.value)}
+              placeholder='Enter reference name'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-4'
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
+            <div className='flex justify-end gap-2'>
+              <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={handleAddReference} className='px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold cursor-pointer'>Add</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

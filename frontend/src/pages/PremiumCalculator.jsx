@@ -130,7 +130,7 @@ const VEHICLE_CATEGORIES = [
   { id: 'private_car', label: 'Private Car', icon: <FaCar className='h-7 w-7 sm:h-8 sm:w-8 text-blue-600' />, image: '/calculator/private%20car_converted.avif', desc: 'Personal 4-Wheeler', gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50 border-blue-200 hover:border-blue-400' },
   { id: 'two_wheeler', label: '2W / Motorcycle', icon: <FaMotorcycle className='h-7 w-7 sm:h-8 sm:w-8 text-purple-600' />, image: '/calculator/2%20wheeler_converted.avif', desc: 'Scooter & Motorcycle', gradient: 'from-purple-500 to-violet-600', light: 'bg-purple-50 border-purple-200 hover:border-purple-400' },
   { id: 'gcv', label: 'GCV', icon: <FaTruck className='h-7 w-7 sm:h-8 sm:w-8 text-orange-600' />, image: '/calculator/gcv_converted.avif', desc: 'Goods Carrying Vehicle', gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50 border-orange-200 hover:border-orange-400' },
-  { id: 'gcv_3w', label: '3W GCV', icon: <FaTruckPickup className='h-7 w-7 sm:h-8 sm:w-8 text-amber-600' />, image: '/calculator/gcv_converted.avif', desc: '3-Wheeler Goods Vehicle', gradient: 'from-blue-400 to-amber-400', light: 'bg-blue-50 border-amber-200 hover:border-blue-400' },
+  { id: 'gcv_3w', label: '3W GCV', icon: <FaTruckPickup className='h-7 w-7 sm:h-8 sm:w-8 text-amber-600' />, image: '/calculator/gcv%203%20wheel_converted.avif', desc: '3-Wheeler Goods Vehicle', gradient: 'from-blue-400 to-amber-400', light: 'bg-blue-50 border-amber-200 hover:border-blue-400' },
   { id: 'pcv', label: 'BUS & MAXI', icon: <FaBus className='h-7 w-7 sm:h-8 sm:w-8 text-green-600' />, image: '/calculator/pcv_converted.avif', desc: '≥4W & >6 Passengers', gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50 border-green-200 hover:border-green-400' },
   { id: 'pcv_3w', label: '3W PCV', icon: <FaVanShuttle className='h-7 w-7 sm:h-8 sm:w-8 text-teal-600' />, image: '/calculator/3w%20pcv_converted.avif', desc: '3-Wheeler Passenger Vehicle', gradient: 'from-teal-500 to-cyan-600', light: 'bg-teal-50 border-teal-200 hover:border-teal-400' },
   { id: 'taxi', label: 'Taxi', icon: <FaTaxi className='h-7 w-7 sm:h-8 sm:w-8 text-rose-600' />, image: '/calculator/taxi_converted.avif', desc: '4W ≤6 Passengers', gradient: 'from-red-500 to-rose-600', light: 'bg-red-50 border-red-200 hover:border-red-400' },
@@ -1518,7 +1518,7 @@ const PremiumCalculator = () => {
                     <button
                     key={v.id}
                     onClick={() => handleVehicleSelect(v.id)}
-                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-3 sm:py-5 md:py-3 text-center transition-all hover:shadow-lg active:scale-[0.98] ${v.light}`}
+                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-2 sm:py-4 md:py-2 text-center transition-all hover:shadow-lg active:scale-[0.98] ${v.light}`}
                   >
                     <div className={`absolute -right-4 -top-4 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br ${v.gradient} opacity-10 transition-all group-hover:opacity-20 group-hover:scale-110`} />
                     <span className='flex-1 flex items-center justify-center mb-4'>{v.image ? <img src={v.image} alt={v.label} className='h-36 w-36 sm:h-44 sm:w-44 md:h-56 md:w-56 object-contain' /> : <span className='text-5xl sm:text-6xl'>{v.icon}</span>}</span>

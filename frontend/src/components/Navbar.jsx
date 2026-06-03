@@ -19,12 +19,12 @@ const Navbar = () => {
         {/* Logo Section - Left Aligned with offset */}
         <div className='flex-none'>
           <Link to='/' className='flex items-center gap-1.5'>
-            <img src='/bimalogo.png' alt='BimaBox' className='h-[53px] w-auto' />
+            <img src='/bimalogo.png' alt='BimaBox' className='h-[50px] w-auto' />
             <div className='flex flex-col'>
-              <span className='text-[22px] font-bold leading-none lg:pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <span className='text-[20px] font-bold leading-none lg:pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}>
                 <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
               </span>
-              <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+              <span className='mt-0.5 text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
             </div>
           </Link>
         </div>

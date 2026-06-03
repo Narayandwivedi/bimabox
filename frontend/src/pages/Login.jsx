@@ -153,12 +153,12 @@ const Login = () => {
           <div className='text-center mb-6'>
             <div className='mb-4'>
               <Link to='/' className='inline-flex items-center gap-1'>
-                <img src='/bimalogo.png' alt='BimaBox' className='h-[76px] w-auto' />
+                <img src='/bimalogo.png' alt='BimaBox' className='h-[72px] w-auto' />
                 <div className='flex flex-col'>
-                  <span className='text-[28px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  <span className='text-[26px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
                     <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
                   </span>
-                  <span className='mt-0.5 text-[7px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+                  <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
                 </div>
               </Link>
             </div>

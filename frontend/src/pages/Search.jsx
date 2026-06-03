@@ -24,6 +24,24 @@ const POLICY_TYPES = [
   'Comprehensive', 'Third Party'
 ]
 
+const DOCUMENT_TYPES = [
+  { value: 'Insurance', label: 'Insurance' },
+  { value: 'Tax', label: 'Tax' },
+  { value: 'PUC', label: 'PUC' },
+  { value: 'GPS', label: 'GPS' },
+  { value: 'Fitness', label: 'Fitness' },
+  { value: 'Permit', label: 'Permit' },
+]
+
+const API_ENDPOINTS = {
+  Insurance: '/api/insurance',
+  Tax: '/api/tax',
+  PUC: '/api/puc',
+  GPS: '/api/gps',
+  Fitness: '/api/fitness',
+  Permit: '/api/permit',
+}
+
 const Search = () => {
   const navigate = useNavigate()
   const [inputValue, setInputValue] = useState('')
@@ -38,6 +56,7 @@ const Search = () => {
 
   // Filter state
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [filterType, setFilterType] = useState('Insurance')
   const [filterCompany, setFilterCompany] = useState('')
   const [filterProductType, setFilterProductType] = useState('')
   const [filterPolicyType, setFilterPolicyType] = useState('')
@@ -45,9 +64,10 @@ const Search = () => {
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
-  const activeFilterCount = [filterCompany, filterProductType, filterPolicyType, filterValidity].filter(Boolean).length
+  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType].filter(Boolean).length : 0
+  const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', company = '', productType = '', policyType = '', validity = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -56,12 +76,15 @@ const Search = () => {
 
     try {
       const params = { search: q, limit: PAGE_SIZE, page: pageNum }
-      if (company) params.insuranceCompany = company
-      if (productType) params.product = productType
-      if (policyType) params.insuranceClass = policyType
+      if (type === 'Insurance') {
+        if (company) params.insuranceCompany = company
+        if (productType) params.product = productType
+        if (policyType) params.insuranceClass = policyType
+      }
       if (validity) params.validity = validity
 
-      const res = await axios.get(`${API_URL}/api/insurance`, {
+      const endpoint = API_ENDPOINTS[type] || '/api/insurance'
+      const res = await axios.get(`${API_URL}${endpoint}`, {
         withCredentials: true,
         params,
       })
@@ -86,15 +109,27 @@ const Search = () => {
 
   // Initial load
   useEffect(() => {
-    fetchRecords(1, false, '', '', '', '', '')
+    fetchRecords(1, false, '', 'Insurance', '', '', '', '')
   }, [fetchRecords])
+
+  // Reset pagination and search when type changes
+  useEffect(() => {
+    setRecords([])
+    setPage(1)
+    setFilterCompany('')
+    setFilterProductType('')
+    setFilterPolicyType('')
+    setFilterValidity('')
+    setSearched(false)
+    setShowFilterPanel(false)
+  }, [filterType])
 
   // Trigger search immediately on input change (each keystroke) and filter changes
   useEffect(() => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false, inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity)
-  }, [inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity, fetchRecords])
+    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity)
+  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, fetchRecords])
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -108,7 +143,7 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterCompany, filterProductType, filterPolicyType, filterValidity)
+    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity)
   }
 
   const handleClearFilters = () => {
@@ -143,9 +178,12 @@ const Search = () => {
     return diff
   }
 
+  const getExpiryField = (record) => record.validTo || record.taxTo
+
   const getStatusBadge = (record) => {
-    if (!record.validTo) return null
-    const parts = record.validTo.split('-')
+    const expiryField = getExpiryField(record)
+    if (!expiryField) return null
+    const parts = expiryField.split('-')
     if (parts.length !== 3) return null
     const expiry = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
     const today = new Date()
@@ -166,8 +204,8 @@ const Search = () => {
               {/* Header */}
               <div className='mb-6 flex items-center justify-between'>
                 <div>
-                  <h1 className='text-lg md:text-2xl font-black text-slate-900'>Search Insurance</h1>
-                  <p className='text-[8px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5'>Browse all insurance records</p>
+                  <h1 className='text-lg md:text-2xl font-black text-slate-900'>Search {filterType}</h1>
+                  <p className='text-[8px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5'>Browse all {filterType.toLowerCase()} records</p>
                 </div>
                 {activeFilterCount > 0 && (
                   <button
@@ -184,6 +222,24 @@ const Search = () => {
 
               {/* Search Bar + Filter Icon */}
               <div className='flex gap-2 items-center relative'>
+                {/* Type Selector */}
+                <div className='relative shrink-0'>
+                  <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-3 pr-8 text-xs font-black text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer'
+                  >
+                    {DOCUMENT_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                  <div className='pointer-events-none absolute inset-y-0 right-2 flex items-center'>
+                    <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </div>
+                </div>
+
                 <div className='relative flex-1'>
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
                     {loading ? (
@@ -198,7 +254,7 @@ const Search = () => {
                     type='text'
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder='Search by name, vehicle number, policy...'
+                    placeholder='Search by name, vehicle number...'
                     className='w-full rounded-xl border-2 border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-black text-slate-900 placeholder:text-[10px] md:placeholder:text-xs placeholder:text-slate-400 placeholder:font-semibold focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all uppercase'
                   />
                 </div>
@@ -273,107 +329,111 @@ const Search = () => {
 
                           <div className='p-4 lg:p-6 space-y-4 lg:space-y-5'>
 
-                            {/* Insurance Company */}
-                            <div>
-                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                                Insurance Company
-                              </label>
-                              <div className='relative'>
-                                <select
-                                  value={filterCompany}
-                                  onChange={(e) => setFilterCompany(e.target.value)}
-                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                                >
-                                  <option value=''>All Companies</option>
-                                  {INSURANCE_COMPANIES.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                  ))}
-                                </select>
-                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                                  </svg>
+                            {filterType === 'Insurance' && (
+                              <>
+                                {/* Insurance Company */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    Insurance Company
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterCompany}
+                                      onChange={(e) => setFilterCompany(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All Companies</option>
+                                      {INSURANCE_COMPANIES.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                      ))}
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterCompany && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterCompany}</span>
+                                      <button onClick={() => setFilterCompany('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                              {filterCompany && (
-                                <div className='mt-1.5 flex items-center justify-between'>
-                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterCompany}</span>
-                                  <button onClick={() => setFilterCompany('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                    </svg>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
 
-                            {/* Product Type */}
-                            <div>
-                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                                Product Type
-                              </label>
-                              <div className='relative'>
-                                <select
-                                  value={filterProductType}
-                                  onChange={(e) => setFilterProductType(e.target.value)}
-                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                                >
-                                  <option value=''>All Product Types</option>
-                                  {PRODUCT_TYPES.map(p => (
-                                    <option key={p} value={p}>{p}</option>
-                                  ))}
-                                </select>
-                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                                  </svg>
+                                {/* Product Type */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    Product Type
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterProductType}
+                                      onChange={(e) => setFilterProductType(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All Product Types</option>
+                                      {PRODUCT_TYPES.map(p => (
+                                        <option key={p} value={p}>{p}</option>
+                                      ))}
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterProductType && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterProductType}</span>
+                                      <button onClick={() => setFilterProductType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                              {filterProductType && (
-                                <div className='mt-1.5 flex items-center justify-between'>
-                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterProductType}</span>
-                                  <button onClick={() => setFilterProductType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                    </svg>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
 
-                            {/* Policy Type */}
-                            <div>
-                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                                Policy Type
-                              </label>
-                              <div className='relative'>
-                                <select
-                                  value={filterPolicyType}
-                                  onChange={(e) => setFilterPolicyType(e.target.value)}
-                                  className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
-                                >
-                                  <option value=''>All Policy Types</option>
-                                  {POLICY_TYPES.map(p => (
-                                    <option key={p} value={p}>{p}</option>
-                                  ))}
-                                </select>
-                                <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
-                                  <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                                  </svg>
+                                {/* Policy Type */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    Policy Type
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterPolicyType}
+                                      onChange={(e) => setFilterPolicyType(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All Policy Types</option>
+                                      {POLICY_TYPES.map(p => (
+                                        <option key={p} value={p}>{p}</option>
+                                      ))}
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterPolicyType && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterPolicyType}</span>
+                                      <button onClick={() => setFilterPolicyType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                              {filterPolicyType && (
-                                <div className='mt-1.5 flex items-center justify-between'>
-                                  <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterPolicyType}</span>
-                                  <button onClick={() => setFilterPolicyType('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
-                                    <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                    </svg>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                              </>
+                            )}
 
                             {/* Validity */}
                             <div>
@@ -436,7 +496,7 @@ const Search = () => {
               {/* Active Filter Chips */}
               {activeFilterCount > 0 && (
                 <div className='mt-3 flex flex-wrap gap-2'>
-                  {filterCompany && (
+                  {filterType === 'Insurance' && filterCompany && (
                     <span className='inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 ring-1 ring-inset ring-blue-200'>
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16' />
@@ -449,7 +509,7 @@ const Search = () => {
                       </button>
                     </span>
                   )}
-                  {filterProductType && (
+                  {filterType === 'Insurance' && filterProductType && (
                     <span className='inline-flex items-center gap-1.5 rounded-lg bg-purple-50 px-2.5 py-1 text-[10px] font-bold text-purple-700 ring-1 ring-inset ring-purple-200'>
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
@@ -462,7 +522,7 @@ const Search = () => {
                       </button>
                     </span>
                   )}
-                  {filterPolicyType && (
+                  {filterType === 'Insurance' && filterPolicyType && (
                     <span className='inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-200'>
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' />
@@ -543,19 +603,20 @@ const Search = () => {
                   <div className='grid gap-4 sm:grid-cols-2'>
                     {filteredRecords.map((record) => {
                       const badge = getStatusBadge(record)
+                      const recordName = record.policyHolderName || record.ownerName || record.name || 'Unknown'
                       return (
                         <div
                           key={record._id}
-                          onClick={() => navigate(`/rto-documents/Insurance/${record._id}`)}
+                          onClick={() => navigate(`/rto-documents/${filterType}/${record._id}`)}
                           className='group relative overflow-hidden rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-blue-500 hover:shadow-xl hover:shadow-blue-100/40 hover:-translate-y-0.5 cursor-pointer'
                         >
                           <div className='flex items-start justify-between'>
                             <div className='flex-1 min-w-0'>
                               <div className='flex items-center gap-2 flex-wrap'>
                                 <h3 className='text-xs sm:text-sm font-black text-slate-900 truncate sm:overflow-visible sm:whitespace-normal max-w-[200px] sm:max-w-none'>
-                                  {record.policyHolderName || 'Unknown Holder'}
+                                  {recordName}
                                 </h3>
-                                {record.premium != null && (
+                                {filterType === 'Insurance' && record.premium != null && (
                                   <span className='inline-flex items-center rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700 ring-1 ring-inset ring-emerald-600/20 shadow-sm'>
                                     ₹{record.premium.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                                   </span>
@@ -568,17 +629,20 @@ const Search = () => {
                                 <p className='text-[10px] font-bold text-slate-400 mt-0.5'>{record.mobileNumber}</p>
                               )}
                               <div className='mt-2.5 flex flex-wrap gap-1.5'>
-                                {record.insuranceCompany && (
+                                <span className='inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[9px] font-black text-slate-600 ring-1 ring-inset ring-slate-300/50 whitespace-nowrap shadow-sm'>
+                                  {filterType}
+                                </span>
+                                {filterType === 'Insurance' && record.insuranceCompany && (
                                   <span className='inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-[9px] font-black text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap shadow-sm'>
                                     {record.insuranceCompany}
                                   </span>
                                 )}
-                                {record.product && (
+                                {filterType === 'Insurance' && record.product && (
                                   <span className='inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[9px] font-black text-purple-700 ring-1 ring-inset ring-purple-700/10 whitespace-nowrap shadow-sm'>
                                     {record.product}
                                   </span>
                                 )}
-                                {record.insuranceClass && (
+                                {filterType === 'Insurance' && record.insuranceClass && (
                                   <span className='inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[9px] font-black text-indigo-700 ring-1 ring-inset ring-indigo-700/10 whitespace-nowrap shadow-sm'>
                                     {record.insuranceClass}
                                   </span>
@@ -595,15 +659,15 @@ const Search = () => {
                             <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-bold text-slate-500'>
                               <span className='whitespace-nowrap'>
                                 <span className='text-[8px] font-black uppercase tracking-wider text-slate-400 mr-1'>From</span>
-                                <span className='text-slate-700 font-semibold'>{record.validFrom || 'N/A'}</span>
+                                <span className='text-slate-700 font-semibold'>{record.validFrom || record.taxFrom || 'N/A'}</span>
                               </span>
                               <span className='text-slate-300 hidden min-[320px]:inline'>•</span>
                               <span className='whitespace-nowrap'>
                                 <span className='text-[8px] font-black uppercase tracking-wider text-slate-400 mr-1'>To</span>
                                 <span className='font-black text-slate-900'>
-                                  {record.validTo || 'N/A'}
+                                  {record.validTo || record.taxTo || 'N/A'}
                                   {(() => {
-                                    const days = getDaysLeft(record.validTo)
+                                    const days = getDaysLeft(record.validTo || record.taxTo)
                                     if (days === null) return null
                                     return (
                                       <span className='text-rose-600 ml-1'>({days}d)</span>
@@ -612,7 +676,7 @@ const Search = () => {
                                 </span>
                               </span>
                             </div>
-                            {record.policyNumber && (
+                            {filterType === 'Insurance' && record.policyNumber && (
                               <span className='hidden sm:inline-block self-start sm:self-auto -mt-1 sm:mt-0 text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>
                                 {record.policyNumber}
                               </span>

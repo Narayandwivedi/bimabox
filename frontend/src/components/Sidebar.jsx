@@ -63,7 +63,7 @@ const Sidebar = () => {
             <img src='/bimalogo.png' alt='BimaBox' className='h-16 w-auto' />
             <div className='flex flex-col'>
               <span className='text-2xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}><span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span></span>
-              <span className='mt-0.5 text-[7px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+              <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
             </div>
           </Link>
         </div>

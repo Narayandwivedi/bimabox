@@ -34,12 +34,14 @@ function AppContent() {
 
       {showNav && (
         <nav className={`fixed top-0 left-0 right-0 z-20 flex h-16 items-center justify-center border-b border-slate-200 lg:hidden ${theme.navbar}`}>
-          <Link to='/'>
-            <img
-              src='/bimabox-Photoroom.avif'
-              alt='BimaBox'
-              className='h-12 w-auto drop-shadow-md'
-            />
+          <Link to='/' className='flex items-center gap-1.5'>
+            <img src='/bimalogo.png' alt='BimaBox' className='h-12 w-auto' />
+            <div className='flex flex-col'>
+              <span className='text-xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
+              </span>
+              <span className='mt-px text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+            </div>
           </Link>
         </nav>
       )}

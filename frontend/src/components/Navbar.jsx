@@ -18,12 +18,14 @@ const Navbar = () => {
       <div className='mx-auto flex h-16 lg:h-20 max-w-screen-2xl items-center px-4 lg:px-48'>
         {/* Logo Section - Left Aligned with offset */}
         <div className='flex-none'>
-          <Link to='/' className='flex items-center bg-white/10 px-4 lg:px-6 py-1.5 lg:py-2.5 rounded-2xl backdrop-blur-sm border border-white/10 hover:bg-white/20 transition-all group'>
-            <img
-              src='/bimabox-Photoroom.avif'
-              alt='BimaBox'
-              className='h-12 lg:h-14 w-auto drop-shadow-md transition-transform group-hover:scale-105'
-            />
+          <Link to='/' className='flex items-center gap-1.5'>
+            <img src='/bimalogo.png' alt='BimaBox' className='h-14 w-auto' />
+            <div className='flex flex-col'>
+              <span className='text-2xl font-bold leading-none lg:pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}>
+                <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
+              </span>
+              <span className='mt-0.5 text-[7px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+            </div>
           </Link>
         </div>
 

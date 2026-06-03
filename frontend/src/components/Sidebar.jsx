@@ -55,15 +55,15 @@ const Sidebar = () => {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 hidden w-[230px] flex-col border-r border-slate-200/70 bg-white/90 backdrop-blur-sm lg:flex ${theme.navbar}`}
+      className={`fixed inset-y-0 left-0 z-30 hidden w-[260px] flex-col border-r border-slate-200/70 bg-white/90 backdrop-blur-sm lg:flex ${theme.navbar}`}
     >
       <div className='flex h-full flex-col'>
         <div className='flex-none border-b border-slate-100 px-5 py-5'>
           <Link to='/' className='flex items-center justify-center gap-1'>
-            <img src='/bimalogo.png' alt='BimaBox' className='h-16 w-auto' />
+            <img src='/bimalogo.png' alt='BimaBox' className='h-20 w-auto' />
             <div className='flex flex-col'>
-              <span className='text-2xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}><span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span></span>
-              <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+              <span className='text-3xl font-bold leading-none pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}><span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span></span>
+              <span className='mt-0.5 text-[7.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
             </div>
           </Link>
         </div>

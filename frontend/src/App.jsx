@@ -35,18 +35,18 @@ function AppContent() {
       {showNav && (
         <nav className={`fixed top-0 left-0 right-0 z-20 flex h-16 items-center justify-center border-b border-slate-200 lg:hidden ${theme.navbar}`}>
           <Link to='/' className='flex items-center gap-1.5'>
-            <img src='/bimalogo.png' alt='BimaBox' className='h-12 w-auto' />
+            <img src='/bimalogo.png' alt='BimaBox' className='h-14 w-auto' />
             <div className='flex flex-col'>
-              <span className='text-xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <span className='text-2xl font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
                 <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
               </span>
-              <span className='mt-px text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+              <span className='mt-0.5 text-[7px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
             </div>
           </Link>
         </nav>
       )}
 
-      <div className={showNav ? 'lg:ml-[230px]' : ''}>
+      <div className={showNav ? 'lg:ml-[260px]' : ''}>
         <div className={showNav ? 'pt-16 pb-20 lg:pt-0 lg:pb-0' : ''}>
           <Routes>
             <Route path='/login' element={<Login />} />

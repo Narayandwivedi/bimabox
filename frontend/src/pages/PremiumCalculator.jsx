@@ -1395,6 +1395,7 @@ const PremiumCalculator = () => {
               <p className='text-[9px] font-bold text-amber-800'>GCV – Public Carriers Other Than 3W (A1)</p>
               <p className='text-[8px] text-amber-600 mt-0.5'>Zone A/B/C | GVW based TP | Extra ₹27/100 Kg above 12,000 Kg</p>
             </div>
+            <CoverageSelector />
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
               <ZoneSelector zones={['A', 'B', 'C']} />
               <AgeSelector />
@@ -1419,7 +1420,6 @@ const PremiumCalculator = () => {
                 <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
               </div>
             </div>
-            <CoverageSelector />
             <NCBSelector />
             <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
@@ -1441,6 +1441,7 @@ const PremiumCalculator = () => {
                 ))}
               </div>
             </div>
+            <CoverageSelector />
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
               <ZoneSelector zones={['A', 'B', 'C']} />
               <AgeSelector />
@@ -1457,7 +1458,6 @@ const PremiumCalculator = () => {
                 <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
               </div>
             </div>
-            <CoverageSelector />
             <NCBSelector />
             <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>

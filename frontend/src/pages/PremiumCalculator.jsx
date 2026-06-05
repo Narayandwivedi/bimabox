@@ -186,6 +186,12 @@ const PremiumCalculator = () => {
   const [passengers, setPassengers] = useState('') // PCV/Taxi passengers
   const [subtype, setSubtype] = useState('')   // For 3W, PCV, Misc-D sub-types
   const [policyTerm, setPolicyTerm] = useState('1yr') // 1yr / 5yr for 2W
+  const [manufacturingYear, setManufacturingYear] = useState('')
+  const [llPaidDriver, setLlPaidDriver] = useState('')
+  const [paOwnerDriver, setPaOwnerDriver] = useState('')
+  const [rsa, setRsa] = useState('')
+  const [otherAddon, setOtherAddon] = useState('')
+  const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
 
   const selectedCategory = VEHICLE_CATEGORIES.find(v => v.id === vehicleType)
 
@@ -206,6 +212,12 @@ const PremiumCalculator = () => {
     setGstEnabled(true)
     setOdDiscount(0)
     setPolicyTerm('1yr')
+    setManufacturingYear('')
+    setLlPaidDriver('')
+    setPaOwnerDriver('')
+    setRsa('')
+    setOtherAddon('')
+    setPaUnnamedPassenger('')
   }
 
   const handleVehicleSelect = (id) => {
@@ -368,13 +380,24 @@ const PremiumCalculator = () => {
       }
     }
 
-    const netPremium = odPremium + tpPremium
+    const llPdAmount = parseFloat(llPaidDriver) || 0
+    const paOdAmount = parseFloat(paOwnerDriver) || 0
+    const rsaAmount = parseFloat(rsa) || 0
+    const otherAddonAmount = parseFloat(otherAddon) || 0
+    const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
+
+    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + rsaAmount + otherAddonAmount + paUnnamedAmount
     const gst = gstEnabled ? netPremium * 0.18 : 0
     const totalPremium = netPremium + gst
 
     setResult({
       odPremium,                          // raw – shown exact in breakup
       tpPremium,                          // raw
+      llPdAmount,
+      paOdAmount,
+      rsaAmount,
+      otherAddonAmount,
+      paUnnamedAmount,
       gst,                                // raw
       totalPremium: Math.round(totalPremium), // rounded for payable amount
       odRate,
@@ -388,22 +411,29 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, rsa, otherAddon, paUnnamedPassenger])
+
+  const ChevronDown = () => (
+    <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+    </svg>
+  )
 
   // ─── ZONE SELECTOR ─────────────────────────────────────────────────────────
   const ZoneSelector = ({ zones = ['A', 'B'] }) => (
     <div>
       <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>RTO Zone</label>
-      <div className={`flex gap-1 sm:gap-1.5 rounded-2xl bg-slate-200 p-1`}>
-        {zones.map(z => (
-          <button
-            key={z}
-            onClick={() => setZone(z)}
-            className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${zone === z ? `bg-white shadow-sm text-blue-600` : 'text-slate-500'}`}
-          >
-            Zone {z}
-          </button>
-        ))}
+      <div className='relative'>
+        <select
+          value={zone}
+          onChange={e => setZone(e.target.value)}
+          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+        >
+          {zones.map(z => (
+            <option key={z} value={z}>Zone {z}</option>
+          ))}
+        </select>
+        <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
       </div>
       {zones.includes('A') && (
         <p className='mt-1 text-[8px] sm:text-[9px] text-slate-400 font-medium'>
@@ -417,47 +447,42 @@ const PremiumCalculator = () => {
   const AgeSelector = () => (
     <div>
       <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle Age</label>
-      <div className='flex gap-1 rounded-2xl bg-slate-200 p-1'>
-        {[['upto_5', '0–5 Yrs'], ['5_to_7', '5–7 Yrs'], ['above_7', '>7 Yrs']].map(([val, label]) => (
-          <button
-            key={val}
-            onClick={() => setVehicleAge(val)}
-            className={`flex-1 rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${vehicleAge === val ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className='relative'>
+        <select
+          value={vehicleAge}
+          onChange={e => setVehicleAge(e.target.value)}
+          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+        >
+          <option value='upto_5'>0–5 Yrs</option>
+          <option value='5_to_7'>5–7 Yrs</option>
+          <option value='above_7'>&gt;7 Yrs</option>
+        </select>
+        <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
       </div>
     </div>
   )
 
   // ─── NCB ───────────────────────────────────────────────────────────────────
-  const NCBSelector = () => {
-    const slabs = [
-      { years: 0, pct: 0 },
-      { years: 1, pct: 20 },
-      { years: 2, pct: 25 },
-      { years: 3, pct: 35 },
-      { years: 4, pct: 45 },
-      { years: 5, pct: 50 },
-    ]
-    return (
-      <div>
-        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB)</label>
-        <div className='grid grid-cols-3 sm:grid-cols-6 gap-1.5'>
-          {slabs.map(slab => (
-            <button
-              key={slab.years}
-              onClick={() => setNcb(slab.pct)}
-              className={`rounded-xl border py-2 text-[10px] sm:text-xs font-bold transition-all ${ncb === slab.pct ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}
-            >
-              {slab.years} Yr ({slab.pct}%)
-            </button>
-          ))}
-        </div>
+  const NCBSelector = () => (
+    <div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB)</label>
+      <div className='relative'>
+        <select
+          value={ncb}
+          onChange={e => setNcb(Number(e.target.value))}
+          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+        >
+          <option value={0}>0 Yr (0%)</option>
+          <option value={20}>1 Yr (20%)</option>
+          <option value={25}>2 Yr (25%)</option>
+          <option value={35}>3 Yr (35%)</option>
+          <option value={45}>4 Yr (45%)</option>
+          <option value={50}>5 Yr (50%)</option>
+        </select>
+        <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
       </div>
-    )
-  }
+    </div>
+  )
 
   // ─── COVERAGE TYPE / POLICY TYPE ───────────────────────────────────────────
   const PolicyTypeSelector = () => {
@@ -487,68 +512,18 @@ const PremiumCalculator = () => {
     )
   }
 
-  const GSTToggle = () => (
-    <div className='flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3.5'>
-      <div>
-        <p className='text-xs font-black text-slate-800'>Include GST (18%)</p>
-        <p className='text-[9px] text-slate-400 font-medium'>Add 18% Goods and Services Tax to final premium</p>
-      </div>
-      <button
-        onClick={() => setGstEnabled(prev => !prev)}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${gstEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
-      >
-        <span
-          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${gstEnabled ? 'translate-x-5' : 'translate-x-0'}`}
-        />
-      </button>
-    </div>
-  )
-
   // ─── OD DISCOUNT INPUT ─────────────────────────────────────────────────────
   const ODDiscountInput = () => (
     <div>
-      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>
-        OD Discount
-        <span className='ml-2 text-orange-500 font-black text-[10px] sm:text-[11px]'>{odDiscount}%</span>
-      </label>
-      <div className='rounded-2xl border border-slate-200 bg-white p-3 space-y-2'>
-        <input
-          type='range'
-          min={0}
-          max={80}
-          step={1}
-          value={odDiscount}
-          onChange={e => setOdDiscount(Number(e.target.value))}
-          className='w-full h-2 rounded-full appearance-none cursor-pointer accent-orange-500'
-        />
-        <div className='flex items-center justify-between'>
-          <div className='flex gap-1 flex-wrap'>
-            {[0, 5, 10, 15, 20, 25, 30].map(v => (
-              <button
-                key={v}
-                type='button'
-                onClick={() => setOdDiscount(v)}
-                className={`rounded-lg px-2 py-1 text-[9px] sm:text-[10px] font-bold transition-all border ${
-                  odDiscount === v
-                    ? 'border-orange-400 bg-orange-50 text-orange-600'
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                {v}%
-              </button>
-            ))}
-          </div>
-          <input
-            type='number'
-            min={0}
-            max={80}
-            value={odDiscount}
-            onChange={e => setOdDiscount(Math.min(80, Math.max(0, Number(e.target.value))))}
-            className='w-14 rounded-xl border border-slate-200 bg-white px-2 py-1 text-center text-xs font-black text-orange-600 focus:border-orange-400 focus:outline-none'
-          />
-        </div>
-        <p className='text-[8px] text-slate-400 font-medium'>Insurer/channel OD discount applied after NCB • Max 80%</p>
-      </div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>OD Discount (%)</label>
+      <input
+        type='number'
+        min={0}
+        value={odDiscount}
+        onChange={e => setOdDiscount(Math.min(80, Math.max(0, Number(e.target.value))))}
+        placeholder='e.g. 10'
+        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-300 transition-all'
+      />
     </div>
   )
 
@@ -656,7 +631,53 @@ const PremiumCalculator = () => {
         `
       }
 
-      const netPremium = result.odPremium + result.tpPremium
+      if (result.llPdAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Legal Liability to Paid Driver</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.llPdAmount)}</td>
+          </tr>
+        `
+      }
+      if (result.paOdAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Personal Accident to Owner Driver</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.paOdAmount)}</td>
+          </tr>
+        `
+      }
+      if (result.rsaAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Roadside Assistance (RSA)</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.rsaAmount)}</td>
+          </tr>
+        `
+      }
+      if (result.paUnnamedAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>PA to Unnamed Passenger</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.paUnnamedAmount)}</td>
+          </tr>
+        `
+      }
+      if (result.otherAddonAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Other Addon Coverage</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.otherAddonAmount)}</td>
+          </tr>
+        `
+      }
+
+      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount
       const exactTotal = netPremium + result.gst
 
       tableRows += `
@@ -872,6 +893,7 @@ const PremiumCalculator = () => {
                 <span class="detail-label">Vehicle Age</span>
                 <span class="detail-value">${vehicleAge === 'upto_5' ? 'Upto 5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs'}</span>
               </div>
+              ${manufacturingYear ? `<div class="detail-row"><span class="detail-label">Mfg Year</span><span class="detail-value">${manufacturingYear}</span></div>` : ''}
             </div>
 
             <div class="details-box">
@@ -931,11 +953,19 @@ const PremiumCalculator = () => {
 
     return (
       <div className='border-t border-slate-200 pt-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-        <div className='rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-3'>
+        <div className='space-y-3'>
           <h3 className='text-xs font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-2'>Premium Breakup</h3>
 
+          {/* ─── Own Damage ─── */}
           {showOD && (
-            <>
+            <div className='rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100 p-3 space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <div className='h-2 w-2 rounded-full bg-blue-500' />
+                  <h4 className='text-[10px] font-black uppercase tracking-widest text-blue-700'>Own Damage</h4>
+                </div>
+                <span className='text-[9px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full'>Subtotal</span>
+              </div>
               <div className='flex items-center justify-between text-xs'>
                 <p className='font-bold text-slate-500'>Insured Declared Value (IDV)</p>
                 <p className='font-black text-slate-800'>₹{fmtD(parseFloat(idv) || 0)}</p>
@@ -951,85 +981,124 @@ const PremiumCalculator = () => {
               {ncb > 0 && (
                 <>
                   <div className='flex items-center justify-between text-xs text-emerald-600'>
-                    <p className='font-bold'>NCB Percentage Discount</p>
-                    <p className='font-black'>{ncb}%</p>
-                  </div>
-                  <div className='flex items-center justify-between text-xs text-emerald-600'>
-                    <p className='font-bold'>NCB Discount Amount</p>
+                    <p className='font-bold'>NCB Discount ({ncb}%)</p>
                     <p className='font-black'>- ₹{fmtD(ncbDiscount)}</p>
                   </div>
                 </>
               )}
               {(result.odDiscountVal || 0) > 0 && (
-                <>
-                  <div className='flex items-center justify-between text-xs text-orange-600'>
-                    <p className='font-bold'>OD Discount</p>
-                    <p className='font-black'>{result.odDiscountVal}%</p>
-                  </div>
-                  <div className='flex items-center justify-between text-xs text-orange-600'>
-                    <p className='font-bold'>OD Discount Amount</p>
-                    <p className='font-black'>- ₹{fmtD(odDiscountAmt)}</p>
-                  </div>
-                </>
+                <div className='flex items-center justify-between text-xs text-orange-600'>
+                  <p className='font-bold'>OD Discount ({result.odDiscountVal}%)</p>
+                  <p className='font-black'>- ₹{fmtD(odDiscountAmt)}</p>
+                </div>
               )}
-              <div className='flex items-center justify-between text-xs border-b border-dashed border-slate-200 pb-2'>
-                <p className='font-bold text-slate-700'>
-                  Final OD Premium
-                  {(ncb > 0 || (result.odDiscountVal || 0) > 0) && (
-                    <span className='text-slate-400 font-normal'>
-                      {ncb > 0 && (result.odDiscountVal || 0) > 0 ? ' (After NCB + Discount)' :
-                       ncb > 0 ? ' (After NCB)' : ' (After Discount)'}
-                    </span>
-                  )}
-                </p>
-                <p className='font-black text-slate-900'>₹{fmtD(result.odPremium)}</p>
+              <div className='flex items-center justify-between text-xs border-t border-blue-200 pt-2 mt-1'>
+                <p className='font-black text-blue-800'>Total OD Premium</p>
+                <p className='font-black text-blue-800'>₹{fmtD(result.odPremium)}</p>
               </div>
-            </>
-          )}
-
-          {showTP && (
-            <div className='flex items-center justify-between text-xs border-b border-dashed border-slate-200 pb-2'>
-              <p className='font-bold text-slate-700'>
-                {isBundle
-                  ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium (Bundle)' : '3-Year TP Premium (Bundle)')
-                  : '1-Year TP Premium'}
-              </p>
-              <p className='font-black text-slate-900'>₹{fmtD(result.tpPremium)}</p>
             </div>
           )}
 
-          <div className='flex items-center justify-between text-xs pt-1'>
-            <p className='font-bold text-slate-500'>Premium Before GST</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium)}</p>
+          {/* ─── Liability / Third Party ─── */}
+          {showTP && (
+            <div className='rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-100 p-3 space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <div className='h-2 w-2 rounded-full bg-amber-500' />
+                  <h4 className='text-[10px] font-black uppercase tracking-widest text-amber-700'>Liability / Third Party</h4>
+                </div>
+                <span className='text-[9px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full'>Subtotal</span>
+              </div>
+              <div className='flex items-center justify-between text-xs'>
+                <p className='font-bold text-slate-700'>
+                  {isBundle
+                    ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium (Bundle)' : '3-Year TP Premium (Bundle)')
+                    : '1-Year TP Premium'}
+                </p>
+                <p className='font-black text-amber-800'>₹{fmtD(result.tpPremium)}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ─── Add-on Coverages ─── */}
+          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0) && (
+            <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <div className='h-2 w-2 rounded-full bg-emerald-500' />
+                  <h4 className='text-[10px] font-black uppercase tracking-widest text-emerald-700'>Add-on Coverages</h4>
+                </div>
+                <span className='text-[9px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full'>Subtotal</span>
+              </div>
+              <div className='space-y-1.5'>
+                {result.llPdAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>LL to Paid Driver</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.llPdAmount)}</p>
+                  </div>
+                )}
+                {result.paOdAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>PA to Owner Driver</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.paOdAmount)}</p>
+                  </div>
+                )}
+                {result.rsaAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>RSA – Roadside Assistance</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.rsaAmount)}</p>
+                  </div>
+                )}
+                {result.paUnnamedAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>PA to Unnamed Passenger</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.paUnnamedAmount)}</p>
+                  </div>
+                )}
+                {result.otherAddonAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>Other Addon Coverage</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.otherAddonAmount)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Totals ─── */}
+          <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
+            <div className='flex items-center justify-between text-xs'>
+              <p className='font-bold text-slate-500'>Total before GST</p>
+              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount)}</p>
+            </div>
+            <div className='flex items-center justify-between text-xs'>
+              <p className='font-bold text-slate-500'>GST {gstEnabled ? '(18%)' : '(0%)'}</p>
+              <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
+            </div>
           </div>
 
-          <div className='flex items-center justify-between text-xs'>
-            <p className='font-bold text-slate-500'>GST Amount {gstEnabled ? '(18%)' : '(0% - Toggle Off)'}</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
-          </div>
-
-          <div className='mt-2 flex items-center justify-between rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white shadow-xl shadow-blue-200'>
-            <div>
+          <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-5 text-white shadow-xl shadow-indigo-200'>
+            <div className='space-y-1'>
               <p className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-80'>Final Payable Premium</p>
-              <p className='text-2xl sm:text-3xl font-black tracking-tight'>₹{fmt(result.totalPremium)}</p>
-              <p className='text-[8px] opacity-60 mt-0.5'>
+              <p className='text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm'>₹{fmt(result.totalPremium)}</p>
+              <p className='text-[8px] opacity-60'>
                 {gstEnabled ? 'incl. 18% GST' : 'excl. GST'} • {
-                  policyType === 'od' ? 'Own Damage Only' :
-                  policyType === 'tp' ? 'Third Party Only' :
-                  policyType === 'comprehensive' ? 'Comprehensive' : 'Bundle Policy'
+                  policyType === 'od' ? 'Own Damage' :
+                  policyType === 'tp' ? 'Third Party' :
+                  policyType === 'comprehensive' ? 'Comprehensive' : 'Bundle'
                 }
               </p>
             </div>
-            <div className='rounded-xl bg-white/20 p-2.5'>
+            <div className='flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm'>
               <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
               </svg>
             </div>
           </div>
 
-          <div className='mt-3 space-y-2'>
-            <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center'>Share Quotation Via</p>
-            <div className='grid grid-cols-3 gap-2'>
+          <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
+            <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center mb-3'>Share Quotation</p>
+            <div className='grid grid-cols-3 gap-2 sm:gap-3'>
               {/* WhatsApp */}
               <button
                 onClick={() => {
@@ -1063,6 +1132,11 @@ const PremiumCalculator = () => {
                     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
                     msg += `${tpL}: ₹${fmtD(result.tpPremium)}\n`
                   }
+                  if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
+                  if (result.paOdAmount > 0) msg += `PA to Owner Driver: ₹${fmtD(result.paOdAmount)}\n`
+                  if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
+                  if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
+                  if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
                   msg += `GST (${gstEnabled ? '18%' : '0%'}): ₹${fmtD(result.gst)}\n`
                   msg += `─────────────────────\n`
                   msg += `💳 *Total Payable: ₹${fmtD(exactTotal)}*\n`
@@ -1071,7 +1145,7 @@ const PremiumCalculator = () => {
 
                   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
                 }}
-                className='flex flex-col items-center gap-1.5 rounded-2xl border-2 border-green-200 bg-green-50 py-3 text-green-700 hover:bg-green-100 active:scale-[0.97] transition-all'
+                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-green-200 bg-green-50 py-3 text-green-700 hover:bg-green-100 hover:shadow-md hover:shadow-green-200 active:scale-[0.97] transition-all'
               >
                 <svg className='h-5 w-5' fill='currentColor' viewBox='0 0 24 24'>
                   <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z' />
@@ -1092,6 +1166,11 @@ const PremiumCalculator = () => {
                   let shareText = `INSURANCE QUOTATION – BIMABOX\nID: ${quoteId} | Date: ${dateStr}\n\nVehicle: ${selectedCategory ? selectedCategory.label : ''} | ${vehicleSpec} | Zone ${zone}\nPolicy: ${policyLabel} | IDV: ₹${fmtD(parseFloat(idv) || 0)} | NCB: ${ncb}%`
                   if (showOD) shareText += `\nOD Premium: ₹${fmtD(result.odPremium)}`
                   if (showTP) shareText += `\nTP Premium: ₹${fmtD(result.tpPremium)}`
+                  if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
+                  if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
+                  if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
+                  if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
+                  if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
                   shareText += `\nGST: ₹${fmtD(result.gst)}\nTotal Payable: ₹${fmtD(exactTotal)}\n\nIndicative as per IMT. Ref: irdai.gov.in`
 
                   if (navigator.share) {
@@ -1101,23 +1180,23 @@ const PremiumCalculator = () => {
                     navigator.clipboard.writeText(shareText).then(() => alert('Quotation text copied! Paste it to share.'))
                   }
                 }}
-                className='flex flex-col items-center gap-1.5 rounded-2xl border-2 border-blue-200 bg-blue-50 py-3 text-blue-700 hover:bg-blue-100 active:scale-[0.97] transition-all'
+                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-blue-200 bg-blue-50 py-3 text-blue-700 hover:bg-blue-100 hover:shadow-md hover:shadow-blue-200 active:scale-[0.97] transition-all'
               >
                 <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
                 </svg>
-                <span className='text-[9px] font-black uppercase tracking-wide'>Other Apps</span>
+                <span className='text-[9px] font-black uppercase tracking-wide'>Share</span>
               </button>
 
               {/* Print / PDF */}
               <button
                 onClick={shareQuotation}
-                className='flex flex-col items-center gap-1.5 rounded-2xl border-2 border-slate-200 bg-slate-50 py-3 text-slate-700 hover:bg-slate-100 active:scale-[0.97] transition-all'
+                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-slate-50 py-3 text-slate-700 hover:bg-slate-100 hover:shadow-md hover:shadow-slate-200 active:scale-[0.97] transition-all'
               >
                 <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' />
                 </svg>
-                <span className='text-[9px] font-black uppercase tracking-wide'>Print / PDF</span>
+                <span className='text-[9px] font-black uppercase tracking-wide'>Print</span>
               </button>
             </div>
           </div>
@@ -1155,50 +1234,40 @@ const PremiumCalculator = () => {
               </div>
             </div>
             <PolicyTypeSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <ZoneSelector zones={['A', 'B']} />
               <AgeSelector />
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
               {!isElectric ? (
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine Capacity (CC)</label>
-                  <div className='grid grid-cols-3 gap-1 rounded-2xl bg-slate-200 p-1 mb-2'>
-                    {[
-                      { label: '≤1000 CC', val: 999 },
-                      { label: '1001–1500', val: 1200 },
-                      { label: 'Above 1500', val: 1600 },
-                    ].map(item => (
-                      <button
-                        key={item.label}
-                        type='button'
-                        onClick={() => setCc(item.val)}
-                        className={`rounded-xl py-2 text-[9px] sm:text-[10px] font-bold transition-all ${
-                          (item.val === 999 && ccVal <= 1000 && ccVal > 0) ||
-                          (item.val === 1200 && ccVal > 1000 && ccVal <= 1500) ||
-                          (item.val === 1600 && ccVal > 1500)
-                            ? 'bg-white text-blue-600 shadow-sm'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                  <div className='relative'>
+                    <select
+                      value={ccVal > 1500 ? 1600 : ccVal > 1000 ? 1200 : ccVal > 0 ? 999 : ''}
+                      onChange={e => setCc(e.target.value)}
+                      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                    >
+                      <option value='' disabled>Select CC</option>
+                      <option value={999}>≤1000 CC</option>
+                      <option value={1200}>1001–1500 CC</option>
+                      <option value={1600}>&gt;1500 CC</option>
+                    </select>
+                    <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
                   </div>
                 </div>
               ) : (
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                   <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 45'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                    className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all' />
                   <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;30 / 30–65 / {'>'}65 KW</p>
                 </div>
               )}
-              <IDVInput idv={idv} setIdv={setIdv} />
             </div>
-            {policyType !== 'tp' && <NCBSelector />}
-            {policyType !== 'tp' && <ODDiscountInput />}
-            <GSTToggle />
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+              <IDVInput idv={idv} setIdv={setIdv} />
+              {policyType !== 'tp' && <NCBSelector />}
+              {policyType !== 'tp' && <ODDiscountInput />}
+            </div>
           </div>
         )
 
@@ -1239,11 +1308,12 @@ const PremiumCalculator = () => {
                       className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                     <p className='mt-1 text-[8px] text-slate-400'>≤75 / 76–150 / 151–350 / {'>'}350 CC</p>
                   </div>
-                  <IDVInput idv={idv} setIdv={setIdv} />
                 </div>
-                {policyType !== 'tp' && <NCBSelector />}
-                {policyType !== 'tp' && <ODDiscountInput />}
-                <GSTToggle />
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                  <IDVInput idv={idv} setIdv={setIdv} />
+                  {policyType !== 'tp' && <NCBSelector />}
+                  {policyType !== 'tp' && <ODDiscountInput />}
+                </div>
               </>
             ) : (
               <>
@@ -1512,13 +1582,19 @@ const PremiumCalculator = () => {
         {step === 1 && (
           <div className='animate-in fade-in zoom-in-95 duration-300'>
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
-              <h2 className='mb-4 text-center text-base sm:text-lg font-black text-slate-800'>Select Vehicle Category</h2>
+              <div className='flex items-center gap-3 mb-5'>
+                <div className='flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-xs font-black shadow-md shadow-blue-200'>C</div>
+                <div>
+                  <h2 className='text-sm sm:text-base font-black text-slate-800'>Select Vehicle Category</h2>
+                  <p className='text-[9px] text-slate-400 font-medium'>Choose your vehicle type to calculate premium</p>
+                </div>
+              </div>
               <div className='grid grid-cols-2 gap-3 md:grid-cols-3'>
                 {VEHICLE_CATEGORIES.map(v => (
                     <button
                     key={v.id}
                     onClick={() => handleVehicleSelect(v.id)}
-                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-2 sm:py-4 md:py-2 text-center transition-all hover:shadow-lg active:scale-[0.98] ${v.light}`}
+                    className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-2 sm:py-4 md:py-2 text-center transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] ${v.light}`}
                   >
                     <div className={`absolute -right-4 -top-4 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br ${v.gradient} opacity-10 transition-all group-hover:opacity-20 group-hover:scale-110`} />
                     <span className='flex-1 flex items-center justify-center mb-2'>{v.image ? <img src={v.image} alt={v.label} className='h-28 w-28 sm:h-36 sm:w-36 md:h-44 md:w-44 object-contain' /> : <span className='text-5xl sm:text-6xl'>{v.icon}</span>}</span>
@@ -1537,17 +1613,19 @@ const PremiumCalculator = () => {
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 sm:p-6 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
 
               {/* Back + Title */}
-              <div className='mb-4 flex items-center gap-3'>
+              <div className='mb-5 flex items-center gap-3'>
                 <button
                   onClick={() => { setStep(1); setResult(null) }}
-                  className='flex-shrink-0 rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200 transition-all active:scale-[0.95]'
+                  className='flex-shrink-0 rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-all active:scale-[0.95]'
                 >
                   <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M15 19l-7-7 7-7' />
                   </svg>
                 </button>
-                <div className='flex items-center gap-2'>
-                  <span className='text-lg'>{selectedCategory.image ? <img src={selectedCategory.image} alt={selectedCategory.label} className='h-7 w-7 object-contain' /> : selectedCategory.icon}</span>
+                <div className='flex items-center gap-3'>
+                  <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-200'>
+                    {selectedCategory.image ? <img src={selectedCategory.image} alt={selectedCategory.label} className='h-5 w-5 object-contain brightness-0 invert' /> : <span className='text-sm'>{selectedCategory.icon}</span>}
+                  </div>
                   <div>
                     <h2 className='text-sm sm:text-base font-black text-slate-800 leading-tight'>{selectedCategory.label}</h2>
                     <p className='text-[9px] text-slate-400 font-medium'>{selectedCategory.desc}</p>
@@ -1555,14 +1633,104 @@ const PremiumCalculator = () => {
                 </div>
               </div>
 
-              {/* Dynamic Form */}
-              <div className='space-y-4'>
-                {renderForm()}
+              <div className='space-y-5'>
+                {/* ─── Section: Own Damage ─── */}
+                <div className='rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/50 border border-blue-100 p-3 sm:p-4'>
+                  <div className='flex items-center gap-2 mb-3'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white text-[10px] font-black'>1</div>
+                    <h3 className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-800'>Own Damage</h3>
+                  </div>
+                  {renderForm()}
+                </div>
+
+                {/* ─── Section: Add-on Coverages ─── */}
+                <div className='rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 sm:p-4'>
+                  <div className='flex items-center gap-2 mb-3'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-[10px] font-black'>2</div>
+                    <h3 className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-emerald-800'>Add-on Coverages</h3>
+                  </div>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                    <div>
+                      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>RSA – Roadside Assistance (₹)</label>
+                      <input
+                        type='number'
+                        value={rsa}
+                        onChange={e => setRsa(e.target.value)}
+                        placeholder='e.g. 300'
+                        min={0}
+                        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-300 transition-all'
+                      />
+                    </div>
+                    <div>
+                      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addon Coverage (₹)</label>
+                      <input
+                        type='number'
+                        value={otherAddon}
+                        onChange={e => setOtherAddon(e.target.value)}
+                        placeholder='e.g. 500'
+                        min={0}
+                        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 placeholder:text-slate-300 transition-all'
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ─── Section: Liability / Third Party ─── */}
+                <div className='rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-100 p-3 sm:p-4'>
+                  <div className='flex items-center gap-2 mb-3'>
+                    <div className='flex h-6 w-6 items-center justify-center rounded-lg bg-amber-600 text-white text-[10px] font-black'>3</div>
+                    <h3 className='text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-800'>Liability / Third Party</h3>
+                  </div>
+                  <div className='space-y-3'>
+                    <p className='text-[9px] sm:text-[10px] text-amber-700 font-medium bg-amber-100/50 rounded-xl px-3 py-2'>
+                      Third Party premium is calculated automatically based on your vehicle specifications above.
+                    </p>
+                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
+                        <input
+                          type='number'
+                          value={llPaidDriver}
+                          onChange={e => setLlPaidDriver(e.target.value)}
+                          placeholder={vehicleType === 'two_wheeler' ? 'e.g. 10' : 'e.g. 50'}
+                          min={0}
+                          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
+                        />
+                      </div>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>
+                        <input
+                          type='number'
+                          value={paOwnerDriver}
+                          onChange={e => setPaOwnerDriver(e.target.value)}
+                          placeholder={vehicleType === 'two_wheeler' ? 'e.g. 50' : 'e.g. 100'}
+                          min={0}
+                          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
+                        />
+                      </div>
+                      {(vehicleType === 'private_car' || vehicleType === 'two_wheeler') ? (
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Unnamed Passenger (₹)</label>
+                          <input
+                            type='number'
+                            value={paUnnamedPassenger}
+                            onChange={e => setPaUnnamedPassenger(e.target.value)}
+                            placeholder={vehicleType === 'two_wheeler' ? 'e.g. 50' : 'e.g. 200'}
+                            min={0}
+                            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
+                          />
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Calculate Button */}
                 <button
                   onClick={calculatePremium}
-                  className='mt-2 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-[11px] sm:text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-blue-200 transition-all hover:opacity-90 active:scale-[0.98]'
+                  className='mt-2 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-[11px] sm:text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-blue-200 transition-all hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-[0.98]'
                 >
                   Calculate Premium →
                 </button>

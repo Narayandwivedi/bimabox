@@ -14,6 +14,25 @@ const IDVInput = ({ idv, setIdv }) => (
   </div>
 )
 
+const ODDiscountInput = ({ odDiscount, setOdDiscount }) => (
+  <div>
+    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>OD Discount (%)</label>
+    <input
+      type='text'
+      inputMode='numeric'
+      value={odDiscount}
+      onChange={e => {
+        const val = e.target.value
+        if (val === '' || /^\d+$/.test(val)) {
+          setOdDiscount(val)
+        }
+      }}
+      placeholder='e.g. 25'
+      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-300 transition-all'
+    />
+  </div>
+)
+
 // ─── IMT TARIFF DATA (WEF 1st June 2022) ───────────────────────────────────
 const TARIFF = {
   private_car: {
@@ -176,7 +195,7 @@ const PremiumCalculator = () => {
   const [coverageType, setCoverageType] = useState('comprehensive') // kept for other vehicle classes
   const [policyType, setPolicyType] = useState('comprehensive') // 'od' | 'tp' | 'comprehensive' | 'bundle'
   const [gstEnabled, setGstEnabled] = useState(true)
-  const [odDiscount, setOdDiscount] = useState(0)
+  const [odDiscount, setOdDiscount] = useState('')
 
   // Vehicle-specific
   const [cc, setCc] = useState('')             // Private Car / Taxi / 2W
@@ -210,7 +229,7 @@ const PremiumCalculator = () => {
     setCoverageType('comprehensive')
     setPolicyType('comprehensive')
     setGstEnabled(true)
-    setOdDiscount(0)
+    setOdDiscount('')
     setPolicyTerm('1yr')
     setManufacturingYear('')
     setLlPaidDriver('')
@@ -511,21 +530,6 @@ const PremiumCalculator = () => {
       </div>
     )
   }
-
-  // ─── OD DISCOUNT INPUT ─────────────────────────────────────────────────────
-  const ODDiscountInput = () => (
-    <div>
-      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>OD Discount (%)</label>
-      <input
-        type='number'
-        min={0}
-        value={odDiscount}
-        onChange={e => setOdDiscount(Math.min(80, Math.max(0, Number(e.target.value))))}
-        placeholder='e.g. 10'
-        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-300 transition-all'
-      />
-    </div>
-  )
 
   const CoverageSelector = () => (
     <div>
@@ -1266,7 +1270,7 @@ const PremiumCalculator = () => {
             <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <IDVInput idv={idv} setIdv={setIdv} />
               {policyType !== 'tp' && <NCBSelector />}
-              {policyType !== 'tp' && <ODDiscountInput />}
+              {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}
             </div>
           </div>
         )
@@ -1312,7 +1316,7 @@ const PremiumCalculator = () => {
                 <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                   <IDVInput idv={idv} setIdv={setIdv} />
                   {policyType !== 'tp' && <NCBSelector />}
-                  {policyType !== 'tp' && <ODDiscountInput />}
+                  {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}
                 </div>
               </>
             ) : (
@@ -1364,7 +1368,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1391,7 +1395,7 @@ const PremiumCalculator = () => {
             <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1452,7 +1456,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1493,7 +1497,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1529,7 +1533,7 @@ const PremiumCalculator = () => {
             </div>
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1556,7 +1560,7 @@ const PremiumCalculator = () => {
             <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
             <NCBSelector />
-            <ODDiscountInput />
+            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 

@@ -210,6 +210,7 @@ const PremiumCalculator = () => {
   const [paOwnerDriver, setPaOwnerDriver] = useState('')
   const [llToEmployee, setLlToEmployee] = useState('')
   const [rsa, setRsa] = useState('')
+  const [geoExtent, setGeoExtent] = useState('0')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
 
@@ -237,6 +238,7 @@ const PremiumCalculator = () => {
     setPaOwnerDriver('')
     setLlToEmployee('')
     setRsa('')
+    setGeoExtent('0')
     setOtherAddon('')
     setPaUnnamedPassenger('')
   }
@@ -407,8 +409,9 @@ const PremiumCalculator = () => {
     const rsaAmount = parseFloat(rsa) || 0
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
+    const geoExtentAmount = parseFloat(geoExtent) || 0
 
-    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount
+    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount
     const gst = gstEnabled ? netPremium * 0.18 : 0
     const totalPremium = netPremium + gst
 
@@ -421,6 +424,7 @@ const PremiumCalculator = () => {
       rsaAmount,
       otherAddonAmount,
       paUnnamedAmount,
+      geoExtentAmount,
       gst,                                // raw
       totalPremium: Math.round(totalPremium), // rounded for payable amount
       odRate,
@@ -434,7 +438,7 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, rsa, otherAddon, paUnnamedPassenger])
 
   const ChevronDown = () => (
     <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -693,8 +697,17 @@ const PremiumCalculator = () => {
           </tr>
         `
       }
+      if (result.geoExtentAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Geographical Extent</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.geoExtentAmount)}</td>
+          </tr>
+        `
+      }
 
-      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount
+      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount
       const exactTotal = netPremium + result.gst
 
       tableRows += `
@@ -1038,7 +1051,7 @@ const PremiumCalculator = () => {
           )}
 
           {/* ─── Add-on Coverages ─── */}
-          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0) && (
+          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || result.geoExtentAmount > 0) && (
             <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -1084,6 +1097,12 @@ const PremiumCalculator = () => {
                     <p className='font-black text-slate-800'>₹{fmtD(result.otherAddonAmount)}</p>
                   </div>
                 )}
+                {result.geoExtentAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>Geographical Extent</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.geoExtentAmount)}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1092,7 +1111,7 @@ const PremiumCalculator = () => {
           <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
             <div className='flex items-center justify-between text-xs'>
               <p className='font-bold text-slate-500'>Total before GST</p>
-              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount)}</p>
+              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount)}</p>
             </div>
             <div className='flex items-center justify-between text-xs'>
               <p className='font-bold text-slate-500'>GST {gstEnabled ? '(18%)' : '(0%)'}</p>
@@ -1161,6 +1180,7 @@ const PremiumCalculator = () => {
                   if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
                   if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
                   if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
+                  if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
                   msg += `GST (${gstEnabled ? '18%' : '0%'}): ₹${fmtD(result.gst)}\n`
                   msg += `─────────────────────\n`
                   msg += `💳 *Total Payable: ₹${fmtD(exactTotal)}*\n`
@@ -1196,6 +1216,7 @@ const PremiumCalculator = () => {
                   if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
                   if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
                   if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
+                  if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
                   shareText += `\nGST: ₹${fmtD(result.gst)}\nTotal Payable: ₹${fmtD(exactTotal)}\n\nIndicative as per IMT. Ref: irdai.gov.in`
 
                   if (navigator.share) {
@@ -1387,6 +1408,17 @@ const PremiumCalculator = () => {
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
+            <div>
+              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent</label>
+              <div className='relative'>
+                <select value={geoExtent} onChange={e => setGeoExtent(e.target.value)}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+                  <option value='0'>Not Opted</option>
+                  <option value='400'>Rs 400</option>
+                </select>
+                <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
+              </div>
+            </div>
             <CoverageSelector />
             <NCBSelector />
             <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
@@ -1414,6 +1446,17 @@ const PremiumCalculator = () => {
               <AgeSelector />
             </div>
             <IDVInput idv={idv} setIdv={setIdv} />
+            <div>
+              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent</label>
+              <div className='relative'>
+                <select value={geoExtent} onChange={e => setGeoExtent(e.target.value)}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+                  <option value='0'>Not Opted</option>
+                  <option value='400'>Rs 400</option>
+                </select>
+                <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
+              </div>
+            </div>
             <CoverageSelector />
             <NCBSelector />
             <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />

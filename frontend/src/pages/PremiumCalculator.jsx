@@ -208,6 +208,7 @@ const PremiumCalculator = () => {
   const [manufacturingYear, setManufacturingYear] = useState('')
   const [llPaidDriver, setLlPaidDriver] = useState('')
   const [paOwnerDriver, setPaOwnerDriver] = useState('')
+  const [llToEmployee, setLlToEmployee] = useState('')
   const [rsa, setRsa] = useState('')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
@@ -234,6 +235,7 @@ const PremiumCalculator = () => {
     setManufacturingYear('')
     setLlPaidDriver('')
     setPaOwnerDriver('')
+    setLlToEmployee('')
     setRsa('')
     setOtherAddon('')
     setPaUnnamedPassenger('')
@@ -401,11 +403,12 @@ const PremiumCalculator = () => {
 
     const llPdAmount = parseFloat(llPaidDriver) || 0
     const paOdAmount = parseFloat(paOwnerDriver) || 0
+    const llEmployeeAmount = parseFloat(llToEmployee) || 0
     const rsaAmount = parseFloat(rsa) || 0
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
 
-    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + rsaAmount + otherAddonAmount + paUnnamedAmount
+    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount
     const gst = gstEnabled ? netPremium * 0.18 : 0
     const totalPremium = netPremium + gst
 
@@ -414,6 +417,7 @@ const PremiumCalculator = () => {
       tpPremium,                          // raw
       llPdAmount,
       paOdAmount,
+      llEmployeeAmount,
       rsaAmount,
       otherAddonAmount,
       paUnnamedAmount,
@@ -430,7 +434,7 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, rsa, otherAddon, paUnnamedPassenger])
 
   const ChevronDown = () => (
     <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -653,6 +657,15 @@ const PremiumCalculator = () => {
           </tr>
         `
       }
+      if (result.llEmployeeAmount > 0) {
+        tableRows += `
+          <tr>
+            <td>Legal Liability to Employee (other than Paid Driver)</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.llEmployeeAmount)}</td>
+          </tr>
+        `
+      }
       if (result.rsaAmount > 0) {
         tableRows += `
           <tr>
@@ -681,7 +694,7 @@ const PremiumCalculator = () => {
         `
       }
 
-      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount
+      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount
       const exactTotal = netPremium + result.gst
 
       tableRows += `
@@ -1025,7 +1038,7 @@ const PremiumCalculator = () => {
           )}
 
           {/* ─── Add-on Coverages ─── */}
-          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0) && (
+          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0) && (
             <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -1045,6 +1058,12 @@ const PremiumCalculator = () => {
                   <div className='flex items-center justify-between text-xs'>
                     <p className='font-bold text-slate-500'>PA to Owner Driver</p>
                     <p className='font-black text-slate-800'>₹{fmtD(result.paOdAmount)}</p>
+                  </div>
+                )}
+                {result.llEmployeeAmount > 0 && (
+                  <div className='flex items-center justify-between text-xs'>
+                    <p className='font-bold text-slate-500'>LL to Employee (other than Paid Driver)</p>
+                    <p className='font-black text-slate-800'>₹{fmtD(result.llEmployeeAmount)}</p>
                   </div>
                 )}
                 {result.rsaAmount > 0 && (
@@ -1073,7 +1092,7 @@ const PremiumCalculator = () => {
           <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
             <div className='flex items-center justify-between text-xs'>
               <p className='font-bold text-slate-500'>Total before GST</p>
-              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount)}</p>
+              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount)}</p>
             </div>
             <div className='flex items-center justify-between text-xs'>
               <p className='font-bold text-slate-500'>GST {gstEnabled ? '(18%)' : '(0%)'}</p>
@@ -1137,6 +1156,7 @@ const PremiumCalculator = () => {
                     msg += `${tpL}: ₹${fmtD(result.tpPremium)}\n`
                   }
                   if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
+                  if (result.llEmployeeAmount > 0) msg += `LL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}\n`
                   if (result.paOdAmount > 0) msg += `PA to Owner Driver: ₹${fmtD(result.paOdAmount)}\n`
                   if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
                   if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
@@ -1171,6 +1191,7 @@ const PremiumCalculator = () => {
                   if (showOD) shareText += `\nOD Premium: ₹${fmtD(result.odPremium)}`
                   if (showTP) shareText += `\nTP Premium: ₹${fmtD(result.tpPremium)}`
                   if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
+                  if (result.llEmployeeAmount > 0) shareText += `\nLL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}`
                   if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
                   if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
                   if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
@@ -1720,6 +1741,18 @@ const PremiumCalculator = () => {
                             value={paUnnamedPassenger}
                             onChange={e => setPaUnnamedPassenger(e.target.value)}
                             placeholder={vehicleType === 'two_wheeler' ? 'e.g. 50' : 'e.g. 200'}
+                            min={0}
+                            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
+                          />
+                        </div>
+                      ) : (vehicleType === 'gcv' || vehicleType === 'gcv_3w') ? (
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (other than Paid Driver) (₹)</label>
+                          <input
+                            type='number'
+                            value={llToEmployee}
+                            onChange={e => setLlToEmployee(e.target.value)}
+                            placeholder='e.g. 50'
                             min={0}
                             className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
                           />

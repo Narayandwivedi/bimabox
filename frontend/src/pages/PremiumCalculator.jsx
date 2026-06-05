@@ -1430,19 +1430,21 @@ const PremiumCalculator = () => {
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
-            <div>
-              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
-              <input
-                type='number'
-                value={geoExtent}
-                onChange={e => setGeoExtent(e.target.value)}
-                placeholder='e.g. 400'
-                min={0}
-                className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
-              />
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+              <div>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
+                <input
+                  type='number'
+                  value={geoExtent}
+                  onChange={e => setGeoExtent(e.target.value)}
+                  placeholder='e.g. 400'
+                  min={0}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+                />
+              </div>
+              <NCBSelector />
+              <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
             </div>
-            <NCBSelector />
-            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 
@@ -1468,19 +1470,21 @@ const PremiumCalculator = () => {
               <AgeSelector />
             </div>
             <IDVInput idv={idv} setIdv={setIdv} />
-            <div>
-              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
-              <input
-                type='number'
-                value={geoExtent}
-                onChange={e => setGeoExtent(e.target.value)}
-                placeholder='e.g. 400'
-                min={0}
-                className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
-              />
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+              <div>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
+                <input
+                  type='number'
+                  value={geoExtent}
+                  onChange={e => setGeoExtent(e.target.value)}
+                  placeholder='e.g. 400'
+                  min={0}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+                />
+              </div>
+              <NCBSelector />
+              <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
             </div>
-            <NCBSelector />
-            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
           </div>
         )
 

@@ -1489,14 +1489,14 @@ const PremiumCalculator = () => {
             <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
-                <input
-                  type='number'
+                <select
                   value={geoExtent}
                   onChange={e => setGeoExtent(e.target.value)}
-                  placeholder='e.g. 400'
-                  min={0}
-                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
-                />
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                >
+                  <option value="0">₹0 – Not Applicable</option>
+                  <option value="400">₹400 – Extend Coverage</option>
+                </select>
               </div>
               <NCBSelector />
               <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
@@ -1529,14 +1529,14 @@ const PremiumCalculator = () => {
             <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
-                <input
-                  type='number'
+                <select
                   value={geoExtent}
                   onChange={e => setGeoExtent(e.target.value)}
-                  placeholder='e.g. 400'
-                  min={0}
-                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
-                />
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                >
+                  <option value="0">₹0 – Not Applicable</option>
+                  <option value="400">₹400 – Extend Coverage</option>
+                </select>
               </div>
               <NCBSelector />
               <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />

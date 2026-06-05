@@ -211,6 +211,7 @@ const PremiumCalculator = () => {
   const [llToEmployee, setLlToEmployee] = useState('')
   const [rsa, setRsa] = useState('')
   const [geoExtent, setGeoExtent] = useState('0')
+  const [imt23, setImt23] = useState('no')
   const [zeroDep, setZeroDep] = useState('0')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
@@ -240,6 +241,7 @@ const PremiumCalculator = () => {
     setLlToEmployee('')
     setRsa('')
     setGeoExtent('0')
+    setImt23('no')
     setZeroDep('0')
     setOtherAddon('')
     setPaUnnamedPassenger('')
@@ -412,9 +414,10 @@ const PremiumCalculator = () => {
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
+    const imt23Amount = imt23 === 'yes' ? odPremium * 0.15 : 0
     const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
 
-    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + zeroDepAmount
+    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + imt23Amount + zeroDepAmount
 
     let gst = 0
     let gstTp = 0
@@ -445,6 +448,7 @@ const PremiumCalculator = () => {
       otherAddonAmount,
       paUnnamedAmount,
       geoExtentAmount,
+      imt23Amount,
       zeroDepAmount,
       gst,                                // raw
       gstTp,
@@ -463,7 +467,7 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, zeroDep, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, zeroDep, rsa, otherAddon, paUnnamedPassenger])
 
   const ChevronDown = () => (
     <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -649,11 +653,20 @@ const PremiumCalculator = () => {
             </tr>
           `
         }
+        if (result.imt23Amount > 0) {
+          tableRows += `
+            <tr>
+              <td>IMT 23 Loading (15% of OD)</td>
+              <td class="text-right">15%</td>
+              <td class="text-right">₹${fmtD(result.imt23Amount)}</td>
+            </tr>
+          `
+        }
         tableRows += `
           <tr style="font-weight: bold; background-color: #f8fafc;">
             <td>Final Own Damage (OD) Premium</td>
             <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.odPremium)}</td>
+            <td class="text-right">₹${fmtD(result.odPremium + result.imt23Amount)}</td>
           </tr>
         `
       }
@@ -740,8 +753,17 @@ const PremiumCalculator = () => {
           </tr>
         `
       }
+      if (result.imt23Amount > 0) {
+        tableRows += `
+          <tr>
+            <td>IMT 23 (15% of OD)</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.imt23Amount)}</td>
+          </tr>
+        `
+      }
 
-      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.zeroDepAmount
+      const netPremium = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount
       const exactTotal = netPremium + result.gst
 
       tableRows += `
@@ -1069,9 +1091,15 @@ const PremiumCalculator = () => {
                   <p className='font-black'>- ₹{fmtD(odDiscountAmt)}</p>
                 </div>
               )}
+              {result.imt23Amount > 0 && (
+                <div className='flex items-center justify-between text-xs text-purple-600'>
+                  <p className='font-bold'>IMT 23 (15% of OD)</p>
+                  <p className='font-black'>+ ₹{fmtD(result.imt23Amount)}</p>
+                </div>
+              )}
               <div className='flex items-center justify-between text-xs border-t border-blue-200 pt-2 mt-1'>
                 <p className='font-black text-blue-800'>Total OD Premium</p>
-                <p className='font-black text-blue-800'>₹{fmtD(result.odPremium)}</p>
+                <p className='font-black text-blue-800'>₹{fmtD(result.odPremium + result.imt23Amount)}</p>
               </div>
             </div>
           )}
@@ -1098,7 +1126,7 @@ const PremiumCalculator = () => {
           )}
 
           {/* ─── Add-on Coverages ─── */}
-          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || result.geoExtentAmount > 0 || result.zeroDepAmount > 0) && (
+          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || result.geoExtentAmount > 0 || result.imt23Amount > 0 || result.zeroDepAmount > 0) && (
             <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -1164,7 +1192,7 @@ const PremiumCalculator = () => {
           <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
             <div className='flex items-center justify-between text-xs'>
               <p className='font-bold text-slate-500'>Total before GST</p>
-              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.zeroDepAmount)}</p>
+              <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount)}</p>
             </div>
             {result.gstTpRate === 5 ? (
               <>
@@ -1248,6 +1276,7 @@ const PremiumCalculator = () => {
                   if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
                   if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
                   if (result.zeroDepAmount > 0) msg += `Zero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}\n`
+                  if (result.imt23Amount > 0) msg += `IMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}\n`
                   if (result.gstTpRate === 5) {
                     msg += `GST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}\n`
                   } else {
@@ -1289,6 +1318,7 @@ const PremiumCalculator = () => {
                   if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
                   if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
                   if (result.zeroDepAmount > 0) shareText += `\nZero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}`
+                  if (result.imt23Amount > 0) shareText += `\nIMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}`
                   if (result.gstTpRate === 5) {
                     shareText += `\nGST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}`
                   } else {
@@ -1486,7 +1516,7 @@ const PremiumCalculator = () => {
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
                 <select
@@ -1496,6 +1526,17 @@ const PremiumCalculator = () => {
                 >
                   <option value="0">₹0 – Not Applicable</option>
                   <option value="400">₹400 – Extend Coverage</option>
+                </select>
+              </div>
+              <div>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
+                <select
+                  value={imt23}
+                  onChange={e => setImt23(e.target.value)}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                >
+                  <option value="no">No</option>
+                  <option value="yes">Yes (15% of OD)</option>
                 </select>
               </div>
               <NCBSelector />
@@ -1526,7 +1567,7 @@ const PremiumCalculator = () => {
               <AgeSelector />
             </div>
             <IDVInput idv={idv} setIdv={setIdv} />
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
                 <select
@@ -1536,6 +1577,17 @@ const PremiumCalculator = () => {
                 >
                   <option value="0">₹0 – Not Applicable</option>
                   <option value="400">₹400 – Extend Coverage</option>
+                </select>
+              </div>
+              <div>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
+                <select
+                  value={imt23}
+                  onChange={e => setImt23(e.target.value)}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                >
+                  <option value="no">No</option>
+                  <option value="yes">Yes (15% of OD)</option>
                 </select>
               </div>
               <NCBSelector />

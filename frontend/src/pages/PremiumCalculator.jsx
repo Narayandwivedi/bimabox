@@ -415,7 +415,24 @@ const PremiumCalculator = () => {
     const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
 
     const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + zeroDepAmount
-    const gst = gstEnabled ? netPremium * 0.18 : 0
+
+    let gst = 0
+    let gstTp = 0
+    let gstNonTp = 0
+    let gstTpRate = 18
+    let gstNonTpRate = 18
+    if (gstEnabled) {
+      const isGCV = vehicleType === 'gcv' || vehicleType === 'gcv_3w'
+      if (isGCV) {
+        gstTpRate = 5
+        gstNonTpRate = 18
+        gstTp = tpPremium * 0.05
+        gstNonTp = (netPremium - tpPremium) * 0.18
+        gst = gstTp + gstNonTp
+      } else {
+        gst = netPremium * 0.18
+      }
+    }
     const totalPremium = netPremium + gst
 
     setResult({
@@ -430,6 +447,10 @@ const PremiumCalculator = () => {
       geoExtentAmount,
       zeroDepAmount,
       gst,                                // raw
+      gstTp,
+      gstNonTp,
+      gstTpRate,
+      gstNonTpRate,
       totalPremium: Math.round(totalPremium), // rounded for payable amount
       odRate,
       details,
@@ -729,11 +750,24 @@ const PremiumCalculator = () => {
           <td class="text-right">-</td>
           <td class="text-right">₹${fmtD(netPremium)}</td>
         </tr>
+        ${result.gstTpRate === 5 ? `
+        <tr>
+          <td>GST on Third Party Premium @ 5%</td>
+          <td class="text-right">5%</td>
+          <td class="text-right">₹${fmtD(result.gstTp)}</td>
+        </tr>
+        <tr>
+          <td>GST on Other Components @ 18%</td>
+          <td class="text-right">18%</td>
+          <td class="text-right">₹${fmtD(result.gstNonTp)}</td>
+        </tr>
+        ` : `
         <tr>
           <td>Goods and Services Tax (GST ${gstEnabled ? '18%' : '0%'})</td>
           <td class="text-right">${gstEnabled ? '18%' : '0%'}</td>
           <td class="text-right">₹${fmtD(result.gst)}</td>
         </tr>
+        `}
         <tr class="total-row">
           <td>Total Payable Premium (Exact)</td>
           <td class="text-right">-</td>
@@ -1132,10 +1166,23 @@ const PremiumCalculator = () => {
               <p className='font-bold text-slate-500'>Total before GST</p>
               <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.zeroDepAmount)}</p>
             </div>
-            <div className='flex items-center justify-between text-xs'>
-              <p className='font-bold text-slate-500'>GST {gstEnabled ? '(18%)' : '(0%)'}</p>
-              <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
-            </div>
+            {result.gstTpRate === 5 ? (
+              <>
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>GST on TP @ 5%</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.gstTp)}</p>
+                </div>
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>GST on Other @ 18%</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.gstNonTp)}</p>
+                </div>
+              </>
+            ) : (
+              <div className='flex items-center justify-between text-xs'>
+                <p className='font-bold text-slate-500'>GST {gstEnabled ? '(18%)' : '(0%)'}</p>
+                <p className='font-black text-slate-800'>₹{fmtD(result.gst)}</p>
+              </div>
+            )}
           </div>
 
           <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-5 text-white shadow-xl shadow-indigo-200'>
@@ -1143,7 +1190,7 @@ const PremiumCalculator = () => {
               <p className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-80'>Final Payable Premium</p>
               <p className='text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm'>₹{fmt(result.totalPremium)}</p>
               <p className='text-[8px] opacity-60'>
-                {gstEnabled ? 'incl. 18% GST' : 'excl. GST'} • {
+                {gstEnabled ? (result.gstTpRate === 5 ? 'incl. 5% + 18% GST' : 'incl. 18% GST') : 'excl. GST'} • {
                   policyType === 'od' ? 'Own Damage' :
                   policyType === 'tp' ? 'Third Party' :
                   policyType === 'comprehensive' ? 'Comprehensive' : 'Bundle'
@@ -1201,7 +1248,11 @@ const PremiumCalculator = () => {
                   if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
                   if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
                   if (result.zeroDepAmount > 0) msg += `Zero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}\n`
-                  msg += `GST (${gstEnabled ? '18%' : '0%'}): ₹${fmtD(result.gst)}\n`
+                  if (result.gstTpRate === 5) {
+                    msg += `GST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}\n`
+                  } else {
+                    msg += `GST (${gstEnabled ? '18%' : '0%'}): ₹${fmtD(result.gst)}\n`
+                  }
                   msg += `─────────────────────\n`
                   msg += `💳 *Total Payable: ₹${fmtD(exactTotal)}*\n`
                   msg += `─────────────────────\n`
@@ -1238,7 +1289,12 @@ const PremiumCalculator = () => {
                   if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
                   if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
                   if (result.zeroDepAmount > 0) shareText += `\nZero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}`
-                  shareText += `\nGST: ₹${fmtD(result.gst)}\nTotal Payable: ₹${fmtD(exactTotal)}\n\nIndicative as per IMT. Ref: irdai.gov.in`
+                  if (result.gstTpRate === 5) {
+                    shareText += `\nGST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}`
+                  } else {
+                    shareText += `\nGST: ₹${fmtD(result.gst)}`
+                  }
+                  shareText += `\nTotal Payable: ₹${fmtD(exactTotal)}\n\nIndicative as per IMT. Ref: irdai.gov.in`
 
                   if (navigator.share) {
                     navigator.share({ title: `Quotation ${quoteId} – BIMABOX`, text: shareText })
@@ -1842,14 +1898,6 @@ const PremiumCalculator = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Calculate Button */}
-                <button
-                  onClick={calculatePremium}
-                  className='mt-2 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-[11px] sm:text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-blue-200 transition-all hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-[0.98]'
-                >
-                  Calculate Premium →
-                </button>
 
                 {/* Result */}
                 {result && <ResultBox />}

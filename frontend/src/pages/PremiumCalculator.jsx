@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FaCar, FaMotorcycle, FaTruck, FaTruckPickup, FaBus, FaVanShuttle, FaTaxi, FaTractor, FaGasPump, FaBolt } from 'react-icons/fa6'
+import axios from 'axios'
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const IDVInput = ({ idv, setIdv }) => (
   <div>
@@ -215,9 +218,13 @@ const PremiumCalculator = () => {
   const [geoExtent, setGeoExtent] = useState('0')
   const [imt23, setImt23] = useState('no')
   const [restrictedTPPD, setRestrictedTPPD] = useState('no')
-  const [zeroDep, setZeroDep] = useState('0')
+  const [zeroDep, setZeroDep] = useState('')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
+
+  const [showQuotationModal, setShowQuotationModal] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState('')
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   const selectedCategory = VEHICLE_CATEGORIES.find(v => v.id === vehicleType)
 
@@ -470,6 +477,19 @@ const PremiumCalculator = () => {
     })
   }
 
+  // Auto-calculate vehicle age from manufacturing year
+  useEffect(() => {
+    if (manufacturingYear) {
+      const yr = parseInt(manufacturingYear)
+      if (!isNaN(yr)) {
+        const age = currentYear - yr
+        if (age <= 5) setVehicleAge('upto_5')
+        else if (age <= 7) setVehicleAge('5_to_7')
+        else setVehicleAge('above_7')
+      }
+    }
+  }, [manufacturingYear])
+
   // Auto-calculate premium on state updates
   useEffect(() => {
     if (vehicleType) {
@@ -523,6 +543,24 @@ const PremiumCalculator = () => {
         </select>
         <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
       </div>
+    </div>
+  )
+
+  const currentYear = new Date().getFullYear()
+
+  // ─── YEAR OF MANUFACTURE ─────────────────────────────────────────────────
+  const ManufacturingYearInput = () => (
+    <div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Year of Manufacture</label>
+      <input
+        type='number'
+        value={manufacturingYear}
+        onChange={e => setManufacturingYear(e.target.value)}
+        placeholder='e.g. 2020'
+        min={1990}
+        max={currentYear}
+        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+      />
     </div>
   )
 
@@ -1083,6 +1121,132 @@ const PremiumCalculator = () => {
       printWindow.document.close()
     }
 
+    const generateQuotationPdf = async () => {
+      setPdfLoading(true)
+      setShowQuotationModal(true)
+      setPdfUrl('')
+      const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
+      const dateStr = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+
+      const vehicleSpec = isElectric
+        ? `${kwPower || 0} KW (Electric)`
+        : `${cc || 0} CC (Petrol/Diesel/CNG)`
+
+      const policyLabel = policyType === 'od' ? 'Own Damage Only' :
+                          policyType === 'tp' ? 'Third Party Only' :
+                          policyType === 'comprehensive' ? 'Comprehensive Cover' :
+                          (vehicleType === 'two_wheeler' ? '1-Year OD + 5-Year TP Bundle' : '1-Year OD + 3-Year TP Bundle')
+
+      const tpLabel = isBundle
+        ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium' : '3-Year TP Premium')
+        : '1-Year TP Premium'
+
+      const odBaseVal = showOD ? (parseFloat(idv) || 0) * (result.odRate / 100) : 0
+      const ncbDiscountVal = showOD ? odBaseVal * (ncb / 100) : 0
+      const afterNcbODVal = odBaseVal - ncbDiscountVal
+      const odDiscountAmtVal = showOD ? afterNcbODVal * ((result.odDiscountVal || 0) / 100) : 0
+
+      const tableRows = []
+
+      if (showOD) {
+        tableRows.push({ desc: 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
+        if (ncb > 0) tableRows.push({ desc: 'No Claim Bonus (NCB) Discount', rate: `-${ncb}%`, amount: -ncbDiscountVal, type: 'discount' })
+        if (result.odDiscountVal > 0) tableRows.push({ desc: 'Insurer OD Discount', rate: `-${result.odDiscountVal}%`, amount: -odDiscountAmtVal, type: 'discount' })
+        if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of OD)', rate: '15%', amount: result.imt23Amount })
+        if (result.geoExtentAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
+        tableRows.push({ desc: 'Final Own Damage (OD) Premium', rate: '-', amount: result.odPremium + result.imt23Amount + (vehicleType === 'gcv' ? result.geoExtentAmount : 0), type: 'total' })
+      }
+
+      if (showTP) {
+        tableRows.push({ desc: `Third Party Liability (TP) Premium (${tpLabel})`, rate: '-', amount: result.tpPremium + result.restrictedTPPDDiscount })
+        if (result.restrictedTPPDDiscount > 0) tableRows.push({ desc: 'Restricted TPPD Discount', rate: '-', amount: -result.restrictedTPPDDiscount, type: 'discount' })
+        if (result.llPdAmount > 0) tableRows.push({ desc: 'Legal Liability to Paid Driver', rate: '-', amount: result.llPdAmount })
+        if (result.paOdAmount > 0) tableRows.push({ desc: 'Personal Accident to Owner Driver', rate: '-', amount: result.paOdAmount })
+        if (result.llEmployeeAmount > 0) tableRows.push({ desc: 'Legal Liability to Employee (other than Paid Driver)', rate: '-', amount: result.llEmployeeAmount })
+        if (result.paUnnamedAmount > 0) tableRows.push({ desc: 'PA to Unnamed Passenger', rate: '-', amount: result.paUnnamedAmount })
+      }
+
+      if (result.rsaAmount > 0) tableRows.push({ desc: 'Roadside Assistance (RSA)', rate: '-', amount: result.rsaAmount })
+      if (result.otherAddonAmount > 0) tableRows.push({ desc: 'Other Addon Coverage', rate: '-', amount: result.otherAddonAmount })
+      if (result.geoExtentAmount > 0 && vehicleType !== 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
+      if (result.zeroDepAmount > 0) tableRows.push({ desc: 'Zero Depreciation', rate: '-', amount: result.zeroDepAmount })
+
+      const netPremiumVal = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount
+
+      tableRows.push({ desc: 'Premium Before Taxes', rate: '-', amount: netPremiumVal, type: 'total' })
+
+      if (result.gstTpRate === 5) {
+        tableRows.push({ desc: 'GST on Third Party Premium @ 5%', rate: '5%', amount: result.gstTp, type: 'gst-header' })
+        tableRows.push({ desc: 'GST on Other Components @ 18%', rate: '18%', amount: result.gstNonTp, type: 'gst-header' })
+      } else {
+        tableRows.push({ desc: `Goods and Services Tax (GST ${gstEnabled ? '18%' : '0%'})`, rate: gstEnabled ? '18%' : '0%', amount: result.gst, type: 'gst-header' })
+      }
+
+      const exactTotalVal = netPremiumVal + result.gst
+
+      try {
+        const response = await axios.post(`${API_URL}/api/calculator/generate-pdf`, {
+          quoteId,
+          date: dateStr,
+          vehicleCategory: selectedCategory ? selectedCategory.label : 'N/A',
+          vehicleSpec,
+          vehicleSubtype: subtype ? TARIFF[vehicleType]?.subtypes?.find(s => s.id === subtype)?.label : undefined,
+          zone: `Zone ${zone}`,
+          vehicleAge: vehicleAge === 'upto_5' ? 'Upto 5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs',
+          mfgYear: manufacturingYear || undefined,
+          policyType: policyLabel,
+          idv: parseFloat(idv) || 0,
+          ncb,
+          odDiscount: result.odDiscountVal,
+          premiums: {
+            odRate: result.odRate,
+            odBase: odBaseVal,
+            ncbDiscount: ncbDiscountVal,
+            odDiscountAmt: odDiscountAmtVal,
+            finalOd: result.odPremium,
+            tp: result.tpPremium,
+            llPd: result.llPdAmount,
+            paOd: result.paOdAmount,
+            llEmployee: result.llEmployeeAmount,
+            paUnnamed: result.paUnnamedAmount,
+            rsa: result.rsaAmount,
+            otherAddon: result.otherAddonAmount,
+            geoExtent: result.geoExtentAmount,
+            imt23: result.imt23Amount,
+            zeroDep: result.zeroDepAmount,
+            restrictedTPPD: result.restrictedTPPDDiscount,
+          },
+          gst: {
+            enabled: gstEnabled,
+            hasSplitGst: result.gstTpRate === 5,
+            tpRate: result.gstTpRate,
+            gstTp: result.gstTp,
+            gstNonTp: result.gstNonTp,
+            totalGst: result.gst,
+          },
+          netPremium: netPremiumVal,
+          totalPayable: exactTotalVal,
+          tableRows,
+        }, { withCredentials: true })
+
+        if (response.data.success && response.data.url) {
+          setPdfUrl(response.data.url)
+          setPdfLoading(false)
+        } else {
+          setPdfLoading(false)
+          alert('Failed to generate PDF. Please try again.')
+        }
+      } catch (error) {
+        console.error('PDF generation error:', error)
+        setPdfLoading(false)
+        alert('Failed to generate PDF. Please try again.')
+      }
+    }
+
     return (
       <div className='border-t border-slate-200 pt-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
         <div className='space-y-3'>
@@ -1282,132 +1446,89 @@ const PremiumCalculator = () => {
           </div>
 
           <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
-            <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400 text-center mb-3'>Share Quotation</p>
-            <div className='grid grid-cols-3 gap-2 sm:gap-3'>
-              {/* WhatsApp */}
-              <button
-                onClick={() => {
-                  const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
-                  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                  const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
-                  const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
-                  const netPremium = result.odPremium + result.tpPremium
-                  const exactTotal = netPremium + result.gst
-
-                  let msg = `🏷️ *INSURANCE QUOTATION – BIMABOX*\n`
-                  msg += `📋 ID: ${quoteId}  |  Date: ${dateStr}\n`
-                  msg += `─────────────────────\n`
-                  msg += `🚗 *Vehicle Details*\n`
-                  msg += `Category: ${selectedCategory ? selectedCategory.label : 'N/A'}\n`
-                  msg += `Spec: ${vehicleSpec}${isElectric ? '' : ' (Petrol/CNG)'}\n`
-                  msg += `Zone: ${zone}  |  Age: ${vehicleAge === 'upto_5' ? 'Upto 5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs'}\n`
-                  msg += `─────────────────────\n`
-                  msg += `📄 *Policy: ${policyLabel}*\n`
-                  msg += `IDV: ₹${fmtD(parseFloat(idv) || 0)}\n`
-                  msg += `NCB: ${ncb}%  |  OD Discount: ${result.odDiscountVal}%\n`
-                  msg += `─────────────────────\n`
-                  msg += `💰 *Premium Breakup*\n`
-                  if (showOD) {
-                    msg += `OD (Base): ₹${fmtD(odBase)}\n`
-                    if (ncb > 0) msg += `NCB (${ncb}%): - ₹${fmtD(ncbDiscount)}\n`
-                    if ((result.odDiscountVal || 0) > 0) msg += `OD Discount (${result.odDiscountVal}%): - ₹${fmtD(odDiscountAmt)}\n`
-                    msg += `Final OD: ₹${fmtD(result.odPremium)}\n`
-                  }
-                  if (showTP) {
-                    const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
-                    const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
-                    msg += `${tpL}: ₹${fmtD(tpBefore)}\n`
-                    if (result.restrictedTPPDDiscount > 0) msg += `Restricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}\n`
-                    if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
-                    if (result.llEmployeeAmount > 0) msg += `LL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}\n`
-                    if (result.paOdAmount > 0) msg += `PA to Owner Driver: ₹${fmtD(result.paOdAmount)}\n`
-                    if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
-                  }
-                  if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
-                  if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
-                  if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
-                  if (result.zeroDepAmount > 0) msg += `Zero Depreciation: ₹${fmtD(result.zeroDepAmount)}\n`
-                  if (result.imt23Amount > 0) msg += `IMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}\n`
-                  if (result.gstTpRate === 5) {
-                    msg += `GST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}\n`
-                  } else {
-                    msg += `GST (${gstEnabled ? '18%' : '0%'}): ₹${fmtD(result.gst)}\n`
-                  }
-                  msg += `─────────────────────\n`
-                  msg += `💳 *Total Payable: ₹${fmtD(exactTotal)}*\n`
-                  msg += `─────────────────────\n`
-                  msg += `_Indicative as per IMT. Ref: irdai.gov.in_`
-
-                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
-                }}
-                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-green-200 bg-green-50 py-3 text-green-700 hover:bg-green-100 hover:shadow-md hover:shadow-green-200 active:scale-[0.97] transition-all'
-              >
-                <svg className='h-5 w-5' fill='currentColor' viewBox='0 0 24 24'>
-                  <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z' />
-                </svg>
-                <span className='text-[9px] font-black uppercase tracking-wide'>WhatsApp</span>
-              </button>
-
-              {/* Native Share / Other Apps */}
-              <button
-                onClick={() => {
-                  const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
-                  const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                  const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
-                  const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
-                  const netPremium = result.odPremium + result.tpPremium
-                  const exactTotal = netPremium + result.gst
-
-                  let shareText = `INSURANCE QUOTATION – BIMABOX\nID: ${quoteId} | Date: ${dateStr}\n\nVehicle: ${selectedCategory ? selectedCategory.label : ''} | ${vehicleSpec} | Zone ${zone}\nPolicy: ${policyLabel} | IDV: ₹${fmtD(parseFloat(idv) || 0)} | NCB: ${ncb}%`
-                  if (showOD) shareText += `\nOD Premium: ₹${fmtD(result.odPremium)}`
-                  if (showTP) {
-                    const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
-                    shareText += `\nTP Premium: ₹${fmtD(tpBefore)}`
-                    if (result.restrictedTPPDDiscount > 0) shareText += `\nRestricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}`
-                    if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
-                    if (result.llEmployeeAmount > 0) shareText += `\nLL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}`
-                    if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
-                    if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
-                  }
-                  if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
-                  if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
-                  if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
-                  if (result.zeroDepAmount > 0) shareText += `\nZero Depreciation: ₹${fmtD(result.zeroDepAmount)}`
-                  if (result.imt23Amount > 0) shareText += `\nIMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}`
-                  if (result.gstTpRate === 5) {
-                    shareText += `\nGST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}`
-                  } else {
-                    shareText += `\nGST: ₹${fmtD(result.gst)}`
-                  }
-                  shareText += `\nTotal Payable: ₹${fmtD(exactTotal)}\n\nIndicative as per IMT. Ref: irdai.gov.in`
-
-                  if (navigator.share) {
-                    navigator.share({ title: `Quotation ${quoteId} – BIMABOX`, text: shareText })
-                      .catch(() => {})
-                  } else {
-                    navigator.clipboard.writeText(shareText).then(() => alert('Quotation text copied! Paste it to share.'))
-                  }
-                }}
-                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-blue-200 bg-blue-50 py-3 text-blue-700 hover:bg-blue-100 hover:shadow-md hover:shadow-blue-200 active:scale-[0.97] transition-all'
-              >
-                <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z' />
-                </svg>
-                <span className='text-[9px] font-black uppercase tracking-wide'>Share</span>
-              </button>
-
-              {/* Print / PDF */}
-              <button
-                onClick={shareQuotation}
-                className='flex flex-col items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-slate-50 py-3 text-slate-700 hover:bg-slate-100 hover:shadow-md hover:shadow-slate-200 active:scale-[0.97] transition-all'
-              >
-                <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z' />
-                </svg>
-                <span className='text-[9px] font-black uppercase tracking-wide'>Print</span>
-              </button>
-            </div>
+            <button
+              onClick={generateQuotationPdf}
+              className='w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-white font-black text-sm uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200'
+            >
+              <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z' />
+              </svg>
+              Preview Quotation
+            </button>
           </div>
+
+          {showQuotationModal && (
+            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4' onClick={() => { setShowQuotationModal(false); setPdfUrl('') }}>
+              <div className='relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl' onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => { setShowQuotationModal(false); setPdfUrl('') }}
+                  className='absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-all'
+                >
+                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+
+                {pdfLoading && (
+                  <div className='flex flex-col items-center justify-center py-10 gap-4'>
+                    <div className='h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600' />
+                    <p className='text-sm font-bold text-slate-500'>Generating Quotation…</p>
+                  </div>
+                )}
+
+                {!pdfLoading && pdfUrl && (
+                  <div className='space-y-5'>
+                    <div className='text-center'>
+                      <div className='mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100'>
+                        <svg className='h-7 w-7 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                        </svg>
+                      </div>
+                      <h3 className='text-lg font-black text-slate-900'>Quotation Ready</h3>
+                      <p className='mt-1 text-xs text-slate-500'>Your quotation PDF has been generated</p>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                      <a
+                        href={pdfUrl}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='flex flex-col items-center gap-2 rounded-2xl border-2 border-slate-200 bg-white py-4 text-slate-700 hover:bg-slate-50 hover:shadow-md active:scale-[0.97] transition-all'
+                      >
+                        <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                        </svg>
+                        <span className='text-[10px] font-black uppercase tracking-wide'>Download</span>
+                      </a>
+
+                      <button
+                        onClick={() => {
+                          const msg = `🏷️ INSURANCE QUOTATION – BIMABOX\nView PDF: ${window.location.origin}${pdfUrl}`
+                          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+                        }}
+                        className='flex flex-col items-center gap-2 rounded-2xl border-2 border-green-200 bg-green-50 py-4 text-green-700 hover:bg-green-100 hover:shadow-md hover:shadow-green-200 active:scale-[0.97] transition-all'
+                      >
+                        <svg className='h-6 w-6' fill='currentColor' viewBox='0 0 24 24'>
+                          <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z' />
+                        </svg>
+                        <span className='text-[10px] font-black uppercase tracking-wide'>WhatsApp</span>
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(`${window.location.origin}${pdfUrl}`); alert('PDF link copied!') }}
+                      className='w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 active:scale-[0.98] transition-all'
+                    >
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+                      </svg>
+                      Copy Link
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -1419,7 +1540,6 @@ const PremiumCalculator = () => {
 
       // ── PRIVATE CAR ──────────────────────────────────────────────────────
       case 'private_car':
-        const ccVal = parseFloat(cc) || 0
         return (
           <div className='space-y-4'>
             <div>
@@ -1442,25 +1562,26 @@ const PremiumCalculator = () => {
               </div>
             </div>
             <PolicyTypeSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <ZoneSelector zones={['A', 'B']} />
+              <ManufacturingYearInput />
               <AgeSelector />
               {!isElectric ? (
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine Capacity (CC)</label>
-                  <div className='relative'>
-                    <select
-                      value={ccVal > 1500 ? 1600 : ccVal > 1000 ? 1200 : ccVal > 0 ? 999 : ''}
-                      onChange={e => setCc(e.target.value)}
-                      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
-                    >
-                      <option value='' disabled>Select CC</option>
-                      <option value={999}>≤1000 CC</option>
-                      <option value={1200}>1001–1500 CC</option>
-                      <option value={1600}>&gt;1500 CC</option>
-                    </select>
-                    <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
-                  </div>
+                  <input
+                    type='number'
+                    value={cc}
+                    onChange={e => setCc(e.target.value)}
+                    placeholder='e.g. 1500'
+                    min={0}
+                    className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+                  />
+                  {cc && !isNaN(parseFloat(cc)) && (
+                    <p className='mt-1 text-[8px] text-slate-400'>
+                      {parseFloat(cc) <= 1000 ? '≤1000 CC' : parseFloat(cc) <= 1500 ? '1001–1500 CC' : '>1500 CC'} bracket
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div>
@@ -1505,8 +1626,9 @@ const PremiumCalculator = () => {
             {!isElectric ? (
               <>
                 <PolicyTypeSelector />
-                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
                   <ZoneSelector zones={['A', 'B']} />
+                  <ManufacturingYearInput />
                   <AgeSelector />
                   <div>
                     <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
@@ -1524,16 +1646,16 @@ const PremiumCalculator = () => {
             ) : (
               <>
                 <PolicyTypeSelector />
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                   <div>
                     <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                     <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 5'
                       className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                     <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
                   </div>
-                  <IDVInput idv={idv} setIdv={setIdv} />
-                </div>
-                <CoverageSelector />
+              <IDVInput idv={idv} setIdv={setIdv} />
+            </div>
+            <CoverageSelector />
               </>
             )}
           </div>
@@ -1548,8 +1670,9 @@ const PremiumCalculator = () => {
               <p className='text-[8px] text-amber-600 mt-0.5'>Zone A/B/C | GVW based TP | Extra ₹27/100 Kg above 12,000 Kg</p>
             </div>
             <CoverageSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <ZoneSelector zones={['A', 'B', 'C']} />
+              <ManufacturingYearInput />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
@@ -1607,9 +1730,10 @@ const PremiumCalculator = () => {
               </div>
             </div>
             <CoverageSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <IDVInput idv={idv} setIdv={setIdv} />
               <ZoneSelector zones={['A', 'B', 'C']} />
+              <ManufacturingYearInput />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
@@ -1665,14 +1789,15 @@ const PremiumCalculator = () => {
                 </button>
               </div>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               {!isElectric ? (
                 <>
                   <ZoneSelector zones={['A', 'B']} />
+                  <ManufacturingYearInput />
                   <AgeSelector />
                 </>
               ) : (
-                <div className='col-span-2'>
+                <div className='col-span-3'>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
                   <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 40'
                     className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
@@ -1680,7 +1805,7 @@ const PremiumCalculator = () => {
                 </div>
               )}
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               {!isElectric && (
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
@@ -1695,6 +1820,7 @@ const PremiumCalculator = () => {
                   className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
+              <ManufacturingYearInput />
             </div>
             <CoverageSelector />
             <NCBSelector />
@@ -1724,8 +1850,9 @@ const PremiumCalculator = () => {
                 ))}
               </div>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <ZoneSelector zones={['A', 'B', 'C']} />
+              <ManufacturingYearInput />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
@@ -1761,8 +1888,9 @@ const PremiumCalculator = () => {
                 ))}
               </div>
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <ZoneSelector zones={['A', 'B', 'C']} />
+              <ManufacturingYearInput />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
@@ -1799,8 +1927,9 @@ const PremiumCalculator = () => {
               </div>
             </div>
             <CoverageSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <ZoneSelector zones={['C', 'B', 'A']} />
+              <ManufacturingYearInput />
               <AgeSelector />
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
@@ -2036,9 +2165,10 @@ const PremiumCalculator = () => {
         <p className='mt-4 text-center text-[8px] text-slate-400 px-4'>
           <svg className='inline-block h-3 w-3 mr-1 -mt-0.5 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24' strokeWidth={2}><path d='M12 9v2m0 4h.01M10.29 3.86l-8.1 14c-.6 1.04.15 2.14 1.21 2.14h16.2c1.06 0 1.81-1.1 1.21-2.14l-8.1-14c-.6-1.04-1.82-1.04-2.42 0z' /></svg>For indicative purposes only. Premiums may vary based on insurer loading, add-ons & discounts. Ref: IRDAI website irdai.gov.in
         </p>
-      </div>
-    </div>
-  )
-}
+          </div>
+        </div>
+
+    )
+  }
 
 export default PremiumCalculator

@@ -73,6 +73,7 @@ app.use('/api/references', require('./routes/referenceRoutes'))
 app.use('/api/ocr', ocrRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/whatsapp', whatsAppRoutes)
+app.use('/api/calculator', require('./routes/calculatorRoutes'))
 
 mongoose
   .connect(MONGODB_URI)

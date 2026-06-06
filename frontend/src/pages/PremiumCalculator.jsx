@@ -318,8 +318,8 @@ const PremiumCalculator = () => {
 
         {step === 1 && (
           <div className='mb-4'>
-            <h1 className='text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
-            <p className='mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
+            <h1 className='text-center sm:text-left text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
+            <p className='text-center sm:text-left mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
           </div>
         )}
 

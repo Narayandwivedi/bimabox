@@ -122,7 +122,7 @@ const Renewals = () => {
                 <button
                   key={tab.key}
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`rounded-lg px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`rounded-lg px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                     statusFilter === tab.key
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
@@ -223,106 +223,91 @@ const Renewals = () => {
                   })}
                 </div>
 
-                <div className='hidden lg:block'>
-                  <div className='grid grid-cols-4 gap-4'>
-                    {filteredPolicies.map((policy) => {
-                      const status = policy.renewalStatus || ''
-                      const isResolved = status === 'renewed' || status === 'lost'
-                      return (
-                        <div
-                          key={policy._id}
-                          className={`group relative overflow-hidden rounded-xl border p-4 transition-all duration-300 ${
-                            status === 'renewed'
-                              ? 'border-emerald-200 bg-emerald-50/20 hover:border-emerald-400'
-                              : status === 'lost'
-                              ? 'border-red-200 bg-red-50/20 hover:border-red-400'
-                              : 'border-slate-150 bg-slate-50/30 hover:scale-[1.02] hover:bg-white hover:border-amber-300 hover:shadow-[0_20px_50px_-20px_rgba(245,158,11,0.15)]'
-                          }`}
-                        >
-                          <div className={`absolute top-0 left-0 right-0 h-1 ${
-                            status === 'renewed' ? 'bg-emerald-500' : status === 'lost' ? 'bg-red-500' : 'bg-amber-500'
-                          }`} />
-                          <div className='flex items-start justify-between mb-3 mt-1'>
-                            <div className='flex items-center gap-2.5'>
-                              <div className='flex h-9 w-9 items-center justify-center rounded-xl shadow-sm bg-amber-50 text-amber-600'>
-                                <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' />
-                                </svg>
+                <div className='hidden lg:block overflow-hidden rounded-2xl border border-slate-100 bg-white'>
+                  <table className='w-full text-left'>
+                    <thead>
+                      <tr className='border-b border-slate-100 bg-slate-50/50'>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Policy No</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Class</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Days</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-slate-50'>
+                      {filteredPolicies.map((policy) => {
+                        const status = policy.renewalStatus || ''
+                        const isResolved = status === 'renewed' || status === 'lost'
+                        return (
+                          <tr key={policy._id} className={`transition-colors hover:bg-slate-50/50 ${
+                            status === 'renewed' ? 'bg-emerald-50/20' : status === 'lost' ? 'bg-red-50/20' : ''
+                          }`}>
+                            <td className='px-4 py-2'>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-sm font-bold text-slate-800'>{policy.insuranceCompany}</span>
                               </div>
-                              <div>
-                                <h3 className='text-sm font-black text-slate-800 group-hover:text-amber-600 transition-colors'>{policy.insuranceCompany}</h3>
-                                <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{policy.vehicleNumber}</p>
-                              </div>
-                            </div>
-                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
-                              status === 'renewed'
-                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                : status === 'lost'
-                                ? 'bg-red-50 text-red-600 border border-red-100'
-                                : policy.daysLeft <= 5
-                                ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                : 'bg-amber-50 text-amber-600 border border-amber-100'
-                            }`}>
-                              {status === 'renewed' ? 'Renewed' : status === 'lost' ? 'Lost' : policy.daysLeft < 0 ? 'Expired' : policy.daysLeft === 0 ? 'Today' : `${policy.daysLeft}d left`}
-                            </span>
-                          </div>
-                          <div className='flex flex-col gap-1 text-[11px] text-slate-500'>
-                            <div className='flex justify-between'>
-                              <span className='font-medium text-slate-400'>Company:</span>
-                              <span className='font-semibold text-slate-700'>{policy.insuranceCompany}</span>
-                            </div>
-                            <div className='flex justify-between'>
-                              <span className='font-medium text-slate-400'>Policy No:</span>
-                              <span className='font-semibold text-slate-700'>{policy.policyNumber || '—'}</span>
-                            </div>
-                            <div className='flex justify-between'>
-                              <span className='font-medium text-slate-400'>Class:</span>
-                              <span className='font-semibold text-slate-700'>{policy.insuranceClass || '—'}</span>
-                            </div>
-                            <div className='flex justify-between'>
-                              <span className='font-medium text-slate-400'>Valid From:</span>
-                              <span className='font-semibold text-slate-700'>{policy.validFrom}</span>
-                            </div>
-                            <div className='flex justify-between'>
-                              <span className='font-medium text-slate-400'>Valid To:</span>
-                              <span className='font-semibold text-slate-700'>{policy.validTo}</span>
-                            </div>
-                          </div>
-                          <div className='mt-3 pt-3 border-t border-slate-100/80 flex items-center justify-between'>
-                            {isResolved ? (
-                              <button
-                                onClick={() => handleStatusChange(policy._id, 'pending')}
-                                className='w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600 underline py-1'
-                              >
-                                Reset
-                              </button>
-                            ) : (
-                              <div className='flex items-center gap-2 w-full'>
+                            </td>
+                            <td className='px-4 py-2'>
+                              <span className='font-mono text-xs font-bold text-slate-600'>{policy.vehicleNumber}</span>
+                            </td>
+                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.policyHolderName || '—'}</td>
+                            <td className='px-4 py-2'>
+                              <span className='text-xs font-semibold text-slate-600'>{policy.policyNumber || '—'}</span>
+                            </td>
+                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.insuranceClass || '—'}</td>
+                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.validTo}</td>
+                            <td className='px-4 py-2'>
+                              <span className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                                status === 'renewed'
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                  : status === 'lost'
+                                  ? 'bg-red-50 text-red-600 border border-red-100'
+                                  : policy.daysLeft <= 5
+                                  ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                  : 'bg-amber-50 text-amber-600 border border-amber-100'
+                              }`}>
+                                {status === 'renewed' ? 'Renewed' : status === 'lost' ? 'Lost' : policy.daysLeft < 0 ? 'Expired' : policy.daysLeft === 0 ? 'Today' : `${policy.daysLeft}d`}
+                              </span>
+                            </td>
+                            <td className='px-4 py-2'>
+                              {isResolved ? (
                                 <button
-                                  onClick={() => handleStatusChange(policy._id, 'renewed')}
-                                  className='flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
+                                  onClick={() => handleStatusChange(policy._id, 'pending')}
+                                  className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
                                 >
-                                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
-                                  </svg>
-                                  Renewal Done
+                                  Reset
                                 </button>
-                                <button
-                                  onClick={() => handleStatusChange(policy._id, 'lost')}
-                                  className='flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-all'
-                                >
-                                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                  </svg>
-                                  Business Lost
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                              ) : (
+                                <div className='flex items-center gap-1'>
+                                  <button
+                                    onClick={() => handleStatusChange(policy._id, 'renewed')}
+                                    className='flex items-center gap-0.5 rounded-lg bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
+                                  >
+                                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
+                                    </svg>
+                                    Done
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusChange(policy._id, 'lost')}
+                                    className='flex items-center gap-0.5 rounded-lg bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all'
+                                  >
+                                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                    Lost
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </>
             )}

@@ -14,7 +14,7 @@ import ResultBox from '../components/calculator/ResultBox'
 import TARIFF from '../components/calculator/tariffData'
 import { fmt } from '../components/calculator/helpers'
 import {
-  IDVInput, NCBSelector, ODDiscountInput,
+  NCBSelector, ODDiscountInput,
 } from '../components/calculator/SharedFields'
 
 const PremiumCalculator = () => {
@@ -393,8 +393,24 @@ const PremiumCalculator = () => {
                       <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z' /></svg>
                       Liability / Third Party
                     </p>
-                    <div className={`grid grid-cols-1 ${vehicleType === 'private_car' || vehicleType === 'two_wheeler' ? '' : 'sm:grid-cols-2'} gap-3`}>
-                      <IDVInput idv={idv} setIdv={setIdv} />
+                    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
+                        <input type='number' value={llPaidDriver} onChange={e => setLlPaidDriver(e.target.value)} placeholder='e.g. 50'
+                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                      </div>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>
+                        <input type='number' value={paOwnerDriver} onChange={e => setPaOwnerDriver(e.target.value)} placeholder='e.g. 100'
+                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                      </div>
+                      {(vehicleType === 'private_car' || vehicleType === 'two_wheeler') && (
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Unnamed Psgr (₹)</label>
+                        <input type='number' value={paUnnamedPassenger} onChange={e => setPaUnnamedPassenger(e.target.value)} placeholder='e.g. 25'
+                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                      </div>
+                      )}
                       {vehicleType !== 'private_car' && vehicleType !== 'two_wheeler' && (
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD (GCV only)</label>
@@ -407,24 +423,7 @@ const PremiumCalculator = () => {
                           <option value="yes">Yes (₹200 discount)</option>
                         </select>
                       </div>
-                    )}
-                    </div>
-                    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
-                        <input type='number' value={llPaidDriver} onChange={e => setLlPaidDriver(e.target.value)} placeholder='e.g. 50'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>
-                        <input type='number' value={paOwnerDriver} onChange={e => setPaOwnerDriver(e.target.value)} placeholder='e.g. 100'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Unnamed Psgr (₹)</label>
-                        <input type='number' value={paUnnamedPassenger} onChange={e => setPaUnnamedPassenger(e.target.value)} placeholder='e.g. 25'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
+                      )}
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (₹)</label>
                         <input type='number' value={llToEmployee} onChange={e => setLlToEmployee(e.target.value)} placeholder='e.g. 50'

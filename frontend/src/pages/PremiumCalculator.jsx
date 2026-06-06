@@ -38,7 +38,7 @@ const TARIFF = {
   private_car: {
     // CC brackets: 0=<1000, 1=1001-1500, 2=>1500
     tpByCC: [2094, 3416, 7897],
-    tp3YrsByCC: [5543, 9044, 20907],
+    tp3YrsByCC: [6521, 10640, 24596],
     odRates: {
       upto_5: { A: [3.127, 3.283, 3.440], B: [3.039, 3.191, 3.343] },
       '5_to_7': { A: [3.283, 3.447, 3.612], B: [3.191, 3.351, 3.510] },
@@ -276,7 +276,7 @@ const PremiumCalculator = () => {
         if (isElectric) {
           const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.private_car.electricTP1yr[kwBracket] * 3
+            tpPremium = TARIFF.private_car.electricTP3yr[kwBracket]
           } else {
             tpPremium = TARIFF.private_car.electricTP1yr[kwBracket]
           }
@@ -285,7 +285,7 @@ const PremiumCalculator = () => {
         } else {
           const bracket = getCCBracket(ccVal)
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.private_car.tpByCC[bracket] * 3
+            tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
           } else {
             tpPremium = TARIFF.private_car.tpByCC[bracket]
           }

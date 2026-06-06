@@ -134,14 +134,15 @@ const TARIFF = {
     },
   },
   misc_d: {
-    odRate: 1.05,
     subtypes: [
-      { id: 'agri_tractor', label: 'Agricultural Tractor', tp: 3268 },
-      { id: 'mobile_crane', label: 'Mobile Crane / Road Roller', tp: 20879 },
-      { id: 'excavator', label: 'Excavator / Dozer / Dumper', tp: 20879 },
-      { id: 'forklift', label: 'Forklift / Reach Stacker', tp: 7897 },
-      { id: 'other_misc', label: 'Other Misc-D Vehicle', tp: 7897 },
+      { id: 'other', label: 'Other Vehicle', tp: 7267 },
+      { id: 'agri_tractor', label: 'Agriculture Tractors upto 6 HP', tp: 1645 },
     ],
+    odRates: {
+      upto_5: { C: 1.190, B: 1.202, A: 1.208 },
+      '5_to_7': { C: 1.220, B: 1.232, A: 1.238 },
+      above_7: { C: 1.250, B: 1.262, A: 1.268 },
+    },
   },
 }
 
@@ -253,7 +254,7 @@ const PremiumCalculator = () => {
     setVehicleType(id)
     resetForm()
     // set default subtype
-    const defaults = { gcv_3w: 'public', pcv: 'school_bus', pcv_3w: 'c1b', misc_d: 'agri_tractor', taxi: null }
+    const defaults = { gcv_3w: 'public', pcv: 'school_bus', pcv_3w: 'c1b', misc_d: 'other', taxi: null }
     if (defaults[id] !== undefined) setSubtype(defaults[id] || '')
     setStep(2)
   }
@@ -381,7 +382,7 @@ const PremiumCalculator = () => {
       case 'misc_d': {
         const st = TARIFF.misc_d.subtypes.find(s => s.id === subtype) || TARIFF.misc_d.subtypes[0]
         tpPremium = st.tp
-        odRate = TARIFF.misc_d.odRate
+        odRate = TARIFF.misc_d.odRates[vehicleAge][zone] || TARIFF.misc_d.odRates[vehicleAge]['C']
         details = { label: st.label }
         break
       }
@@ -462,7 +463,7 @@ const PremiumCalculator = () => {
       gstNonTp,
       gstTpRate,
       gstNonTpRate,
-      totalPremium: Math.round(totalPremium), // rounded for payable amount
+      totalPremium,
       odRate,
       details,
       odDiscountVal,
@@ -1264,7 +1265,7 @@ const PremiumCalculator = () => {
           <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-5 text-white shadow-xl shadow-indigo-200'>
             <div className='space-y-1'>
               <p className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-80'>Final Payable Premium</p>
-              <p className='text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm'>₹{fmt(result.totalPremium)}</p>
+              <p className='text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm'>₹{fmtD(result.totalPremium)}</p>
               <p className='text-[8px] opacity-60'>
                 {gstEnabled ? (result.gstTpRate === 5 ? 'incl. 5% + 18% GST' : 'incl. 18% GST') : 'excl. GST'} • {
                   policyType === 'od' ? 'Own Damage' :
@@ -1784,11 +1785,10 @@ const PremiumCalculator = () => {
           <div className='space-y-4'>
             <div className='rounded-xl bg-slate-100 border border-slate-200 p-3'>
               <p className='text-[9px] font-bold text-slate-700'>Misc-D Class — OD Rate: 1.05% of IDV</p>
-              <p className='text-[8px] text-slate-500 mt-0.5'>Includes: Agricultural tractors, cranes, road rollers, excavators & other special vehicles</p>
             </div>
             <div>
-              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle Sub-Type</label>
-              <div className='grid grid-cols-1 gap-2'>
+              <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle Category</label>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                 {TARIFF.misc_d.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
@@ -1798,10 +1798,27 @@ const PremiumCalculator = () => {
                 ))}
               </div>
             </div>
-            <IDVInput idv={idv} setIdv={setIdv} />
             <CoverageSelector />
-            <NCBSelector />
-            <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              <ZoneSelector zones={['C', 'B', 'A']} />
+              <AgeSelector />
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+              <IDVInput idv={idv} setIdv={setIdv} />
+              <div>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
+                <select
+                  value={imt23}
+                  onChange={e => setImt23(e.target.value)}
+                  className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                >
+                  <option value="no">No</option>
+                  <option value="yes">Yes (15% of OD)</option>
+                </select>
+              </div>
+              <NCBSelector />
+              <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+            </div>
           </div>
         )
 
@@ -1976,7 +1993,7 @@ const PremiumCalculator = () => {
                             className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 placeholder:text-slate-300 transition-all'
                           />
                         </div>
-                      ) : (vehicleType === 'gcv' || vehicleType === 'gcv_3w') ? (
+                      ) : (vehicleType === 'gcv' || vehicleType === 'gcv_3w' || vehicleType === 'misc_d') ? (
                         <div>
                           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee <span className='text-[8px]'>(other than Paid Driver) (₹)</span></label>
                           <input

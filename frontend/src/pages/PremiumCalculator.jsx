@@ -1790,7 +1790,7 @@ const PremiumCalculator = () => {
                   <p className='text-[9px] text-slate-400 font-medium'>Choose your vehicle type to calculate premium</p>
                 </div>
               </div>
-              <div className='grid grid-cols-2 gap-3 md:grid-cols-3'>
+              <div className='grid grid-cols-2 gap-3 md:grid-cols-4'>
                 {VEHICLE_CATEGORIES.map(v => (
                     <button
                     key={v.id}

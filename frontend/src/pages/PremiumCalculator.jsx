@@ -451,6 +451,7 @@ const PremiumCalculator = () => {
                     manufacturingYear={manufacturingYear}
                     selectedCategory={selectedCategory}
                     subtype={subtype}
+                    gvw={gvw}
                   />
                 )}
               </div>

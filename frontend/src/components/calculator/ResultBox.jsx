@@ -10,6 +10,7 @@ const ResultBox = ({
   result,
   policyType, vehicleType, isElectric, cc, kwPower, idv, ncb, odDiscount,
   zone, vehicleAge, manufacturingYear, selectedCategory, gstEnabled, subtype,
+  gvw,
 }) => {
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [pdfUrl, setPdfUrl] = useState('')
@@ -159,9 +160,11 @@ const ResultBox = ({
       year: 'numeric',
     })
 
-    const vehicleSpec = isElectric
-      ? `${kwPower || 0} KW (Electric)`
-      : `${cc || 0} CC (Petrol/Diesel/CNG)`
+    const vehicleSpec = vehicleType === 'gcv' && gvw
+      ? `GVW ${gvw} kg`
+      : isElectric
+        ? `${kwPower || 0} KW (Electric)`
+        : `${cc || 0} CC (Petrol/Diesel/CNG)`
 
     const policyLabel = policyType === 'od' ? 'Own Damage Only' :
                         policyType === 'tp' ? 'Third Party Only' :

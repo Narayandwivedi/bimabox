@@ -123,6 +123,13 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Renewal tracking
+  renewalStatus: {
+    type: String,
+    enum: ['pending', 'renewed', 'lost'],
+    default: 'pending'
+  },
+
   // WhatsApp message tracking
   whatsappMessageCount: {
     type: Number,

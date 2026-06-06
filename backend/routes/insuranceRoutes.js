@@ -16,5 +16,6 @@ router.put('/:id', controller.update)
 router.delete('/:id', controller.remove)
 router.patch('/:id/mark-as-paid', controller.markAsPaid)
 router.patch('/:id/whatsapp-increment', controller.incrementWhatsapp)
+router.patch('/:id/renewal-status', controller.updateRenewalStatus)
 
 module.exports = router

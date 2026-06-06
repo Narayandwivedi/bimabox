@@ -1595,7 +1595,7 @@ const PremiumCalculator = () => {
           <div className='space-y-4'>
             <div>
               <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle Sub-Type</label>
-              <div className='grid grid-cols-1 gap-2'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                 {TARIFF.gcv_3w.subtypes.map(st => (
                   <button key={st.id} onClick={() => setSubtype(st.id)}
                     className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>

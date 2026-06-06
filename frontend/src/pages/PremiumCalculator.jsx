@@ -299,7 +299,7 @@ const PremiumCalculator = () => {
         if (isElectric) {
           const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.two_wheeler.electricTP1yr[kwBracket] * 5
+            tpPremium = TARIFF.two_wheeler.electricTP5yr[kwBracket]
           } else {
             tpPremium = TARIFF.two_wheeler.electricTP1yr[kwBracket]
           }

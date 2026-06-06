@@ -1507,7 +1507,7 @@ const PremiumCalculator = () => {
               <ZoneSelector zones={['A', 'B', 'C']} />
               <AgeSelector />
             </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GVW (Gross Vehicle Weight in Kg)</label>
                 <input type='number' value={gvw} onChange={e => setGvw(e.target.value)} placeholder='e.g. 8000'
@@ -1515,8 +1515,6 @@ const PremiumCalculator = () => {
                 <p className='mt-1 text-[8px] text-slate-400'>≤7500 / 7501–12000 / 12001–20000 / 20001–40000 / {'>'}40000</p>
               </div>
               <IDVInput idv={idv} setIdv={setIdv} />
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
                 <select
@@ -1528,6 +1526,8 @@ const PremiumCalculator = () => {
                   <option value="400">₹400 – Extend Coverage</option>
                 </select>
               </div>
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
                 <select

@@ -623,6 +623,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddFitnessModal(false)
+            toast.success('Fitness record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}
@@ -638,6 +639,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddTaxModal(false)
+            toast.success('Tax record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}
@@ -653,6 +655,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddPucModal(false)
+            toast.success('PUC record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}
@@ -668,6 +671,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddGpsModal(false)
+            toast.success('GPS record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}
@@ -683,6 +687,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddPermitModal(false)
+            toast.success('Permit record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}

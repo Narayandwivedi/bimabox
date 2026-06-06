@@ -41,16 +41,31 @@ const generatePdf = async (req, res) => {
     let y = 40
 
     // ── Header Block ────────────────────────────────────────────────────────
-    doc.rect(40, y, pageWidth, 65).fillColor('#1e3a8a').fill()
-    
-    doc.fontSize(18).font('Helvetica-Bold').fillColor('#ffffff').text('BIMABOX General Insurance Limited', 50, y + 15)
-    doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text('Indian Motor Tariff Rates Quote  •  IRDAI Approved Rates', 50, y + 38)
-    
-    // Quote ID & Date on Right Side
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#ffffff').text(`Quote ID: ${quoteId}`, 360, y + 16, { align: 'right', width: 145 })
-    doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text(`Quote Date: ${dateStr}`, 360, y + 36, { align: 'right', width: 145 })
+    const logoPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'bimalogo.png')
 
-    y += 75
+    // Light header with a blue bottom accent line
+    doc.rect(40, y, pageWidth, 70).fillColor('#ffffff').fill()
+    doc.rect(40, y, pageWidth, 70).strokeColor('#e2e8f0').lineWidth(1).stroke()
+    doc.rect(40, y + 68, pageWidth, 3).fillColor('#003afd').fill()
+
+    // Logo image (left side)
+    const logoSize = 48
+    if (require('fs').existsSync(logoPath)) {
+      doc.image(logoPath, 52, y + 11, { height: logoSize, fit: [logoSize, logoSize] })
+    }
+
+    // Brand Name: "Bima" (dark/black) + "Box" (blue #003afd)
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#0f172a').text('Bima', 112, y + 14, { continued: true })
+    doc.fillColor('#003afd').text('Box', { continued: false })
+
+    // Tagline
+    doc.fontSize(8.5).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 112, y + 40)
+
+    // Quote ID & Date on Right Side (dark text on light bg)
+    doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e293b').text(`Quote ID: ${quoteId}`, 360, y + 18, { align: 'right', width: 145 })
+    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(`Date: ${dateStr}`, 360, y + 34, { align: 'right', width: 145 })
+
+    y += 82
 
     // Quote Subtitle
     const categoryUpper = (data.vehicleCategory || 'MOTOR').toUpperCase()
@@ -146,13 +161,19 @@ const generatePdf = async (req, res) => {
     }
     const finalOD = premiums.finalOd || 0
 
+    const addonRows = [
+      ['Zero Depreciation', fmt(premiums.zeroDep || 0)],
+      ['Roadside Assistance (RSA)', fmt(premiums.rsa || 0)],
+      ['Other Addon Coverage', fmt(premiums.otherAddon || 0)]
+    ]
+    const finalAddon = (premiums.zeroDep || 0) + (premiums.rsa || 0) + (premiums.otherAddon || 0)
+
     const tpRows = []
     if (premiums.tp > 0) {
       tpRows.push(['Liability Premium (TP)', fmt(premiums.tp + premiums.restrictedTPPD)])
       if (premiums.restrictedTPPD > 0) {
         tpRows.push(['Restricted TPPD Discount', `-${fmt(premiums.restrictedTPPD)}`])
       }
-      // Always show PA to Owner Driver even if 0
       tpRows.push(['PA to Owner Driver', fmt(premiums.paOd || 0)])
       if (premiums.llPd > 0) tpRows.push(['LL to Paid Driver', fmt(premiums.llPd)])
       if (premiums.llEmployee > 0) tpRows.push(['LL to Employee', fmt(premiums.llEmployee)])
@@ -160,8 +181,8 @@ const generatePdf = async (req, res) => {
     }
     const finalTP = (premiums.tp || 0) + (premiums.llPd || 0) + (premiums.paOd || 0) + (premiums.llEmployee || 0) + (premiums.paUnnamed || 0)
 
-    const drawBreakupColumn = (x, title, rows, totalVal, totalLabel) => {
-      let cy = tableY
+    const drawBreakupColumn = (x, startY, title, rows, minRows = 5) => {
+      let cy = startY
       
       // Column Header
       doc.rect(x, cy, colWidth, 18).fillColor('#f1f5f9').fill()
@@ -172,7 +193,7 @@ const generatePdf = async (req, res) => {
       const rowH = 16
 
       // Empty states or padded table rows
-      const totalRowsToDraw = Math.max(rows.length, 6)
+      const totalRowsToDraw = Math.max(rows.length, minRows)
       for (let i = 0; i < totalRowsToDraw; i++) {
         doc.rect(x, cy, colWidth, rowH).strokeColor('#f1f5f9').stroke()
         if (rows[i]) {
@@ -183,19 +204,32 @@ const generatePdf = async (req, res) => {
         cy += rowH
       }
 
-      // Column Subtotal
-      doc.rect(x, cy, colWidth, 20).fillColor('#eff6ff').fill()
-      doc.rect(x, cy, colWidth, 20).strokeColor('#bfdbfe').stroke()
-      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e40af').text(totalLabel, x + 8, cy + 6)
-      doc.text(fmt(totalVal), x + colWidth - 85, cy + 6, { align: 'right', width: 77 })
-
-      return cy + 20
+      return cy
     }
 
-    const odEndY = drawBreakupColumn(40, 'Own Damage Premium (A) Rupees', odRows, finalOD, 'Net Own Damage Premium (A)')
-    const tpEndY = drawBreakupColumn(40 + colWidth + 15, 'Liability Premium (B) Rupees', tpRows, finalTP, 'Total Liability Premium (B)')
+    const drawSubtotalBox = (x, yCoord, label, totalVal) => {
+      doc.rect(x, yCoord, colWidth, 20).fillColor('#eff6ff').fill()
+      doc.rect(x, yCoord, colWidth, 20).strokeColor('#bfdbfe').stroke()
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e40af').text(label, x + 8, yCoord + 6)
+      doc.text(fmt(totalVal), x + colWidth - 85, yCoord + 6, { align: 'right', width: 77 })
+    }
 
-    y = Math.max(odEndY, tpEndY) + 18
+    const odRowsEndY = drawBreakupColumn(40, tableY, 'Own Damage Premium (A) Rupees', odRows, 11)
+    
+    // Addon column
+    const addonRowsEndY = drawBreakupColumn(40 + colWidth + 15, tableY, 'Addon Coverage (B) Rupees', addonRows, 3)
+    drawSubtotalBox(40 + colWidth + 15, addonRowsEndY, 'Total Addon Premium (B)', finalAddon)
+    const addonSubtotalEndY = addonRowsEndY + 20
+
+    // Liability column
+    const tpRowsEndY = drawBreakupColumn(40 + colWidth + 15, addonSubtotalEndY + 12, 'Liability Premium (C) Rupees', tpRows, 4)
+
+    // Align OD and TP subtotals on the same line
+    const finalSubtotalY = Math.max(odRowsEndY, tpRowsEndY)
+    drawSubtotalBox(40, finalSubtotalY, 'Net Own Damage Premium (A)', finalOD)
+    drawSubtotalBox(40 + colWidth + 15, finalSubtotalY, 'Total Liability Premium (C)', finalTP)
+
+    y = finalSubtotalY + 20 + 18
 
     // ── Totals Section ─────────────────────────────────────────────────────
     doc.rect(40, y, pageWidth, 56).fillColor('#f8fafc').fill()
@@ -207,14 +241,14 @@ const generatePdf = async (req, res) => {
       doc.text(value, 360, y + offset, { align: 'right', width: 145 })
     }
 
-    const netPrem = data.netPremium || (finalOD + finalTP)
+    const netPrem = data.netPremium || (finalOD + finalAddon + finalTP)
     const gstData = data.gst || {}
     let gstLabel = `GST (${gstData.enabled ? '18%' : '0%'})`
     if (gstData.hasSplitGst) {
       gstLabel = `GST (TP @ 5% + Other @ 18%)`
     }
 
-    drawTotalRow('Total Premium Before Tax (A+B)', fmt(netPrem), false, 6)
+    drawTotalRow('Premium before GST (A+B+C)', fmt(netPrem), false, 6)
     drawTotalRow(gstLabel, fmt(gstData.totalGst || 0), false, 22)
     
     // Horizontal divider

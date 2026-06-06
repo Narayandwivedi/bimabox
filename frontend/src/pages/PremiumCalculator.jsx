@@ -424,11 +424,13 @@ const PremiumCalculator = () => {
                         </select>
                       </div>
                       )}
+                      {vehicleType !== 'private_car' && (
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (₹)</label>
                         <input type='number' value={llToEmployee} onChange={e => setLlToEmployee(e.target.value)} placeholder='e.g. 50'
                           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                       </div>
+                      )}
                     </div>
                     <div className='flex items-center gap-3 pt-2'>
                       <label className='flex items-center gap-2 cursor-pointer'>

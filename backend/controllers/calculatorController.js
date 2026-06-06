@@ -159,7 +159,7 @@ const generatePdf = async (req, res) => {
         odRows.push(['Geographical Extent', fmt(premiums.geoExtent)])
       }
       if (premiums.gcvExtraUnits > 0) {
-        odRows.push([`Extra Weight >12,000 kg (${premiums.gcvExtraUnits} units × Rs. 27)`, fmt(premiums.gcvExtraPremium)])
+        odRows.push([`Extra Weight > 12000 Premium`, fmt(premiums.gcvExtraPremium)])
       }
     }
     const finalOD = premiums.finalOd || 0

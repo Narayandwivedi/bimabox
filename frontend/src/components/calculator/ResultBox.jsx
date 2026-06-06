@@ -308,7 +308,7 @@ const ResultBox = ({
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of OD)', `₹${fmtD(result.imt23Amount)}`]] : []),
               ...(result.geoExtentAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? [
-                [`Extra Weight >12,000 kg (${result.details.gcvExtraUnits} units × ₹27)`, `₹${fmtD(result.details.gcvExtraPremium)}`],
+                [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),
               ['Total OD Premium', `₹${fmtD(result.odPremium)}`, 'font-black text-blue-700'],
             ].map(([label, value, cls], i) => {

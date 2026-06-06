@@ -137,9 +137,12 @@ const PremiumCalculator = () => {
         const brackets = [7500, 12000, 20000, 40000, Infinity]
         const idx = brackets.findIndex(b => gvwVal <= b)
         const gvwIdx = idx >= 0 ? idx : 4
-        tpPremium = TARIFF.gcv.tpByGVW[gvwIdx] + (gvwVal > 12000 ? Math.ceil((gvwVal - 12000) / 100) * TARIFF.gcv.extraPer100kg : 0)
+        const gcvBaseTP = TARIFF.gcv.tpByGVW[gvwIdx]
+        const gcvExtraUnits = gvwVal > 12000 ? Math.floor((gvwVal - 12000) / 100) : 0
+        const gcvExtraPremium = gcvExtraUnits * TARIFF.gcv.extraPer100kg
+        tpPremium = gcvBaseTP  // extra weight goes to OD side
         odRate = TARIFF.gcv.odRates[vehicleAge][zone]
-        details = { label: `GVW ${gvwVal} kg` }
+        details = { label: `GVW ${gvwVal} kg`, gcvBaseTP, gcvExtraUnits, gcvExtraPremium }
         break
       }
       case 'gcv_3w': {
@@ -203,6 +206,10 @@ const PremiumCalculator = () => {
         odPremium = idvVal * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
         odPremium = odPremium * (1 - odDiscountVal / 100)
+      }
+      // Add GCV extra weight premium to OD side (comprehensive only)
+      if (vehicleType === 'gcv' && coverageType === 'comprehensive' && details?.gcvExtraPremium > 0) {
+        odPremium += details.gcvExtraPremium
       }
       if (coverageType === 'tp') odPremium = 0
     }

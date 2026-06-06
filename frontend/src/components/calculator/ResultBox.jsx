@@ -303,12 +303,15 @@ const ResultBox = ({
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of OD)', `₹${fmtD(result.imt23Amount)}`]] : []),
               ...(result.geoExtentAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ['Total OD Premium', `₹${fmtD(result.odPremium)}`, 'font-black text-blue-700'],
-            ].map(([label, value, cls], i) => (
-              <div key={i} className={`flex items-center justify-between ${i === 0 ? '' : 'border-t border-blue-100/50 pt-1.5'} ${i === 0 ? '' : ''} ${i === 0 ? '' : ''}`}>
-                <p className='text-[9px] sm:text-[10px] font-bold text-slate-500'>{label}</p>
-                <p className={`text-[10px] sm:text-[11px] font-bold text-slate-800 ${cls || ''}`}>{value}</p>
-              </div>
-            ))}
+            ].map(([label, value, cls], i) => {
+              const isTotal = label === 'Total OD Premium'
+              return (
+                <div key={i} className={`flex items-center justify-between ${i === 0 ? '' : 'border-t border-blue-100/50 pt-1.5'} ${isTotal ? 'rounded-lg bg-blue-100/80 px-3 py-2 -mx-2 border-t border-blue-200/70 mt-1.5' : ''}`}>
+                  <p className={`text-[10px] sm:text-[11px] ${isTotal ? 'font-black text-blue-900' : 'font-bold text-slate-500'}`}>{label}</p>
+                  <p className={`${isTotal ? 'text-sm sm:text-base font-black text-blue-700' : 'text-[10px] sm:text-[11px] font-bold text-slate-800'}`}>{value}</p>
+                </div>
+              )
+            })}
           </div>
         )}
 
@@ -334,6 +337,10 @@ const ResultBox = ({
                 <p className='text-[10px] sm:text-[11px] font-bold text-slate-800'>{value}</p>
               </div>
             ))}
+            <div className='flex items-center justify-between rounded-lg bg-rose-100/80 px-3 py-2 -mx-2 border-t border-rose-200/70 mt-1.5'>
+              <p className='text-[10px] sm:text-[11px] font-black text-rose-900'>Total TP & Liability Premium</p>
+              <p className='text-sm sm:text-base font-black text-rose-700'>₹{fmtD(result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.paUnnamedAmount)}</p>
+            </div>
           </div>
         )}
 
@@ -355,6 +362,10 @@ const ResultBox = ({
                 <p className='text-[10px] sm:text-[11px] font-bold text-slate-800'>{value}</p>
               </div>
             ))}
+            <div className='flex items-center justify-between rounded-lg bg-amber-100/80 px-3 py-2 -mx-2 border-t border-amber-200/70 mt-1.5'>
+              <p className='text-[10px] sm:text-[11px] font-black text-amber-900'>Total Add-on Premium</p>
+              <p className='text-sm sm:text-base font-black text-amber-700'>₹{fmtD(result.rsaAmount + result.otherAddonAmount + (vehicleType !== 'gcv' ? result.geoExtentAmount : 0) + result.zeroDepAmount)}</p>
+            </div>
           </div>
         )}
 

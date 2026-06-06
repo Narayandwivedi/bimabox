@@ -143,7 +143,12 @@ const Home = () => {
         }
       })
 
-      allDocs.sort((a, b) => a.daysLeft - b.daysLeft)
+      allDocs.sort((a, b) => {
+        const aExpired = a.daysLeft < 0 ? 1 : 0
+        const bExpired = b.daysLeft < 0 ? 1 : 0
+        if (aExpired !== bExpired) return aExpired - bExpired
+        return a.daysLeft - b.daysLeft
+      })
       setRealExpiringDocs(allDocs)
     } catch (error) {
       console.error('Error fetching expiring documents:', error)
@@ -301,7 +306,7 @@ const Home = () => {
                   (doc.vehicleNumber.toUpperCase().includes(searchQuery.toUpperCase()) || 
                    doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && 
                   doc.daysLeft <= expiryFilter
-                )
+                ).slice(0, 12)
 
                 return (
                   <>

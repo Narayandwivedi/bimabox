@@ -313,7 +313,7 @@ const PremiumCalculator = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-1 pb-24 pt-4 sm:px-4 md:px-6'>
+    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-0 pb-24 pt-4 sm:px-4 md:px-6'>
       <div className='mx-auto max-w-6xl'>
 
         {step === 1 && (
@@ -327,7 +327,7 @@ const PremiumCalculator = () => {
 
         {step === 2 && selectedCategory && (
           <div className='animate-in fade-in slide-in-from-right-6 duration-300'>
-            <div className='rounded-[32px] border border-slate-200 bg-white p-5 sm:p-7 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
+            <div className='rounded-[32px] border border-slate-200 bg-white p-3 sm:p-7 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
               <div className='mb-5 flex items-center gap-3'>
                 <button
                   onClick={() => { setStep(1); setResult(null) }}

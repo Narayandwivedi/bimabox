@@ -298,9 +298,11 @@ const PremiumCalculator = () => {
       case 'two_wheeler': {
         if (isElectric) {
           const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
-          tpPremium = policyTerm === '5yr'
-            ? TARIFF.two_wheeler.electricTP1yr[kwBracket] * 5
-            : TARIFF.two_wheeler.electricTP1yr[kwBracket]
+          if (policyType === 'bundle') {
+            tpPremium = TARIFF.two_wheeler.electricTP1yr[kwBracket] * 5
+          } else {
+            tpPremium = TARIFF.two_wheeler.electricTP1yr[kwBracket]
+          }
           odRate = 1.5 // Electric OD rate (approximate)
           details = { label: kwVal < 3 ? '<3 KW' : kwVal <= 7 ? '3–7 KW' : kwVal <= 16 ? '7–16 KW' : '>16 KW', isElec: true }
         } else {
@@ -1520,13 +1522,16 @@ const PremiumCalculator = () => {
               </>
             ) : (
               <>
-                <div>
-                  <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
-                  <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 5'
-                    className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                  <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
+                <PolicyTypeSelector />
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                  <div>
+                    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
+                    <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 5'
+                      className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                    <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
+                  </div>
+                  <IDVInput idv={idv} setIdv={setIdv} />
                 </div>
-                <IDVInput idv={idv} setIdv={setIdv} />
                 <div>
                   <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Policy Term</label>
                   <div className='flex gap-1.5 rounded-2xl bg-slate-200 p-1'>

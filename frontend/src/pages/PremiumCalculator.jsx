@@ -66,7 +66,6 @@ const PremiumCalculator = () => {
     setVehicleAge('upto_5')
     setCoverageType('comprehensive')
     setPolicyType('comprehensive')
-    setGstEnabled(true)
     setOdDiscount('')
     setPolicyTerm('1yr')
     setManufacturingYear('')

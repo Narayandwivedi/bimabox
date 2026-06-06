@@ -16,6 +16,7 @@ router.post('/logout', controller.logout)
 router.post('/admin/login', controller.adminLogin)
 router.get('/admin/profile', requireAdminAuth, controller.adminProfile)
 router.post('/admin/logout', controller.adminLogout)
+router.post('/admin/access-user/:id', requireAdminAuth, controller.accessUser)
 router.post('/admin/change-password', requireAdminAuth, controller.changeAdminPassword)
 
 module.exports = router

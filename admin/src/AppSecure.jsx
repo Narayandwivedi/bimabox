@@ -622,6 +622,24 @@ function AppSecure() {
     }
   }
 
+  const [accessingUserId, setAccessingUserId] = useState(null)
+
+  const handleAccessUser = async (user) => {
+    try {
+      setAccessingUserId(user._id)
+      const result = await apiFetch(`/api/auth/admin/access-user/${user._id}`, {
+        method: 'POST',
+      })
+      const redirectUrl = result.data?.redirectUrl || 'https://bimabox.in'
+      window.open(redirectUrl, '_blank')
+    } catch (error) {
+      console.error('Error accessing user:', error)
+      alert(error.message || 'Failed to access user account')
+    } finally {
+      setAccessingUserId(null)
+    }
+  }
+
   const openAddUserModal = () => {
     setFormData(initialForm)
     setMessage({ type: '', text: '' })
@@ -783,6 +801,15 @@ function AppSecure() {
                             </td>
                             <td>
                               <div className="flex gap-2" style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                  type="button"
+                                  className="secondary-btn table-btn"
+                                  style={{ borderColor: '#6ee7b7', color: '#065f46' }}
+                                  onClick={() => handleAccessUser(user)}
+                                  disabled={accessingUserId === user._id}
+                                >
+                                  {accessingUserId === user._id ? 'Redirecting...' : 'Access'}
+                                </button>
                                 <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
                                   Edit
                                 </button>

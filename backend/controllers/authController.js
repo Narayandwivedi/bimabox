@@ -300,6 +300,33 @@ const updateMobile = async (req, res) => {
   }
 }
 
+const accessUser = async (req, res) => {
+  try {
+    const { id } = req.params
+    const user = await User.findById(id)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    user.lastLogin = new Date()
+    await user.save()
+
+    const token = signToken({ userId: String(user._id), type: 'user' })
+    res.setHeader('Set-Cookie', buildAuthCookie(token))
+
+    res.json({
+      success: true,
+      data: {
+        userId: user._id,
+        redirectUrl: process.env.MAIN_APP_URL || 'https://bimabox.in',
+      },
+    })
+  } catch (error) {
+    console.error('Access user error:', error)
+    res.status(500).json({ success: false, message: 'Failed to access user' })
+  }
+}
+
 module.exports = {
   login,
   register,
@@ -311,4 +338,5 @@ module.exports = {
   adminLogout,
   changeAdminPassword,
   googleLogin,
+  accessUser,
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import * as XLSX from 'xlsx'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -151,6 +152,28 @@ const Search = () => {
     setFilterProductType('')
     setFilterPolicyType('')
     setFilterValidity('')
+  }
+
+  const handleExport = () => {
+    if (!filteredRecords.length) return
+    const exportData = filteredRecords.map((r) => ({
+      'Vehicle Number': r.vehicleNumber || 'N/A',
+      'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
+      'Mobile': r.mobileNumber || '',
+      'Insurance Company': r.insuranceCompany || '',
+      'Product': r.product || '',
+      'Policy Type': r.insuranceClass || '',
+      'Policy Number': r.policyNumber || '',
+      'Premium': r.premium ?? '',
+      'Valid From': r.validFrom || r.taxFrom || '',
+      'Valid To': r.validTo || r.taxTo || '',
+      'Remarks': r.remarks || '',
+      'Reference': r.reference || '',
+    }))
+    const ws = XLSX.utils.json_to_sheet(exportData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Records')
+    XLSX.writeFile(wb, `${filterType}_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   // Validity filter applied client-side on loaded records
@@ -582,15 +605,28 @@ const Search = () => {
               {/* Results */}
               {!loading && records.length > 0 && (
                 <>
-                  <div className='mt-6 mb-3 flex items-center justify-between'>
+                  <div className='mt-6 mb-3 flex items-center justify-between flex-wrap gap-2'>
                     <p className='text-xs font-bold text-slate-500'>
                       Showing <span className='text-slate-800'>{filteredRecords.length}</span> of <span className='text-slate-800'>{totalRecords}</span> results
                     </p>
-                    {activeFilterCount > 0 && (
-                      <span className='text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg'>
-                        {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} applied
-                      </span>
-                    )}
+                    <div className='flex items-center gap-2'>
+                      {filteredRecords.length > 0 && (
+                        <button
+                          onClick={handleExport}
+                          className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
+                        >
+                          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                          </svg>
+                          Export Excel
+                        </button>
+                      )}
+                      {activeFilterCount > 0 && (
+                        <span className='text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg'>
+                          {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} applied
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {filteredRecords.length === 0 && filterValidity && (

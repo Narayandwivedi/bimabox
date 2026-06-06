@@ -28,7 +28,6 @@ const PremiumCalculator = () => {
   const [ncb, setNcb] = useState(0)
   const [coverageType, setCoverageType] = useState('comprehensive')
   const [policyType, setPolicyType] = useState('comprehensive')
-  const [gstEnabled, setGstEnabled] = useState(true)
   const [odDiscount, setOdDiscount] = useState('')
 
   const [cc, setCc] = useState('')
@@ -228,17 +227,15 @@ const PremiumCalculator = () => {
     let gstNonTp = 0
     let gstTpRate = 18
     let gstNonTpRate = 18
-    if (gstEnabled) {
-      const isGCV = vehicleType === 'gcv'
-      if (isGCV) {
-        gstTpRate = 5
-        gstNonTpRate = 18
-        gstTp = tpPremium * 0.05
-        gstNonTp = (netPremium - tpPremium) * 0.18
-        gst = gstTp + gstNonTp
-      } else {
-        gst = netPremium * 0.18
-      }
+    const isGCV = vehicleType === 'gcv'
+    if (isGCV) {
+      gstTpRate = 5
+      gstNonTpRate = 18
+      gstTp = tpPremium * 0.05
+      gstNonTp = (netPremium - tpPremium) * 0.18
+      gst = gstTp + gstNonTp
+    } else {
+      gst = netPremium * 0.18
     }
     const totalPremium = netPremium + gst
 
@@ -284,7 +281,7 @@ const PremiumCalculator = () => {
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
 
   const formProps = {
     zone, setZone, vehicleAge, setVehicleAge, idv, setIdv,
@@ -427,11 +424,7 @@ const PremiumCalculator = () => {
                       )}
                     </div>
                     <div className='flex items-center gap-3 pt-2'>
-                      <label className='flex items-center gap-2 cursor-pointer'>
-                        <input type='checkbox' checked={gstEnabled} onChange={e => setGstEnabled(e.target.checked)}
-                          className='h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500' />
-                        <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Apply GST (18%)</span>
-                      </label>
+                      <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GST (18%) included</span>
                     </div>
                   </div>
                 </div>
@@ -451,7 +444,6 @@ const PremiumCalculator = () => {
                     vehicleAge={vehicleAge}
                     manufacturingYear={manufacturingYear}
                     selectedCategory={selectedCategory}
-                    gstEnabled={gstEnabled}
                     subtype={subtype}
                   />
                 )}

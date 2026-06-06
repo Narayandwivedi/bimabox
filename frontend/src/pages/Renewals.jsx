@@ -191,7 +191,7 @@ const Renewals = () => {
                           </div>
                           {isResolved ? (
                             <button
-                              onClick={() => handleStatusChange(policy._id, 'pending')}
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
                               className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
                             >
                               Reset
@@ -199,7 +199,7 @@ const Renewals = () => {
                           ) : (
                             <div className='flex items-center gap-2'>
                               <button
-                                onClick={() => handleStatusChange(policy._id, 'renewed')}
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
                                 className='flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
                               >
                                 <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -208,7 +208,7 @@ const Renewals = () => {
                                 Done
                               </button>
                               <button
-                                onClick={() => handleStatusChange(policy._id, 'lost')}
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
                                 className='flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-all'
                               >
                                 <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -276,7 +276,7 @@ const Renewals = () => {
                             <td className='px-4 py-2'>
                               {isResolved ? (
                                 <button
-                                  onClick={() => handleStatusChange(policy._id, 'pending')}
+                                  onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
                                   className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
                                 >
                                   Reset
@@ -284,7 +284,7 @@ const Renewals = () => {
                               ) : (
                                 <div className='flex items-center gap-1'>
                                   <button
-                                    onClick={() => handleStatusChange(policy._id, 'renewed')}
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
                                     className='flex items-center gap-0.5 rounded-lg bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
                                   >
                                     <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -293,7 +293,7 @@ const Renewals = () => {
                                     Done
                                   </button>
                                   <button
-                                    onClick={() => handleStatusChange(policy._id, 'lost')}
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
                                     className='flex items-center gap-0.5 rounded-lg bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all'
                                   >
                                     <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

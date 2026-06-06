@@ -316,11 +316,6 @@ const PremiumCalculator = () => {
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-3 pb-24 pt-4 sm:px-4 md:px-6'>
       <div className='mx-auto max-w-6xl'>
 
-        <div className='flex items-center gap-3 mb-6'>
-          <img src='/bimalogo.png' alt='BIMABOX' className='h-8 w-auto' />
-          <span className='text-lg sm:text-xl font-black text-slate-800 tracking-tight'>bimabox</span>
-        </div>
-
         {step === 1 && (
           <div className='mb-4'>
             <h1 className='text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>

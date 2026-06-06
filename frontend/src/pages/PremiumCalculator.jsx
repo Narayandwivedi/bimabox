@@ -1518,7 +1518,7 @@ const PremiumCalculator = () => {
             </div>
             <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
-                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
                 <select
                   value={geoExtent}
                   onChange={e => setGeoExtent(e.target.value)}
@@ -1569,7 +1569,7 @@ const PremiumCalculator = () => {
             <IDVInput idv={idv} setIdv={setIdv} />
             <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
-                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Extent (₹)</label>
+                <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
                 <select
                   value={geoExtent}
                   onChange={e => setGeoExtent(e.target.value)}

@@ -50,31 +50,12 @@ const GCV3WForm = ({
       </div>
       <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
       <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
-        {!isElectric ? (
-          <div>
-            <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine Capacity (CC)</label>
-            <input
-              type='number'
-              value={cc}
-              onChange={e => setCc(e.target.value)}
-              placeholder='e.g. 250'
-              min={0}
-              className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
-            />
-          </div>
-        ) : (
-          <div>
-            <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
-            <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 15'
-              className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all' />
-          </div>
-        )}
         <IDVInput idv={idv} setIdv={setIdv} />
         <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
-      </div>
-      <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
+      </div>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
           <select

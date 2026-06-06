@@ -52,6 +52,7 @@ const TARIFF = {
     // CC brackets: 0=<=75, 1=76-150, 2=151-350, 3=>350
     tpByCC: [538, 714, 1366, 2804],
     tpLongTerm: [6521, 10640, 24596, null],
+    tpBundle5yr: [2901, 3851, 7365, 15117],
     // OD bracket: 0=<=150CC, 1=151-350CC, 2=>350CC
     odRates: {
       upto_5: { A: [1.708, 1.793, 1.879], B: [1.676, 1.760, 1.844] },
@@ -306,7 +307,7 @@ const PremiumCalculator = () => {
           const ccBracket = get2WCCBracket(ccVal)
           const odBracket = get2WODBracket(ccVal)
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket] * 5
+            tpPremium = TARIFF.two_wheeler.tpBundle5yr[ccBracket]
           } else {
             tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket]
           }
@@ -776,7 +777,7 @@ const PremiumCalculator = () => {
       if (result.zeroDepAmount > 0) {
         tableRows += `
           <tr>
-            <td>Zero Dep (5% of IDV)</td>
+            <td>Zero Depreciation</td>
             <td class="text-right">-</td>
             <td class="text-right">₹${fmtD(result.zeroDepAmount)}</td>
           </tr>
@@ -1225,7 +1226,7 @@ const PremiumCalculator = () => {
                 )}
                 {result.zeroDepAmount > 0 && (
                   <div className='flex items-center justify-between text-xs'>
-                    <p className='font-bold text-slate-500'>Zero Dep (5% of IDV)</p>
+                    <p className='font-bold text-slate-500'>Zero Depreciation</p>
                     <p className='font-black text-slate-800'>₹{fmtD(result.zeroDepAmount)}</p>
                   </div>
                 )}
@@ -1322,7 +1323,7 @@ const PremiumCalculator = () => {
                   if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
                   if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
                   if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
-                  if (result.zeroDepAmount > 0) msg += `Zero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}\n`
+                  if (result.zeroDepAmount > 0) msg += `Zero Depreciation: ₹${fmtD(result.zeroDepAmount)}\n`
                   if (result.imt23Amount > 0) msg += `IMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}\n`
                   if (result.gstTpRate === 5) {
                     msg += `GST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}\n`
@@ -1368,7 +1369,7 @@ const PremiumCalculator = () => {
                   if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
                   if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
                   if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
-                  if (result.zeroDepAmount > 0) shareText += `\nZero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}`
+                  if (result.zeroDepAmount > 0) shareText += `\nZero Depreciation: ₹${fmtD(result.zeroDepAmount)}`
                   if (result.imt23Amount > 0) shareText += `\nIMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}`
                   if (result.gstTpRate === 5) {
                     shareText += `\nGST on TP @ 5%: ₹${fmtD(result.gstTp)}\nGST on Other @ 18%: ₹${fmtD(result.gstNonTp)}`
@@ -1501,11 +1502,9 @@ const PremiumCalculator = () => {
             {!isElectric ? (
               <>
                 <PolicyTypeSelector />
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
                   <ZoneSelector zones={['A', 'B']} />
                   <AgeSelector />
-                </div>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div>
                     <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
                     <input type='number' value={cc} onChange={e => setCc(e.target.value)} placeholder='e.g. 125'

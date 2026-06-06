@@ -341,7 +341,9 @@ const Home = () => {
                                 <p className='text-[10px] font-mono text-slate-500'>{doc.vehicleNumber}</p>
                               </div>
                               <div className='text-right'>
-                                <p className={`text-[11px] font-black ${doc.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'}`}>
+                                <p className={`text-[11px] font-black ${
+                                  doc.daysLeft < 0 ? 'text-red-600' : doc.daysLeft <= 2 ? 'text-orange-600' : 'text-amber-600'
+                                }`}>
                                   {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
                                 </p>
                                 <p className='text-[10px] text-slate-400'>{doc.validTo}</p>
@@ -390,7 +392,13 @@ const Home = () => {
                                       <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
                                     </div>
                                   </div>
-                                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${doc.daysLeft <= 5 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                                    doc.daysLeft < 0
+                                      ? 'bg-red-50 text-red-600 border border-red-100'
+                                      : doc.daysLeft <= 2
+                                      ? 'bg-orange-50 text-orange-600 border border-orange-100'
+                                      : 'bg-amber-50 text-amber-600 border border-amber-100'
+                                  }`}>
                                     {doc.daysLeft < 0 ? 'Expired' : doc.daysLeft === 0 ? 'Today' : `${doc.daysLeft}d left`}
                                   </span>
                                 </div>

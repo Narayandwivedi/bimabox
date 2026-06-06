@@ -212,6 +212,7 @@ const PremiumCalculator = () => {
   const [rsa, setRsa] = useState('')
   const [geoExtent, setGeoExtent] = useState('0')
   const [imt23, setImt23] = useState('no')
+  const [restrictedTPPD, setRestrictedTPPD] = useState('no')
   const [zeroDep, setZeroDep] = useState('0')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
@@ -414,8 +415,10 @@ const PremiumCalculator = () => {
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
-    const imt23Amount = imt23 === 'yes' ? odPremium * 0.15 : 0
+    const imt23Amount = imt23 === 'yes' ? (odPremium + (vehicleType === 'gcv' ? geoExtentAmount : 0)) * 0.15 : 0
     const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
+    const restrictedTPPDDiscount = restrictedTPPD === 'yes' && vehicleType === 'gcv' ? Math.min(tpPremium, 200) : 0
+    tpPremium -= restrictedTPPDDiscount
 
     const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + imt23Amount + zeroDepAmount
 
@@ -450,6 +453,7 @@ const PremiumCalculator = () => {
       geoExtentAmount,
       imt23Amount,
       zeroDepAmount,
+      restrictedTPPDDiscount,
       gst,                                // raw
       gstTp,
       gstNonTp,
@@ -467,7 +471,7 @@ const PremiumCalculator = () => {
     if (vehicleType) {
       calculatePremium()
     }
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, zeroDep, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, gstEnabled, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
 
   const ChevronDown = () => (
     <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -662,11 +666,20 @@ const PremiumCalculator = () => {
             </tr>
           `
         }
+        if (result.geoExtentAmount > 0 && vehicleType === 'gcv') {
+          tableRows += `
+            <tr>
+              <td>Geographical Extent</td>
+              <td class="text-right">-</td>
+              <td class="text-right">₹${fmtD(result.geoExtentAmount)}</td>
+            </tr>
+          `
+        }
         tableRows += `
           <tr style="font-weight: bold; background-color: #f8fafc;">
             <td>Final Own Damage (OD) Premium</td>
             <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.odPremium + result.imt23Amount)}</td>
+            <td class="text-right">₹${fmtD(result.odPremium + result.imt23Amount + (vehicleType === 'gcv' ? result.geoExtentAmount : 0))}</td>
           </tr>
         `
       }
@@ -676,9 +689,18 @@ const PremiumCalculator = () => {
           <tr>
             <td>Third Party Liability (TP) Premium (${tpLabel})</td>
             <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.tpPremium)}</td>
+            <td class="text-right">₹${fmtD(result.tpPremium + result.restrictedTPPDDiscount)}</td>
           </tr>
         `
+        if (result.restrictedTPPDDiscount > 0) {
+          tableRows += `
+            <tr class="discount-text">
+              <td>Restricted TPPD Discount</td>
+              <td class="text-right">-</td>
+              <td class="text-right">- ₹${fmtD(result.restrictedTPPDDiscount)}</td>
+            </tr>
+          `
+        }
       }
 
       if (result.llPdAmount > 0) {
@@ -735,7 +757,7 @@ const PremiumCalculator = () => {
           </tr>
         `
       }
-      if (result.geoExtentAmount > 0) {
+      if (result.geoExtentAmount > 0 && vehicleType !== 'gcv') {
         tableRows += `
           <tr>
             <td>Geographical Extent</td>
@@ -1097,9 +1119,15 @@ const PremiumCalculator = () => {
                   <p className='font-black'>+ ₹{fmtD(result.imt23Amount)}</p>
                 </div>
               )}
+              {vehicleType === 'gcv' && result.geoExtentAmount > 0 && (
+                <div className='flex items-center justify-between text-xs text-slate-600'>
+                  <p className='font-bold'>Geographical Extent</p>
+                  <p className='font-black'>+ ₹{fmtD(result.geoExtentAmount)}</p>
+                </div>
+              )}
               <div className='flex items-center justify-between text-xs border-t border-blue-200 pt-2 mt-1'>
                 <p className='font-black text-blue-800'>Total OD Premium</p>
-                <p className='font-black text-blue-800'>₹{fmtD(result.odPremium + result.imt23Amount)}</p>
+                <p className='font-black text-blue-800'>₹{fmtD(result.odPremium + result.imt23Amount + (vehicleType === 'gcv' ? result.geoExtentAmount : 0))}</p>
               </div>
             </div>
           )}
@@ -1120,13 +1148,19 @@ const PremiumCalculator = () => {
                     ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium (Bundle)' : '3-Year TP Premium (Bundle)')
                     : '1-Year TP Premium'}
                 </p>
-                <p className='font-black text-amber-800'>₹{fmtD(result.tpPremium)}</p>
+                <p className='font-black text-amber-800'>₹{fmtD(result.tpPremium + result.restrictedTPPDDiscount)}</p>
               </div>
+              {result.restrictedTPPDDiscount > 0 && (
+                <div className='flex items-center justify-between text-xs text-emerald-600'>
+                  <p className='font-bold'>Restricted TPPD Discount</p>
+                  <p className='font-black'>- ₹{fmtD(result.restrictedTPPDDiscount)}</p>
+                </div>
+              )}
             </div>
           )}
 
           {/* ─── Add-on Coverages ─── */}
-          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || result.geoExtentAmount > 0 || result.imt23Amount > 0 || result.zeroDepAmount > 0) && (
+          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || (result.geoExtentAmount > 0 && vehicleType !== 'gcv') || result.imt23Amount > 0 || result.zeroDepAmount > 0) && (
             <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -1172,7 +1206,7 @@ const PremiumCalculator = () => {
                     <p className='font-black text-slate-800'>₹{fmtD(result.otherAddonAmount)}</p>
                   </div>
                 )}
-                {result.geoExtentAmount > 0 && (
+                {result.geoExtentAmount > 0 && vehicleType !== 'gcv' && (
                   <div className='flex items-center justify-between text-xs'>
                     <p className='font-bold text-slate-500'>Geographical Extent</p>
                     <p className='font-black text-slate-800'>₹{fmtD(result.geoExtentAmount)}</p>
@@ -1266,7 +1300,9 @@ const PremiumCalculator = () => {
                   }
                   if (showTP) {
                     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
-                    msg += `${tpL}: ₹${fmtD(result.tpPremium)}\n`
+                    const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
+                    msg += `${tpL}: ₹${fmtD(tpBefore)}\n`
+                    if (result.restrictedTPPDDiscount > 0) msg += `Restricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}\n`
                   }
                   if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
                   if (result.llEmployeeAmount > 0) msg += `LL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}\n`
@@ -1309,7 +1345,11 @@ const PremiumCalculator = () => {
 
                   let shareText = `INSURANCE QUOTATION – BIMABOX\nID: ${quoteId} | Date: ${dateStr}\n\nVehicle: ${selectedCategory ? selectedCategory.label : ''} | ${vehicleSpec} | Zone ${zone}\nPolicy: ${policyLabel} | IDV: ₹${fmtD(parseFloat(idv) || 0)} | NCB: ${ncb}%`
                   if (showOD) shareText += `\nOD Premium: ₹${fmtD(result.odPremium)}`
-                  if (showTP) shareText += `\nTP Premium: ₹${fmtD(result.tpPremium)}`
+                  if (showTP) {
+                    const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
+                    shareText += `\nTP Premium: ₹${fmtD(tpBefore)}`
+                    if (result.restrictedTPPDDiscount > 0) shareText += `\nRestricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}`
+                  }
                   if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
                   if (result.llEmployeeAmount > 0) shareText += `\nLL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}`
                   if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
@@ -1948,6 +1988,21 @@ const PremiumCalculator = () => {
                         <div />
                       )}
                     </div>
+                    {vehicleType === 'gcv' && (
+                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
+                        <select
+                          value={restrictedTPPD}
+                          onChange={e => setRestrictedTPPD(e.target.value)}
+                          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none cursor-pointer transition-all'
+                        >
+                          <option value="no">No</option>
+                          <option value="yes">Yes (₹200 off TP)</option>
+                        </select>
+                      </div>
+                    </div>
+                    )}
                   </div>
                 </div>
 

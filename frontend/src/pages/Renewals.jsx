@@ -173,7 +173,8 @@ const Renewals = () => {
                           </div>
                           <div className='min-w-0 flex-1'>
                             <h3 className='text-sm font-bold text-slate-900 truncate'>{policy.insuranceCompany}</h3>
-                            <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber} · {policy.policyHolderName || '—'}</p>
+                            <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber}</p>
+                            <p className='text-[9px] text-slate-400'>{policy.policyHolderName}</p>
                           </div>
                           <div className='text-right'>
                             <p className={`text-[11px] font-black ${policy.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'}`}>

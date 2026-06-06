@@ -141,7 +141,7 @@ const generatePdf = async (req, res) => {
       doc.fontSize(9).fillColor(color)
       doc.text(desc, col1 + 8, yy + 4)
       doc.text(rate, col2 + 8, yy + 4)
-      doc.text(amount, col3 - 8, yy + 4, { align: 'right' })
+      doc.text(fmt(amount), col3 - 8, yy + 4, { align: 'right' })
       return yy + 22
     }
 

@@ -337,7 +337,6 @@ const PremiumCalculator = () => {
                 </button>
                 <div>
                   <div className='flex items-center gap-2'>
-                    <span className='flex items-center justify-center h-6 w-6 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-[10px] font-black shadow-sm shadow-blue-200'>2</span>
                     {selectedCategory.icon && <span className='flex items-center'>{selectedCategory.icon}</span>}
                     <h2 className='text-sm sm:text-base font-black text-slate-800'>{selectedCategory.label}</h2>
                   </div>

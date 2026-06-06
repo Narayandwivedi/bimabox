@@ -18,7 +18,7 @@ import KycPage from './pages/Kyc/KycPage'
 import Renewals from './pages/Renewals'
 import { getTheme } from './context/ThemeContext'
 
-import { Agentation } from "agentation";
+// import { Agentation } from "agentation";
 
 
 
@@ -63,7 +63,7 @@ function AppContent() {
           </Routes>
         </div>
       </div>
-      {<Agentation />}
+      {/* {<Agentation />} */}
       {showNav && <BottomNavigation />}
     </>
   )

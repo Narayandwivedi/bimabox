@@ -77,7 +77,7 @@ const TARIFF = {
   },
   gcv_3w: {
     subtypes: [
-      { id: 'public', label: '3W GCV (A2)', tp: 4492 },
+      { id: 'public', label: '3W GCV', tp: 4492 },
       { id: 'erickshaw_gcv', label: '3W e-Rickshaw GCV', tp: 3139 },
     ],
     odRates: {
@@ -431,7 +431,7 @@ const PremiumCalculator = () => {
     let gstTpRate = 18
     let gstNonTpRate = 18
     if (gstEnabled) {
-      const isGCV = vehicleType === 'gcv' || vehicleType === 'gcv_3w'
+      const isGCV = vehicleType === 'gcv'
       if (isGCV) {
         gstTpRate = 5
         gstNonTpRate = 18
@@ -1606,11 +1606,11 @@ const PremiumCalculator = () => {
               </div>
             </div>
             <CoverageSelector />
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+              <IDVInput idv={idv} setIdv={setIdv} />
               <ZoneSelector zones={['A', 'B', 'C']} />
               <AgeSelector />
             </div>
-            <IDVInput idv={idv} setIdv={setIdv} />
             <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
               <div>
                 <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>

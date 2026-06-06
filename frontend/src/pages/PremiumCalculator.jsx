@@ -1974,7 +1974,7 @@ const PremiumCalculator = () => {
                         </div>
                       ) : (vehicleType === 'gcv' || vehicleType === 'gcv_3w') ? (
                         <div>
-                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (other than Paid Driver) (₹)</label>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee <span className='text-[8px]'>(other than Paid Driver) (₹)</span></label>
                           <input
                             type='number'
                             value={llToEmployee}

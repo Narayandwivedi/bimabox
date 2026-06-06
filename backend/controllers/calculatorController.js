@@ -135,9 +135,8 @@ const generatePdf = async (req, res) => {
       if (premiums.odDiscountAmt > 0) {
         odRows.push(['Discount on OD Premium', `-${fmt(premiums.odDiscountAmt)}`])
       }
-      if (premiums.ncbDiscount > 0) {
-        odRows.push(['No Claim Bonus (NCB)', `-${fmt(premiums.ncbDiscount)}`])
-      }
+      // Always show NCB even if 0
+      odRows.push(['No Claim Bonus (NCB)', premiums.ncbDiscount > 0 ? `-${fmt(premiums.ncbDiscount)}` : fmt(0)])
       if (premiums.imt23 > 0) {
         odRows.push(['IMT 23 Loading', fmt(premiums.imt23)])
       }
@@ -153,7 +152,8 @@ const generatePdf = async (req, res) => {
       if (premiums.restrictedTPPD > 0) {
         tpRows.push(['Restricted TPPD Discount', `-${fmt(premiums.restrictedTPPD)}`])
       }
-      if (premiums.paOd > 0) tpRows.push(['PA to Owner Driver', fmt(premiums.paOd)])
+      // Always show PA to Owner Driver even if 0
+      tpRows.push(['PA to Owner Driver', fmt(premiums.paOd || 0)])
       if (premiums.llPd > 0) tpRows.push(['LL to Paid Driver', fmt(premiums.llPd)])
       if (premiums.llEmployee > 0) tpRows.push(['LL to Employee', fmt(premiums.llEmployee)])
       if (premiums.paUnnamed > 0) tpRows.push(['PA to Unnamed Passenger', fmt(premiums.paUnnamed)])

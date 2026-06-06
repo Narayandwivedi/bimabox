@@ -19,179 +19,243 @@ const generatePdf = async (req, res) => {
 
     const quoteId = data.quoteId || `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
     const dateStr = data.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+    const producerName = data.producerName || 'Bimabox Agent'
+    const producerContact = data.producerContact || 'N/A'
+    const producerEmail = data.producerEmail || 'N/A'
 
-    const doc = new PDFDocument({ size: 'A4', margin: 50 })
+    // Compute policy dates
+    const startDate = new Date()
+    const endDate = new Date()
+    endDate.setFullYear(startDate.getFullYear() + 1)
+    endDate.setDate(endDate.getDate() - 1)
+    const periodStr = `${startDate.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })} to ${endDate.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+
+    const doc = new PDFDocument({ size: 'A4', margin: 40 })
     const filename = `${quoteId.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
     const filePath = path.join(QUOTATIONS_DIR, filename)
 
     const stream = fs.createWriteStream(filePath)
     doc.pipe(stream)
 
-    const pageWidth = doc.page.width - 100
-    let y = 50
+    const pageWidth = doc.page.width - 80 // 515 pt printable area width
+    let y = 40
 
-    // ── Header ──────────────────────────────────────────────────────────────
-    doc.fontSize(28).font('Helvetica-Bold').fillColor('#4f46e5').text('BIMABOX', 50, y)
-    doc.fontSize(10).font('Helvetica').fillColor('#64748b')
-      .text(`ID: ${quoteId}  •  ${dateStr}`, 50, y + 32, { align: 'right' })
+    // ── Header Block ────────────────────────────────────────────────────────
+    doc.rect(40, y, pageWidth, 65).fillColor('#1e3a8a').fill()
+    
+    doc.fontSize(18).font('Helvetica-Bold').fillColor('#ffffff').text('BIMABOX General Insurance Limited', 50, y + 15)
+    doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text('Indian Motor Tariff Rates Quote  •  IRDAI Approved Rates', 50, y + 38)
+    
+    // Quote ID & Date on Right Side
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#ffffff').text(`Quote ID: ${quoteId}`, 360, y + 16, { align: 'right', width: 145 })
+    doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text(`Quote Date: ${dateStr}`, 360, y + 36, { align: 'right', width: 145 })
 
-    doc.moveTo(50, y + 52).lineTo(50 + pageWidth, y + 52).strokeColor('#6366f1').lineWidth(2).stroke()
+    y += 75
 
-    y = y + 70
+    // Quote Subtitle
+    const categoryUpper = (data.vehicleCategory || 'MOTOR').toUpperCase()
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e293b').text(`${categoryUpper} INSURANCE QUOTATION`, 40, y)
+    doc.fontSize(9).font('Helvetica').fillColor('#64748b').text(`Period of Insurance : ${periodStr}`, 40, y + 16)
+    
+    y += 35
 
-    // ── Title ───────────────────────────────────────────────────────────────
-    doc.fontSize(16).font('Helvetica-Bold').fillColor('#1e1b4b').text('INSURANCE QUOTATION', 50, y)
-    y += 30
-
-    // ── Details Grid ────────────────────────────────────────────────────────
-    const boxW = (pageWidth - 20) / 2
-
-    const drawDetailBox = (x, yy, title, rows) => {
-      const boxH = rows.length * 20 + 50
-      doc.roundedRect(x, yy, boxW, boxH, 8).fillColor('#f8fafc').fill()
-      doc.roundedRect(x, yy, boxW, boxH, 8).strokeColor('#e2e8f0').lineWidth(1).stroke()
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#4f46e5').text(title, x + 12, yy + 12)
-      doc.moveTo(x + 12, yy + 28).lineTo(x + boxW - 12, yy + 28).strokeColor('#cbd5e1').lineWidth(1).stroke()
-
-      let ry = yy + 36
-      rows.forEach(([label, value]) => {
-        doc.fontSize(9).font('Helvetica').fillColor('#64748b').text(label, x + 12, ry)
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#0f172a').text(value, x + boxW - 12, ry, { align: 'right' })
-        ry += 18
-      })
-      return yy + boxH + 15
-    }
-
-    const vehicleRows = [
-      ['Vehicle Category', data.vehicleCategory || 'N/A'],
-      ['Specification', data.vehicleSpec || 'N/A'],
-      ['RTO Zone', data.zone || 'N/A'],
-      ['Vehicle Age', data.vehicleAge || 'N/A'],
-    ]
-    if (data.mfgYear) vehicleRows.push(['Mfg Year', data.mfgYear])
-    if (data.vehicleSubtype) vehicleRows.push(['Sub-Type', data.vehicleSubtype])
-
-    const quoteRows = [
-      ['Policy Type', data.policyType || 'N/A'],
-      ['IDV', fmt(data.idv)],
-      ['NCB', `${data.ncb || 0}%`],
-      ['OD Discount', `${data.odDiscount || 0}%`],
-    ]
-
-    const maxRows = Math.max(vehicleRows.length, quoteRows.length)
-    const boxH = maxRows * 20 + 50
-
-    // Draw vehicle box
-    doc.roundedRect(50, y, boxW, boxH, 8).fillColor('#f8fafc').fill()
-    doc.roundedRect(50, y, boxW, boxH, 8).strokeColor('#e2e8f0').lineWidth(1).stroke()
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#4f46e5').text('Vehicle Details', 62, y + 12)
-    doc.moveTo(62, y + 28).lineTo(50 + boxW - 12, y + 28).strokeColor('#cbd5e1').lineWidth(1).stroke()
-    let ry = y + 36
-    vehicleRows.forEach(([label, value]) => {
-      doc.fontSize(9).font('Helvetica').fillColor('#64748b').text(label, 62, ry)
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#0f172a').text(value, 50 + boxW - 12, ry, { align: 'right' })
-      ry += 18
-    })
-
-    // Draw quote box
-    const qx = 50 + boxW + 20
-    doc.roundedRect(qx, y, boxW, boxH, 8).fillColor('#f8fafc').fill()
-    doc.roundedRect(qx, y, boxW, boxH, 8).strokeColor('#e2e8f0').lineWidth(1).stroke()
-    doc.fontSize(10).font('Helvetica-Bold').fillColor('#4f46e5').text('Quotation Details', qx + 12, y + 12)
-    doc.moveTo(qx + 12, y + 28).lineTo(qx + boxW - 12, y + 28).strokeColor('#cbd5e1').lineWidth(1).stroke()
-    ry = y + 36
-    quoteRows.forEach(([label, value]) => {
-      doc.fontSize(9).font('Helvetica').fillColor('#64748b').text(label, qx + 12, ry)
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#0f172a').text(value, qx + boxW - 12, ry, { align: 'right' })
-      ry += 18
-    })
-
-    y = y + boxH + 25
-
-    // ── Premium Table ──────────────────────────────────────────────────────
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e293b').text('Premium Calculation Breakup', 50, y)
-    y += 22
-
-    const col1 = 50
-    const col2 = pageWidth * 0.65 + 50
-    const col3 = pageWidth + 50
-    const tableTop = y
-
-    const drawTableHeader = (yy) => {
-      doc.rect(50, yy, pageWidth, 24).fillColor('#f1f5f9').fill()
-      doc.rect(50, yy, pageWidth, 24).strokeColor('#cbd5e1').lineWidth(1).stroke()
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#475569')
-      doc.text('Description', col1 + 8, yy + 6)
-      doc.text('Rate', col2 + 8, yy + 6)
-      doc.text('Amount (INR)', col3 - 8, yy + 6, { align: 'right' })
-      return yy + 24
-    }
-
-    const drawRow = (yy, desc, rate, amount, opts = {}) => {
-      if (opts.fill) {
-        doc.rect(50, yy, pageWidth, 22).fillColor(opts.fill).fill()
-      }
-      doc.rect(50, yy, pageWidth, 22).strokeColor('#e2e8f0').lineWidth(0.5).stroke()
-      if (opts.bold) {
-        doc.font('Helvetica-Bold')
-      } else {
-        doc.font('Helvetica')
-      }
-      const color = opts.color || '#1e293b'
-      doc.fontSize(9).fillColor(color)
-      doc.text(desc, col1 + 8, yy + 4)
-      doc.text(rate, col2 + 8, yy + 4)
-      doc.text(fmt(amount), col3 - 8, yy + 4, { align: 'right' })
-      return yy + 22
-    }
-
-    let ty = drawTableHeader(tableTop)
-
+    // ── Coverages Paragraphs ─────────────────────────────────────────────────
+    // Build addon & other lists
     const premiums = data.premiums || {}
-    const rows = data.tableRows || []
+    const addonsList = []
+    if (premiums.zeroDep > 0) addonsList.push(`Zero Depreciation (${fmt(premiums.zeroDep)})`)
+    if (premiums.rsa > 0) addonsList.push(`Roadside Assistance (${fmt(premiums.rsa)})`)
+    if (premiums.otherAddon > 0) addonsList.push(`Other Addon (${fmt(premiums.otherAddon)})`)
+    
+    const otherList = []
+    if (premiums.paOd > 0) otherList.push(`PA to Owner Driver (${fmt(premiums.paOd)})`)
+    if (premiums.llPd > 0) otherList.push(`LL to Paid Driver (${fmt(premiums.llPd)})`)
+    if (premiums.llEmployee > 0) otherList.push(`LL to Employee (${fmt(premiums.llEmployee)})`)
+    if (premiums.paUnnamed > 0) otherList.push(`PA to Unnamed Passenger (${fmt(premiums.paUnnamed)})`)
 
-    rows.forEach(row => {
-      if (ty > doc.page.height - 100) {
-        doc.addPage()
-        ty = 50
-        ty = drawTableHeader(ty)
-      }
-      if (row.type === 'total') {
-        ty = drawRow(ty, row.desc, row.rate, row.amount, { bold: true, fill: '#e0e7ff', color: '#312e81' })
-      } else if (row.type === 'discount') {
-        ty = drawRow(ty, row.desc, row.rate, row.amount, { color: '#16a34a' })
-      } else if (row.type === 'gst-header') {
-        ty = drawRow(ty, row.desc, row.rate, row.amount, { bold: true, fill: '#f8fafc' })
-      } else {
-        ty = drawRow(ty, row.desc, row.rate, row.amount)
-      }
-    })
+    doc.rect(40, y, pageWidth, 42).fillColor('#f8fafc').fill()
+    doc.rect(40, y, pageWidth, 42).strokeColor('#e2e8f0').lineWidth(1).stroke()
+    
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text('Addon Coverage:', 50, y + 8)
+    doc.font('Helvetica').fillColor('#0f172a').text(addonsList.join(', ') || 'None Selected', 135, y + 8, { width: pageWidth - 150 })
+    
+    doc.font('Helvetica-Bold').fillColor('#475569').text('Other Coverage:', 50, y + 24)
+    doc.font('Helvetica').fillColor('#0f172a').text(otherList.join(', ') || 'None Selected', 135, y + 24, { width: pageWidth - 150 })
 
-    // Add total row
-    if (ty > doc.page.height - 80) {
-      doc.addPage()
-      ty = 50
+    y += 52
+
+    // ── Vehicle Details Grid ───────────────────────────────────────────────
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Vehicle & Quotation Details', 40, y)
+    y += 15
+
+    const gridH = 40
+    const colW = pageWidth / 4 // 128.75 pt
+
+    doc.rect(40, y, pageWidth, gridH).fillColor('#f8fafc').fill()
+    doc.rect(40, y, pageWidth, gridH).strokeColor('#cbd5e1').lineWidth(1).stroke()
+
+    // Vertical lines
+    doc.moveTo(40 + colW, y).lineTo(40 + colW, y + gridH).strokeColor('#cbd5e1').stroke()
+    doc.moveTo(40 + colW * 2, y).lineTo(40 + colW * 2, y + gridH).strokeColor('#cbd5e1').stroke()
+    doc.moveTo(40 + colW * 3, y).lineTo(40 + colW * 3, y + gridH).strokeColor('#cbd5e1').stroke()
+    // Horizontal center line
+    doc.moveTo(40, y + 20).lineTo(40 + pageWidth, y + 20).strokeColor('#cbd5e1').stroke()
+
+    const drawGridCell = (colIdx, rowIdx, label, val) => {
+      const cx = 40 + colIdx * colW
+      const cy = y + rowIdx * 20
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b').text(label, cx + 6, cy + 3)
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 6, cy + 11, { width: colW - 12, height: 8, ellipsis: true })
     }
-    doc.rect(50, ty, pageWidth, 30).fillColor('#e0e7ff').fill()
-    doc.rect(50, ty, pageWidth, 30).strokeColor('#4f46e5').lineWidth(2).stroke()
-    doc.fontSize(12).font('Helvetica-Bold').fillColor('#312e81')
-    doc.text('Total Payable Premium', col1 + 8, ty + 6)
-    doc.text(fmt(data.totalPayable), col3 - 8, ty + 6, { align: 'right' })
-    ty += 45
 
-    // ── Disclaimer ─────────────────────────────────────────────────────────
-    if (ty > doc.page.height - 60) {
-      doc.addPage()
-      ty = 50
+    drawGridCell(0, 0, 'VEHICLE MAKE/MODEL', data.vehicleCategory || 'N/A')
+    drawGridCell(1, 0, 'ZONE', data.zone || 'N/A')
+    drawGridCell(2, 0, 'YEAR OF MANUFACTURE', data.mfgYear || 'N/A')
+    drawGridCell(3, 0, 'VEHICLE TYPE', data.policyType || 'N/A')
+
+    drawGridCell(0, 1, 'REGISTRATION NO / SPEC', data.vehicleSpec || 'N/A')
+    drawGridCell(1, 1, 'VEHICLE AGE', data.vehicleAge || 'N/A')
+    drawGridCell(2, 1, 'IDV OF THE VEHICLE', fmt(data.idv))
+    drawGridCell(3, 1, 'NCB / OD DISCOUNT', `${data.ncb || 0}% / ${data.odDiscount || 0}%`)
+
+    y += gridH + 20
+
+    // ── Two-Column Premium Breakup Table ──────────────────────────────────
+    doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Premium Calculation Breakup', 40, y)
+    y += 15
+
+    const colWidth = (pageWidth - 15) / 2 // 250 pt per column
+    const tableY = y
+
+    // Build side-by-side items
+    const odRows = []
+    if (premiums.odBase > 0) {
+      odRows.push(['Vehicle Basic Rate', `${premiums.odRate}%`])
+      odRows.push(['Basic OD Premium', fmt(premiums.odBase)])
+      if (premiums.odDiscountAmt > 0) {
+        odRows.push(['Discount on OD Premium', `-${fmt(premiums.odDiscountAmt)}`])
+      }
+      if (premiums.ncbDiscount > 0) {
+        odRows.push(['No Claim Bonus (NCB)', `-${fmt(premiums.ncbDiscount)}`])
+      }
+      if (premiums.imt23 > 0) {
+        odRows.push(['IMT 23 Loading', fmt(premiums.imt23)])
+      }
+      if (premiums.geoExtent > 0 && categoryUpper === 'GCV') {
+        odRows.push(['Geographical Extent', fmt(premiums.geoExtent)])
+      }
     }
-    doc.moveTo(50, ty).lineTo(50 + pageWidth, ty).strokeColor('#e2e8f0').lineWidth(1).stroke()
-    ty += 10
-    doc.fontSize(8).font('Helvetica').fillColor('#94a3b8')
-    doc.text(
-      'This is an indicative system-generated insurance quotation prepared under the Indian Motor Tariff guidelines. The final premium is subject to actual verification of vehicle registration details, previous policy claim history, and underwriting guidelines of the respective insurance company.',
-      50, ty,
-      { align: 'center', width: pageWidth }
-    )
+    const finalOD = premiums.finalOd || 0
+
+    const tpRows = []
+    if (premiums.tp > 0) {
+      tpRows.push(['Liability Premium (TP)', fmt(premiums.tp + premiums.restrictedTPPD)])
+      if (premiums.restrictedTPPD > 0) {
+        tpRows.push(['Restricted TPPD Discount', `-${fmt(premiums.restrictedTPPD)}`])
+      }
+      if (premiums.paOd > 0) tpRows.push(['PA to Owner Driver', fmt(premiums.paOd)])
+      if (premiums.llPd > 0) tpRows.push(['LL to Paid Driver', fmt(premiums.llPd)])
+      if (premiums.llEmployee > 0) tpRows.push(['LL to Employee', fmt(premiums.llEmployee)])
+      if (premiums.paUnnamed > 0) tpRows.push(['PA to Unnamed Passenger', fmt(premiums.paUnnamed)])
+    }
+    const finalTP = (premiums.tp || 0) + (premiums.llPd || 0) + (premiums.paOd || 0) + (premiums.llEmployee || 0) + (premiums.paUnnamed || 0)
+
+    const drawBreakupColumn = (x, title, rows, totalVal, totalLabel) => {
+      let cy = tableY
+      
+      // Column Header
+      doc.rect(x, cy, colWidth, 18).fillColor('#f1f5f9').fill()
+      doc.rect(x, cy, colWidth, 18).strokeColor('#cbd5e1').stroke()
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e3a8a').text(title, x + 8, cy + 5)
+      
+      cy += 18
+      const rowH = 16
+
+      // Empty states or padded table rows
+      const totalRowsToDraw = Math.max(rows.length, 6)
+      for (let i = 0; i < totalRowsToDraw; i++) {
+        doc.rect(x, cy, colWidth, rowH).strokeColor('#f1f5f9').stroke()
+        if (rows[i]) {
+          const [lbl, val] = rows[i]
+          doc.fontSize(8).font('Helvetica').fillColor('#334155').text(lbl, x + 8, cy + 4)
+          doc.font('Helvetica-Bold').fillColor('#0f172a').text(val, x + colWidth - 8, cy + 4, { align: 'right', width: 70 })
+        }
+        cy += rowH
+      }
+
+      // Column Subtotal
+      doc.rect(x, cy, colWidth, 20).fillColor('#eff6ff').fill()
+      doc.rect(x, cy, colWidth, 20).strokeColor('#bfdbfe').stroke()
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e40af').text(totalLabel, x + 8, cy + 6)
+      doc.text(fmt(totalVal), x + colWidth - 8, cy + 6, { align: 'right', width: 90 })
+
+      return cy + 20
+    }
+
+    const odEndY = drawBreakupColumn(40, 'Own Damage Premium (A) Rupees', odRows, finalOD, 'Net Own Damage Premium (A)')
+    const tpEndY = drawBreakupColumn(40 + colWidth + 15, 'Liability Premium (B) Rupees', tpRows, finalTP, 'Total Liability Premium (B)')
+
+    y = Math.max(odEndY, tpEndY) + 18
+
+    // ── Totals Section ─────────────────────────────────────────────────────
+    doc.rect(40, y, pageWidth, 56).fillColor('#f8fafc').fill()
+    doc.rect(40, y, pageWidth, 56).strokeColor('#cbd5e1').stroke()
+
+    const drawTotalRow = (label, value, isBold = false, offset = 4) => {
+      doc.fontSize(isBold ? 9.5 : 8.5).font(isBold ? 'Helvetica-Bold' : 'Helvetica').fillColor(isBold ? '#1e3a8a' : '#334155')
+      doc.text(label, 50, y + offset)
+      doc.text(value, 360, y + offset, { align: 'right', width: 145 })
+    }
+
+    const netPrem = data.netPremium || (finalOD + finalTP)
+    const gstData = data.gst || {}
+    let gstLabel = `GST (${gstData.enabled ? '18%' : '0%'})`
+    if (gstData.hasSplitGst) {
+      gstLabel = `GST (TP @ 5% + Other @ 18%)`
+    }
+
+    drawTotalRow('Total Premium Before Tax (A+B)', fmt(netPrem), false, 6)
+    drawTotalRow(gstLabel, fmt(gstData.totalGst || 0), false, 22)
+    
+    // Horizontal divider
+    doc.moveTo(50, y + 36).lineTo(40 + pageWidth - 10, y + 36).strokeColor('#cbd5e1').stroke()
+    
+    drawTotalRow('Final Premium (Payable)', fmt(data.totalPayable), true, 41)
+
+    y += 72
+
+    // ── Instructions & Documents ──────────────────────────────────────────
+    const bottomW = (pageWidth - 15) / 2
+
+    // Left Column: Payment & Docs
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text('Kindly pay cheque/DD in favor of BIMABOX.', 40, y)
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e3a8a').text('Documents Required:-', 40, y + 15)
+    doc.fontSize(8).font('Helvetica').fillColor('#475569').text('1. Previous Policy Copy\n2. RC Copy', 40, y + 28)
+
+    // Right Column: Notes & Validity
+    doc.fontSize(7.5).font('Helvetica').fillColor('#dc2626')
+      .text('Note : In case of any claim, NCB will be revised and hence Quotation is Subject to Change.', 40 + bottomW + 15, y, { width: bottomW })
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569')
+      .text(`Quote Validity: This Quote is valid for 7 days from date of generation.`, 40 + bottomW + 15, y + 26, { width: bottomW })
+
+    y += 55
+
+    // ── Producer Info Box ─────────────────────────────────────────────────
+    doc.rect(40, y, pageWidth, 42).fillColor('#f1f5f9').fill()
+    doc.rect(40, y, pageWidth, 42).strokeColor('#cbd5e1').stroke()
+
+    const drawProducerCol = (colIdx, label, val) => {
+      const cx = 40 + colIdx * (pageWidth / 3)
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569').text(label, cx + 8, y + 8)
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8, y + 22, { width: (pageWidth / 3) - 16, ellipsis: true })
+    }
+
+    drawProducerCol(0, 'Producer Name', producerName)
+    drawProducerCol(1, 'Producer Contact', producerContact)
+    drawProducerCol(2, 'Producer Email', producerEmail)
+
+    // Footer signature
+    doc.fontSize(7).font('Helvetica').fillColor('#94a3b8').text('Insurance is subject matter of the solicitation.', 40, y + 50, { align: 'center', width: pageWidth })
 
     // ── Finalize ───────────────────────────────────────────────────────────
     doc.end()

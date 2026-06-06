@@ -2,6 +2,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { fmt, fmtD } from './helpers'
 import PdfPreviewModal from './PdfPreviewModal'
+import { useAuth } from '../../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -14,6 +15,7 @@ const ResultBox = ({
   const [pdfUrl, setPdfUrl] = useState('')
   const [pdfLoading, setPdfLoading] = useState(false)
   const [generatedQuoteId, setGeneratedQuoteId] = useState('')
+  const { user } = useAuth()
 
   if (!result) return null
 
@@ -227,6 +229,9 @@ const ResultBox = ({
         idv: parseFloat(idv) || 0,
         ncb,
         odDiscount: result.odDiscountVal,
+        producerName: user?.name || 'Bimabox Agent',
+        producerContact: user?.phone || user?.contact || 'N/A',
+        producerEmail: user?.email || 'N/A',
         premiums: {
           odRate: result.odRate,
           odBase: odBaseVal,

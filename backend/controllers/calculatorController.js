@@ -9,8 +9,8 @@ if (!fs.existsSync(QUOTATIONS_DIR)) {
 }
 
 function fmt(n) {
-  if (n == null || isNaN(n)) return '₹0.00'
-  return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  if (n == null || isNaN(n)) return 'Rs. 0.00'
+  return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 const generatePdf = async (req, res) => {
@@ -88,7 +88,7 @@ const generatePdf = async (req, res) => {
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Vehicle & Quotation Details', 40, y)
     y += 15
 
-    const gridH = 40
+    const gridH = 52
     const colW = pageWidth / 4 // 128.75 pt
 
     doc.rect(40, y, pageWidth, gridH).fillColor('#f8fafc').fill()
@@ -99,13 +99,13 @@ const generatePdf = async (req, res) => {
     doc.moveTo(40 + colW * 2, y).lineTo(40 + colW * 2, y + gridH).strokeColor('#cbd5e1').stroke()
     doc.moveTo(40 + colW * 3, y).lineTo(40 + colW * 3, y + gridH).strokeColor('#cbd5e1').stroke()
     // Horizontal center line
-    doc.moveTo(40, y + 20).lineTo(40 + pageWidth, y + 20).strokeColor('#cbd5e1').stroke()
+    doc.moveTo(40, y + 26).lineTo(40 + pageWidth, y + 26).strokeColor('#cbd5e1').stroke()
 
     const drawGridCell = (colIdx, rowIdx, label, val) => {
       const cx = 40 + colIdx * colW
-      const cy = y + rowIdx * 20
-      doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b').text(label, cx + 6, cy + 3)
-      doc.fontSize(8).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 6, cy + 11, { width: colW - 12, height: 8, ellipsis: true })
+      const cy = y + rowIdx * 26
+      doc.fontSize(7).font('Helvetica').fillColor('#64748b').text(label, cx + 8, cy + 5)
+      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8, cy + 13, { width: colW - 16, height: 11, ellipsis: true })
     }
 
     drawGridCell(0, 0, 'VEHICLE MAKE/MODEL', data.vehicleCategory || 'N/A')
@@ -178,7 +178,7 @@ const generatePdf = async (req, res) => {
         if (rows[i]) {
           const [lbl, val] = rows[i]
           doc.fontSize(8).font('Helvetica').fillColor('#334155').text(lbl, x + 8, cy + 4)
-          doc.font('Helvetica-Bold').fillColor('#0f172a').text(val, x + colWidth - 8, cy + 4, { align: 'right', width: 70 })
+          doc.font('Helvetica-Bold').fillColor('#0f172a').text(val, x + colWidth - 85, cy + 4, { align: 'right', width: 77 })
         }
         cy += rowH
       }
@@ -187,7 +187,7 @@ const generatePdf = async (req, res) => {
       doc.rect(x, cy, colWidth, 20).fillColor('#eff6ff').fill()
       doc.rect(x, cy, colWidth, 20).strokeColor('#bfdbfe').stroke()
       doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e40af').text(totalLabel, x + 8, cy + 6)
-      doc.text(fmt(totalVal), x + colWidth - 8, cy + 6, { align: 'right', width: 90 })
+      doc.text(fmt(totalVal), x + colWidth - 85, cy + 6, { align: 'right', width: 77 })
 
       return cy + 20
     }

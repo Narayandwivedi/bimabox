@@ -1532,17 +1532,6 @@ const PremiumCalculator = () => {
                   </div>
                   <IDVInput idv={idv} setIdv={setIdv} />
                 </div>
-                <div>
-                  <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Policy Term</label>
-                  <div className='flex gap-1.5 rounded-2xl bg-slate-200 p-1'>
-                    {[['1yr', '1 Year'], ['5yr', '5 Years (Long Term)']].map(([val, label]) => (
-                      <button key={val} onClick={() => setPolicyTerm(val)}
-                        className={`flex-1 rounded-xl py-2 text-[10px] sm:text-xs font-bold transition-all ${policyTerm === val ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
                 <CoverageSelector />
               </>
             )}

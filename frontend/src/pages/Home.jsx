@@ -537,6 +537,7 @@ const Home = () => {
           onSubmit={() => {
             setShowAddInsuranceModal(false)
             fetchExpiringDocs()
+            fetchRecentDocs()
           }}
           initialExtractionFile={initialExtractionFile}
         />

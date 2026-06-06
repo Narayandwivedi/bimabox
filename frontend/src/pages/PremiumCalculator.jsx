@@ -1937,7 +1937,7 @@ const PremiumCalculator = () => {
                     <p className='text-[9px] sm:text-[10px] text-amber-700 font-medium bg-amber-100/50 rounded-xl px-3 py-2'>
                       Third Party premium is calculated automatically based on your vehicle specifications above.
                     </p>
-                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                    <div className={`grid grid-cols-1 gap-3 ${vehicleType === 'gcv' ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
                         <input
@@ -1987,22 +1987,20 @@ const PremiumCalculator = () => {
                       ) : (
                         <div />
                       )}
+                      {vehicleType === 'gcv' && (
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
+                          <select
+                            value={restrictedTPPD}
+                            onChange={e => setRestrictedTPPD(e.target.value)}
+                            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none cursor-pointer transition-all'
+                          >
+                            <option value="no">No</option>
+                            <option value="yes">Yes (₹200 off TP)</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
-                    {vehicleType === 'gcv' && (
-                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
-                        <select
-                          value={restrictedTPPD}
-                          onChange={e => setRestrictedTPPD(e.target.value)}
-                          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 appearance-none cursor-pointer transition-all'
-                        >
-                          <option value="no">No</option>
-                          <option value="yes">Yes (₹200 off TP)</option>
-                        </select>
-                      </div>
-                    </div>
-                    )}
                   </div>
                 </div>
 

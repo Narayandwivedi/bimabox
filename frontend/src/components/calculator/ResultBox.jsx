@@ -252,6 +252,8 @@ const ResultBox = ({
           imt23: result.imt23Amount,
           zeroDep: result.zeroDepAmount,
           restrictedTPPD: result.restrictedTPPDDiscount,
+          gcvExtraUnits: result.details?.gcvExtraUnits || 0,
+          gcvExtraPremium: result.details?.gcvExtraPremium || 0,
         },
         gst: {
           enabled: gstEnabled,

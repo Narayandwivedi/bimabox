@@ -325,7 +325,8 @@ const Home = () => {
                         filteredDocs.map((doc) => (
                           <div
                             key={doc.id}
-                            className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm hover:border-blue-400 transition-all'
+                            onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                            className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm hover:border-blue-400 transition-all cursor-pointer'
                           >
                             <div className='flex items-center gap-3'>
                               <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-${doc.color}-50 text-${doc.color}-600`}>
@@ -372,7 +373,8 @@ const Home = () => {
                             return (
                               <div
                                 key={doc.id}
-                                className='group relative overflow-hidden rounded-xl border border-slate-150 bg-slate-50/30 p-4 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:border-blue-300 hover:shadow-[0_20px_50px_-20px_rgba(59,130,246,0.15)]'
+                                onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
+                                className='group relative overflow-hidden rounded-xl border border-slate-150 bg-slate-50/30 p-4 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:border-blue-300 hover:shadow-[0_20px_50px_-20px_rgba(59,130,246,0.15)] cursor-pointer'
                               >
                                 {/* Color bar at top for premium feel */}
                                 <div className={`absolute top-0 left-0 right-0 h-1 ${colors.strip}`} />

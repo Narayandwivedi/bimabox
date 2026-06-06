@@ -151,13 +151,14 @@ const Renewals = () => {
             ) : (
               <>
                 <div className='space-y-3 lg:hidden'>
-                  {filteredPolicies.map((policy) => {
+                    {filteredPolicies.map((policy) => {
                     const status = policy.renewalStatus || ''
                     const isResolved = status === 'renewed' || status === 'lost'
                     return (
                       <div
                         key={policy._id}
-                        className={`group relative overflow-hidden rounded-xl border-2 p-3 shadow-sm transition-all ${
+                        onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)}
+                        className={`group relative overflow-hidden rounded-xl border-2 p-3 shadow-sm transition-all cursor-pointer ${
                           status === 'renewed'
                             ? 'border-emerald-300 bg-emerald-50/30'
                             : status === 'lost'
@@ -242,7 +243,7 @@ const Renewals = () => {
                         const status = policy.renewalStatus || ''
                         const isResolved = status === 'renewed' || status === 'lost'
                         return (
-                          <tr key={policy._id} className={`transition-colors hover:bg-slate-50/50 ${
+                          <tr key={policy._id} onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)} className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${
                             status === 'renewed' ? 'bg-emerald-50/20' : status === 'lost' ? 'bg-red-50/20' : ''
                           }`}>
                             <td className='px-4 py-2'>

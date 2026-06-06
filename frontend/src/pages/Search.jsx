@@ -62,13 +62,15 @@ const Search = () => {
   const [filterProductType, setFilterProductType] = useState('')
   const [filterPolicyType, setFilterPolicyType] = useState('')
   const [filterValidity, setFilterValidity] = useState('')
+  const [filterDateFrom, setFilterDateFrom] = useState('')
+  const [filterDateTo, setFilterDateTo] = useState('')
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
   const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType].filter(Boolean).length : 0
-  const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0)
+  const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0) + (filterDateFrom ? 1 : 0) + (filterDateTo ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -83,6 +85,8 @@ const Search = () => {
         if (policyType) params.insuranceClass = policyType
       }
       if (validity) params.validity = validity
+      if (dateFrom) params.dateFrom = dateFrom
+      if (dateTo) params.dateTo = dateTo
 
       const endpoint = API_ENDPOINTS[type] || '/api/insurance'
       const res = await axios.get(`${API_URL}${endpoint}`, {
@@ -121,6 +125,8 @@ const Search = () => {
     setFilterProductType('')
     setFilterPolicyType('')
     setFilterValidity('')
+    setFilterDateFrom('')
+    setFilterDateTo('')
     setSearched(false)
     setShowFilterPanel(false)
   }, [filterType])
@@ -129,8 +135,8 @@ const Search = () => {
   useEffect(() => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity)
-  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, fetchRecords])
+    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo)
+  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, fetchRecords])
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -144,7 +150,7 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity)
+    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo)
   }
 
   const handleClearFilters = () => {
@@ -152,6 +158,8 @@ const Search = () => {
     setFilterProductType('')
     setFilterPolicyType('')
     setFilterValidity('')
+    setFilterDateFrom('')
+    setFilterDateTo('')
   }
 
   const handleExport = () => {
@@ -496,6 +504,51 @@ const Search = () => {
                               )}
                             </div>
 
+                            {/* Custom Date Range */}
+                            <div>
+                              <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                Custom Date Range
+                              </label>
+                              <div className='flex gap-2'>
+                                <div className='flex-1'>
+                                  <input
+                                    type='date'
+                                    value={filterDateFrom}
+                                    onChange={(e) => setFilterDateFrom(e.target.value)}
+                                    className='w-full rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 px-3 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all'
+                                  />
+                                  {filterDateFrom && (
+                                    <div className='mt-1 flex items-center justify-between'>
+                                      <span className='text-[9px] font-bold text-blue-600'>From</span>
+                                      <button onClick={() => setFilterDateFrom('')} className='text-slate-400 hover:text-rose-500 transition-colors'>
+                                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className='flex-1'>
+                                  <input
+                                    type='date'
+                                    value={filterDateTo}
+                                    onChange={(e) => setFilterDateTo(e.target.value)}
+                                    className='w-full rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 px-3 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all'
+                                  />
+                                  {filterDateTo && (
+                                    <div className='mt-1 flex items-center justify-between'>
+                                      <span className='text-[9px] font-bold text-blue-600'>To</span>
+                                      <button onClick={() => setFilterDateTo('')} className='text-slate-400 hover:text-rose-500 transition-colors'>
+                                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
                             {/* Close button */}
                             <button
                               onClick={() => setShowFilterPanel(false)}
@@ -565,6 +618,32 @@ const Search = () => {
                       </svg>
                       {filterValidity === 'expired' ? 'Expired' : `Expires in ${filterValidity} Days`}
                       <button onClick={() => setFilterValidity('')} className='ml-0.5 hover:text-rose-700 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
+                  {filterDateFrom && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-inset ring-teal-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                      From: {filterDateFrom}
+                      <button onClick={() => setFilterDateFrom('')} className='ml-0.5 hover:text-rose-700 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
+                  {filterDateTo && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-inset ring-teal-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                      To: {filterDateTo}
+                      <button onClick={() => setFilterDateTo('')} className='ml-0.5 hover:text-rose-700 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
                         </svg>

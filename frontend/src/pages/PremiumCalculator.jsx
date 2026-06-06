@@ -275,7 +275,7 @@ const PremiumCalculator = () => {
         if (isElectric) {
           const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.private_car.electricTP3yr[kwBracket]
+            tpPremium = TARIFF.private_car.electricTP1yr[kwBracket] * 3
           } else {
             tpPremium = TARIFF.private_car.electricTP1yr[kwBracket]
           }
@@ -284,7 +284,7 @@ const PremiumCalculator = () => {
         } else {
           const bracket = getCCBracket(ccVal)
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
+            tpPremium = TARIFF.private_car.tpByCC[bracket] * 3
           } else {
             tpPremium = TARIFF.private_car.tpByCC[bracket]
           }
@@ -298,7 +298,7 @@ const PremiumCalculator = () => {
         if (isElectric) {
           const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
           tpPremium = policyTerm === '5yr'
-            ? TARIFF.two_wheeler.electricTP5yr[kwBracket]
+            ? TARIFF.two_wheeler.electricTP1yr[kwBracket] * 5
             : TARIFF.two_wheeler.electricTP1yr[kwBracket]
           odRate = 1.5 // Electric OD rate (approximate)
           details = { label: kwVal < 3 ? '<3 KW' : kwVal <= 7 ? '3–7 KW' : kwVal <= 16 ? '7–16 KW' : '>16 KW', isElec: true }
@@ -306,7 +306,7 @@ const PremiumCalculator = () => {
           const ccBracket = get2WCCBracket(ccVal)
           const odBracket = get2WODBracket(ccVal)
           if (policyType === 'bundle') {
-            tpPremium = TARIFF.two_wheeler.tpLongTerm[ccBracket] || TARIFF.two_wheeler.tpByCC[ccBracket]
+            tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket] * 5
           } else {
             tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket]
           }
@@ -701,50 +701,57 @@ const PremiumCalculator = () => {
             </tr>
           `
         }
+        if (result.llPdAmount > 0) {
+          tableRows += `
+            <tr>
+              <td>Legal Liability to Paid Driver</td>
+              <td class="text-right">-</td>
+              <td class="text-right">₹${fmtD(result.llPdAmount)}</td>
+            </tr>
+          `
+        }
+        if (result.paOdAmount > 0) {
+          tableRows += `
+            <tr>
+              <td>Personal Accident to Owner Driver</td>
+              <td class="text-right">-</td>
+              <td class="text-right">₹${fmtD(result.paOdAmount)}</td>
+            </tr>
+          `
+        }
+        if (result.llEmployeeAmount > 0) {
+          tableRows += `
+            <tr>
+              <td>Legal Liability to Employee (other than Paid Driver)</td>
+              <td class="text-right">-</td>
+              <td class="text-right">₹${fmtD(result.llEmployeeAmount)}</td>
+            </tr>
+          `
+        }
+        if (result.paUnnamedAmount > 0) {
+          tableRows += `
+            <tr>
+              <td>PA to Unnamed Passenger</td>
+              <td class="text-right">-</td>
+              <td class="text-right">₹${fmtD(result.paUnnamedAmount)}</td>
+            </tr>
+          `
+        }
+        tableRows += `
+          <tr style="font-weight: bold; background-color: #fef9f0;">
+            <td>Total Liability Premium</td>
+            <td class="text-right">-</td>
+            <td class="text-right">₹${fmtD(result.tpPremium + result.llPdAmount + result.paOdAmount + result.paUnnamedAmount + result.llEmployeeAmount)}</td>
+          </tr>
+        `
       }
 
-      if (result.llPdAmount > 0) {
-        tableRows += `
-          <tr>
-            <td>Legal Liability to Paid Driver</td>
-            <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.llPdAmount)}</td>
-          </tr>
-        `
-      }
-      if (result.paOdAmount > 0) {
-        tableRows += `
-          <tr>
-            <td>Personal Accident to Owner Driver</td>
-            <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.paOdAmount)}</td>
-          </tr>
-        `
-      }
-      if (result.llEmployeeAmount > 0) {
-        tableRows += `
-          <tr>
-            <td>Legal Liability to Employee (other than Paid Driver)</td>
-            <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.llEmployeeAmount)}</td>
-          </tr>
-        `
-      }
       if (result.rsaAmount > 0) {
         tableRows += `
           <tr>
             <td>Roadside Assistance (RSA)</td>
             <td class="text-right">-</td>
             <td class="text-right">₹${fmtD(result.rsaAmount)}</td>
-          </tr>
-        `
-      }
-      if (result.paUnnamedAmount > 0) {
-        tableRows += `
-          <tr>
-            <td>PA to Unnamed Passenger</td>
-            <td class="text-right">-</td>
-            <td class="text-right">₹${fmtD(result.paUnnamedAmount)}</td>
           </tr>
         `
       }
@@ -1156,11 +1163,39 @@ const PremiumCalculator = () => {
                   <p className='font-black'>- ₹{fmtD(result.restrictedTPPDDiscount)}</p>
                 </div>
               )}
+              {result.llPdAmount > 0 && (
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>LL to Paid Driver</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.llPdAmount)}</p>
+                </div>
+              )}
+              {result.paOdAmount > 0 && (
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>PA to Owner Driver</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.paOdAmount)}</p>
+                </div>
+              )}
+              {result.paUnnamedAmount > 0 && (
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>PA to Unnamed Passenger</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.paUnnamedAmount)}</p>
+                </div>
+              )}
+              {result.llEmployeeAmount > 0 && (
+                <div className='flex items-center justify-between text-xs'>
+                  <p className='font-bold text-slate-500'>LL to Employee (other than Paid Driver)</p>
+                  <p className='font-black text-slate-800'>₹{fmtD(result.llEmployeeAmount)}</p>
+                </div>
+              )}
+              <div className='flex items-center justify-between text-xs border-t border-amber-200 pt-2 mt-1'>
+                <p className='font-black text-amber-800'>Total Liability Premium</p>
+                <p className='font-black text-amber-800'>₹{fmtD(result.tpPremium + result.llPdAmount + result.paOdAmount + result.paUnnamedAmount + result.llEmployeeAmount)}</p>
+              </div>
             </div>
           )}
 
           {/* ─── Add-on Coverages ─── */}
-          {(result.llPdAmount > 0 || result.paOdAmount > 0 || result.llEmployeeAmount > 0 || result.rsaAmount > 0 || result.otherAddonAmount > 0 || result.paUnnamedAmount > 0 || (result.geoExtentAmount > 0 && vehicleType !== 'gcv') || result.imt23Amount > 0 || result.zeroDepAmount > 0) && (
+          {(result.rsaAmount > 0 || result.otherAddonAmount > 0 || (result.geoExtentAmount > 0 && vehicleType !== 'gcv') || result.imt23Amount > 0 || result.zeroDepAmount > 0) && (
             <div className='rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-100 p-3 space-y-2'>
               <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
@@ -1170,34 +1205,10 @@ const PremiumCalculator = () => {
                 <span className='text-[9px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full'>Subtotal</span>
               </div>
               <div className='space-y-1.5'>
-                {result.llPdAmount > 0 && (
-                  <div className='flex items-center justify-between text-xs'>
-                    <p className='font-bold text-slate-500'>LL to Paid Driver</p>
-                    <p className='font-black text-slate-800'>₹{fmtD(result.llPdAmount)}</p>
-                  </div>
-                )}
-                {result.paOdAmount > 0 && (
-                  <div className='flex items-center justify-between text-xs'>
-                    <p className='font-bold text-slate-500'>PA to Owner Driver</p>
-                    <p className='font-black text-slate-800'>₹{fmtD(result.paOdAmount)}</p>
-                  </div>
-                )}
-                {result.llEmployeeAmount > 0 && (
-                  <div className='flex items-center justify-between text-xs'>
-                    <p className='font-bold text-slate-500'>LL to Employee (other than Paid Driver)</p>
-                    <p className='font-black text-slate-800'>₹{fmtD(result.llEmployeeAmount)}</p>
-                  </div>
-                )}
                 {result.rsaAmount > 0 && (
                   <div className='flex items-center justify-between text-xs'>
                     <p className='font-bold text-slate-500'>RSA – Roadside Assistance</p>
                     <p className='font-black text-slate-800'>₹{fmtD(result.rsaAmount)}</p>
-                  </div>
-                )}
-                {result.paUnnamedAmount > 0 && (
-                  <div className='flex items-center justify-between text-xs'>
-                    <p className='font-bold text-slate-500'>PA to Unnamed Passenger</p>
-                    <p className='font-black text-slate-800'>₹{fmtD(result.paUnnamedAmount)}</p>
                   </div>
                 )}
                 {result.otherAddonAmount > 0 && (
@@ -1303,13 +1314,13 @@ const PremiumCalculator = () => {
                     const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
                     msg += `${tpL}: ₹${fmtD(tpBefore)}\n`
                     if (result.restrictedTPPDDiscount > 0) msg += `Restricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}\n`
+                    if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
+                    if (result.llEmployeeAmount > 0) msg += `LL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}\n`
+                    if (result.paOdAmount > 0) msg += `PA to Owner Driver: ₹${fmtD(result.paOdAmount)}\n`
+                    if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
                   }
-                  if (result.llPdAmount > 0) msg += `LL to Paid Driver: ₹${fmtD(result.llPdAmount)}\n`
-                  if (result.llEmployeeAmount > 0) msg += `LL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}\n`
-                  if (result.paOdAmount > 0) msg += `PA to Owner Driver: ₹${fmtD(result.paOdAmount)}\n`
                   if (result.rsaAmount > 0) msg += `RSA: ₹${fmtD(result.rsaAmount)}\n`
                   if (result.otherAddonAmount > 0) msg += `Other Addon: ₹${fmtD(result.otherAddonAmount)}\n`
-                  if (result.paUnnamedAmount > 0) msg += `PA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}\n`
                   if (result.geoExtentAmount > 0) msg += `Geographical Extent: ₹${fmtD(result.geoExtentAmount)}\n`
                   if (result.zeroDepAmount > 0) msg += `Zero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}\n`
                   if (result.imt23Amount > 0) msg += `IMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}\n`
@@ -1349,13 +1360,13 @@ const PremiumCalculator = () => {
                     const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
                     shareText += `\nTP Premium: ₹${fmtD(tpBefore)}`
                     if (result.restrictedTPPDDiscount > 0) shareText += `\nRestricted TPPD: - ₹${fmtD(result.restrictedTPPDDiscount)}`
+                    if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
+                    if (result.llEmployeeAmount > 0) shareText += `\nLL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}`
+                    if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
+                    if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
                   }
-                  if (result.llPdAmount > 0) shareText += `\nLL to Paid Driver: ₹${fmtD(result.llPdAmount)}`
-                  if (result.llEmployeeAmount > 0) shareText += `\nLL to Employee (other than Paid Driver): ₹${fmtD(result.llEmployeeAmount)}`
-                  if (result.paOdAmount > 0) shareText += `\nPA to Owner Driver: ₹${fmtD(result.paOdAmount)}`
                   if (result.rsaAmount > 0) shareText += `\nRSA: ₹${fmtD(result.rsaAmount)}`
                   if (result.otherAddonAmount > 0) shareText += `\nOther Addon: ₹${fmtD(result.otherAddonAmount)}`
-                  if (result.paUnnamedAmount > 0) shareText += `\nPA Unnamed Passenger: ₹${fmtD(result.paUnnamedAmount)}`
                   if (result.geoExtentAmount > 0) shareText += `\nGeographical Extent: ₹${fmtD(result.geoExtentAmount)}`
                   if (result.zeroDepAmount > 0) shareText += `\nZero Dep (5% of IDV): ₹${fmtD(result.zeroDepAmount)}`
                   if (result.imt23Amount > 0) shareText += `\nIMT 23 (15% of OD): ₹${fmtD(result.imt23Amount)}`

@@ -84,6 +84,12 @@ const Home = () => {
 
   useEffect(() => {
     if (user && user.hasPassword === false && user.mobile) {
+      const dismissed = localStorage.getItem('passwordPromptDismissedAt')
+      if (dismissed) {
+        const dismissedDate = new Date(dismissed).toDateString()
+        const today = new Date().toDateString()
+        if (dismissedDate === today) return
+      }
       setShowPasswordPrompt(true)
     }
   }, [user])
@@ -752,7 +758,7 @@ const Home = () => {
             </button>
             <button
               type='button'
-              onClick={() => setShowPasswordPrompt(false)}
+              onClick={() => { localStorage.setItem('passwordPromptDismissedAt', new Date().toISOString()); setShowPasswordPrompt(false) }}
               disabled={submittingPassword}
               className='w-full mt-2 px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer rounded-xl'
             >

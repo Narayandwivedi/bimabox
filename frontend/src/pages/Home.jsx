@@ -162,6 +162,7 @@ const Home = () => {
               validTo: validTo,
               daysLeft: daysLeft,
               color: ep.color,
+              insuredName: record.policyHolderName || record.ownerName || record.name || '',
               rawRecord: record
             }
           })
@@ -394,6 +395,7 @@ const Home = () => {
                               <div className='min-w-0 flex-1'>
                                 <h3 className='text-sm font-bold text-slate-900 truncate'>{doc.type}</h3>
                                 <p className='text-[10px] font-mono text-slate-500'>{doc.vehicleNumber}</p>
+                                {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400 truncate'>{doc.insuredName}</p>}
                               </div>
                               <div className='text-right'>
                                 <p className={`text-[11px] font-black ${
@@ -446,6 +448,7 @@ const Home = () => {
                                     <div>
                                       <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type}</h3>
                                       <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
+                                      {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400'>{doc.insuredName}</p>}
                                     </div>
                                   </div>
                                   <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${

@@ -1,9 +1,11 @@
 const User = require('../models/User')
 const Admin = require('../models/Admin')
+const Otp = require('../models/Otp')
 const { recordFailedAttempt } = require('../middleware/adminRateLimiter')
 const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+const { sendOtpEmail } = require('../utils/email')
 const {
   signToken,
   buildAuthCookie,
@@ -41,7 +43,10 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Identifier and password are required' })
     }
 
-    const user = await User.findOne({ mobile: identifier })
+    const isEmail = identifier.includes('@')
+    const user = isEmail
+      ? await User.findOne({ email: identifier.toLowerCase() })
+      : await User.findOne({ mobile: identifier })
 
     if (!user || user.isActive === false) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' })
@@ -327,6 +332,116 @@ const accessUser = async (req, res) => {
   }
 }
 
+const forgotPassword = async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase()
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.json({ success: true, message: 'If this email is registered, you will receive an OTP' })
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000))
+    const hashedOtp = await bcrypt.hash(otp, 10)
+
+    await Otp.deleteMany({ email })
+    await Otp.create({
+      email,
+      otp: hashedOtp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+    })
+
+    console.log(`[Password Reset] OTP for ${email}: ${otp}`)
+
+    await sendOtpEmail(email, otp)
+
+    res.json({ success: true, message: 'OTP send at email successfully' })
+  } catch (error) {
+    console.error('Forgot password error:', error)
+    res.status(500).json({ success: false, message: 'Failed to send OTP' })
+  }
+}
+
+const verifyOtp = async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const otp = String(req.body.otp || '').trim()
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' })
+    }
+
+    if (!/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: 'OTP must be 6 digits' })
+    }
+
+    const otpRecord = await Otp.findOne({ email, verified: false })
+
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: 'OTP expired or invalid' })
+    }
+
+    const isValid = await otpRecord.compareOtp(otp)
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' })
+    }
+
+    otpRecord.verified = true
+    await otpRecord.save()
+
+    res.json({ success: true, message: 'OTP verified successfully' })
+  } catch (error) {
+    console.error('Verify OTP error:', error)
+    res.status(500).json({ success: false, message: 'Failed to verify OTP' })
+  }
+}
+
+const resetPassword = async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase()
+    const otp = String(req.body.otp || '').trim()
+    const newPassword = String(req.body.newPassword || '')
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Email, OTP, and new password are required' })
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
+    }
+
+    const otpRecord = await Otp.findOne({ email, verified: true })
+
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: 'OTP not verified or expired. Please request a new OTP.' })
+    }
+
+    const isValid = await otpRecord.compareOtp(otp)
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' })
+    }
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10)
+    await user.save()
+
+    await Otp.deleteMany({ email })
+
+    res.json({ success: true, message: 'Password reset successfully. You can now login with your new password.' })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    res.status(500).json({ success: false, message: 'Failed to reset password' })
+  }
+}
+
 module.exports = {
   login,
   register,
@@ -339,4 +454,7 @@ module.exports = {
   changeAdminPassword,
   googleLogin,
   accessUser,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
 }

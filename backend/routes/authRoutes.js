@@ -18,5 +18,8 @@ router.get('/admin/profile', requireAdminAuth, controller.adminProfile)
 router.post('/admin/logout', controller.adminLogout)
 router.post('/admin/access-user/:id', requireAdminAuth, controller.accessUser)
 router.post('/admin/change-password', requireAdminAuth, controller.changeAdminPassword)
+router.post('/forgot-password', controller.forgotPassword)
+router.post('/verify-otp', controller.verifyOtp)
+router.post('/reset-password', controller.resetPassword)
 
 module.exports = router

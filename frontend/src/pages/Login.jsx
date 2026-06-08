@@ -127,7 +127,7 @@ const Login = () => {
 
   if (authLoading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex items-center justify-center p-4'>
+      <div className='min-h-[100dvh] bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex items-center justify-center p-4'>
         <div className='bg-white rounded-2xl shadow-2xl p-8'>
           <div className='flex flex-col items-center justify-center'>
             <svg className='animate-spin h-12 w-12 text-orange-600 mb-4' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
@@ -142,7 +142,7 @@ const Login = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-100 flex flex-col items-center justify-center p-4 relative overflow-hidden'>
+    <div className='min-h-[100dvh] bg-gradient-to-br from-slate-50 via-indigo-50 to-blue-100 flex flex-col items-center justify-center p-4 relative overflow-hidden'>
       <div className='absolute top-0 left-0 w-full h-full overflow-hidden z-0'>
         <div className='absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-indigo-300/20 rounded-full blur-3xl'></div>
         <div className='absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-emerald-300/20 rounded-full blur-3xl'></div>

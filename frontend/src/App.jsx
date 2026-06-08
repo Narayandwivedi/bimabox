@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
@@ -24,7 +24,9 @@ import { Agentation } from "agentation";
 
 function AppContent() {
   const location = useLocation()
+  const navigate = useNavigate()
   const isLoginPage = location.pathname === '/login'
+  const isHomePage = location.pathname === '/'
   const showNav = !isLoginPage
   const theme = getTheme()
 
@@ -34,16 +36,26 @@ function AppContent() {
       {showNav && <Sidebar />}
 
       {showNav && (
-        <nav className={`fixed top-0 left-0 right-0 z-20 flex h-16 items-center justify-center border-b border-slate-200 lg:hidden ${theme.navbar}`}>
-          <Link to='/' className='flex items-center gap-1.5'>
-            <img src='/bimalogo.png' alt='BimaBox' className='h-[50px] w-auto' />
-            <div className='flex flex-col'>
-              <span className='text-[20px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
-                <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
-              </span>
-              <span className='mt-0.5 text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
-            </div>
-          </Link>
+        <nav className={`fixed top-0 left-0 right-0 z-20 flex h-16 items-center border-b border-slate-200 lg:hidden ${theme.navbar}`}>
+          {!isHomePage && (
+            <button onClick={() => navigate(-1)} className='ml-3 p-2 text-slate-600 hover:text-slate-900 transition cursor-pointer' title='Go back'>
+              <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+              </svg>
+            </button>
+          )}
+          <div className='flex-1 flex justify-center'>
+            <Link to='/' className='flex items-center gap-1.5'>
+              <img src='/bimalogo.png' alt='BimaBox' className='h-[50px] w-auto' />
+              <div className='flex flex-col'>
+                <span className='text-[20px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
+                </span>
+                <span className='mt-0.5 text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
+              </div>
+            </Link>
+          </div>
+          {!isHomePage && <div className='w-12' />}
         </nav>
       )}
 

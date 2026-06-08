@@ -15,17 +15,16 @@ const KycPage = () => {
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewTitle, setPreviewTitle] = useState('')
   const fileInputRef = useRef(null)
-  const aadharFrontRef = useRef(null)
-  const aadharBackRef = useRef(null)
+  const frontFileRef = useRef(null)
+  const backFileRef = useRef(null)
 
   const [form, setForm] = useState({
     name: '',
     documentType: 'Aadhar',
     otherDocumentType: '',
     documentNumber: '',
-    aadharFrontFile: null,
-    aadharBackFile: null,
-    documentFile: null,
+    frontFile: null,
+    backFile: null,
     remarks: ''
   })
 
@@ -56,9 +55,8 @@ const KycPage = () => {
       documentType: 'Aadhar',
       otherDocumentType: '',
       documentNumber: '',
-      aadharFrontFile: null,
-      aadharBackFile: null,
-      documentFile: null,
+      frontFile: null,
+      backFile: null,
       remarks: ''
     })
     setShowModal(true)
@@ -71,9 +69,8 @@ const KycPage = () => {
       documentType: record.documentType || 'Aadhar',
       otherDocumentType: record.otherDocumentType || '',
       documentNumber: record.documentNumber || '',
-      aadharFrontFile: null,
-      aadharBackFile: null,
-      documentFile: null,
+      frontFile: null,
+      backFile: null,
       remarks: record.remarks || ''
     })
     setShowModal(true)
@@ -97,12 +94,8 @@ const KycPage = () => {
         remarks: form.remarks
       }
 
-      if (form.documentType === 'Aadhar') {
-        if (form.aadharFrontFile) payload.aadharFrontDocument = await toBase64(form.aadharFrontFile)
-        if (form.aadharBackFile) payload.aadharBackDocument = await toBase64(form.aadharBackFile)
-      } else {
-        if (form.documentFile) payload.documentImage = await toBase64(form.documentFile)
-      }
+      if (form.frontFile) payload.documentFrontImg = await toBase64(form.frontFile)
+      if (form.backFile) payload.documentBackImg = await toBase64(form.backFile)
 
       if (editingRecord) {
         await axios.put(`${API_URL}/api/kyc/${editingRecord._id}`, payload, { withCredentials: true })
@@ -134,11 +127,11 @@ const KycPage = () => {
     setPreviewTitle(title)
   }
 
-  const getDocumentUrl = (record) => {
-    if (record.documentType === 'Aadhar') {
-      return record.aadharFrontDocument || record.aadharBackDocument
+  const getDocumentUrl = (record, side = 'front') => {
+    if (side === 'front') {
+      return record.documentFrontImg || record.documentImage
     }
-    return record.documentImage
+    return record.documentBackImg
   }
 
   return (
@@ -201,19 +194,11 @@ const KycPage = () => {
                         </div>
                         {record.documentNumber && <p className='text-[11px] text-slate-500 font-mono mb-2'>No: {record.documentNumber}</p>}
                         <div className='flex gap-2'>
-                          {record.documentType === 'Aadhar' ? (
-                            <>
-                              {record.aadharFrontDocument && (
-                                <button onClick={() => openPreview(API_URL + record.aadharFrontDocument, 'Aadhar Front')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Front</button>
-                              )}
-                              {record.aadharBackDocument && (
-                                <button onClick={() => openPreview(API_URL + record.aadharBackDocument, 'Aadhar Back')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Back</button>
-                              )}
-                            </>
-                          ) : (
-                            record.documentImage && (
-                              <button onClick={() => openPreview(API_URL + record.documentImage, record.documentType)} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Document</button>
-                            )
+                          {getDocumentUrl(record, 'front') && (
+                            <button onClick={() => openPreview(API_URL + getDocumentUrl(record, 'front'), 'Front Side')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Front</button>
+                          )}
+                          {getDocumentUrl(record, 'back') && (
+                            <button onClick={() => openPreview(API_URL + getDocumentUrl(record, 'back'), 'Back Side')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Back</button>
                           )}
                         </div>
                       </div>
@@ -333,53 +318,36 @@ const KycPage = () => {
                     <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
                     Documents
                   </h3>
-                  {form.documentType === 'Aadhar' ? (
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
-                      <div>
-                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Aadhar Front</label>
-                        <div className='relative overflow-hidden'>
-                          <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
-                            <span className='flex items-center gap-2'>
-                              <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
-                              </svg>
-                              {form.aadharFrontFile ? form.aadharFrontFile.name : 'Upload Front'}
-                            </span>
-                          </button>
-                          <input ref={aadharFrontRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, aadharFrontFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
-                        </div>
-                      </div>
-                      <div>
-                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Aadhar Back</label>
-                        <div className='relative overflow-hidden'>
-                          <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
-                            <span className='flex items-center gap-2'>
-                              <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
-                              </svg>
-                              {form.aadharBackFile ? form.aadharBackFile.name : 'Upload Back'}
-                            </span>
-                          </button>
-                          <input ref={aadharBackRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, aadharBackFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
                     <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Document</label>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Front Side</label>
                       <div className='relative overflow-hidden'>
                         <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
                           <span className='flex items-center gap-2'>
                             <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
                             </svg>
-                            {form.documentFile ? form.documentFile.name : 'Upload document (image/PDF)'}
+                            {form.frontFile ? form.frontFile.name : 'Upload Front'}
                           </span>
                         </button>
-                        <input ref={fileInputRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, documentFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                        <input ref={frontFileRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, frontFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
                       </div>
                     </div>
-                  )}
+                    <div>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Back Side</label>
+                      <div className='relative overflow-hidden'>
+                        <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
+                          <span className='flex items-center gap-2'>
+                            <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
+                            </svg>
+                            {form.backFile ? form.backFile.name : 'Upload Back'}
+                          </span>
+                        </button>
+                        <input ref={backFileRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, backFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className='bg-gradient-to-r from-slate-50 to-indigo-50 border-2 border-slate-200 rounded-xl p-3 md:p-6'>

@@ -63,7 +63,7 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { name, documentType, otherDocumentType, documentNumber, aadharFrontDocument, aadharBackDocument, documentImage, remarks } = req.body
+    const { name, documentType, otherDocumentType, documentNumber, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
 
     if (!name || !documentType) {
       return res.status(400).json({ success: false, message: 'Name and document type are required' })
@@ -78,12 +78,12 @@ const create = async (req, res) => {
       remarks: remarks ? String(remarks).trim() : ''
     }
 
-    if (documentType === 'Aadhar') {
-      payload.aadharFrontDocument = saveBase64File(aadharFrontDocument)
-      payload.aadharBackDocument = saveBase64File(aadharBackDocument)
-    } else {
-      payload.documentImage = saveBase64File(documentImage)
-    }
+    const savedFront = saveBase64File(documentFrontImg)
+    const savedBack = saveBase64File(documentBackImg)
+    if (savedFront) payload.documentFrontImg = savedFront
+    if (savedBack) payload.documentBackImg = savedBack
+    if (savedFront && !documentFrontImg?.startsWith('data:')) payload.documentImage = savedFront
+    else if (!savedFront && documentImage) payload.documentImage = saveBase64File(documentImage)
 
     const record = await Kyc.create(payload)
     res.status(201).json({ success: true, data: record })
@@ -98,7 +98,7 @@ const update = async (req, res) => {
     const existing = await Kyc.findOne({ _id: req.params.id, userId: req.user._id })
     if (!existing) return res.status(404).json({ success: false, message: 'KYC record not found' })
 
-    const { name, documentType, otherDocumentType, documentNumber, aadharFrontDocument, aadharBackDocument, documentImage, remarks } = req.body
+    const { name, documentType, otherDocumentType, documentNumber, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
 
     if (name) existing.name = String(name).trim()
     if (documentType) existing.documentType = documentType
@@ -106,12 +106,14 @@ const update = async (req, res) => {
     if (documentNumber !== undefined) existing.documentNumber = String(documentNumber).trim()
     if (remarks !== undefined) existing.remarks = String(remarks).trim()
 
-    if (documentType === 'Aadhar') {
-      if (aadharFrontDocument) existing.aadharFrontDocument = saveBase64File(aadharFrontDocument)
-      if (aadharBackDocument) existing.aadharBackDocument = saveBase64File(aadharBackDocument)
-    } else {
-      if (documentImage) existing.documentImage = saveBase64File(documentImage)
+    const savedFront = saveBase64File(documentFrontImg)
+    const savedBack = saveBase64File(documentBackImg)
+    if (savedFront) {
+      existing.documentFrontImg = savedFront
+      existing.documentImage = savedFront
     }
+    if (savedBack) existing.documentBackImg = savedBack
+    if (!savedFront && documentImage) existing.documentImage = saveBase64File(documentImage)
 
     await existing.save()
     res.json({ success: true, data: existing })

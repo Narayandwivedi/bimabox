@@ -15,8 +15,8 @@ const kycSchema = new mongoose.Schema({
   },
   otherDocumentType: { type: String, trim: true },
   documentNumber: { type: String, trim: true },
-  aadharFrontDocument: { type: String, trim: true },
-  aadharBackDocument: { type: String, trim: true },
+  documentFrontImg: { type: String, trim: true },
+  documentBackImg: { type: String, trim: true },
   documentImage: { type: String, trim: true },
   remarks: { type: String, trim: true }
 }, { timestamps: true })

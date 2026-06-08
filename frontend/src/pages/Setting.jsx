@@ -1,13 +1,40 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const Setting = () => {
   const navigate = useNavigate()
-  const { logout, user } = useAuth()
+  const { logout, user, setUser } = useAuth()
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState(user?.name || '')
+  const [savingName, setSavingName] = useState(false)
 
   const handleLogout = async () => {
     await logout()
     navigate('/login')
+  }
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) return
+    setSavingName(true)
+    try {
+      const response = await axios.put(`${API_URL}/api/auth/name`, { name: nameInput.trim() }, { withCredentials: true })
+      if (response.data.success) {
+        setUser(response.data.data.user)
+        setEditingName(false)
+      }
+    } catch (_err) {
+    } finally {
+      setSavingName(false)
+    }
+  }
+
+  const handleCancelName = () => {
+    setNameInput(user?.name || '')
+    setEditingName(false)
   }
 
   return (
@@ -29,8 +56,32 @@ const Setting = () => {
                   user?.name?.charAt(0) || 'U'
                 )}
               </div>
-              <div className='min-w-0'>
-                <h2 className='text-base font-black text-slate-900 truncate'>{user?.name || 'User'}</h2>
+              <div className='min-w-0 flex-1'>
+                {editingName ? (
+                  <div className='flex items-center gap-2'>
+                    <input
+                      type='text'
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      className='flex-1 px-3 py-1.5 text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all'
+                      autoFocus
+                      disabled={savingName}
+                    />
+                    <button type='button' onClick={handleSaveName} disabled={savingName || !nameInput.trim()} className='px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer'>
+                      {savingName ? '...' : 'Save'}
+                    </button>
+                    <button type='button' onClick={handleCancelName} disabled={savingName} className='px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition cursor-pointer'>
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button type='button' onClick={() => { setNameInput(user?.name || ''); setEditingName(true) }} className='group flex items-center gap-2 cursor-pointer'>
+                    <h2 className='text-base font-black text-slate-900 truncate group-hover:text-blue-600 transition-colors'>{user?.name || 'User'}</h2>
+                    <svg className='h-3.5 w-3.5 text-slate-300 group-hover:text-blue-500 transition-colors' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
+                    </svg>
+                  </button>
+                )}
                 <p className='text-[9px] font-bold text-indigo-600 uppercase tracking-widest'>Active Member</p>
               </div>
             </div>

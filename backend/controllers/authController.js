@@ -21,6 +21,7 @@ const sanitizeUser = (user) => ({
   mobile: user.mobile || '',
   picture: user.picture || '',
   isActive: user.isActive !== false,
+  hasPassword: !!user.password,
   lastLogin: user.lastLogin || null,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
@@ -180,11 +181,11 @@ const register = async (req, res) => {
     const mobile = String(req.body.mobile || '').trim()
     const password = String(req.body.password || '')
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Name, email, and password are required' })
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required' })
     }
 
-    if (password.length < 6) {
+    if (password && password.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
     }
 
@@ -196,9 +197,12 @@ const register = async (req, res) => {
     const userData = {
       name,
       email,
-      password: await bcrypt.hash(password, 10),
       isActive: true,
       lastLogin: new Date()
+    }
+
+    if (password) {
+      userData.password = await bcrypt.hash(password, 10)
     }
     if (mobile && /^\d{10}$/.test(mobile)) {
       const mobileExists = await User.findOne({ mobile })
@@ -305,6 +309,30 @@ const updateMobile = async (req, res) => {
   }
 }
 
+const updateName = async (req, res) => {
+  try {
+    const name = String(req.body.name || '').trim()
+
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Name is required' })
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { name },
+      { new: true }
+    )
+
+    res.json({
+      success: true,
+      data: { user: sanitizeUser(updatedUser) },
+    })
+  } catch (error) {
+    console.error('Update name error:', error)
+    res.status(500).json({ success: false, message: 'Failed to update name' })
+  }
+}
+
 const accessUser = async (req, res) => {
   try {
     const { id } = req.params
@@ -329,6 +357,33 @@ const accessUser = async (req, res) => {
   } catch (error) {
     console.error('Access user error:', error)
     res.status(500).json({ success: false, message: 'Failed to access user' })
+  }
+}
+
+const setPassword = async (req, res) => {
+  try {
+    const newPassword = String(req.body.password || '')
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' })
+    }
+
+    const user = await User.findById(req.user._id)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' })
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10)
+    await user.save()
+
+    res.json({
+      success: true,
+      message: 'Password set successfully',
+      data: { user: sanitizeUser(user) }
+    })
+  } catch (error) {
+    console.error('Set password error:', error)
+    res.status(500).json({ success: false, message: 'Failed to set password' })
   }
 }
 
@@ -447,6 +502,7 @@ module.exports = {
   register,
   profile,
   updateMobile,
+  updateName,
   adminLogin,
   adminProfile,
   logout,
@@ -454,6 +510,7 @@ module.exports = {
   changeAdminPassword,
   googleLogin,
   accessUser,
+  setPassword,
   forgotPassword,
   verifyOtp,
   resetPassword,

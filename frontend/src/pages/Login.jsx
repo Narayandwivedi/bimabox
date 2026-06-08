@@ -235,21 +235,29 @@ const Login = () => {
     }
   }
 
-  const handleSignup = async (e) => {
+  const handleSignup = async (e, skipPassword) => {
     e.preventDefault()
     setError('')
 
     const { name, email, password } = formData
-    if (!name || !email || !password) {
-      setError('Name, email, and password are required')
+    if (!name || !email) {
+      setError('Name and email are required')
       return
+    }
+
+    const effectivePassword = skipPassword ? '' : password
+    const payload = { name, email }
+    if (effectivePassword) {
+      if (effectivePassword.length < 6) {
+        setError('Password must be at least 6 characters')
+        return
+      }
+      payload.password = password
     }
 
     setLoading(true)
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/auth/register`, {
-        name, email, password
-      }, { withCredentials: true })
+      const response = await axios.post(`${BACKEND_URL}/api/auth/register`, payload, { withCredentials: true })
 
       if (response.data.success) {
         setUser(response.data.data.user)
@@ -436,14 +444,14 @@ const Login = () => {
               )}
 
               <div>
-                <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 ml-1'>Password</label>
+                <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 ml-1'>Password {mode === 'signup' && <span className='text-slate-400 font-medium normal-case'>(optional)</span>}</label>
                 <div className='relative group'>
                   <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-500'>
                     <svg className='w-5 h-5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
                     </svg>
                   </div>
-                  <input type={showPassword ? 'text' : 'password'} name='password' value={formData.password} onChange={handleChange} placeholder='••••••••' className='w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium' disabled={loading} />
+                  <input type={showPassword ? 'text' : 'password'} name='password' value={formData.password} onChange={handleChange} placeholder={mode === 'signup' ? 'Set a password (optional)' : '••••••••'} className='w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium' disabled={loading} />
                   <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-slate-400 hover:text-slate-600 transition-colors'>
                     {showPassword ? (
                       <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -467,19 +475,40 @@ const Login = () => {
                 </div>
               )}
 
-              <button type='submit' disabled={loading} className='w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4'>
-                {loading ? (
-                  <>
-                    <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
-                      <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
-                    </svg>
-                    <span>{mode === 'login' ? 'Verifying...' : 'Creating account...'}</span>
-                  </>
-                ) : (
-                  <span>{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
-                )}
-              </button>
+              {mode === 'signup' ? (
+                <div className='flex gap-3 mt-4'>
+                  <button type='submit' disabled={loading} className='flex-1 bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2'>
+                    {loading ? (
+                      <>
+                        <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
+                        </svg>
+                        <span>Creating account...</span>
+                      </>
+                    ) : (
+                      <span>Create Account</span>
+                    )}
+                  </button>
+                  <button type='button' onClick={(e) => handleSignup(e, true)} disabled={loading} className='flex-1 bg-white border-2 border-slate-200 text-slate-700 py-3 rounded-xl font-bold hover:border-slate-400 hover:bg-slate-50 hover:shadow-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'>
+                    Maybe Later
+                  </button>
+                </div>
+              ) : (
+                <button type='submit' disabled={loading} className='w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4'>
+                  {loading ? (
+                    <>
+                      <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                        <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
+                      </svg>
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </button>
+              )}
 
               <div className='relative my-4'>
                 <div className='absolute inset-0 flex items-center'>

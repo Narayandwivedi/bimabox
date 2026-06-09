@@ -267,7 +267,7 @@ const KycPage = () => {
 
       {showModal && (
         <div className='fixed inset-0 bg-black/60 z-[60] flex items-start md:items-center justify-center p-3 pt-16 md:p-4'>
-          <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] md:max-h-[95vh] overflow-hidden flex flex-col'>
+          <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] md:max-h-[95vh] overflow-hidden flex flex-col'>
             <div className='bg-gradient-to-r from-indigo-600 to-blue-600 p-3 md:p-4 text-white flex-shrink-0'>
               <div className='flex justify-between items-center'>
                 <div>

@@ -28,6 +28,8 @@ const PremiumCalculator = () => {
   const [ncb, setNcb] = useState(0)
   const [coverageType, setCoverageType] = useState('comprehensive')
   const [policyType, setPolicyType] = useState('comprehensive')
+  const [bundleOdTerm, setBundleOdTerm] = useState('1')
+  const [bundleTpTerm, setBundleTpTerm] = useState('3')
   const [odDiscount, setOdDiscount] = useState('')
 
   const [cc, setCc] = useState('')
@@ -103,12 +105,24 @@ const PremiumCalculator = () => {
       case 'private_car': {
         if (isElectric) {
           const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
-          tpPremium = policyType === 'bundle' ? TARIFF.private_car.electricTP3yr[kwBracket] : TARIFF.private_car.electricTP1yr[kwBracket]
+          if (policyType === 'bundle') {
+            const tpYr = parseInt(bundleTpTerm) || 3
+            tpPremium = TARIFF.private_car.electricTP3yr[kwBracket]
+            if (tpYr !== 3) tpPremium = TARIFF.private_car.electricTP1yr[kwBracket] * tpYr
+          } else {
+            tpPremium = TARIFF.private_car.electricTP1yr[kwBracket]
+          }
           odRate = TARIFF.private_car.odRates[vehicleAge][zone][kwBracket]
           details = { label: `${kwVal} KW (Electric)` }
         } else {
           const bracket = getCCBracket(ccVal)
-          tpPremium = policyType === 'bundle' ? TARIFF.private_car.tp3YrsByCC[bracket] : TARIFF.private_car.tpByCC[bracket]
+          if (policyType === 'bundle') {
+            const tpYr = parseInt(bundleTpTerm) || 3
+            tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
+            if (tpYr !== 3) tpPremium = TARIFF.private_car.tpByCC[bracket] * tpYr
+          } else {
+            tpPremium = TARIFF.private_car.tpByCC[bracket]
+          }
           odRate = TARIFF.private_car.odRates[vehicleAge][zone][bracket]
           details = { label: ccVal <= 1000 ? '≤1000 CC' : ccVal <= 1500 ? '1001–1500 CC' : '>1500 CC' }
         }
@@ -124,7 +138,9 @@ const PremiumCalculator = () => {
           const ccBracket = get2WCCBracket(ccVal)
           const odBracket = get2WODBracket(ccVal)
           if (policyTerm === '5yr' || policyType === 'bundle') {
+            const tpYr = parseInt(bundleTpTerm) || 5
             tpPremium = TARIFF.two_wheeler.tpBundle5yr[ccBracket] || 0
+            if (tpYr !== 5) tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket] * tpYr
           } else {
             tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket]
           }
@@ -201,6 +217,7 @@ const PremiumCalculator = () => {
         odPremium = odPremium * (1 - odDiscountVal / 100)
       }
       if (policyType === 'od') tpPremium = 0
+      if (policyType === 'bundle') odPremium *= (parseInt(bundleOdTerm) || 1)
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
         odPremium = idvVal * (odRate / 100)
@@ -287,12 +304,12 @@ const PremiumCalculator = () => {
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
 
   const formProps = {
     zone, setZone, vehicleAge, setVehicleAge, idv, setIdv,
     ncb, setNcb, odDiscount, setOdDiscount,
-    coverageType, setCoverageType, policyType, setPolicyType,
+    coverageType, setCoverageType, policyType, setPolicyType, bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
     isElectric, setIsElectric, cc, setCc, kwPower, setKwPower,
     gvw, setGvw, passengers, setPassengers,
     subtype, setSubtype,

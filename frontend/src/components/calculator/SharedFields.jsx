@@ -113,13 +113,14 @@ export const NCBSelector = ({ ncb, setNcb }) => (
   </div>
 )
 
-export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType }) => {
+export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm }) => {
   const is2W = vehicleType === 'two_wheeler'
+  const showBundleOpts = policyType === 'bundle'
   const policies = [
     { id: 'od', label: 'Own Damage (OD)', desc: 'Damages to your own vehicle' },
     { id: 'tp', label: 'Third Party (TP)', desc: 'Mandatory third party liability' },
     { id: 'comprehensive', label: 'Comprehensive', desc: 'Own Damage + Third Party' },
-    { id: 'bundle', label: 'Bundle Policy', desc: is2W ? '1-Year OD + 5-Year TP' : '1-Year OD + 3-Year TP' },
+    { id: 'bundle', label: 'Bundle Policy', desc: 'OD + Third Party' },
   ]
   return (
     <div>
@@ -136,6 +137,24 @@ export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType }) =
           </button>
         ))}
       </div>
+      {showBundleOpts && (
+        <div className='mt-2 flex gap-3'>
+          <div className='flex-1'>
+            <label className='mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-400'>OD Term</label>
+            <select value={bundleOdTerm} onChange={e => setBundleOdTerm(e.target.value)}
+              className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
+            </select>
+          </div>
+          <div className='flex-1'>
+            <label className='mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-400'>TP Term</label>
+            <select value={bundleTpTerm} onChange={e => setBundleTpTerm(e.target.value)}
+              className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

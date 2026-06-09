@@ -12,6 +12,7 @@ const TwoWheelerForm = ({
   ncb, setNcb,
   odDiscount, setOdDiscount,
   policyType, setPolicyType,
+  bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
   coverageType, setCoverageType,
   vehicleType,
   currentYear,
@@ -38,7 +39,7 @@ const TwoWheelerForm = ({
     </div>
     {!isElectric ? (
       <>
-        <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} />
+        <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
         <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
           <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
           <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
@@ -58,7 +59,7 @@ const TwoWheelerForm = ({
       </>
     ) : (
       <>
-        <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} />
+        <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
           <div>
             <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>

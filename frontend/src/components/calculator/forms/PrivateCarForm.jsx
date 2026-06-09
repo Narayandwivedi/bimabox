@@ -12,6 +12,7 @@ const PrivateCarForm = ({
   ncb, setNcb,
   odDiscount, setOdDiscount,
   policyType, setPolicyType,
+  bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
   vehicleType,
   currentYear,
 }) => (
@@ -35,7 +36,7 @@ const PrivateCarForm = ({
         </button>
       </div>
     </div>
-    <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} />
+    <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
     <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
       <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />

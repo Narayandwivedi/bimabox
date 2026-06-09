@@ -2,7 +2,7 @@ export const fmt = (n) => Math.round(n).toLocaleString('en-IN')
 
 export const fmtD = (n) => {
   const num = typeof n === 'number' ? n : parseFloat(n) || 0
-  return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return Math.round(num).toLocaleString('en-IN')
 }
 
 export const getCCBracket = (cc) => {

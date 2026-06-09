@@ -16,6 +16,7 @@ import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
 import KycPage from './pages/Kyc/KycPage'
 import Renewals from './pages/Renewals'
+import Reference from './pages/Reference'
 import { getTheme } from './context/ThemeContext'
 
 import { Agentation } from "agentation";
@@ -72,6 +73,7 @@ function AppContent() {
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
             <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+            <Route path='/references' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
           </Routes>
         </div>
       </div>

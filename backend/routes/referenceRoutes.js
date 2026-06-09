@@ -52,4 +52,29 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { name } = req.body
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Reference name is required' })
+    }
+    const existing = await Reference.findOne({ userId: req.user._id, name: name.trim() })
+    if (existing && existing._id.toString() !== req.params.id) {
+      return res.status(409).json({ success: false, message: 'A reference with this name already exists' })
+    }
+    const reference = await Reference.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { name: name.trim() },
+      { new: true }
+    )
+    if (!reference) {
+      return res.status(404).json({ success: false, message: 'Reference not found' })
+    }
+    res.json({ success: true, data: reference })
+  } catch (error) {
+    console.error('Error updating reference:', error)
+    res.status(500).json({ success: false, message: 'Failed to update reference' })
+  }
+})
+
 module.exports = router

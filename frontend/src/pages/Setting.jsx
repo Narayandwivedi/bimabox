@@ -39,15 +39,15 @@ const Setting = () => {
 
   return (
     <div className='min-h-screen bg-slate-100 px-4 pb-32 pt-4 md:px-6 lg:px-8'>
-      <div className='mx-auto max-w-lg'>
+      <div className='mx-auto max-w-lg lg:max-w-3xl'>
         <div className='mb-5'>
           <h1 className='text-xl font-black text-slate-900'>Settings</h1>
           <p className='text-[10px] font-bold uppercase tracking-widest text-slate-500'>Account Preferences</p>
         </div>
 
-        <div className='space-y-4'>
+        <div className='space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0'>
           {/* Profile Card */}
-          <div className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
+          <div className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:self-start'>
             <div className='flex items-center gap-4 mb-4'>
               <div className='h-12 w-12 shrink-0 rounded-full bg-indigo-600 flex items-center justify-center overflow-hidden text-lg text-white font-black shadow-md'>
                 {user?.picture ? (
@@ -86,7 +86,7 @@ const Setting = () => {
               </div>
             </div>
 
-            <div className='space-y-2.5'>
+            <div className='space-y-2.5 md:grid md:grid-cols-2 md:gap-2.5 md:space-y-0'>
               <div className='flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-slate-100'>
                 <svg className='h-4 w-4 shrink-0 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
@@ -102,11 +102,31 @@ const Setting = () => {
             </div>
           </div>
 
+          {/* References Card */}
+          <div className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:self-start'>
+            <h3 className='text-xs font-black uppercase tracking-widest text-slate-500 mb-4'>Manage Data</h3>
+            <button
+              onClick={() => navigate('/references')}
+              className='flex w-full items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors cursor-pointer'
+            >
+              <svg className='h-5 w-5 shrink-0 text-indigo-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
+              </svg>
+              <div className='min-w-0 text-left'>
+                <p className='text-xs font-bold text-slate-900'>References</p>
+                <p className='text-[9px] font-semibold text-slate-400'>Manage reference names used in insurance</p>
+              </div>
+              <svg className='h-4 w-4 ml-auto shrink-0 text-slate-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+              </svg>
+            </button>
+          </div>
+
           {/* Contact & Social Card */}
           <div className='rounded-2xl border border-slate-200 bg-white p-5 shadow-sm'>
             <h3 className='text-xs font-black uppercase tracking-widest text-slate-500 mb-4'>Get In Touch</h3>
 
-            <div className='space-y-2.5 mb-5'>
+            <div className='space-y-2.5 mb-5 md:grid md:grid-cols-2 md:gap-2.5 md:space-y-0'>
               <a href='mailto:mybimabox@gmail.com' className='flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors group'>
                 <svg className='h-4 w-4 shrink-0 text-indigo-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />

@@ -63,27 +63,34 @@ const getById = async (req, res) => {
 
 const create = async (req, res) => {
   try {
-    const { name, documentType, otherDocumentType, documentNumber, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
+    const { name, documents, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
 
-    if (!name || !documentType) {
-      return res.status(400).json({ success: false, message: 'Name and document type are required' })
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Name is required' })
     }
 
     const payload = {
       userId: req.user._id,
       name: String(name).trim(),
-      documentType,
-      otherDocumentType: otherDocumentType ? String(otherDocumentType).trim() : '',
-      documentNumber: documentNumber ? String(documentNumber).trim() : '',
       remarks: remarks ? String(remarks).trim() : ''
     }
 
-    const savedFront = saveBase64File(documentFrontImg)
-    const savedBack = saveBase64File(documentBackImg)
-    if (savedFront) payload.documentFrontImg = savedFront
-    if (savedBack) payload.documentBackImg = savedBack
-    if (savedFront && !documentFrontImg?.startsWith('data:')) payload.documentImage = savedFront
-    else if (!savedFront && documentImage) payload.documentImage = saveBase64File(documentImage)
+    if (documents && Array.isArray(documents) && documents.length > 0) {
+      payload.documents = documents.map(doc => ({
+        documentType: doc.documentType,
+        otherDocumentType: doc.otherDocumentType ? String(doc.otherDocumentType).trim() : '',
+        documentNumber: doc.documentNumber ? String(doc.documentNumber).trim() : '',
+        documentFrontImg: saveBase64File(doc.documentFrontImg),
+        documentBackImg: saveBase64File(doc.documentBackImg)
+      }))
+    } else {
+      const savedFront = saveBase64File(documentFrontImg)
+      const savedBack = saveBase64File(documentBackImg)
+      if (savedFront) payload.documentFrontImg = savedFront
+      if (savedBack) payload.documentBackImg = savedBack
+      if (savedFront) payload.documentImage = savedFront
+      else if (documentImage) payload.documentImage = saveBase64File(documentImage)
+    }
 
     const record = await Kyc.create(payload)
     res.status(201).json({ success: true, data: record })
@@ -98,22 +105,29 @@ const update = async (req, res) => {
     const existing = await Kyc.findOne({ _id: req.params.id, userId: req.user._id })
     if (!existing) return res.status(404).json({ success: false, message: 'KYC record not found' })
 
-    const { name, documentType, otherDocumentType, documentNumber, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
+    const { name, documents, documentFrontImg, documentBackImg, documentImage, remarks } = req.body
 
     if (name) existing.name = String(name).trim()
-    if (documentType) existing.documentType = documentType
-    if (otherDocumentType !== undefined) existing.otherDocumentType = String(otherDocumentType).trim()
-    if (documentNumber !== undefined) existing.documentNumber = String(documentNumber).trim()
     if (remarks !== undefined) existing.remarks = String(remarks).trim()
 
-    const savedFront = saveBase64File(documentFrontImg)
-    const savedBack = saveBase64File(documentBackImg)
-    if (savedFront) {
-      existing.documentFrontImg = savedFront
-      existing.documentImage = savedFront
+    if (documents && Array.isArray(documents) && documents.length > 0) {
+      existing.documents = documents.map(doc => ({
+        documentType: doc.documentType,
+        otherDocumentType: doc.otherDocumentType ? String(doc.otherDocumentType).trim() : '',
+        documentNumber: doc.documentNumber ? String(doc.documentNumber).trim() : '',
+        documentFrontImg: saveBase64File(doc.documentFrontImg),
+        documentBackImg: saveBase64File(doc.documentBackImg)
+      }))
+    } else {
+      const savedFront = saveBase64File(documentFrontImg)
+      const savedBack = saveBase64File(documentBackImg)
+      if (savedFront) {
+        existing.documentFrontImg = savedFront
+        existing.documentImage = savedFront
+      }
+      if (savedBack) existing.documentBackImg = savedBack
+      if (!savedFront && documentImage) existing.documentImage = saveBase64File(documentImage)
     }
-    if (savedBack) existing.documentBackImg = savedBack
-    if (!savedFront && documentImage) existing.documentImage = saveBase64File(documentImage)
 
     await existing.save()
     res.json({ success: true, data: existing })

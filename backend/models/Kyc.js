@@ -1,5 +1,17 @@
 const mongoose = require('mongoose')
 
+const documentEntrySchema = new mongoose.Schema({
+  documentType: {
+    type: String,
+    required: true,
+    enum: ['Aadhar', 'PAN', 'GST', 'Other']
+  },
+  otherDocumentType: { type: String, trim: true },
+  documentNumber: { type: String, trim: true },
+  documentFrontImg: { type: String, trim: true },
+  documentBackImg: { type: String, trim: true },
+}, { _id: true })
+
 const kycSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -8,11 +20,8 @@ const kycSchema = new mongoose.Schema({
     index: true
   },
   name: { type: String, required: true, trim: true },
-  documentType: {
-    type: String,
-    required: true,
-    enum: ['Aadhar', 'PAN', 'GST', 'Other']
-  },
+  documents: [documentEntrySchema],
+  documentType: { type: String, enum: ['Aadhar', 'PAN', 'GST', 'Other'] },
   otherDocumentType: { type: String, trim: true },
   documentNumber: { type: String, trim: true },
   documentFrontImg: { type: String, trim: true },

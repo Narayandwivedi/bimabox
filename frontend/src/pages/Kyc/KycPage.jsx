@@ -6,6 +6,17 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const DOCUMENT_TYPES = ['Aadhar', 'PAN', 'GST', 'Other']
 
+const emptyDoc = () => ({
+  documentType: 'Aadhar',
+  otherDocumentType: '',
+  documentNumber: '',
+  frontFile: null,
+  backFile: null,
+  _id: null,
+  existingFrontUrl: '',
+  existingBackUrl: ''
+})
+
 const KycPage = () => {
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
@@ -14,17 +25,10 @@ const KycPage = () => {
   const [editingRecord, setEditingRecord] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewTitle, setPreviewTitle] = useState('')
-  const fileInputRef = useRef(null)
-  const frontFileRef = useRef(null)
-  const backFileRef = useRef(null)
 
   const [form, setForm] = useState({
     name: '',
-    documentType: 'Aadhar',
-    otherDocumentType: '',
-    documentNumber: '',
-    frontFile: null,
-    backFile: null,
+    documents: [emptyDoc()],
     remarks: ''
   })
 
@@ -52,11 +56,7 @@ const KycPage = () => {
     setEditingRecord(null)
     setForm({
       name: '',
-      documentType: 'Aadhar',
-      otherDocumentType: '',
-      documentNumber: '',
-      frontFile: null,
-      backFile: null,
+      documents: [emptyDoc()],
       remarks: ''
     })
     setShowModal(true)
@@ -64,13 +64,30 @@ const KycPage = () => {
 
   const openEditModal = (record) => {
     setEditingRecord(record)
+    const docs = (record.documents && record.documents.length > 0)
+      ? record.documents.map(d => ({
+          documentType: d.documentType || 'Aadhar',
+          otherDocumentType: d.otherDocumentType || '',
+          documentNumber: d.documentNumber || '',
+          frontFile: null,
+          backFile: null,
+          _id: d._id || null,
+          existingFrontUrl: d.documentFrontImg || '',
+          existingBackUrl: d.documentBackImg || ''
+        }))
+      : [{
+          documentType: record.documentType || 'Aadhar',
+          otherDocumentType: record.otherDocumentType || '',
+          documentNumber: record.documentNumber || '',
+          frontFile: null,
+          backFile: null,
+          _id: null,
+          existingFrontUrl: record.documentFrontImg || record.documentImage || '',
+          existingBackUrl: record.documentBackImg || ''
+        }]
     setForm({
       name: record.name || '',
-      documentType: record.documentType || 'Aadhar',
-      otherDocumentType: record.otherDocumentType || '',
-      documentNumber: record.documentNumber || '',
-      frontFile: null,
-      backFile: null,
+      documents: docs,
       remarks: record.remarks || ''
     })
     setShowModal(true)
@@ -88,14 +105,20 @@ const KycPage = () => {
     try {
       const payload = {
         name: form.name,
-        documentType: form.documentType,
-        otherDocumentType: form.documentType === 'Other' ? form.otherDocumentType : '',
-        documentNumber: form.documentNumber,
-        remarks: form.remarks
+        remarks: form.remarks,
+        documents: []
       }
 
-      if (form.frontFile) payload.documentFrontImg = await toBase64(form.frontFile)
-      if (form.backFile) payload.documentBackImg = await toBase64(form.backFile)
+      for (const doc of form.documents) {
+        const entry = {
+          documentType: doc.documentType,
+          otherDocumentType: doc.documentType === 'Other' ? doc.otherDocumentType : '',
+          documentNumber: doc.documentNumber,
+          documentFrontImg: doc.frontFile ? await toBase64(doc.frontFile) : (doc.existingFrontUrl || ''),
+          documentBackImg: doc.backFile ? await toBase64(doc.backFile) : (doc.existingBackUrl || '')
+        }
+        payload.documents.push(entry)
+      }
 
       if (editingRecord) {
         await axios.put(`${API_URL}/api/kyc/${editingRecord._id}`, payload, { withCredentials: true })
@@ -127,11 +150,42 @@ const KycPage = () => {
     setPreviewTitle(title)
   }
 
-  const getDocumentUrl = (record, side = 'front') => {
-    if (side === 'front') {
-      return record.documentFrontImg || record.documentImage
+  const getDocUrl = (doc, side) => {
+    const url = side === 'front' ? doc.existingFrontUrl : doc.existingBackUrl
+    if (!url) return null
+    if (url.startsWith('http') || url.startsWith('data:')) return url
+    return `${API_URL}${url}`
+  }
+
+  const addDocumentEntry = () => {
+    setForm(prev => ({ ...prev, documents: [...prev.documents, emptyDoc()] }))
+  }
+
+  const removeDocumentEntry = (index) => {
+    setForm(prev => {
+      const docs = prev.documents.filter((_, i) => i !== index)
+      return { ...prev, documents: docs.length === 0 ? [emptyDoc()] : docs }
+    })
+  }
+
+  const updateDocumentEntry = (index, updates) => {
+    setForm(prev => {
+      const docs = [...prev.documents]
+      docs[index] = { ...docs[index], ...updates }
+      return { ...prev, documents: docs }
+    })
+  }
+
+  const getRecordDocs = (record) => {
+    if (record.documents && record.documents.length > 0) return record.documents
+    const doc = {
+      documentType: record.documentType || '',
+      otherDocumentType: record.otherDocumentType || '',
+      documentNumber: record.documentNumber || '',
+      documentFrontImg: record.documentFrontImg || record.documentImage || '',
+      documentBackImg: record.documentBackImg || ''
     }
-    return record.documentBackImg
+    return doc.documentType ? [doc] : []
   }
 
   return (
@@ -172,37 +226,61 @@ const KycPage = () => {
               ) : (
                 <>
                   <div className='space-y-3 lg:hidden'>
-                    {records.map((record) => (
-                      <div key={record._id} className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm'>
-                        <div className='flex items-start justify-between mb-2'>
-                          <div>
-                            <p className='text-sm font-bold text-slate-800'>{record.name}</p>
-                            <p className='text-[11px] font-semibold text-indigo-600'>{record.documentType}{record.documentType === 'Other' && record.otherDocumentType ? ` (${record.otherDocumentType})` : ''}</p>
+                    {records.map((record) => {
+                      const docs = getRecordDocs(record)
+                      return (
+                        <div key={record._id} className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm'>
+                          <div className='flex items-start justify-between mb-2'>
+                            <div>
+                              <p className='text-sm font-bold text-slate-800'>{record.name}</p>
+                            </div>
+                            <div className='flex gap-1'>
+                              <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 transition cursor-pointer' title='Edit'>
+                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                                </svg>
+                              </button>
+                              <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer' title='Delete'>
+                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                          <div className='flex gap-1'>
-                            <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 transition cursor-pointer' title='Edit'>
-                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
-                              </svg>
-                            </button>
-                            <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer' title='Delete'>
-                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        {record.documentNumber && <p className='text-[11px] text-slate-500 font-mono mb-2'>No: {record.documentNumber}</p>}
-                        <div className='flex gap-2'>
-                          {getDocumentUrl(record, 'front') && (
-                            <button onClick={() => openPreview(API_URL + getDocumentUrl(record, 'front'), 'Front Side')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Front</button>
+                          {docs.length > 0 && (
+                            <div className='mt-2 space-y-2'>
+                              {docs.map((d, i) => (
+                                <div key={i} className='flex items-center justify-between bg-indigo-50/50 rounded-lg px-3 py-2 border border-indigo-100'>
+                                  <span className='text-[11px] font-semibold text-indigo-600'>
+                                    {d.documentType}{d.documentType === 'Other' && d.otherDocumentType ? ` (${d.otherDocumentType})` : ''}
+                                  </span>
+                                  <div className='flex gap-3'>
+                                    {d.documentFrontImg && (
+                                      <button onClick={() => openPreview(d.documentFrontImg.startsWith('http') ? d.documentFrontImg : `${API_URL}${d.documentFrontImg}`, `${d.documentType} Front`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
+                                        Front
+                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                                        </svg>
+                                      </button>
+                                    )}
+                                    {d.documentBackImg && (
+                                      <button onClick={() => openPreview(d.documentBackImg.startsWith('http') ? d.documentBackImg : `${API_URL}${d.documentBackImg}`, `${d.documentType} Back`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
+                                        Back
+                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                                        </svg>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           )}
-                          {getDocumentUrl(record, 'back') && (
-                            <button onClick={() => openPreview(API_URL + getDocumentUrl(record, 'back'), 'Back Side')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View Back</button>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
 
                   <div className='hidden lg:block overflow-hidden rounded-2xl border border-slate-100 bg-white'>
@@ -210,51 +288,59 @@ const KycPage = () => {
                       <thead>
                         <tr className='border-b border-slate-100 bg-slate-50/50'>
                           <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Name</th>
-                          <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document Type</th>
-                          <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document No</th>
                           <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Documents</th>
                           <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Actions</th>
                         </tr>
                       </thead>
                       <tbody className='divide-y divide-slate-50'>
-                        {records.map((record) => (
-                          <tr key={record._id} className='transition-colors hover:bg-slate-50/50'>
-                            <td className='px-6 py-3'>
-                              <span className='text-sm font-bold text-slate-700'>{record.name}</span>
-                            </td>
-                            <td className='px-6 py-3'>
-                              <span className='text-xs font-semibold text-indigo-600'>{record.documentType}{record.documentType === 'Other' && record.otherDocumentType ? ` (${record.otherDocumentType})` : ''}</span>
-                            </td>
-                            <td className='px-6 py-3'>
-                              <span className='font-mono text-xs text-slate-500'>{record.documentNumber || '—'}</span>
-                            </td>
-                            <td className='px-6 py-3'>
-                              <div className='flex gap-2'>
-                                {record.documentType === 'Aadhar' ? (
-                                  <>
-                                    {record.aadharFrontDocument && (
-                                      <button onClick={() => openPreview(API_URL + record.aadharFrontDocument, 'Aadhar Front')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>Front</button>
-                                    )}
-                                    {record.aadharBackDocument && (
-                                      <button onClick={() => openPreview(API_URL + record.aadharBackDocument, 'Aadhar Back')} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>Back</button>
-                                    )}
-                                  </>
-                                ) : (
-                                  record.documentImage && (
-                                    <button onClick={() => openPreview(API_URL + record.documentImage, record.documentType)} className='text-xs text-indigo-600 font-semibold hover:underline cursor-pointer'>View</button>
-                                  )
-                                )}
-                                {!getDocumentUrl(record) && <span className='text-xs text-slate-400'>—</span>}
-                              </div>
-                            </td>
-                            <td className='px-6 py-3 text-right'>
-                              <div className='flex items-center justify-end gap-1'>
-                                <button onClick={() => openEditModal(record)} className='px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer'>Edit</button>
-                                <button onClick={() => handleDelete(record._id)} className='px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer'>Delete</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {records.map((record) => {
+                          const docs = getRecordDocs(record)
+                          return (
+                            <tr key={record._id} className='transition-colors hover:bg-slate-50/50'>
+                              <td className='px-6 py-3'>
+                                <span className='text-sm font-bold text-slate-700'>{record.name}</span>
+                              </td>
+                              <td className='px-6 py-3'>
+                                <div className='space-y-2'>
+                                  {docs.map((d, i) => (
+                                    <div key={i} className='flex items-center justify-between bg-indigo-50/50 rounded-lg px-3 py-2 border border-indigo-100'>
+                                      <span className='text-xs font-semibold text-indigo-600'>
+                                        {d.documentType}{d.documentType === 'Other' && d.otherDocumentType ? ` (${d.otherDocumentType})` : ''}
+                                      </span>
+                                      <div className='flex gap-3'>
+                                        {d.documentFrontImg && (
+                                          <button onClick={() => openPreview(d.documentFrontImg.startsWith('http') ? d.documentFrontImg : `${API_URL}${d.documentFrontImg}`, `${d.documentType} Front`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
+                                            Front
+                                            <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                                            </svg>
+                                          </button>
+                                        )}
+                                        {d.documentBackImg && (
+                                          <button onClick={() => openPreview(d.documentBackImg.startsWith('http') ? d.documentBackImg : `${API_URL}${d.documentBackImg}`, `${d.documentType} Back`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
+                                            Back
+                                            <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                                            </svg>
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {docs.length === 0 && <span className='text-xs text-slate-400'>—</span>}
+                                </div>
+                              </td>
+                              <td className='px-6 py-3 text-right'>
+                                <div className='flex items-center justify-end gap-1'>
+                                  <button onClick={() => openEditModal(record)} className='px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer'>Edit</button>
+                                  <button onClick={() => handleDelete(record._id)} className='px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer'>Delete</button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -287,72 +373,96 @@ const KycPage = () => {
                 <div className='bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                   <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                     <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
-                    Personal Details
+                    Client Name
                   </h3>
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
-                    <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Full Name <span className='text-red-500'>*</span></label>
-                      <input type='text' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder='Enter full name' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white' required />
-                    </div>
-                    <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Document Type <span className='text-red-500'>*</span></label>
-                      <select value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm'>
-                        {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Document Number</label>
-                      <input type='text' value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder='Document number' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm bg-white' />
-                    </div>
-                    {form.documentType === 'Other' && (
-                      <div className='md:col-span-2'>
-                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Specify Document Type <span className='text-red-500'>*</span></label>
-                        <input type='text' value={form.otherDocumentType} onChange={(e) => setForm({ ...form, otherDocumentType: e.target.value })} placeholder='e.g. Driving License' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white' />
-                      </div>
-                    )}
+                  <div>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Full Name <span className='text-red-500'>*</span></label>
+                    <input type='text' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder='Enter client full name' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white' required />
                   </div>
                 </div>
 
-                <div className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
-                  <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                    <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-                    Documents
-                  </h3>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
-                    <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Front Side</label>
-                      <div className='relative overflow-hidden'>
-                        <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
-                          <span className='flex items-center gap-2'>
-                            <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
-                            </svg>
-                            {form.frontFile ? form.frontFile.name : 'Upload Front'}
-                          </span>
+                {form.documents.map((doc, index) => (
+                  <div key={index} className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6 relative'>
+                    <div className='flex items-center justify-between mb-3 md:mb-4'>
+                      <h3 className='text-base md:text-lg font-bold text-gray-800 flex items-center gap-2'>
+                        <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>{index + 2}</span>
+                        Document {index + 1}
+                      </h3>
+                      {form.documents.length > 1 && (
+                        <button type='button' onClick={() => removeDocumentEntry(index)} className='text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg p-1.5 transition cursor-pointer' title='Remove document'>
+                          <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                          </svg>
                         </button>
-                        <input ref={frontFileRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, frontFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
-                      </div>
+                      )}
                     </div>
-                    <div>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Back Side</label>
-                      <div className='relative overflow-hidden'>
-                        <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
-                          <span className='flex items-center gap-2'>
-                            <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
-                            </svg>
-                            {form.backFile ? form.backFile.name : 'Upload Back'}
-                          </span>
-                        </button>
-                        <input ref={backFileRef} type='file' accept='image/*,application/pdf' onChange={(e) => setForm({ ...form, backFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4'>
+                      <div>
+                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Document Type <span className='text-red-500'>*</span></label>
+                        <select value={doc.documentType} onChange={(e) => updateDocumentEntry(index, { documentType: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-sm'>
+                          {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Document Number</label>
+                        <input type='text' value={doc.documentNumber} onChange={(e) => updateDocumentEntry(index, { documentNumber: e.target.value })} placeholder='Document number' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm bg-white' />
+                      </div>
+                      {doc.documentType === 'Other' && (
+                        <div>
+                          <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Specify Type <span className='text-red-500'>*</span></label>
+                          <input type='text' value={doc.otherDocumentType} onChange={(e) => updateDocumentEntry(index, { otherDocumentType: e.target.value })} placeholder='e.g. Driving License' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white' />
+                        </div>
+                      )}
+                    </div>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+                      <div>
+                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Front Side</label>
+                        {doc.existingFrontUrl && !doc.frontFile && (
+                          <p className='text-[10px] text-green-600 font-semibold mb-1'>Existing file kept</p>
+                        )}
+                        <div className='relative overflow-hidden'>
+                          <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
+                            <span className='flex items-center gap-2'>
+                              <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
+                              </svg>
+                              {doc.frontFile ? doc.frontFile.name : 'Upload Front'}
+                            </span>
+                          </button>
+                          <input type='file' accept='image/*,application/pdf' onChange={(e) => updateDocumentEntry(index, { frontFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                        </div>
+                      </div>
+                      <div>
+                        <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Back Side</label>
+                        {doc.existingBackUrl && !doc.backFile && (
+                          <p className='text-[10px] text-green-600 font-semibold mb-1'>Existing file kept</p>
+                        )}
+                        <div className='relative overflow-hidden'>
+                          <button type='button' className='w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-500 text-left bg-white hover:border-purple-400 transition cursor-pointer truncate'>
+                            <span className='flex items-center gap-2'>
+                              <svg className='w-4 h-4 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12' />
+                              </svg>
+                              {doc.backFile ? doc.backFile.name : 'Upload Back'}
+                            </span>
+                          </button>
+                          <input type='file' accept='image/*,application/pdf' onChange={(e) => updateDocumentEntry(index, { backFile: e.target.files[0] })} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                ))}
+
+                <button type='button' onClick={addDocumentEntry} className='w-full mb-4 md:mb-6 py-2.5 border-2 border-dashed border-purple-300 rounded-xl text-sm font-bold text-purple-600 hover:bg-purple-50 hover:border-purple-400 transition cursor-pointer flex items-center justify-center gap-2'>
+                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 4v16m8-8H4' />
+                  </svg>
+                  Add Another Document
+                </button>
 
                 <div className='bg-gradient-to-r from-slate-50 to-indigo-50 border-2 border-slate-200 rounded-xl p-3 md:p-6'>
                   <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                    <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                    <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>{form.documents.length + 2}</span>
                     Additional
                   </h3>
                   <div>

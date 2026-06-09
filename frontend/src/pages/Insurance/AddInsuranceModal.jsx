@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
-import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -54,7 +53,6 @@ const normalizeInsuranceCompany = (companyName) => {
 }
 
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
-  const dropdownItemRefs = useRef([])
   const isOcrUpdate = useRef(false)
   const processedInitialFile = useRef(false)
   const userEditedValidTo = useRef(false)
@@ -74,12 +72,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     remarks: '',
     reference: ''
   })
-  const [fetchingVehicle, setFetchingVehicle] = useState(false)
-  const [vehicleError, setVehicleError] = useState('')
-  const [vehicleValidation, setVehicleValidation] = useState({ isValid: !prefilledVehicleNumber, message: '' })
-  const [vehicleMatches, setVehicleMatches] = useState([])
-  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
-  const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scanningFile, setScanningFile] = useState(null)
   const [isExtractingInsurance, setIsExtractingInsurance] = useState(false)
@@ -129,7 +121,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       )
       setUploadedInsuranceFile(null)
       userEditedValidTo.current = true
-      if (vehicleNum) setVehicleValidation(validateVehicleNumberRealtime(vehicleNum))
     } else if (!isOpen) {
       setFormData({
         vehicleNumber: prefilledVehicleNumber,
@@ -146,12 +137,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         remarks: '',
         reference: ''
       })
-      setFetchingVehicle(false)
-      setVehicleValidation({ isValid: !prefilledVehicleNumber, message: '' })
-      setVehicleError('')
-      setVehicleMatches([])
-      setShowVehicleDropdown(false)
-      setSelectedDropdownIndex(0)
       setScanningFile(null)
       setIsExtractingInsurance(false)
       setUploadedInsuranceDocument(prev => {
@@ -220,52 +205,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   useEffect(() => {
     if (isOpen && !initialData && (prefilledVehicleNumber || prefilledOwnerName)) {
       setFormData(prev => ({ ...prev, vehicleNumber: prefilledVehicleNumber, policyHolderName: prefilledOwnerName }))
-      if (prefilledVehicleNumber) setVehicleValidation({ isValid: true, message: 'Vehicle number prefilled' })
     }
   }, [isOpen, prefilledVehicleNumber, prefilledOwnerName, initialData])
-
-  useEffect(() => {
-    const fetchVehicleDetails = async () => {
-      const searchInput = formData.vehicleNumber.trim()
-      if (searchInput.length < 4) {
-        setVehicleError('')
-        setVehicleMatches([])
-        setShowVehicleDropdown(false)
-        setSelectedDropdownIndex(0)
-        return
-      }
-      setFetchingVehicle(true)
-      setVehicleError('')
-      try {
-        const response = await axios.get(`${API_URL}/api/vehicle/search/${searchInput}`, { withCredentials: true })
-        if (response.data.success) {
-          if (response.data.multiple) {
-            setVehicleMatches(response.data.data)
-            setShowVehicleDropdown(true)
-            setSelectedDropdownIndex(0)
-          } else {
-            const vehicleData = response.data.data
-            setFormData(prev => ({ ...prev, vehicleNumber: vehicleData.registrationNumber, policyHolderName: vehicleData.ownerName || prev.policyHolderName }))
-            setVehicleValidation(validateVehicleNumberRealtime(vehicleData.registrationNumber))
-            setVehicleMatches([])
-            setShowVehicleDropdown(false)
-          }
-        }
-      } catch (error) {
-        setVehicleError(error.response?.status === 404 ? 'No vehicles found matching the search' : 'Error fetching vehicle details')
-        setVehicleMatches([])
-        setShowVehicleDropdown(false)
-        setSelectedDropdownIndex(0)
-      } finally {
-        setFetchingVehicle(false)
-      }
-    }
-
-    const timeoutId = setTimeout(() => {
-      if (formData.vehicleNumber) fetchVehicleDetails()
-    }, 500)
-    return () => clearTimeout(timeoutId)
-  }, [formData.vehicleNumber])
 
   useEffect(() => {
     if (isOcrUpdate.current || userEditedValidTo.current || !formData.validFrom) return
@@ -291,59 +232,20 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   }, [formData.validFrom, formData.validTo])
 
   useEffect(() => {
-    if (showVehicleDropdown && dropdownItemRefs.current[selectedDropdownIndex]) {
-      dropdownItemRefs.current[selectedDropdownIndex]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }
-  }, [selectedDropdownIndex, showVehicleDropdown])
-
-  useEffect(() => {
     const handleKeyDown = (e) => {
-      if (showVehicleDropdown && vehicleMatches.length > 0) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault()
-          setSelectedDropdownIndex(prev => (prev + 1) % vehicleMatches.length)
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault()
-          setSelectedDropdownIndex(prev => (prev - 1 + vehicleMatches.length) % vehicleMatches.length)
-        } else if (e.key === 'Enter') {
-          e.preventDefault()
-          if (vehicleMatches[selectedDropdownIndex]) handleVehicleSelect(vehicleMatches[selectedDropdownIndex])
-        } else if (e.key === 'Escape') {
-          e.preventDefault()
-          setShowVehicleDropdown(false)
-          setVehicleMatches([])
-        }
-        return
-      }
-if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onClose()
     }
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown)
       return () => document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose, showVehicleDropdown, vehicleMatches, selectedDropdownIndex])
-
-  const handleVehicleSelect = (vehicle) => {
-    setFormData(prev => ({ ...prev, vehicleNumber: vehicle.registrationNumber, policyHolderName: vehicle.ownerName || prev.policyHolderName }))
-    setShowVehicleDropdown(false)
-    setVehicleMatches([])
-    setVehicleError('')
-    setSelectedDropdownIndex(0)
-    setVehicleValidation(validateVehicleNumberRealtime(vehicle.registrationNumber))
-  }
+  }, [isOpen, onClose])
 
   const handleChange = (e) => {
     const { name, value } = e.target
     if (name === 'vehicleNumber') {
-      const upperValue = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
-      const validation = upperValue.length === 0 
-        ? { isValid: true, message: '' } 
-        : (upperValue.length === 9 || upperValue.length === 10) 
-          ? validateVehicleNumberRealtime(upperValue) 
-          : { isValid: false, message: 'Invalid vehicle number format' }
-      setVehicleValidation(validation)
-      setFormData(prev => ({ ...prev, [name]: upperValue }))
+      setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }))
       return
     }
     if (name === 'policyNumber') {
@@ -401,11 +303,6 @@ if (e.key === 'Escape') onClose()
                 }
                 updated[key] = value
               })
-
-              if (resultData.vehicleNumber) {
-                const normalizedVehicleNumber = resultData.vehicleNumber.toUpperCase().replace(/\s+/g, '')
-                setVehicleValidation(validateVehicleNumberRealtime(normalizedVehicleNumber))
-              }
 
               return updated
             })
@@ -485,10 +382,6 @@ if (e.key === 'Escape') onClose()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!vehicleValidation.isValid && formData.vehicleNumber) {
-      toast.error('Please enter a valid vehicle number in the format: CG04AA1234 (10 chars) or CG04G1234 (9 chars), no spaces')
-      return
-    }
     const submitData = {
       vehicleNumber: formData.vehicleNumber,
       policyNumber: formData.policyNumber,
@@ -576,21 +469,8 @@ if (e.key === 'Escape') onClose()
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number</label>
                   <div className='relative'>
-                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='CG04AA1234 or 4793' maxLength='10' tabIndex='1' className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:border-transparent font-mono bg-white ${formData.vehicleNumber && !vehicleValidation.isValid ? 'border-red-500 focus:ring-red-500' : formData.vehicleNumber && vehicleValidation.isValid ? 'border-green-500 focus:ring-green-500' : 'border-gray-300 focus:ring-indigo-500'}`} autoFocus />
-                    {showVehicleDropdown && vehicleMatches.length > 0 && (
-                      <div className='absolute z-50 w-full mt-1 bg-white border border-indigo-300 rounded-lg shadow-xl max-h-60 overflow-y-auto'>
-                        <div className='p-2 bg-indigo-50 border-b border-indigo-200 text-xs font-semibold text-indigo-800'>{vehicleMatches.length} vehicles found</div>
-                        {vehicleMatches.map((vehicle, index) => (
-                          <div key={vehicle._id} ref={(el) => (dropdownItemRefs.current[index] = el)} onClick={() => handleVehicleSelect(vehicle)} className={`p-3 cursor-pointer border-b border-gray-100 hover:bg-indigo-50 transition ${index === selectedDropdownIndex ? 'bg-indigo-100 border-l-4 border-l-indigo-600' : ''}`}>
-                            <div className='font-mono font-bold text-indigo-700'>{vehicle.registrationNumber}</div>
-                            <div className='text-xs text-gray-600 mt-1'>Owner: {vehicle.ownerName || 'N/A'}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter vehicle number' tabIndex='1' className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono bg-white' autoFocus />
                   </div>
-                  {vehicleError && !fetchingVehicle && <p className='text-xs mt-1 text-red-600'>{vehicleError}</p>}
-                  {vehicleValidation.message && !vehicleError && <p className={`text-xs mt-1 ${vehicleValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>{vehicleValidation.message}</p>}
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Number</label>

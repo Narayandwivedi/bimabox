@@ -48,6 +48,7 @@ const PremiumCalculator = () => {
   const [imt23, setImt23] = useState('no')
   const [restrictedTPPD, setRestrictedTPPD] = useState('no')
   const [zeroDep, setZeroDep] = useState('')
+  const [tyreCover, setTyreCover] = useState('')
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
 
@@ -240,10 +241,11 @@ const PremiumCalculator = () => {
     const geoExtentAmount = parseFloat(geoExtent) || 0
     const imt23Amount = imt23 === 'yes' ? (odPremium + (vehicleType === 'gcv' ? geoExtentAmount : 0)) * 0.15 : 0
     const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
+    const tyreCoverAmount = tyreCover !== '' && tyreCover !== '0' ? (parseFloat(tyreCover) / 100) * idvVal : 0
     const restrictedTPPDDiscount = restrictedTPPD === 'yes' && vehicleType === 'gcv' ? Math.min(tpPremium, 200) : 0
     tpPremium -= restrictedTPPDDiscount
 
-    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + imt23Amount + zeroDepAmount
+    const netPremium = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + imt23Amount + zeroDepAmount + tyreCoverAmount
 
     let gst = 0
     let gstTp = 0
@@ -265,8 +267,8 @@ const PremiumCalculator = () => {
     setResult({
       odPremium, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
       rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount,
-      imt23Amount, zeroDepAmount, restrictedTPPDDiscount,
-      gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium,
+      imt23Amount, zeroDepAmount, tyreCoverAmount, restrictedTPPDDiscount,
+      gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
       odRate, details, odDiscountVal,
     })
   }
@@ -304,7 +306,7 @@ const PremiumCalculator = () => {
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, rsa, otherAddon, paUnnamedPassenger])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger])
 
   const formProps = {
     zone, setZone, vehicleAge, setVehicleAge, idv, setIdv,
@@ -381,10 +383,15 @@ const PremiumCalculator = () => {
                       <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M11.42 15.17l-5.25 3.04 1-5.5L3 8.75l5.5-.83L11.42 3l2.92 4.92 5.5.83-4.17 3.96 1 5.5z' /></svg>
                       Add-on Coverages
                     </p>
-                    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+                    <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Zero Depreciation (%)</label>
                         <input type='number' value={zeroDep} onChange={e => setZeroDep(e.target.value)} placeholder='e.g. 20' min={0} max={100}
+                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                      </div>
+                      <div>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Tyre Cover (%)</label>
+                        <input type='number' value={tyreCover} onChange={e => setTyreCover(e.target.value)} placeholder='e.g. 2' min={0} max={100}
                           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                       </div>
                       <div>

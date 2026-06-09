@@ -184,8 +184,8 @@ const Renewals = () => {
                             <p className='text-[10px] text-slate-400'>{policy.validTo}</p>
                           </div>
                         </div>
-                        <div className='mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
-                          <div className='flex items-center gap-4'>
+                        <div className='mt-2.5 flex items-start justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
+                          <div className='flex flex-col gap-0.5 min-w-0'>
                             <span><span className='font-semibold text-slate-500'>Policy:</span> {policy.policyNumber || '—'}</span>
                             <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
                           </div>

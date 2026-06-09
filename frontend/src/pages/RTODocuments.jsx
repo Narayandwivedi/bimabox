@@ -7,11 +7,13 @@ import AddPucModal from './Puc/AddPucModal'
 import AddGpsModal from './Gps/AddGpsModal'
 import AddTaxModal from './Tax/AddTaxModal'
 import AddPermitModal from './Permit/components/AddPermitModal'
+import AddRcModal from './Rc/AddRcModal'
 import EditFitnessModal from './Fitness/EditFitnessModal'
 import EditPucModal from './Puc/EditPucModal'
 import EditGpsModal from './Gps/EditGpsModal'
 import EditTaxModal from './Tax/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
+import EditRcModal from './Rc/EditRcModal'
 import ImportModal from '../components/ImportModal'
 
 
@@ -134,6 +136,7 @@ const RTODocuments = () => {
   const [showAddGpsModal, setShowAddGpsModal] = useState(false)
   const [showAddTaxModal, setShowAddTaxModal] = useState(false)
   const [showAddPermitModal, setShowAddPermitModal] = useState(false)
+  const [showAddRcModal, setShowAddRcModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [documents, setDocuments] = useState([])
@@ -152,6 +155,7 @@ const RTODocuments = () => {
         { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo' },
         { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo' },
+        { type: 'RC', url: `${API_URL}/api/rc`, fromField: null, toField: null },
       ];
 
       const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 1000 } }));
@@ -166,9 +170,9 @@ const RTODocuments = () => {
             id: record._id,
             type: ep.type,
             vehicleNumber: record.vehicleNumber,
-            validFrom: record[ep.fromField] || 'N/A',
-            validTo: record[ep.toField] || 'N/A',
-            status: record.status === 'active' ? 'Active' : (record.status === 'expiring_soon' ? 'Expiring Soon' : 'Expired'),
+            validFrom: ep.fromField ? (record[ep.fromField] || 'N/A') : 'N/A',
+            validTo: ep.toField ? (record[ep.toField] || 'N/A') : 'N/A',
+            status: ep.type === 'RC' ? 'Active' : (record.status === 'active' ? 'Active' : (record.status === 'expiring_soon' ? 'Expiring Soon' : 'Expired')),
             rawRecord: record
           }));
           allDocs = [...allDocs, ...records];
@@ -263,6 +267,11 @@ const RTODocuments = () => {
       )
       case 'Fitness': return '🔧'
       case 'Permit': return '📜'
+      case 'RC': return (
+        <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+        </svg>
+      )
       default: return '📄'
     }
   }
@@ -350,6 +359,7 @@ const RTODocuments = () => {
                         { value: 'GPS', label: 'GPS' },
                         { value: 'Fitness', label: 'Fitness' },
                         { value: 'Permit', label: 'Permit' },
+                        { value: 'RC', label: 'RC' },
                       ]}
                       icon={
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -614,6 +624,14 @@ const RTODocuments = () => {
           permit={editingDoc.rawRecord}
         />
       )}
+      {editingDoc?.type === 'RC' && (
+        <EditRcModal
+          isOpen={!!editingDoc}
+          onClose={() => setEditingDoc(null)}
+          onSubmit={handleEditSubmit}
+          rc={editingDoc.rawRecord}
+        />
+      )}
       {showAddFitnessModal && (
         <AddFitnessModal
           isOpen={showAddFitnessModal}
@@ -694,6 +712,22 @@ const RTODocuments = () => {
         />
       )}
 
+      {showAddRcModal && (
+        <AddRcModal
+          isOpen={showAddRcModal}
+          onClose={() => {
+            setShowAddRcModal(false)
+            setInitialExtractionFile(null)
+          }}
+          onSubmit={() => {
+            setShowAddRcModal(false)
+            toast.success('RC record added successfully')
+            fetchAllDocuments()
+          }}
+          initialExtractionFile={initialExtractionFile}
+        />
+      )}
+
       {showImportModal && (
         <ImportModal
           isOpen={showImportModal}
@@ -707,6 +741,7 @@ const RTODocuments = () => {
               tax: () => setShowAddTaxModal(true),
               gps: () => setShowAddGpsModal(true),
               permit: () => setShowAddPermitModal(true),
+              rc: () => setShowAddRcModal(true),
             }
             modalMap[type]?.()
           }}

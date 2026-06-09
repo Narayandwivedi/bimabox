@@ -7,6 +7,7 @@ import EditPucModal from './Puc/EditPucModal'
 import EditGpsModal from './Gps/EditGpsModal'
 import EditTaxModal from './Tax/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
+import EditRcModal from './Rc/EditRcModal'
 import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 
@@ -97,6 +98,20 @@ const TYPE_CONFIG = {
       { label: 'Name', key: 'name' }
     ],
   },
+  RC: {
+    apiPath: 'rc',
+    documentField: 'rcFrontImage',
+    icon: '📋',
+    color: 'orange',
+    fromField: null,
+    toField: null,
+    extraFields: [
+      { label: 'Chassis No', key: 'chassisNo' },
+      { label: 'Engine No', key: 'engineNo' },
+      { label: 'Make', key: 'make' },
+      { label: 'Model', key: 'model' },
+    ],
+  },
 }
 
 const STATUS_STYLES = {
@@ -107,6 +122,48 @@ const STATUS_STYLES = {
 }
 
 const isPdf = (url) => url && (url.toLowerCase().includes('.pdf') || url.startsWith('data:application/pdf'))
+
+const RcImageBlock = ({ url, label, apiUrl }) => {
+  const fullUrl = url && (url.startsWith('http') || url.startsWith('data:') ? url : `${apiUrl}${url}`)
+
+  const handleDownload = async () => {
+    if (!fullUrl) return
+    try {
+      const res = await fetch(fullUrl)
+      const blob = await res.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `RC_${label.replace(/\s/g, '_')}.${blob.type.split('/')[1] || 'png'}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      window.open(fullUrl, '_blank')
+    }
+  }
+
+  return fullUrl ? (
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex items-center justify-between">
+        <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          RC {label}
+        </h3>
+        <button onClick={handleDownload} className='flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm cursor-pointer'>
+          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+          </svg>
+          Download
+        </button>
+      </div>
+      <div className="relative bg-slate-50 min-h-[200px] flex items-center justify-center p-2">
+        <img src={fullUrl} alt={`RC ${label}`} className="w-full object-contain rounded-lg" style={{ maxHeight: '400px' }} />
+      </div>
+    </div>
+  ) : null
+}
 
 // --- Component ---
 const RTODocumentDetail = () => {
@@ -197,6 +254,7 @@ const RTODocumentDetail = () => {
     violet: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', iconBg: 'bg-violet-600' },
     amber: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', iconBg: 'bg-amber-600' },
     blue: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', iconBg: 'bg-blue-600' },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', iconBg: 'bg-orange-600' },
   }
 
   const col = colorMap[config.color] || colorMap.blue
@@ -294,6 +352,7 @@ const RTODocumentDetail = () => {
             </div>
 
             {/* Validity Period */}
+            {config.fromField && config.toField && (
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
               <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-slate-400">Validity Period</p>
               <div className="grid grid-cols-2 gap-3">
@@ -307,6 +366,7 @@ const RTODocumentDetail = () => {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Extra Fields */}
             {config.extraFields.filter(f => record[f.key] !== undefined && record[f.key] !== null && record[f.key] !== '').length > 0 && (
@@ -343,7 +403,18 @@ const RTODocumentDetail = () => {
             )}
 
             {/* Document Preview Section */}
-            {fullDocUrl && (
+            {type === 'RC' ? (
+              <div className="space-y-3">
+                {/* RC Front Image */}
+                {record.rcFrontImage && (
+                  <RcImageBlock url={record.rcFrontImage} label="Front Side" apiUrl={API_URL} />
+                )}
+                {/* RC Back Image */}
+                {record.rcBackImage && (
+                  <RcImageBlock url={record.rcBackImage} label="Back Side" apiUrl={API_URL} />
+                )}
+              </div>
+            ) : fullDocUrl && (
               <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
@@ -476,6 +547,14 @@ const RTODocumentDetail = () => {
           onClose={() => setShowEditModal(false)}
           onSubmit={handleEditSubmit}
           permit={record}
+        />
+      )}
+      {showEditModal && type === 'RC' && (
+        <EditRcModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEditSubmit}
+          rc={record}
         />
       )}
       {showEditModal && type === 'Insurance' && (

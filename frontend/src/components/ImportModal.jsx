@@ -6,7 +6,8 @@ const ImportModal = ({ isOpen, onClose, onProceed }) => {
     { value: 'fitness', label: 'Fitness' },
     { value: 'tax', label: 'Tax' },
     { value: 'gps', label: 'GPS' },
-    { value: 'permit', label: 'Permit' }
+    { value: 'permit', label: 'Permit' },
+    { value: 'rc', label: 'RC' }
   ])
   const [selectedDataType, setSelectedDataType] = useState('')
 

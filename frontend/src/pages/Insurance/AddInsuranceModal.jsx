@@ -344,6 +344,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     const file = e.target.files?.[0]
     if (!file) return
     
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('File size must be less than 15MB.', { position: 'top-right', autoClose: 3000 })
+      e.target.value = ''
+      return
+    }
+
     if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
       setUploadedInsuranceFile(file)
       setUploadedInsuranceDocument(prev => {
@@ -402,8 +408,17 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
            return;
         }
       } catch (err) {
-         console.error('Upload Error:', err);
-         toast.error(err.response?.data?.message || 'Failed to upload document. Please ensure it is not larger than 50MB.');
+         console.error('Upload Error Detailed:', err);
+         if (err.response) {
+            console.error('Error Response Data:', err.response.data);
+            console.error('Error Response Status:', err.response.status);
+            console.error('Error Response Headers:', err.response.headers);
+         } else if (err.request) {
+            console.error('Error Request:', err.request);
+         } else {
+            console.error('Error Message:', err.message);
+         }
+         toast.error(err.response?.data?.message || `Failed to upload document: ${err.message}. Ensure it is not larger than 15MB.`);
          setIsSubmitting(false);
          return;
       }

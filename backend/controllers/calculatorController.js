@@ -22,6 +22,7 @@ const generatePdf = async (req, res) => {
     const producerName = data.producerName || 'Bimabox Agent'
     const producerContact = data.producerContact || 'N/A'
     const producerEmail = data.producerEmail || 'N/A'
+    const insuranceCompany = data.insuranceCompany || 'BIMABOX'
 
     // Compute policy dates
     const startDate = new Date()
@@ -265,7 +266,7 @@ const generatePdf = async (req, res) => {
     const bottomW = (pageWidth - 15) / 2
 
     // Left Column: Payment & Docs
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text('Kindly pay cheque/DD in favor of BIMABOX.', 40, y)
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text(`Kindly pay cheque/DD in favour of ${insuranceCompany}.`, 40, y)
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e3a8a').text('Documents Required:-', 40, y + 15)
     doc.fontSize(8).font('Helvetica').fillColor('#475569').text('1. Previous Policy Copy\n2. RC Copy', 40, y + 28)
 

@@ -16,7 +16,30 @@ const ResultBox = ({
   const [pdfUrl, setPdfUrl] = useState('')
   const [pdfLoading, setPdfLoading] = useState(false)
   const [generatedQuoteId, setGeneratedQuoteId] = useState('')
+  const [showCompanyModal, setShowCompanyModal] = useState(false)
+  const [selectedCompany, setSelectedCompany] = useState('')
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { user } = useAuth()
+
+  const insuranceCompanies = [
+    'Bajaj Allianz General Insurance Co. Ltd.',
+    'Bharti AXA General Insurance Co. Ltd.',
+    'Cholamandalam MS General Insurance Co. Ltd.',
+    'HDFC ERGO General Insurance Co. Ltd.',
+    'ICICI Lombard General Insurance Co. Ltd.',
+    'IFFCO Tokio General Insurance Co. Ltd.',
+    'Kotak Mahindra General Insurance Co. Ltd.',
+    'National Insurance Co. Ltd.',
+    'New India Assurance Co. Ltd.',
+    'Oriental Insurance Co. Ltd.',
+    'Reliance General Insurance Co. Ltd.',
+    'Royal Sundaram General Insurance Co. Ltd.',
+    'SBI General Insurance Co. Ltd.',
+    'Shriram General Insurance Co. Ltd.',
+    'Tata AIG General Insurance Co. Ltd.',
+    'United India Insurance Co. Ltd.',
+  ]
 
   if (!result) return null
 
@@ -148,7 +171,7 @@ const ResultBox = ({
     printWindow.document.close()
   }
 
-  const generateQuotationPdf = async () => {
+  const generateQuotationPdf = async (insuranceCompany) => {
     setPdfLoading(true)
     setShowQuotationModal(true)
     setPdfUrl('')
@@ -233,8 +256,9 @@ const ResultBox = ({
         ncb,
         odDiscount: result.odDiscountVal,
         producerName: user?.name || 'Bimabox Agent',
-        producerContact: user?.phone || user?.contact || 'N/A',
+        producerContact: user?.mobile || 'N/A',
         producerEmail: user?.email || 'N/A',
+        insuranceCompany,
         premiums: {
           odRate: result.odRate,
           odBase: odBaseVal,
@@ -424,7 +448,7 @@ const ResultBox = ({
 
       <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
         <button
-          onClick={generateQuotationPdf}
+          onClick={() => { setShowCompanyModal(true); setDropdownOpen(false); setSearchQuery('') }}
           className='w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-white font-black text-sm uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200'
         >
           <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -433,6 +457,112 @@ const ResultBox = ({
           Preview Quotation
         </button>
       </div>
+
+      {/* Insurance Company Selection Modal */}
+      {showCompanyModal && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
+          <div className='relative w-full max-w-md rounded-3xl bg-white shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]'>
+            
+            {/* Fixed Header */}
+            <div className='p-6 pb-4 border-b border-slate-100'>
+              <div className='flex items-center gap-3'>
+                <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100'>
+                  <svg className='h-5 w-5 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className='text-base font-black text-slate-800'>Select Insurance Company</h3>
+                  <p className='text-xs font-medium text-slate-400'>Choose the insurer for this quotation</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className='p-6 overflow-y-auto flex-1'>
+              <div className='space-y-2'>
+                <button
+                  type='button'
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className='w-full flex items-center justify-between rounded-xl border-2 border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none bg-white transition-all'
+                >
+                  <span className={selectedCompany ? 'text-slate-800' : 'text-slate-400'}>{selectedCompany || '-- Select Insurance Company --'}</span>
+                  <svg className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </button>
+
+                {dropdownOpen && (
+                  <div className='border-2 border-slate-200 rounded-xl bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-2 duration-150'>
+                    <div className='p-2 border-b border-slate-100'>
+                      <div className='flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2'>
+                        <svg className='h-4 w-4 text-slate-400 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
+                        </svg>
+                        <input
+                          type='text'
+                          placeholder='Search company...'
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className='w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400'
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className='overflow-y-auto' style={{ maxHeight: '240px' }}>
+                      {insuranceCompanies
+                        .filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map((company) => (
+                          <button
+                            key={company}
+                            type='button'
+                            onClick={() => { setSelectedCompany(company); setDropdownOpen(false); setSearchQuery('') }}
+                            className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-b-0 ${
+                              selectedCompany === company
+                                ? 'bg-blue-50 text-blue-700 font-bold'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            {company}
+                          </button>
+                        ))}
+                      {insuranceCompanies.filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                        <p className='px-4 py-8 text-sm text-slate-400 text-center'>No companies found</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Fixed Bottom Buttons */}
+            <div className='p-4 sm:p-6 pt-3 sm:pt-4 border-t border-slate-100'>
+              <div className='flex gap-2 sm:gap-3'>
+                <button
+                  onClick={() => { setShowCompanyModal(false); setSelectedCompany(''); setDropdownOpen(false); setSearchQuery('') }}
+                  className='flex-1 rounded-xl border-2 border-slate-200 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98]'
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!selectedCompany) {
+                      alert('Please select an insurance company.')
+                      return
+                    }
+                    setShowCompanyModal(false)
+                    generateQuotationPdf(selectedCompany)
+                  }}
+                  className='flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2 sm:py-3 text-xs sm:text-sm font-black text-white uppercase tracking-wider hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]'
+                >
+                  Generate Quotation
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Quotation Loading Modal */}
       {showQuotationModal && pdfLoading && (

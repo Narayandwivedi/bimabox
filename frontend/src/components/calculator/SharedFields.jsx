@@ -101,12 +101,12 @@ export const NCBSelector = ({ ncb, setNcb }) => (
         onChange={e => setNcb(Number(e.target.value))}
         className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
       >
-        <option value={0}>0 Yr (0%)</option>
-        <option value={20}>1 Yr (20%)</option>
-        <option value={25}>2 Yr (25%)</option>
-        <option value={35}>3 Yr (35%)</option>
-        <option value={45}>4 Yr (45%)</option>
-        <option value={50}>5 Yr (50%)</option>
+        <option value={0}>0%</option>
+        <option value={20}>20%</option>
+        <option value={25}>25%</option>
+        <option value={35}>35%</option>
+        <option value={45}>45%</option>
+        <option value={50}>50%</option>
       </select>
       <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
     </div>

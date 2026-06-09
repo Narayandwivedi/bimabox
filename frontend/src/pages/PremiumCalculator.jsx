@@ -393,8 +393,15 @@ const PremiumCalculator = () => {
                     <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
-                        <input type='number' value={llPaidDriver} onChange={e => setLlPaidDriver(e.target.value)} placeholder='e.g. 50'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        <select value={llPaidDriver} onChange={e => setLlPaidDriver(e.target.value)}
+                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+                          <option value='0'>0</option>
+                          <option value='50'>50</option>
+                          <option value='100'>100</option>
+                          <option value='150'>150</option>
+                          <option value='200'>200</option>
+                          <option value='300'>300</option>
+                        </select>
                       </div>
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>

@@ -29,6 +29,31 @@ const uploadRcImage = async (req, res) => {
   }
 }
 
+const uploadDocument = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No document uploaded' })
+    }
+    
+    // Convert to web path format
+    const filePath = `/uploads/${req.file.filename}`
+    
+    return res.json({
+      success: true,
+      data: {
+        path: filePath,
+        sizeInMB: (req.file.size / (1024 * 1024)).toFixed(2),
+        format: req.file.mimetype,
+        originalName: req.file.originalname
+      }
+    })
+  } catch (error) {
+    console.error('Error uploading document:', error)
+    return res.status(500).json({ success: false, message: 'Failed to upload document' })
+  }
+}
+
 module.exports = {
   uploadRcImage,
+  uploadDocument
 }

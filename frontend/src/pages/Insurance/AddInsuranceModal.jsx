@@ -382,6 +382,33 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
+
+    let uploadedDocumentPath = formData.insuranceDocument;
+
+    if (uploadedInsuranceFile) {
+      const formDataUpload = new FormData();
+      formDataUpload.append('document', uploadedInsuranceFile);
+      try {
+        const uploadResponse = await axios.post(`${API_URL}/api/upload/document`, formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          withCredentials: true
+        });
+        if (uploadResponse.data.success) {
+           uploadedDocumentPath = uploadResponse.data.data.path;
+        } else {
+           toast.error('Failed to upload document to server');
+           setIsSubmitting(false);
+           return;
+        }
+      } catch (err) {
+         console.error('Upload Error:', err);
+         toast.error(err.response?.data?.message || 'Failed to upload document. Please ensure it is not larger than 50MB.');
+         setIsSubmitting(false);
+         return;
+      }
+    }
+
     const submitData = {
       vehicleNumber: formData.vehicleNumber,
       policyNumber: formData.policyNumber,
@@ -390,7 +417,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       validTo: formData.validTo,
       premium: formData.premium !== '' ? Number(formData.premium) : 0,
       issueDate: formData.validFrom,
-      insuranceDocument: uploadedInsuranceFile ? '' : formData.insuranceDocument,
+      insuranceDocument: uploadedDocumentPath,
       insuranceCompany: formData.insuranceCompany,
       insuranceClass: formData.insuranceClass,
       product: formData.product,
@@ -399,16 +426,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       reference: formData.reference
     }
 
-    if (uploadedInsuranceFile) {
-      submitData.insuranceDocumentData = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result)
-        reader.onerror = reject
-        reader.readAsDataURL(uploadedInsuranceFile)
-      })
-    }
-
-    setIsSubmitting(true)
     try {
       const request = isEditMode && initialData?._id
         ? axios.put(`${API_URL}/api/insurance/${initialData._id}`, submitData, { withCredentials: true })

@@ -497,7 +497,7 @@ const Home = () => {
                     {recentDocs.map((doc) => {
                       const dotColor = ({ emerald: '#10B981', amber: '#F59E0B', indigo: '#6366F1', rose: '#F43F5E', blue: '#3B82F6', teal: '#14B8A6' })[doc.color] || '#3B82F6'
                       return (
-                        <div key={doc.id} className='rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-[0_4px_16px_-6px_rgba(15,23,42,0.08)] transition-all hover:border-blue-300 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)]'>
+                        <div key={doc.id} onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)} className='rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-[0_4px_16px_-6px_rgba(15,23,42,0.08)] transition-all hover:border-blue-300 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)] cursor-pointer'>
                           <div className='flex items-center gap-3'>
                             <div className='h-2 w-2 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
                             <div className='min-w-0 flex-1'>
@@ -536,7 +536,7 @@ const Home = () => {
                         </thead>
                         <tbody className='divide-y divide-slate-50'>
                           {recentDocs.map((doc) => (
-                            <tr key={doc.id} className='transition-colors hover:bg-slate-50/50 group'>
+                            <tr key={doc.id} onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)} className='transition-colors hover:bg-slate-50/50 group cursor-pointer'>
                               <td className='px-6 py-3'>
                                 <div className='flex items-center gap-3'>
                                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>

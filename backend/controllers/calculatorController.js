@@ -43,6 +43,7 @@ const generatePdf = async (req, res) => {
 
     // ── Header Block ────────────────────────────────────────────────────────
     const logoPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'bimalogo.png')
+    const headerCenterX = 40 + pageWidth / 2
 
     // Light header with a blue bottom accent line
     doc.rect(40, y, pageWidth, 70).fillColor('#ffffff').fill()
@@ -50,21 +51,24 @@ const generatePdf = async (req, res) => {
     doc.rect(40, y + 68, pageWidth, 3).fillColor('#003afd').fill()
 
     // Logo image (left side)
-    const logoSize = 48
+    const logoSize = 28
     if (require('fs').existsSync(logoPath)) {
-      doc.image(logoPath, 52, y + 11, { height: logoSize, fit: [logoSize, logoSize] })
+      doc.image(logoPath, 52, y + 12, { height: logoSize, fit: [logoSize, logoSize] })
     }
 
-    // Brand Name: "Bima" (dark/black) + "Box" (blue #003afd)
-    doc.fontSize(24).font('Helvetica-Bold').fillColor('#0f172a').text('Bima', 112, y + 14, { continued: true })
+    // Brand Name: "Bima" (dark/black) + "Box" (blue #003afd) — left aligned
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#0f172a').text('Bima', 80, y + 16, { continued: true })
     doc.fillColor('#003afd').text('Box', { continued: false })
 
     // Tagline
-    doc.fontSize(8.5).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 112, y + 40)
+    doc.fontSize(7).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 80, y + 34)
 
-    // Quote ID & Date on Right Side (dark text on light bg)
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e293b').text(`Quote ID: ${quoteId}`, 360, y + 18, { align: 'right', width: 145 })
-    doc.fontSize(8).font('Helvetica').fillColor('#64748b').text(`Date: ${dateStr}`, 360, y + 34, { align: 'right', width: 145 })
+    // Insurance Company Name — centered across the full header width
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f172a').text(insuranceCompany, 40, y + 50, { align: 'center', width: pageWidth })
+
+    // Quote ID & Date on Right Side
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#1e293b').text(`Quote ID: ${quoteId}`, 360, y + 18, { align: 'right', width: 145 })
+    doc.fontSize(7).font('Helvetica').fillColor('#64748b').text(`Date: ${dateStr}`, 360, y + 33, { align: 'right', width: 145 })
 
     y += 82
 
@@ -266,12 +270,12 @@ const generatePdf = async (req, res) => {
     const bottomW = (pageWidth - 15) / 2
 
     // Left Column: Payment & Docs
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text(`Kindly pay cheque/DD in favour of ${insuranceCompany}.`, 40, y)
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#1e3a8a').text('Documents Required:-', 40, y + 15)
-    doc.fontSize(8).font('Helvetica').fillColor('#475569').text('1. Previous Policy Copy\n2. RC Copy', 40, y + 28)
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#475569').text(`Kindly pay cheque/DD in favour of ${insuranceCompany}.`, 40, y, { width: bottomW, lineBreak: true })
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#1e3a8a').text('Documents Required:-', 40, y + 22, { width: bottomW })
+    doc.fontSize(7).font('Helvetica').fillColor('#475569').text('1. Previous Policy Copy\n2. RC Copy', 40, y + 36, { width: bottomW })
 
     // Right Column: Notes & Validity
-    doc.fontSize(7.5).font('Helvetica').fillColor('#dc2626')
+    doc.fontSize(6.5).font('Helvetica').fillColor('#dc2626')
       .text('Note : In case of any claim, NCB will be revised and hence Quotation is Subject to Change.', 40 + bottomW + 15, y, { width: bottomW })
     doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569')
       .text(`Quote Validity: This Quote is valid for 7 days from date of generation.`, 40 + bottomW + 15, y + 26, { width: bottomW })

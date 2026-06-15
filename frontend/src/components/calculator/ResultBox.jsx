@@ -47,7 +47,8 @@ const ResultBox = ({
   const showTP = policyType !== 'od'
   const isBundle = policyType === 'bundle'
 
-  const odBase = showOD ? (parseFloat(idv) || 0) * (result.odRate / 100) : 0
+  const effectiveIdv = result.depreciatedIdv || (parseFloat(idv) || 0)
+  const odBase = showOD ? effectiveIdv * (result.odRate / 100) : 0
   const ncbDiscount = showOD ? odBase * (ncb / 100) : 0
   const afterNcbOD = odBase - ncbDiscount
   const odDiscountAmt = showOD ? afterNcbOD * ((result.odDiscountVal || 0) / 100) : 0
@@ -65,6 +66,8 @@ const ResultBox = ({
     const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
 
     const odItems = showOD ? `
+      <tr><td style='padding:4px 8px;color:#64748b'>IDV Value</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(parseFloat(idv) || 0)}</td></tr>
+      ${result.depreciation > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Depreciation on IDV (${result.depreciation}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(((parseFloat(idv) || 0) - effectiveIdv) * (result.odRate / 100))}</td></tr>` : ''}
       <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
       ${ncb > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>NCB Discount (${ncb}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#16a34a'>- ₹${fmtD(ncbDiscount)}</td></tr>` : ''}
       ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(odDiscountAmt)}</td></tr>` : ''}
@@ -200,7 +203,8 @@ const ResultBox = ({
       ? (vehicleType === 'two_wheeler' ? '5-Year TP Premium' : '3-Year TP Premium')
       : '1-Year TP Premium'
 
-    const odBaseVal = showOD ? (parseFloat(idv) || 0) * (result.odRate / 100) : 0
+    const effectiveIdvForPdf = result.depreciatedIdv || (parseFloat(idv) || 0)
+    const odBaseVal = showOD ? effectiveIdvForPdf * (result.odRate / 100) : 0
     const ncbDiscountVal = showOD ? odBaseVal * (ncb / 100) : 0
     const afterNcbODVal = odBaseVal - ncbDiscountVal
     const odDiscountAmtVal = showOD ? afterNcbODVal * ((result.odDiscountVal || 0) / 100) : 0
@@ -283,6 +287,8 @@ const ResultBox = ({
           restrictedTPPD: result.restrictedTPPDDiscount,
           loadingDiscount: result.loadingDiscount,
           loadingAmount: result.loadingAmount,
+          depreciation: result.depreciation,
+          depreciatedIdv: result.depreciatedIdv,
           gcvExtraUnits: result.details?.gcvExtraUnits || 0,
           gcvExtraPremium: result.details?.gcvExtraPremium || 0,
         },
@@ -333,6 +339,7 @@ const ResultBox = ({
             </div>
             {[
               ['IDV Value', `₹${fmtD(parseFloat(idv) || 0)}`],
+              ...(result.depreciation > 0 ? [[`Depreciation on IDV (${result.depreciation}%)`, `- ₹${fmtD(((parseFloat(idv) || 0) - effectiveIdv) * (result.odRate / 100))}`]] : []),
               ['Basic OD Premium', `₹${fmtD(odBase)}`],
               ...(ncb > 0 ? [[`NCB Discount (${ncb}%)`, `- ₹${fmtD(ncbDiscount)}`]] : []),
               ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(odDiscountAmt)}`]] : []),

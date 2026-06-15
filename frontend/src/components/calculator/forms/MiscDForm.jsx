@@ -1,6 +1,6 @@
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
 
 const MiscDForm = ({
   subtype, setSubtype,
@@ -11,6 +11,7 @@ const MiscDForm = ({
   ncb, setNcb,
   odDiscount, setOdDiscount,
   loadingDiscount, setLoadingDiscount,
+  depreciation, setDepreciation,
   coverageType, setCoverageType,
   imt23, setImt23,
   currentYear,
@@ -53,6 +54,7 @@ const MiscDForm = ({
       <NCBSelector ncb={ncb} setNcb={setNcb} />
       <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
       <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
+      <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
     </div>
   </div>
 )

@@ -1,7 +1,7 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
 
 const GCV3WForm = ({
   subtype, setSubtype,
@@ -15,6 +15,7 @@ const GCV3WForm = ({
   ncb, setNcb,
   odDiscount, setOdDiscount,
   loadingDiscount, setLoadingDiscount,
+  depreciation, setDepreciation,
   coverageType, setCoverageType,
   geoExtent, setGeoExtent,
   imt23, setImt23,
@@ -82,6 +83,7 @@ const GCV3WForm = ({
         <NCBSelector ncb={ncb} setNcb={setNcb} />
         <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
         <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
+        <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
       </div>
     </div>
   )

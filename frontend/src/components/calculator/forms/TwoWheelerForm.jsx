@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
-import { PolicyTypeSelector, CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
+import { PolicyTypeSelector, CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
 
 const TwoWheelerForm = ({
   isElectric, setIsElectric,
@@ -12,6 +12,7 @@ const TwoWheelerForm = ({
   ncb, setNcb,
   odDiscount, setOdDiscount,
   loadingDiscount, setLoadingDiscount,
+  depreciation, setDepreciation,
   policyType, setPolicyType,
   bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
   coverageType, setCoverageType,
@@ -57,6 +58,7 @@ const TwoWheelerForm = ({
           {policyType !== 'tp' && <NCBSelector ncb={ncb} setNcb={setNcb} />}
           {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}
           <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
+          <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
         </div>
       </>
     ) : (

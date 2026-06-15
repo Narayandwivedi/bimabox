@@ -52,6 +52,7 @@ const PremiumCalculator = () => {
   const [otherAddon, setOtherAddon] = useState('')
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
   const [loadingDiscount, setLoadingDiscount] = useState('')
+  const [depreciation, setDepreciation] = useState('')
 
   const selectedCategory = VEHICLE_CATEGORIES.find(v => v.id === vehicleType)
   const currentYear = new Date().getFullYear()
@@ -83,6 +84,7 @@ const PremiumCalculator = () => {
     setOtherAddon('')
     setPaUnnamedPassenger('')
     setLoadingDiscount('')
+    setDepreciation('')
   }
 
   const handleVehicleSelect = (id) => {
@@ -95,6 +97,8 @@ const PremiumCalculator = () => {
 
   const calculatePremium = () => {
     const idvVal = parseFloat(idv) || 0
+    const depreciationPercent = parseFloat(depreciation) || 0
+    const depreciatedIdv = idvVal * (1 - depreciationPercent / 100)
     const ccVal = parseFloat(cc) || 0
     const gvwVal = parseFloat(gvw) || 0
     const passengerVal = parseInt(passengers) || 1
@@ -215,7 +219,7 @@ const PremiumCalculator = () => {
     const odDiscountVal = parseFloat(odDiscount) || 0
     if (vehicleType === 'private_car' || (vehicleType === 'two_wheeler' && !isElectric)) {
       if (policyType !== 'tp' && idvVal > 0) {
-        odPremium = idvVal * (odRate / 100)
+        odPremium = depreciatedIdv * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
         odPremium = odPremium * (1 - odDiscountVal / 100)
       }
@@ -223,7 +227,7 @@ const PremiumCalculator = () => {
       if (policyType === 'bundle') odPremium *= (parseInt(bundleOdTerm) || 1)
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
-        odPremium = idvVal * (odRate / 100)
+        odPremium = depreciatedIdv * (odRate / 100)
         odPremium = odPremium * (1 - ncb / 100)
         odPremium = odPremium * (1 - odDiscountVal / 100)
       }
@@ -247,6 +251,7 @@ const PremiumCalculator = () => {
     let restrictedTPPDDiscount = 0
     if (restrictedTPPD === 'yes') {
       if (vehicleType === 'gcv') restrictedTPPDDiscount = Math.min(tpPremium, 200)
+      else if (vehicleType === 'private_car') restrictedTPPDDiscount = Math.min(tpPremium, 100)
       else if (vehicleType === 'two_wheeler') restrictedTPPDDiscount = Math.min(tpPremium, 50)
     }
     tpPremium -= restrictedTPPDDiscount
@@ -278,6 +283,7 @@ const PremiumCalculator = () => {
       rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount,
       imt23Amount, zeroDepAmount, tyreCoverAmount, restrictedTPPDDiscount,
       loadingAmount, loadingDiscount: loadingDiscountPercent,
+      depreciation: depreciationPercent, depreciatedIdv,
       gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
       odRate, details, odDiscountVal,
     })
@@ -316,7 +322,7 @@ const PremiumCalculator = () => {
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount, depreciation])
 
   const formProps = {
     zone, setZone, vehicleAge, setVehicleAge, idv, setIdv,
@@ -328,6 +334,7 @@ const PremiumCalculator = () => {
     manufacturingYear, setManufacturingYear,
     geoExtent, setGeoExtent, imt23, setImt23,
     loadingDiscount, setLoadingDiscount,
+    depreciation, setDepreciation,
     vehicleType, currentYear,
   }
 
@@ -451,7 +458,6 @@ const PremiumCalculator = () => {
                           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                       </div>
                       )}
-                      {vehicleType !== 'private_car' && (
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
                         <select
@@ -460,10 +466,9 @@ const PremiumCalculator = () => {
                           className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
                         >
                           <option value="no">No</option>
-                          <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : '₹50'} discount)</option>
+                          <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : vehicleType === 'private_car' ? '₹100' : '₹50'} discount)</option>
                         </select>
                       </div>
-                      )}
                       {vehicleType !== 'private_car' && vehicleType !== 'two_wheeler' && (
                       <div>
                         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (₹)</label>

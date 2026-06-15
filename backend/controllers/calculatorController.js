@@ -136,7 +136,7 @@ const generatePdf = async (req, res) => {
     drawGridCell(0, 1, 'REGISTRATION NO / SPEC', data.vehicleSpec || 'N/A')
     drawGridCell(1, 1, 'VEHICLE AGE', data.vehicleAge || 'N/A')
     drawGridCell(2, 1, 'IDV OF THE VEHICLE', fmt(data.idv))
-    drawGridCell(3, 1, 'NCB / OD DISCOUNT', `${data.ncb || 0}% / ${data.odDiscount || 0}%`)
+    drawGridCell(3, 1, 'NCB / OD / DEPR%', `${data.ncb || 0}% / ${data.odDiscount || 0}% / ${premiums.depreciation || 0}%`)
 
     y += gridH + 20
 

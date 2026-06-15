@@ -1,4 +1,4 @@
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
 
 const GCVForm = ({
   gvw, setGvw,
@@ -8,6 +8,7 @@ const GCVForm = ({
   idv, setIdv,
   ncb, setNcb,
   odDiscount, setOdDiscount,
+  loadingDiscount, setLoadingDiscount,
   coverageType, setCoverageType,
   geoExtent, setGeoExtent,
   imt23, setImt23,
@@ -44,7 +45,7 @@ const GCVForm = ({
         </select>
       </div>
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
       <div>
         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
         <select
@@ -58,6 +59,7 @@ const GCVForm = ({
       </div>
       <NCBSelector ncb={ncb} setNcb={setNcb} />
       <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+      <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
     </div>
   </div>
 )

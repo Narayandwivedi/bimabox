@@ -166,8 +166,11 @@ const generatePdf = async (req, res) => {
       if (premiums.gcvExtraUnits > 0) {
         odRows.push([`Extra Weight > 12000 Premium`, fmt(premiums.gcvExtraPremium)])
       }
+      if (premiums.loadingAmount > 0) {
+        odRows.push([`Loading Discount @ ${premiums.loadingDiscount}%`, fmt(premiums.loadingAmount)])
+      }
     }
-    const finalOD = premiums.finalOd || 0
+    const finalOD = (premiums.finalOd || 0) + (premiums.loadingAmount || 0)
 
     const addonRows = [
       ['Zero Depreciation', fmt(premiums.zeroDep || 0)],

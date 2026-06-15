@@ -1,6 +1,6 @@
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
 
 const PCV3WForm = ({
   subtype, setSubtype,
@@ -10,6 +10,7 @@ const PCV3WForm = ({
   idv, setIdv,
   ncb, setNcb,
   odDiscount, setOdDiscount,
+  loadingDiscount, setLoadingDiscount,
   coverageType, setCoverageType,
   passengers, setPassengers,
   currentYear,
@@ -45,6 +46,7 @@ const PCV3WForm = ({
     <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <NCBSelector ncb={ncb} setNcb={setNcb} />
     <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+    <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
   </div>
 )
 

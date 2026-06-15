@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
 
 const TaxiForm = ({
   isElectric, setIsElectric,
@@ -11,6 +11,7 @@ const TaxiForm = ({
   idv, setIdv,
   ncb, setNcb,
   odDiscount, setOdDiscount,
+  loadingDiscount, setLoadingDiscount,
   coverageType, setCoverageType,
   passengers, setPassengers,
   currentYear,
@@ -72,6 +73,7 @@ const TaxiForm = ({
     <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <NCBSelector ncb={ncb} setNcb={setNcb} />
     <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+    <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
   </div>
 )
 

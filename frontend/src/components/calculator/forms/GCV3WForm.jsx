@@ -1,7 +1,7 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput } from '../SharedFields'
 
 const GCV3WForm = ({
   subtype, setSubtype,
@@ -14,6 +14,7 @@ const GCV3WForm = ({
   idv, setIdv,
   ncb, setNcb,
   odDiscount, setOdDiscount,
+  loadingDiscount, setLoadingDiscount,
   coverageType, setCoverageType,
   geoExtent, setGeoExtent,
   imt23, setImt23,
@@ -55,7 +56,7 @@ const GCV3WForm = ({
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
       </div>
-      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+      <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
           <select
@@ -80,6 +81,7 @@ const GCV3WForm = ({
         </div>
         <NCBSelector ncb={ncb} setNcb={setNcb} />
         <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+        <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
       </div>
     </div>
   )

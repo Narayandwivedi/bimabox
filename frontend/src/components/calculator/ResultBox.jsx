@@ -58,7 +58,7 @@ const ResultBox = ({
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
     const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
 
-    const netPremium = result.odPremium + result.tpPremium
+    const netPremium = result.odPremium + result.tpPremium + (result.loadingAmount || 0)
     const exactTotal = netPremium + result.gst
 
     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
@@ -70,7 +70,8 @@ const ResultBox = ({
       ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(odDiscountAmt)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 (15% of OD)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 && vehicleType === 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
-      <tr style='background:#f1f5f9'><td style='padding:6px 8px;font-weight:800'>Total OD Premium</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#2563eb'>₹${fmtD(result.odPremium)}</td></tr>
+      ${result.loadingAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Loading Discount @ ${result.loadingDiscount}%</td><td style='text-align:right;padding:4px 8px;font-weight:700'>+ ₹${fmtD(result.loadingAmount)}</td></tr>` : ''}
+      <tr style='background:#f1f5f9'><td style='padding:6px 8px;font-weight:800'>Total OD Premium</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#2563eb'>₹${fmtD(result.odPremium + result.loadingAmount)}</td></tr>
     ` : ''
 
     const tpItems = showTP ? `
@@ -212,7 +213,8 @@ const ResultBox = ({
       if (result.odDiscountVal > 0) tableRows.push({ desc: 'Insurer OD Discount', rate: `-${result.odDiscountVal}%`, amount: -odDiscountAmtVal, type: 'discount' })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of OD)', rate: '15%', amount: result.imt23Amount })
       if (result.geoExtentAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
-      tableRows.push({ desc: 'Final Own Damage (OD) Premium', rate: '-', amount: result.odPremium + result.imt23Amount + (vehicleType === 'gcv' ? result.geoExtentAmount : 0), type: 'total' })
+      if (result.loadingAmount > 0) tableRows.push({ desc: `Loading Discount @ ${result.loadingDiscount}%`, rate: `${result.loadingDiscount}%`, amount: result.loadingAmount })
+      tableRows.push({ desc: 'Final Own Damage (OD) Premium', rate: '-', amount: result.odPremium + result.imt23Amount + (vehicleType === 'gcv' ? result.geoExtentAmount : 0) + result.loadingAmount, type: 'total' })
     }
 
     if (showTP) {
@@ -230,7 +232,7 @@ const ResultBox = ({
     if (result.zeroDepAmount > 0) tableRows.push({ desc: 'Zero Depreciation', rate: '-', amount: result.zeroDepAmount })
     if (result.tyreCoverAmount > 0) tableRows.push({ desc: 'Tyre Cover', rate: '-', amount: result.tyreCoverAmount })
 
-    const netPremiumVal = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount
+    const netPremiumVal = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
 
     tableRows.push({ desc: 'Premium Before Taxes', rate: '-', amount: netPremiumVal, type: 'total' })
 
@@ -279,6 +281,8 @@ const ResultBox = ({
           zeroDep: result.zeroDepAmount,
           tyreCover: result.tyreCoverAmount,
           restrictedTPPD: result.restrictedTPPDDiscount,
+          loadingDiscount: result.loadingDiscount,
+          loadingAmount: result.loadingAmount,
           gcvExtraUnits: result.details?.gcvExtraUnits || 0,
           gcvExtraPremium: result.details?.gcvExtraPremium || 0,
         },
@@ -337,7 +341,8 @@ const ResultBox = ({
               ...(vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? [
                 [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),
-              ['Total OD Premium', `₹${fmtD(result.odPremium)}`, 'font-black text-blue-700'],
+              ...(result.loadingAmount > 0 ? [[`Loading Discount @ ${result.loadingDiscount}%`, `+ ₹${fmtD(result.loadingAmount)}`]] : []),
+              ['Total OD Premium', `₹${fmtD(result.odPremium + result.loadingAmount)}`, 'font-black text-blue-700'],
             ].map(([label, value, cls], i) => {
               const isTotal = label === 'Total OD Premium'
               return (
@@ -409,7 +414,7 @@ const ResultBox = ({
         <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
           <div className='flex items-center justify-between text-xs'>
             <p className='font-bold text-slate-500'>Total before GST</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount)}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
           </div>
           {result.gstTpRate === 5 ? (
             <>

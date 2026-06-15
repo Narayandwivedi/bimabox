@@ -159,6 +159,25 @@ export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bun
   )
 }
 
+export const LoadingDiscountInput = ({ loadingDiscount, setLoadingDiscount }) => (
+  <div>
+    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Loading on Discount Premium (%)</label>
+    <select
+      value={loadingDiscount}
+      onChange={e => setLoadingDiscount(e.target.value)}
+      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 appearance-none cursor-pointer transition-all'
+    >
+      <option value=''>0%</option>
+      <option value='5'>5%</option>
+      <option value='10'>10%</option>
+      <option value='15'>15%</option>
+      <option value='20'>20%</option>
+      <option value='25'>25%</option>
+      <option value='30'>30%</option>
+    </select>
+  </div>
+)
+
 export const CoverageSelector = ({ coverageType, setCoverageType }) => (
   <div>
     <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Class of Insurance</label>

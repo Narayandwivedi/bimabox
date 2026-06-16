@@ -22,7 +22,7 @@ const PremiumCalculator = () => {
   const [result, setResult] = useState(null)
 
   const [zone, setZone] = useState('A')
-  const [vehicleAge, setVehicleAge] = useState('upto_5')
+  const [vehicleAge, setVehicleAge] = useState('')
   const [idv, setIdv] = useState('')
   const [ncb, setNcb] = useState(0)
   const [coverageType, setCoverageType] = useState('comprehensive')
@@ -183,18 +183,6 @@ const PremiumCalculator = () => {
       odRate, details, odDiscountVal,
     })
   }
-
-  useEffect(() => {
-    if (manufacturingYear) {
-      const yr = parseInt(manufacturingYear)
-      if (!isNaN(yr)) {
-        const age = currentYear - yr
-        if (age <= 5) setVehicleAge('upto_5')
-        else if (age <= 7) setVehicleAge('5_to_7')
-        else setVehicleAge('above_7')
-      }
-    }
-  }, [manufacturingYear])
 
   useEffect(() => {
     if (vehicleType) calculatePremium()

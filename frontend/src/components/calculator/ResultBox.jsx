@@ -66,8 +66,7 @@ const ResultBox = ({
     const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
 
     const odItems = showOD ? `
-      <tr><td style='padding:4px 8px;color:#64748b'>IDV Value</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(parseFloat(idv) || 0)}</td></tr>
-      ${result.depreciation > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Depreciation on IDV (${result.depreciation}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(((parseFloat(idv) || 0) - effectiveIdv) * (result.odRate / 100))}</td></tr>` : ''}
+      <tr><td style='padding:4px 8px;color:#64748b'>Final IDV (after depreciation)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(effectiveIdv)}</td></tr>
       <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
       ${ncb > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>NCB Discount (${ncb}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#16a34a'>- ₹${fmtD(ncbDiscount)}</td></tr>` : ''}
       ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(odDiscountAmt)}</td></tr>` : ''}
@@ -338,8 +337,7 @@ const ResultBox = ({
               <p className='text-[9px] sm:text-[10px] font-bold text-blue-600'>Rate: {result.odRate}%</p>
             </div>
             {[
-              ['IDV Value', `₹${fmtD(parseFloat(idv) || 0)}`],
-              ...(result.depreciation > 0 ? [[`Depreciation on IDV (${result.depreciation}%)`, `- ₹${fmtD(((parseFloat(idv) || 0) - effectiveIdv) * (result.odRate / 100))}`]] : []),
+              ['Final IDV (after depreciation)', `₹${fmtD(effectiveIdv)}`],
               ['Basic OD Premium', `₹${fmtD(odBase)}`],
               ...(ncb > 0 ? [[`NCB Discount (${ncb}%)`, `- ₹${fmtD(ncbDiscount)}`]] : []),
               ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(odDiscountAmt)}`]] : []),

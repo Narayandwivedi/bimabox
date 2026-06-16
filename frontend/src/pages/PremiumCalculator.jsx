@@ -367,6 +367,7 @@ const PremiumCalculator = () => {
                     selectedCategory={selectedCategory}
                     subtype={subtype}
                     gvw={gvw}
+                    gstEnabled={true}
                   />
                 )}
               </div>

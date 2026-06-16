@@ -242,8 +242,12 @@ const generatePdf = async (req, res) => {
     y = finalSubtotalY + 20 + 18
 
     // ── Totals Section ─────────────────────────────────────────────────────
-    doc.rect(40, y, pageWidth, 56).fillColor('#f8fafc').fill()
-    doc.rect(40, y, pageWidth, 56).strokeColor('#cbd5e1').stroke()
+    const gstData = data.gst || {}
+    const hasSplitGst = gstData.hasSplitGst
+    const totalsBoxH = hasSplitGst ? 66 : 56
+
+    doc.rect(40, y, pageWidth, totalsBoxH).fillColor('#f8fafc').fill()
+    doc.rect(40, y, pageWidth, totalsBoxH).strokeColor('#cbd5e1').stroke()
 
     const drawTotalRow = (label, value, isBold = false, offset = 4) => {
       doc.fontSize(isBold ? 9.5 : 8.5).font(isBold ? 'Helvetica-Bold' : 'Helvetica').fillColor(isBold ? '#1e3a8a' : '#334155')
@@ -252,21 +256,22 @@ const generatePdf = async (req, res) => {
     }
 
     const netPrem = data.netPremium || (finalOD + finalAddon + finalTP)
-    const gstData = data.gst || {}
-    let gstLabel = `GST (${gstData.enabled ? '18%' : '0%'})`
-    if (gstData.hasSplitGst) {
-      gstLabel = `GST (TP @ 5% + Other @ 18%)`
-    }
 
     drawTotalRow('Premium before GST (A+B+C)', fmt(Math.round(netPrem), 0), false, 6)
-    drawTotalRow(gstLabel, fmt(Math.round(gstData.totalGst || 0), 0), false, 22)
-    
-    // Horizontal divider
-    doc.moveTo(50, y + 36).lineTo(40 + pageWidth - 10, y + 36).strokeColor('#cbd5e1').stroke()
-    
-    drawTotalRow('Final Premium (Payable)', fmt(Math.round(data.totalPayable), 0), true, 41)
 
-    y += 72
+    if (hasSplitGst) {
+      drawTotalRow('GST on TP @ 5%', fmt(Math.round(gstData.gstTp || 0), 0), false, 20)
+      drawTotalRow('GST on Other @ 18%', fmt(Math.round(gstData.gstNonTp || 0), 0), false, 32)
+      doc.moveTo(50, y + 44).lineTo(40 + pageWidth - 10, y + 44).strokeColor('#cbd5e1').stroke()
+      drawTotalRow('Final Premium (Payable)', fmt(Math.round(data.totalPayable), 0), true, 50)
+    } else {
+      const gstLabel = `GST (${gstData.enabled ? '18%' : '0%'})`
+      drawTotalRow(gstLabel, fmt(Math.round(gstData.totalGst || 0), 0), false, 22)
+      doc.moveTo(50, y + 36).lineTo(40 + pageWidth - 10, y + 36).strokeColor('#cbd5e1').stroke()
+      drawTotalRow('Final Premium (Payable)', fmt(Math.round(data.totalPayable), 0), true, 41)
+    }
+
+    y += totalsBoxH + 16
 
     // ── Instructions & Documents ──────────────────────────────────────────
     const bottomW = (pageWidth - 15) / 2

@@ -53,7 +53,7 @@ const TwoWheelerForm = ({
             <p className='mt-1 text-[8px] text-slate-400'>≤75 / 76–150 / 151–350 / {'>'}350 CC</p>
           </div>
         </div>
-        <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+        <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
           <IDVInput idv={idv} setIdv={setIdv} />
           {policyType !== 'tp' && <NCBSelector ncb={ncb} setNcb={setNcb} />}
           {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}

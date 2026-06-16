@@ -57,7 +57,7 @@ const GCV3WForm = ({
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
       </div>
-      <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+      <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
           <select

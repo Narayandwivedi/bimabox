@@ -69,7 +69,7 @@ const PrivateCarForm = ({
         </div>
       )}
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+    <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
       <IDVInput idv={idv} setIdv={setIdv} />
       {policyType !== 'tp' && <NCBSelector ncb={ncb} setNcb={setNcb} />}
       {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}

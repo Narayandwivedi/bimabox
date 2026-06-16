@@ -11,8 +11,7 @@ import PCVForm from '../components/calculator/forms/PCVForm'
 import PCV3WForm from '../components/calculator/forms/PCV3WForm'
 import MiscDForm from '../components/calculator/forms/MiscDForm'
 import ResultBox from '../components/calculator/ResultBox'
-import TARIFF from '../components/calculator/tariffData'
-import { fmt } from '../components/calculator/helpers'
+import CALCULATORS from '../components/calculator/calculations'
 import {
   NCBSelector, ODDiscountInput,
 } from '../components/calculator/SharedFields'
@@ -104,116 +103,12 @@ const PremiumCalculator = () => {
     const passengerVal = parseInt(passengers) || 1
     const kwVal = parseFloat(kwPower) || 0
 
-    let tpPremium = 0
-    let odRate = 0
-    let details = {}
-
-    switch (vehicleType) {
-      case 'private_car': {
-        if (isElectric) {
-          const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
-          if (policyType === 'bundle') {
-            const tpYr = parseInt(bundleTpTerm) || 3
-            tpPremium = TARIFF.private_car.electricTP3yr[kwBracket]
-            if (tpYr !== 3) tpPremium = TARIFF.private_car.electricTP1yr[kwBracket] * tpYr
-          } else {
-            tpPremium = TARIFF.private_car.electricTP1yr[kwBracket]
-          }
-          odRate = TARIFF.private_car.odRates[vehicleAge][zone][kwBracket]
-          details = { label: `${kwVal} KW (Electric)` }
-        } else {
-          const bracket = getCCBracket(ccVal)
-          if (policyType === 'bundle') {
-            const tpYr = parseInt(bundleTpTerm) || 3
-            tpPremium = TARIFF.private_car.tp3YrsByCC[bracket]
-            if (tpYr !== 3) tpPremium = TARIFF.private_car.tpByCC[bracket] * tpYr
-          } else {
-            tpPremium = TARIFF.private_car.tpByCC[bracket]
-          }
-          odRate = TARIFF.private_car.odRates[vehicleAge][zone][bracket]
-          details = { label: ccVal <= 1000 ? '≤1000 CC' : ccVal <= 1500 ? '1001–1500 CC' : '>1500 CC' }
-        }
-        break
-      }
-      case 'two_wheeler': {
-        if (isElectric) {
-          const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
-          tpPremium = policyType === 'bundle' ? TARIFF.two_wheeler.tpBundle5yr[kwBracket] || 0 : TARIFF.two_wheeler.electricTP1yr[kwBracket]
-          odRate = TARIFF.two_wheeler.odRates[vehicleAge][zone][kwBracket >= 3 ? 2 : kwBracket]
-          details = { label: `${kwVal} KW (Electric)` }
-        } else {
-          const ccBracket = get2WCCBracket(ccVal)
-          const odBracket = get2WODBracket(ccVal)
-          if (policyTerm === '5yr' || policyType === 'bundle') {
-            const tpYr = parseInt(bundleTpTerm) || 5
-            tpPremium = TARIFF.two_wheeler.tpBundle5yr[ccBracket] || 0
-            if (tpYr !== 5) tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket] * tpYr
-          } else {
-            tpPremium = TARIFF.two_wheeler.tpByCC[ccBracket]
-          }
-          odRate = TARIFF.two_wheeler.odRates[vehicleAge][zone][odBracket]
-          details = { label: ccVal <= 75 ? '≤75 CC' : ccVal <= 150 ? '76–150 CC' : ccVal <= 350 ? '151–350 CC' : '>350 CC' }
-        }
-        break
-      }
-      case 'gcv': {
-        const brackets = [7500, 12000, 20000, 40000, Infinity]
-        const idx = brackets.findIndex(b => gvwVal <= b)
-        const gvwIdx = idx >= 0 ? idx : 4
-        const gcvBaseTP = TARIFF.gcv.tpByGVW[gvwIdx]
-        const gcvExtraUnits = gvwVal > 12000 ? Math.floor((gvwVal - 12000) / 100) : 0
-        const gcvExtraPremium = gcvExtraUnits * TARIFF.gcv.extraPer100kg
-        tpPremium = gcvBaseTP  // extra weight goes to OD side
-        odRate = TARIFF.gcv.odRates[vehicleAge][zone]
-        details = { label: `GVW ${gvwVal} kg`, gcvBaseTP, gcvExtraUnits, gcvExtraPremium }
-        break
-      }
-      case 'gcv_3w': {
-        const st = TARIFF.gcv_3w.subtypes.find(s => s.id === subtype) || TARIFF.gcv_3w.subtypes[0]
-        tpPremium = st.tp
-        odRate = TARIFF.gcv_3w.odRates[vehicleAge][zone]
-        details = { label: st.label }
-        break
-      }
-      case 'taxi': {
-        if (isElectric) {
-          const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
-          tpPremium = TARIFF.taxi.electricTP[kwBracket] + (passengerVal * TARIFF.taxi.electricTPPerPsgr[kwBracket])
-          odRate = TARIFF.taxi.odRates[vehicleAge][zone][kwBracket]
-          details = { label: `${kwVal} KW (Electric)` }
-        } else {
-          const bracket = getCCBracket(ccVal)
-          tpPremium = TARIFF.taxi.tpByCC[bracket] + (passengerVal * TARIFF.taxi.tpPerPsgr[bracket])
-          odRate = TARIFF.taxi.odRates[vehicleAge][zone][bracket]
-          details = { label: ccVal <= 1000 ? '≤1000 CC' : ccVal <= 1500 ? '1001–1500 CC' : '>1500 CC', tpBase: TARIFF.taxi.tpByCC[bracket], tpPsgr: passengerVal * TARIFF.taxi.tpPerPsgr[bracket] }
-        }
-        break
-      }
-      case 'pcv': {
-        const st = TARIFF.pcv.subtypes.find(s => s.id === subtype) || TARIFF.pcv.subtypes[0]
-        tpPremium = st.tpBase + (passengerVal * st.tpPerPsgr)
-        odRate = TARIFF.pcv.odRates[vehicleAge][zone]
-        const addODEntry = TARIFF.pcv.addOD.find(a => passengerVal <= a.maxPsgr)
-        details = { label: st.label, tpBase: st.tpBase, tpPsgr: passengerVal * st.tpPerPsgr, addOD: addODEntry?.extra || 350 }
-        break
-      }
-      case 'pcv_3w': {
-        const st = TARIFF.pcv_3w.subtypes.find(s => s.id === subtype) || TARIFF.pcv_3w.subtypes[0]
-        tpPremium = st.tpBase + (passengerVal * st.tpPerPsgr)
-        odRate = TARIFF.pcv_3w.odRates[vehicleAge][zone]
-        details = { label: st.label, tpBase: st.tpBase, tpPsgr: passengerVal * st.tpPerPsgr }
-        break
-      }
-      case 'misc_d': {
-        const st = TARIFF.misc_d.subtypes.find(s => s.id === subtype) || TARIFF.misc_d.subtypes[0]
-        tpPremium = st.tp
-        odRate = TARIFF.misc_d.odRates[vehicleAge][zone]
-        details = { label: st.label }
-        break
-      }
-      default:
-        break
-    }
+    const calcFn = CALCULATORS[vehicleType]
+    let { tpPremium = 0, odRate = 0, details = {} } = calcFn ? calcFn({
+      isElectric, kwVal, ccVal, gvwVal, passengerVal,
+      policyType, policyTerm, bundleTpTerm,
+      vehicleAge, zone, subtype,
+    }) : {}
 
     let odPremium = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
@@ -287,25 +182,6 @@ const PremiumCalculator = () => {
       gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
       odRate, details, odDiscountVal,
     })
-  }
-
-  const getCCBracket = (cc) => {
-    if (cc <= 1000) return 0
-    if (cc <= 1500) return 1
-    return 2
-  }
-
-  const get2WCCBracket = (cc) => {
-    if (cc <= 75) return 0
-    if (cc <= 150) return 1
-    if (cc <= 350) return 2
-    return 3
-  }
-
-  const get2WODBracket = (cc) => {
-    if (cc <= 150) return 0
-    if (cc <= 350) return 1
-    return 2
   }
 
   useEffect(() => {

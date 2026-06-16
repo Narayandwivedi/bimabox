@@ -64,6 +64,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     policyHolderName: prefilledOwnerName,
     validFrom: '',
     validTo: '',
+    issueDate: '',
     premium: '',
     insuranceDocument: '',
     insuranceCompany: '',
@@ -101,6 +102,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: initialData.policyHolderName || '',
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
+        issueDate: initialData.issueDate || '',
         premium: initialData.premium != null ? String(initialData.premium) : '',
         insuranceDocument: initialData.insuranceDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
@@ -129,6 +131,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: prefilledOwnerName,
         validFrom: '',
         validTo: '',
+        issueDate: '',
         premium: '',
         insuranceDocument: '',
         insuranceCompany: '',
@@ -253,7 +256,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }))
       return
     }
-    if (name === 'validFrom' || name === 'validTo') {
+    if (name === 'validFrom' || name === 'validTo' || name === 'issueDate') {
       if (name === 'validTo') userEditedValidTo.current = true
       const formatted = handleSmartDateInput(value, formData[name] || '')
       if (formatted !== null) setFormData(prev => ({ ...prev, [name]: formatted }))
@@ -280,7 +283,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               Object.keys(resultData).forEach((key) => {
                 const value = resultData[key]
                 if (!value || !Object.prototype.hasOwnProperty.call(updated, key)) return
-                if (key === 'validFrom' || key === 'validTo') {
+                if (key === 'validFrom' || key === 'validTo' || key === 'issueDate') {
                   const normalizedStr = normalizeAIExtractedDate(value)
                   const formatted = handleSmartDateInput(normalizedStr, '')
                   if (formatted) updated[key] = formatted
@@ -379,7 +382,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     if (e.key !== 'Enter') return
     e.preventDefault()
     const currentTabIndex = parseInt(e.target.getAttribute('tabIndex'), 10)
-    if (currentTabIndex === 5) {
+    if (currentTabIndex === 7) {
       document.querySelector('form')?.requestSubmit()
       return
     }
@@ -432,7 +435,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       validFrom: formData.validFrom,
       validTo: formData.validTo,
       premium: formData.premium !== '' ? Number(formData.premium) : 0,
-      issueDate: formData.validFrom,
+      issueDate: formData.issueDate,
       insuranceDocument: uploadedDocumentPath,
       insuranceCompany: formData.insuranceCompany,
       insuranceClass: formData.insuranceClass,
@@ -498,20 +501,24 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
                 Policy Details
               </h3>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4'>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Issue Date <span className='text-xs text-gray-500'>(Optional)</span></label>
+                  <input type='text' name='issueDate' value={formData.issueDate} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='1' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
+                </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number</label>
                   <div className='relative'>
-                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter vehicle number' tabIndex='1' className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono bg-white' autoFocus />
+                    <input type='text' name='vehicleNumber' value={formData.vehicleNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter vehicle number' tabIndex='2' className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono bg-white' autoFocus />
                   </div>
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Number</label>
-                  <input type='text' name='policyNumber' value={formData.policyNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='INS001234567' tabIndex='2' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono bg-white' />
+                  <input type='text' name='policyNumber' value={formData.policyNumber} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='INS001234567' tabIndex='3' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono bg-white' />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Policy Holder Name</label>
-                  <input type='text' name='policyHolderName' value={formData.policyHolderName} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter policy holder name' tabIndex='3' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
+                  <input type='text' name='policyHolderName' value={formData.policyHolderName} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='Enter policy holder name' tabIndex='4' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Insurance Company</label>
@@ -646,11 +653,11 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid From <span className='text-red-500'>*</span></label>
-                  <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='4' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
+                  <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='5' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated, editable)</span></label>
-                  <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='5' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                  <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='6' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
@@ -667,7 +674,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       placeholder='0'
                       min='0'
                       step='any'
-                      tabIndex='6'
+                      tabIndex='7'
                       className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
                     />
                   </div>

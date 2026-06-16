@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
@@ -234,6 +234,78 @@ const Setting = () => {
                   </svg>
                 </a>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Legal & Support Card */}
+        <div className='mb-4 animate-slideUp'>
+          <div className='rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-6'>
+            <div className='flex items-center gap-3 mb-4'>
+              <div className='h-7 w-7 rounded-lg bg-violet-50 flex items-center justify-center'>
+                <svg className='h-3.5 w-3.5 text-violet-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
+                </svg>
+              </div>
+              <h3 className='text-[11px] font-black uppercase tracking-widest text-slate-500'>Legal &amp; Support</h3>
+            </div>
+            <div className='space-y-2.5'>
+              {/* Contact Us */}
+              <Link
+                to='/contact-us'
+                className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-rose-200 hover:from-rose-50/50 hover:to-rose-50/30 transition-all duration-200'
+              >
+                <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/20 group-hover:shadow-lg group-hover:shadow-rose-500/30 transition-shadow'>
+                  <svg className='h-5 w-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                  </svg>
+                </div>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm font-bold text-slate-900 group-hover:text-rose-700 transition-colors'>Contact Us</p>
+                  <p className='text-[10px] font-semibold text-slate-400'>Get help, send feedback, or reach our team</p>
+                </div>
+                <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-rose-400 group-hover:translate-x-0.5 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                </svg>
+              </Link>
+
+              {/* Privacy Policy */}
+              <Link
+                to='/privacy-policy'
+                className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-blue-200 hover:from-blue-50/50 hover:to-blue-50/30 transition-all duration-200'
+              >
+                <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-shadow'>
+                  <svg className='h-5 w-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
+                  </svg>
+                </div>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors'>Privacy Policy</p>
+                  <p className='text-[10px] font-semibold text-slate-400'>How we collect, use, and protect your data</p>
+                </div>
+                <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                </svg>
+              </Link>
+
+              {/* Terms & Conditions */}
+              <Link
+                to='/terms-and-conditions'
+                className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-violet-200 hover:from-violet-50/50 hover:to-violet-50/30 transition-all duration-200'
+              >
+                <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-violet-500/20 group-hover:shadow-lg group-hover:shadow-violet-500/30 transition-shadow'>
+                  <svg className='h-5 w-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                  </svg>
+                </div>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm font-bold text-slate-900 group-hover:text-violet-700 transition-colors'>Terms &amp; Conditions</p>
+                  <p className='text-[10px] font-semibold text-slate-400'>Rules and guidelines for using BimaBox</p>
+                </div>
+                <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>

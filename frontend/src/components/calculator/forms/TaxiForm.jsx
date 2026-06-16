@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const TaxiForm = ({
   isElectric, setIsElectric,
@@ -68,14 +68,16 @@ const TaxiForm = ({
         <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 4' min={1} max={6}
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
       </div>
-      <IDVInput idv={idv} setIdv={setIdv} />
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
     </div>
     <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
-    <NCBSelector ncb={ncb} setNcb={setNcb} />
-    <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
-    <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
-    <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
+    <IDVSection
+      idv={idv} setIdv={setIdv}
+      depreciation={depreciation} setDepreciation={setDepreciation}
+      ncb={ncb} setNcb={setNcb}
+      odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+      loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+    />
   </div>
 )
 

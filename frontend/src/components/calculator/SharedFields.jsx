@@ -180,7 +180,7 @@ export const LoadingDiscountInput = ({ loadingDiscount, setLoadingDiscount }) =>
 
 export const DepreciationInput = ({ depreciation, setDepreciation }) => (
   <div>
-    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Depreciation on IDV (%)</label>
+    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Depreciation</label>
     <select
       value={depreciation}
       onChange={e => setDepreciation(e.target.value)}
@@ -213,6 +213,43 @@ export const CoverageSelector = ({ coverageType, setCoverageType }) => (
           <p className='mt-0.5 text-[9px] sm:text-[10px] text-slate-500 font-medium'>{sub}</p>
         </button>
       ))}
+    </div>
+  </div>
+)
+
+/**
+ * IDVSection – composite row: IDV (wide) | Depreciation | NCB | OD Discount | Loading
+ * showNcb / showOdDiscount – pass false to hide (e.g. TP-only policy)
+ */
+export const IDVSection = ({
+  idv, setIdv,
+  depreciation, setDepreciation,
+  ncb, setNcb,
+  odDiscount, setOdDiscount,
+  loadingDiscount, setLoadingDiscount,
+  showNcb = true,
+  showOdDiscount = true,
+}) => (
+  <div className='flex flex-col sm:flex-row gap-3'>
+    {/* IDV – double width on desktop */}
+    <div className='w-full sm:flex-[2]'>
+      <IDVInput idv={idv} setIdv={setIdv} />
+    </div>
+    <div className='w-full sm:flex-1'>
+      <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
+    </div>
+    {showNcb && (
+      <div className='w-full sm:flex-1'>
+        <NCBSelector ncb={ncb} setNcb={setNcb} />
+      </div>
+    )}
+    {showOdDiscount && (
+      <div className='w-full sm:flex-1'>
+        <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
+      </div>
+    )}
+    <div className='w-full sm:flex-1'>
+      <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
     </div>
   </div>
 )

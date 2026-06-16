@@ -1,7 +1,7 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const GCV3WForm = ({
   subtype, setSubtype,
@@ -51,13 +51,12 @@ const GCV3WForm = ({
         </div>
       </div>
       <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
-      <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
-        <IDVInput idv={idv} setIdv={setIdv} />
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
         <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
       </div>
-      <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
           <select
@@ -80,11 +79,14 @@ const GCV3WForm = ({
             <option value="yes">Yes (15% of OD)</option>
           </select>
         </div>
-        <NCBSelector ncb={ncb} setNcb={setNcb} />
-        <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
-        <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
-        <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
       </div>
+      <IDVSection
+        idv={idv} setIdv={setIdv}
+        depreciation={depreciation} setDepreciation={setDepreciation}
+        ncb={ncb} setNcb={setNcb}
+        odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+        loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+      />
     </div>
   )
 }

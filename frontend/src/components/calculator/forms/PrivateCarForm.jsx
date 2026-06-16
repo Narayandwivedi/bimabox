@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
-import { PolicyTypeSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
+import { PolicyTypeSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const PrivateCarForm = ({
   isElectric, setIsElectric,
@@ -69,13 +69,15 @@ const PrivateCarForm = ({
         </div>
       )}
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
-      <IDVInput idv={idv} setIdv={setIdv} />
-      {policyType !== 'tp' && <NCBSelector ncb={ncb} setNcb={setNcb} />}
-      {policyType !== 'tp' && <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />}
-      <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
-      <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
-    </div>
+    <IDVSection
+      idv={idv} setIdv={setIdv}
+      depreciation={depreciation} setDepreciation={setDepreciation}
+      ncb={ncb} setNcb={setNcb}
+      odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+      loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+      showNcb={policyType !== 'tp'}
+      showOdDiscount={policyType !== 'tp'}
+    />
   </div>
 )
 

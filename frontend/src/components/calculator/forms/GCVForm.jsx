@@ -1,4 +1,4 @@
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const GCVForm = ({
   gvw, setGvw,
@@ -26,14 +26,13 @@ const GCVForm = ({
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
       <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
       <div>
         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GVW (Gross Vehicle Weight in Kg)</label>
         <input type='number' value={gvw} onChange={e => setGvw(e.target.value)} placeholder='e.g. 8000'
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
         <p className='mt-1 text-[8px] text-slate-400'>≤7500 / 7501–12000 / 12001–20000 / 20001–40000 / {'>'}40000</p>
       </div>
-      <IDVInput idv={idv} setIdv={setIdv} />
       <div>
         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
         <select
@@ -46,7 +45,7 @@ const GCVForm = ({
         </select>
       </div>
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-5 gap-3'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
       <div>
         <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23</label>
         <select
@@ -58,11 +57,14 @@ const GCVForm = ({
           <option value="yes">Yes (15% of OD)</option>
         </select>
       </div>
-      <NCBSelector ncb={ncb} setNcb={setNcb} />
-      <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
-      <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
-      <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
     </div>
+    <IDVSection
+      idv={idv} setIdv={setIdv}
+      depreciation={depreciation} setDepreciation={setDepreciation}
+      ncb={ncb} setNcb={setNcb}
+      odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+      loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+    />
   </div>
 )
 

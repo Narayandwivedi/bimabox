@@ -1,6 +1,6 @@
 import TARIFF from '../tariffData'
 import { fmt } from '../helpers'
-import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, NCBSelector, ODDiscountInput, LoadingDiscountInput, DepreciationInput } from '../SharedFields'
+import { CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const PCVForm = ({
   subtype, setSubtype,
@@ -47,13 +47,15 @@ const PCVForm = ({
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
         <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
       </div>
-      <IDVInput idv={idv} setIdv={setIdv} />
     </div>
     <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
-    <NCBSelector ncb={ncb} setNcb={setNcb} />
-    <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
-    <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
-    <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />
+    <IDVSection
+      idv={idv} setIdv={setIdv}
+      depreciation={depreciation} setDepreciation={setDepreciation}
+      ncb={ncb} setNcb={setNcb}
+      odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+      loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+    />
   </div>
 )
 

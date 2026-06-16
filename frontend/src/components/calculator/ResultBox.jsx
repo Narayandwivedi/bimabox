@@ -443,7 +443,7 @@ const ResultBox = ({
         </div>
       </div>
 
-      <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-5 text-white shadow-xl shadow-indigo-200'>
+      <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 p-4 sm:p-5 text-white shadow-xl shadow-indigo-200'>
         <div className='space-y-1'>
           <p className='text-[9px] sm:text-[10px] font-bold uppercase tracking-widest opacity-80'>Final Payable Premium</p>
           <p className='text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm'>₹{fmt(result.totalPremium)}</p>

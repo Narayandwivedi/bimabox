@@ -235,6 +235,11 @@ export const IDVSection = ({
     {/* IDV – slightly wider than others but 10% narrower than before */}
     <div className='w-full sm:flex-[1.8]'>
       <IDVInput idv={idv} setIdv={setIdv} />
+      {idv && depreciation && (
+        <p className='mt-1 text-[10px] font-semibold text-emerald-600'>
+          Final IDV: ₹{Math.round(parseFloat(idv) * (1 - parseFloat(depreciation) / 100)).toLocaleString('en-IN')}
+        </p>
+      )}
     </div>
     <div className='w-full sm:flex-1'>
       <DepreciationInput depreciation={depreciation} setDepreciation={setDepreciation} />

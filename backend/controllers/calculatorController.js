@@ -8,9 +8,9 @@ if (!fs.existsSync(QUOTATIONS_DIR)) {
   fs.mkdirSync(QUOTATIONS_DIR, { recursive: true })
 }
 
-function fmt(n) {
+function fmt(n, decimals = 2) {
   if (n == null || isNaN(n)) return 'Rs. 0.00'
-  return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
 const generatePdf = async (req, res) => {
@@ -75,9 +75,8 @@ const generatePdf = async (req, res) => {
     // Quote Subtitle
     const categoryUpper = (data.vehicleCategory || 'MOTOR').toUpperCase()
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#1e293b').text(`${categoryUpper} INSURANCE QUOTATION`, 40, y)
-    doc.fontSize(9).font('Helvetica').fillColor('#64748b').text(`Period of Insurance : ${periodStr}`, 40, y + 16)
     
-    y += 35
+    y += 22
 
     // ── Coverages Paragraphs ─────────────────────────────────────────────────
     // Build addon & other lists
@@ -259,13 +258,13 @@ const generatePdf = async (req, res) => {
       gstLabel = `GST (TP @ 5% + Other @ 18%)`
     }
 
-    drawTotalRow('Premium before GST (A+B+C)', fmt(netPrem), false, 6)
-    drawTotalRow(gstLabel, fmt(gstData.totalGst || 0), false, 22)
+    drawTotalRow('Premium before GST (A+B+C)', fmt(Math.round(netPrem), 0), false, 6)
+    drawTotalRow(gstLabel, fmt(Math.round(gstData.totalGst || 0), 0), false, 22)
     
     // Horizontal divider
     doc.moveTo(50, y + 36).lineTo(40 + pageWidth - 10, y + 36).strokeColor('#cbd5e1').stroke()
     
-    drawTotalRow('Final Premium (Payable)', fmt(data.totalPayable), true, 41)
+    drawTotalRow('Final Premium (Payable)', fmt(Math.round(data.totalPayable), 0), true, 41)
 
     y += 72
 

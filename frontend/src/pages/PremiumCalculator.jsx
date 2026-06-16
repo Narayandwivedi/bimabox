@@ -111,24 +111,29 @@ const PremiumCalculator = () => {
     }) : {}
 
     let odPremium = 0
+    let imt23Amount = 0
+    let odBeforeDiscount = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
+    const geoExtentAmount = parseFloat(geoExtent) || 0
     if (vehicleType === 'private_car' || (vehicleType === 'two_wheeler' && !isElectric)) {
       if (policyType !== 'tp' && idvVal > 0) {
-        odPremium = depreciatedIdv * (odRate / 100)
-        odPremium = odPremium * (1 - ncb / 100)
-        odPremium = odPremium * (1 - odDiscountVal / 100)
+        const basicOd = depreciatedIdv * (odRate / 100)
+        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
+        const imtBase = basicOd + extras
+        imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
+        const bundleMul = policyType === 'bundle' ? (parseInt(bundleOdTerm) || 1) : 1
+        odBeforeDiscount = (imtBase + imt23Amount) * bundleMul
+        odPremium = odBeforeDiscount * (1 - ncb / 100) * (1 - odDiscountVal / 100)
       }
       if (policyType === 'od') tpPremium = 0
-      if (policyType === 'bundle') odPremium *= (parseInt(bundleOdTerm) || 1)
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
-        odPremium = depreciatedIdv * (odRate / 100)
-        odPremium = odPremium * (1 - ncb / 100)
-        odPremium = odPremium * (1 - odDiscountVal / 100)
-      }
-      // Add GCV extra weight premium to OD side (comprehensive only)
-      if (vehicleType === 'gcv' && coverageType === 'comprehensive' && details?.gcvExtraPremium > 0) {
-        odPremium += details.gcvExtraPremium
+        const basicOd = depreciatedIdv * (odRate / 100)
+        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
+        const imtBase = basicOd + extras
+        imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
+        odBeforeDiscount = imtBase + imt23Amount
+        odPremium = odBeforeDiscount * (1 - ncb / 100) * (1 - odDiscountVal / 100)
       }
       if (coverageType === 'tp') odPremium = 0
     }
@@ -139,8 +144,6 @@ const PremiumCalculator = () => {
     const rsaAmount = parseFloat(rsa) || 0
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
-    const geoExtentAmount = parseFloat(geoExtent) || 0
-    const imt23Amount = imt23 === 'yes' ? (odPremium + (vehicleType === 'gcv' ? geoExtentAmount : 0)) * 0.15 : 0
     const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
     const tyreCoverAmount = tyreCover !== '' && tyreCover !== '0' ? (parseFloat(tyreCover) / 100) * idvVal : 0
     let restrictedTPPDDiscount = 0
@@ -152,7 +155,7 @@ const PremiumCalculator = () => {
     tpPremium -= restrictedTPPDDiscount
 
     const loadingDiscountPercent = parseFloat(loadingDiscount) || 0
-    const netPremiumBeforeLoading = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + geoExtentAmount + imt23Amount + zeroDepAmount + tyreCoverAmount
+    const netPremiumBeforeLoading = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
     const loadingAmount = netPremiumBeforeLoading * (loadingDiscountPercent / 100)
     const netPremium = netPremiumBeforeLoading + loadingAmount
 
@@ -174,7 +177,7 @@ const PremiumCalculator = () => {
     const totalPremium = netPremium + gst
 
     setResult({
-      odPremium, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
+      odPremium, odBeforeDiscount, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
       rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount,
       imt23Amount, zeroDepAmount, tyreCoverAmount, restrictedTPPDDiscount,
       loadingAmount, loadingDiscount: loadingDiscountPercent,

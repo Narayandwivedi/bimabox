@@ -161,7 +161,7 @@ export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bun
 
 export const LoadingDiscountInput = ({ loadingDiscount, setLoadingDiscount }) => (
   <div>
-    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Loading on Discount Premium (%)</label>
+    <label className='mb-1.5 block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-500'>Loading on Discount Premium (%)</label>
     <select
       value={loadingDiscount}
       onChange={e => setLoadingDiscount(e.target.value)}
@@ -231,8 +231,8 @@ export const IDVSection = ({
   showOdDiscount = true,
 }) => (
   <div className='flex flex-col sm:flex-row gap-3'>
-    {/* IDV – double width on desktop */}
-    <div className='w-full sm:flex-[2]'>
+    {/* IDV – slightly wider than others but 10% narrower than before */}
+    <div className='w-full sm:flex-[1.8]'>
       <IDVInput idv={idv} setIdv={setIdv} />
     </div>
     <div className='w-full sm:flex-1'>
@@ -248,7 +248,7 @@ export const IDVSection = ({
         <ODDiscountInput odDiscount={odDiscount} setOdDiscount={setOdDiscount} />
       </div>
     )}
-    <div className='w-full sm:flex-1'>
+    <div className='w-full sm:flex-[1.2]'>
       <LoadingDiscountInput loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount} />
     </div>
   </div>

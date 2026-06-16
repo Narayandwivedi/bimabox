@@ -8,12 +8,32 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 const PAGE_SIZE = 40
 
 const INSURANCE_COMPANIES = [
-  'HDFC ERGO', 'ICICI Lombard', 'Bajaj Allianz', 'Tata AIG', 'Reliance General',
-  'IFFCO Tokio', 'National Insurance', 'New India Assurance', 'Oriental Insurance',
-  'United India Insurance', 'Magma HDI', 'Go Digit', 'Acko', 'Cholamandalam MS',
-  'Future Generali', 'Royal Sundaram', 'SBI General', 'Shriram General',
-  'Liberty General', 'Universal Sompo', 'Kotak General', 'Zuno General',
-  'Raheja QBE', 'Navi General', 'Star Health'
+  'Acko General Insurance Limited',
+  'Bajaj Allianz General Insurance Company Limited',
+  'Cholamandalam MS General Insurance Company Limited',
+  'Navi General Insurance Limited',
+  'Edelweiss General Insurance Company Limited',
+  'Future Generali India Insurance Company Limited',
+  'Go Digit General Insurance Limited',
+  'HDFC ERGO General Insurance Company Limited',
+  'ICICI Lombard General Insurance Company Limited',
+  'IFFCO Tokio General Insurance Company Limited',
+  'Kotak Mahindra General Insurance Company Limited',
+  'Liberty General Insurance Limited',
+  'Magma HDI General Insurance Company Limited',
+  'Niva Bupa Health Insurance Company Limited',
+  'National Insurance Company Limited',
+  'Raheja QBE General Insurance Company Limited',
+  'Reliance General Insurance Company Limited',
+  'Royal Sundaram General Insurance Company Limited',
+  'SBI General Insurance Company Limited',
+  'Shriram General Insurance Company Limited',
+  'Star Health & Allied Insurance Company Limited',
+  'Tata AIG General Insurance Company Limited',
+  'The New India Assurance Company Limited',
+  'The Oriental Insurance Company Limited',
+  'United India Insurance Company Limited',
+  'Universal Sompo General Insurance Company Limited'
 ]
 
 const PRODUCT_TYPES = [

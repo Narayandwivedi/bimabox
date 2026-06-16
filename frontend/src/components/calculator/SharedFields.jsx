@@ -143,14 +143,14 @@ export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bun
             <label className='mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-400'>OD Term</label>
             <select value={bundleOdTerm} onChange={e => setBundleOdTerm(e.target.value)}
               className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
-              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
+              {(is2W ? [1,5] : [1,3]).map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
             </select>
           </div>
           <div className='flex-1'>
             <label className='mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-400'>TP Term</label>
             <select value={bundleTpTerm} onChange={e => setBundleTpTerm(e.target.value)}
               className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
-              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
+              {(is2W ? [5] : [3]).map(n => <option key={n} value={n}>{n} Year{n > 1 ? 's' : ''}</option>)}
             </select>
           </div>
         </div>

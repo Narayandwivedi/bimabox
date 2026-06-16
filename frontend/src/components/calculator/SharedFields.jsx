@@ -69,9 +69,9 @@ export const AgeSelector = ({ vehicleAge, setVehicleAge }) => (
         className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
       >
         <option value='' disabled>Select Age</option>
-        <option value='upto_5'>0–5 Yrs</option>
-        <option value='5_to_7'>5–7 Yrs</option>
-        <option value='above_7'>&gt;7 Yrs</option>
+        <option value='upto_5'>1 – 5 Yrs</option>
+        <option value='5_to_7'>6 – 7 Yrs</option>
+        <option value='above_7'>Above 7 Yrs</option>
       </select>
       <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
     </div>

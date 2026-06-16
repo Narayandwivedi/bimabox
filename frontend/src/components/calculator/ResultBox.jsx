@@ -94,7 +94,7 @@ const ResultBox = ({
       ${result.tyreCoverAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Tyre Cover</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.tyreCoverAmount)}</td></tr>` : ''}
     `
 
-    const ageLabel = vehicleAge === 'upto_5' ? '0–5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs'
+    const ageLabel = vehicleAge === 'upto_5' ? '1 – 5 Yrs' : vehicleAge === '5_to_7' ? '6 – 7 Yrs' : 'Above 7 Yrs'
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -257,7 +257,7 @@ const ResultBox = ({
         vehicleSpec,
         vehicleSubtype: subtype ? undefined : undefined,
         zone: `Zone ${zone}`,
-        vehicleAge: vehicleAge === 'upto_5' ? 'Upto 5 Yrs' : vehicleAge === '5_to_7' ? '5–7 Yrs' : '>7 Yrs',
+        vehicleAge: vehicleAge === 'upto_5' ? '1 – 5 Yrs' : vehicleAge === '5_to_7' ? '6 – 7 Yrs' : 'Above 7 Yrs',
         mfgYear: manufacturingYear || undefined,
         policyType: policyLabel,
         idv: parseFloat(idv) || 0,

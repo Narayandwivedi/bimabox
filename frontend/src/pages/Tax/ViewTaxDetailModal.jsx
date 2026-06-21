@@ -39,7 +39,7 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
         <div className='bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 md:p-6 text-white flex-shrink-0'>
           <div className='flex justify-between items-start'>
             <div className='flex-1'>
-              <h2 className='text-xl md:text-3xl font-bold mb-2'>Tax Record Details</h2>
+              <h2 className='text-xl md:text-3xl font-bold mb-2'>Road Tax Record Details</h2>
             </div>
             <button
               onClick={onClose}
@@ -60,7 +60,7 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
             {/* Tax Status Card */}
             <div className='bg-white rounded-xl shadow-lg border-2 border-indigo-100 p-4'>
               <div className='flex items-center justify-between mb-3'>
-                <h3 className='text-sm font-bold text-gray-600 uppercase tracking-wide'>Tax Status</h3>
+                <h3 className='text-sm font-bold text-gray-600 uppercase tracking-wide'>Road Tax Status</h3>
                 <svg className='w-6 h-6 text-indigo-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
                 </svg>
@@ -177,11 +177,11 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
                 </svg>
               </div>
-              Tax Period
+              Road Tax Period
             </h3>
             <div className='grid grid-cols-2 gap-3 md:gap-4'>
               <div className='bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border-2 border-green-200'>
-                <p className='text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'>Tax From</p>
+                <p className='text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'>Road Tax From</p>
                 <div className='flex items-center text-green-700'>
                   <svg className='w-5 h-5 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
@@ -190,7 +190,7 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
                 </div>
               </div>
               <div className='bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-4 border-2 border-red-200'>
-                <p className='text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'>Tax To</p>
+                <p className='text-xs font-bold text-gray-500 uppercase tracking-wide mb-2'>Road Tax To</p>
                 <div className='flex items-center text-red-700'>
                   <svg className='w-5 h-5 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
@@ -209,7 +209,7 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
                   </svg>
                   <div>
                     <p className='text-sm font-bold text-orange-800'>Expiring Soon</p>
-                    <p className='text-xs text-orange-700 mt-1'>This tax will expire within 15 days. Please renew it soon.</p>
+                    <p className='text-xs text-orange-700 mt-1'>This road tax will expire within 15 days. Please renew it soon.</p>
                   </div>
                 </div>
               </div>
@@ -221,8 +221,8 @@ const ViewTaxDetailModal = ({ isOpen, onClose, tax }) => {
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' />
                   </svg>
                   <div>
-                    <p className='text-sm font-bold text-red-800'>Tax Expired</p>
-                    <p className='text-xs text-red-700 mt-1'>This tax has expired. Please renew immediately to avoid penalties.</p>
+                    <p className='text-sm font-bold text-red-800'>Road Tax Expired</p>
+                    <p className='text-xs text-red-700 mt-1'>This road tax has expired. Please renew immediately to avoid penalties.</p>
                   </div>
                 </div>
               </div>

@@ -446,8 +446,8 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
         <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-2 md:p-3 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold'>Edit Tax</h2>
-              <p className='text-blue-100 text-xs md:text-sm mt-1'>Update vehicle tax record</p>
+              <h2 className='text-lg md:text-2xl font-bold'>Edit Road Tax</h2>
+              <p className='text-blue-100 text-xs md:text-sm mt-1'>Update vehicle road tax record</p>
             </div>
             <div className='flex items-center gap-3'>
               <div className='relative overflow-hidden'>
@@ -589,12 +589,12 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
             <div className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-                Tax Period
+                Road Tax Period
               </h3>
 
               <div className='mb-4'>
                 <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-2'>
-                  Select Tax Period <span className='text-red-500'>*</span>
+                  Select Road Tax Period <span className='text-red-500'>*</span>
                 </label>
                 <div className='grid grid-cols-4 gap-2'>
                   <button type='button' onClick={() => setTaxPeriod('Q1')} className={`px-3 py-2 rounded-lg font-semibold text-sm transition-all cursor-pointer ${taxPeriod === 'Q1' ? 'bg-purple-600 text-white shadow-lg ring-2 ring-purple-300' : 'bg-white text-gray-700 border-2 border-purple-200 hover:border-purple-400'}`}>
@@ -614,7 +614,7 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
 
               <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Tax From <span className='text-red-500'>*</span></label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Road Tax From <span className='text-red-500'>*</span></label>
                   <input
                     type='text'
                     name='taxFrom'
@@ -640,7 +640,7 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
                 </div>
 
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Tax To <span className='text-xs text-blue-500'>(Auto-calculated)</span></label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Road Tax To <span className='text-xs text-blue-500'>(Auto-calculated)</span></label>
                   <input
                     type='text'
                     name='taxTo'
@@ -665,7 +665,7 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
                 </div>
 
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Tax Amount (₹) <span className='text-xs text-gray-500'>(Optional)</span></label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Road Tax Amount (₹) <span className='text-xs text-gray-500'>(Optional)</span></label>
                   <input
                     type='number'
                     name='taxAmount'
@@ -685,7 +685,7 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
               <div className='bg-gradient-to-r from-slate-50 to-indigo-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                 <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                   <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
-                  Uploaded Tax Document
+                  Uploaded Road Tax Document
                 </h3>
                 <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>
                   <div className='min-w-0'>
@@ -721,7 +721,7 @@ const EditTaxModal = ({ isOpen, onClose, onSubmit, tax }) => {
                     <svg className='w-4 h-4 md:w-5 md:h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                     </svg>
-                    Update Tax Record
+                    Update Road Tax Record
                   </>
                 )}
               </button>

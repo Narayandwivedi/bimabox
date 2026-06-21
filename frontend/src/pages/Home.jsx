@@ -393,7 +393,7 @@ const Home = () => {
                                 {doc.type === 'Permit' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
                               </div>
                               <div className='min-w-0 flex-1'>
-                                <h3 className='text-sm font-bold text-slate-900 truncate'>{doc.type}</h3>
+                                <h3 className='text-sm font-bold text-slate-900 truncate'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</h3>
                                 <p className='text-[10px] font-mono text-slate-500'>{doc.vehicleNumber}</p>
                                 {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400 truncate'>{doc.insuredName}</p>}
                               </div>
@@ -446,7 +446,7 @@ const Home = () => {
                                       {doc.type === 'Permit' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
                                     </div>
                                     <div>
-                                      <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type}</h3>
+                                      <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</h3>
                                       <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
                                       {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400'>{doc.insuredName}</p>}
                                     </div>
@@ -501,7 +501,7 @@ const Home = () => {
                           <div className='flex items-center gap-3'>
                             <div className='h-2 w-2 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
                             <div className='min-w-0 flex-1'>
-                              <p className='text-sm font-bold text-slate-800'>{doc.type}</p>
+                              <p className='text-sm font-bold text-slate-800'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</p>
                               <p className='font-mono text-[11px] text-slate-500'>{doc.vehicleNumber}</p>
                               {doc.insuredName && <p className='text-[10px] text-slate-400 truncate'>{doc.insuredName}</p>}
                             </div>
@@ -547,7 +547,7 @@ const Home = () => {
                                     {doc.type === 'GPS' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' /><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' /></svg>}
                                     {doc.type === 'Permit' && <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
                                   </div>
-                                  <span className='text-sm font-bold text-slate-700'>{doc.type}</span>
+                                  <span className='text-sm font-bold text-slate-700'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</span>
                                 </div>
                               </td>
                               <td className='px-6 py-3'>

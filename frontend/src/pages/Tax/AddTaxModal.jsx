@@ -602,10 +602,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
           <div className='flex justify-between items-center'>
             <div>
               <h2 className='text-lg md:text-2xl font-bold'>
-                Add New Tax
+                Add New Road Tax
               </h2>
               <p className='text-blue-100 text-xs md:text-sm mt-1'>
-                Add new tax record
+                Add new road tax record
               </p>
             </div>
             <div className='flex items-center gap-3'>
@@ -764,17 +764,17 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
               </div>
             </div>
 
-            {/* Section 2: Tax Period */}
+            {/* Section 2: Road Tax Period */}
             <div className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-                Tax Period
+                Road Tax Period
               </h3>
 
               {/* Quarter Selection */}
               <div className='mb-4'>
                 <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-2'>
-                  Select Tax Period <span className='text-red-500'>*</span>
+                  Select Road Tax Period <span className='text-red-500'>*</span>
                 </label>
                 <div className='grid grid-cols-4 gap-2'>
                   <button
@@ -829,10 +829,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
               </div>
 
               <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4'>
-                {/* Tax From */}
+                {/* Road Tax From */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Tax From <span className='text-red-500'>*</span>
+                    Road Tax From <span className='text-red-500'>*</span>
                   </label>
                   <input
                     type='text'
@@ -858,10 +858,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                   )}
                 </div>
 
-                {/* Tax To (Auto-calculated) */}
+                {/* Road Tax To (Auto-calculated) */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Tax To <span className='text-xs text-blue-500'>(Auto-calculated)</span>
+                    Road Tax To <span className='text-xs text-blue-500'>(Auto-calculated)</span>
                   </label>
                   <input
                     type='text'
@@ -886,10 +886,10 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                   )}
                 </div>
 
-                {/* Tax Amount (Optional) */}
+                {/* Road Tax Amount (Optional) */}
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Tax Amount (₹) <span className='text-xs text-gray-500'>(Optional)</span>
+                    Road Tax Amount (₹) <span className='text-xs text-gray-500'>(Optional)</span>
                   </label>
                   <input
                     type='number'
@@ -960,7 +960,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
                     <svg className='w-4 h-4 md:w-5 md:h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                     </svg>
-                    Add Tax Record
+                    Add Road Tax Record
                   </>
                 )}
               </button>

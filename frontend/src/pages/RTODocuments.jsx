@@ -354,7 +354,7 @@ const RTODocuments = () => {
                       }}
                       options={[
                         { value: 'All', label: 'All' },
-                        { value: 'Tax', label: 'Tax' },
+                        { value: 'Tax', label: 'Road Tax' },
                         { value: 'PUC', label: 'PUC' },
                         { value: 'GPS', label: 'GPS' },
                         { value: 'Fitness', label: 'Fitness' },
@@ -410,7 +410,7 @@ const RTODocuments = () => {
                               <span className='text-lg'>{getDocTypeIcon(doc.type)}</span>
                             </div>
                             <div>
-                              <h3 className='text-sm font-black text-slate-900'>{doc.type}</h3>
+                              <h3 className='text-sm font-black text-slate-900'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</h3>
                               <p className='text-[10px] font-black tracking-wider text-slate-400 uppercase font-mono'>{doc.vehicleNumber}</p>
                             </div>
                           </div>
@@ -482,7 +482,7 @@ const RTODocuments = () => {
                                     <span className='text-sm'>{getDocTypeIcon(doc.type)}</span>
                                   </div>
                                   <div>
-                                    <span className='text-sm font-extrabold text-slate-800'>{doc.type}</span>
+                                    <span className='text-sm font-extrabold text-slate-800'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</span>
                                   </div>
                                 </div>
                               </td>
@@ -559,7 +559,7 @@ const RTODocuments = () => {
               <h3 className="text-xl font-bold text-slate-800">Delete Record</h3>
             </div>
             <p className="mb-6 text-sm text-slate-600">
-              Are you sure you want to delete this {deletingDoc.type} record for <span className="font-bold">{deletingDoc.vehicleNumber}</span>? This action cannot be undone.
+              Are you sure you want to delete this {deletingDoc.type === 'Tax' ? 'Road Tax' : deletingDoc.type} record for <span className="font-bold">{deletingDoc.vehicleNumber}</span>? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -657,7 +657,7 @@ const RTODocuments = () => {
           }}
           onSubmit={() => {
             setShowAddTaxModal(false)
-            toast.success('Tax record added successfully')
+            toast.success('Road Tax record added successfully')
             fetchAllDocuments()
           }}
           initialExtractionFile={initialExtractionFile}

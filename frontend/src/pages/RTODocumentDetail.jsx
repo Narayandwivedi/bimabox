@@ -25,7 +25,7 @@ const TYPE_CONFIG = {
     extraFields: [
       { label: 'Owner Name', key: 'ownerName' },
       { label: 'Mobile Number', key: 'mobileNumber' },
-      { label: 'Tax Amount', key: 'taxAmount', prefix: '₹' },
+      { label: 'Road Tax Amount', key: 'taxAmount', prefix: '₹' },
       { label: 'Total Amount', key: 'totalAmount', prefix: '₹' },
       { label: 'Paid Amount', key: 'paidAmount', prefix: '₹' },
       { label: 'Balance Amount', key: 'balanceAmount', prefix: '₹' },
@@ -212,7 +212,7 @@ const RTODocumentDetail = () => {
     try {
       const res = await axios.delete(`${API_URL}/api/${config.apiPath}/${id}`, { withCredentials: true })
       if (res.data.success) {
-        toast.success(`${config.label || type} record deleted`)
+        toast.success(`${config.label || (type === 'Tax' ? 'Road Tax' : type)} record deleted`)
         navigate('/rto-documents')
       } else {
         toast.error('Failed to delete record')
@@ -320,7 +320,7 @@ const RTODocumentDetail = () => {
                     {config.icon}
                   </div>
                   <div>
-                    <h2 className={`text-base font-black leading-tight ${col.text}`}>{type} Document</h2>
+                    <h2 className={`text-base font-black leading-tight ${col.text}`}>{type === 'Tax' ? 'Road Tax' : type} Document</h2>
                     <p className="text-[11px] font-black tracking-widest text-slate-900 mt-0.5">{record.vehicleNumber}</p>
                   </div>
                 </div>

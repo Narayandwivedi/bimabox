@@ -84,6 +84,8 @@ const PremiumCalculator = () => {
     setPaUnnamedPassenger('')
     setLoadingDiscount('')
     setDepreciation('')
+    setRestrictedTPPD('no')
+    setTyreCover('')
   }
 
   const handleVehicleSelect = (id) => {

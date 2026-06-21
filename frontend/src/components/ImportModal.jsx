@@ -4,7 +4,7 @@ const ImportModal = ({ isOpen, onClose, onProceed }) => {
   const [dataTypes] = useState([
     { value: 'puc', label: 'PUC' },
     { value: 'fitness', label: 'Fitness' },
-    { value: 'tax', label: 'Tax' },
+    { value: 'tax', label: 'Road Tax' },
     { value: 'gps', label: 'GPS' },
     { value: 'permit', label: 'Permit' },
     { value: 'rc', label: 'RC' }

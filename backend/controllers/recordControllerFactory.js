@@ -185,6 +185,9 @@ const createRecordController = (config) => {
           if (req.query.reference && record.reference !== req.query.reference) {
             return false
           }
+          if (req.query.imd && record.imd !== req.query.imd) {
+            return false
+          }
           if (req.query.validity) {
             const days = getDaysToExpiry(record, expiryField)
             if (req.query.validity === 'expired') {

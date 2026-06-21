@@ -86,13 +86,15 @@ const Search = () => {
   const [filterDateTo, setFilterDateTo] = useState('')
   const [filterReference, setFilterReference] = useState('')
   const [referencesList, setReferencesList] = useState([])
+  const [filterImd, setFilterImd] = useState('')
+  const [imdList, setImdList] = useState([])
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
-  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference].filter(Boolean).length : 0
+  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd].filter(Boolean).length : 0
   const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0) + (filterDateFrom ? 1 : 0) + (filterDateTo ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -106,6 +108,7 @@ const Search = () => {
         if (productType) params.product = productType
         if (policyType) params.insuranceClass = policyType
         if (reference) params.reference = reference
+        if (imd) params.imd = imd
       }
       if (validity) params.validity = validity
       if (dateFrom) params.dateFrom = dateFrom
@@ -142,6 +145,11 @@ const Search = () => {
         if (res.data.success) setReferencesList(res.data.data)
       })
       .catch(() => {})
+    axios.get(`${API_URL}/api/imd`, { withCredentials: true })
+      .then((res) => {
+        if (res.data.success) setImdList(res.data.data)
+      })
+      .catch(() => {})
   }, [])
 
   // Initial load
@@ -160,6 +168,7 @@ const Search = () => {
     setFilterDateFrom('')
     setFilterDateTo('')
     setFilterReference('')
+    setFilterImd('')
     setSearched(false)
     setShowFilterPanel(false)
   }, [filterType])
@@ -168,8 +177,8 @@ const Search = () => {
   useEffect(() => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference)
-  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, fetchRecords])
+    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd)
+  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, fetchRecords])
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -183,7 +192,7 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference)
+    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd)
   }
 
   const handleClearFilters = () => {
@@ -194,6 +203,7 @@ const Search = () => {
     setFilterDateFrom('')
     setFilterDateTo('')
     setFilterReference('')
+    setFilterImd('')
   }
 
   const handleExport = () => {
@@ -211,6 +221,7 @@ const Search = () => {
       'Valid To': r.validTo || r.taxTo || '',
       'Remarks': r.remarks || '',
       'Reference': r.reference || '',
+      'IMD': r.imd || '',
     }))
     const ws = XLSX.utils.json_to_sheet(exportData)
     const wb = XLSX.utils.book_new()
@@ -530,6 +541,40 @@ const Search = () => {
                                       </button>
                                     </div>
                                   )}
+                                  </div>
+
+                                {/* IMD */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    IMD
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterImd}
+                                      onChange={(e) => setFilterImd(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All IMD</option>
+                                      {imdList.map((r) => (
+                                        <option key={r._id} value={r.name}>{r.name}</option>
+                                      ))}
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterImd && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-purple-600 truncate max-w-[200px]'>{filterImd}</span>
+                                      <button onClick={() => setFilterImd('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </>
                             )}
@@ -692,6 +737,19 @@ const Search = () => {
                       </button>
                     </span>
                   )}
+                  {filterType === 'Insurance' && filterImd && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-purple-50 px-2.5 py-1 text-[10px] font-bold text-purple-700 ring-1 ring-inset ring-purple-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' />
+                      </svg>
+                      {filterImd}
+                      <button onClick={() => setFilterImd('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
                   {filterValidity && (
                     <span className='inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 ring-1 ring-inset ring-rose-200'>
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -846,6 +904,11 @@ const Search = () => {
                                 {filterType === 'Insurance' && record.reference && (
                                   <span className='inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-[9px] font-black text-teal-700 ring-1 ring-inset ring-teal-700/10 whitespace-nowrap shadow-sm'>
                                     {record.reference}
+                                  </span>
+                                )}
+                                {filterType === 'Insurance' && record.imd && (
+                                  <span className='inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[9px] font-black text-purple-700 ring-1 ring-inset ring-purple-700/10 whitespace-nowrap shadow-sm'>
+                                    {record.imd}
                                   </span>
                                 )}
                               </div>

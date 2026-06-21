@@ -165,6 +165,23 @@ const Setting = () => {
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
               </svg>
             </button>
+            <button
+              onClick={() => navigate('/imd')}
+              className='group mt-2 flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-purple-200 hover:from-purple-50/50 hover:to-purple-50/30 transition-all duration-200 cursor-pointer'
+            >
+              <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-purple-500/20 group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-shadow'>
+                <svg className='h-5 w-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
+                </svg>
+              </div>
+              <div className='min-w-0 flex-1'>
+                <p className='text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors'>IMD</p>
+                <p className='text-[10px] font-semibold text-slate-400'>Manage IMD used in insurance</p>
+              </div>
+              <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
+              </svg>
+            </button>
           </div>
         </div>
 

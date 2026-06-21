@@ -124,6 +124,11 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  imd: {
+    type: String,
+    trim: true
+  },
+
   // Renewal tracking
   renewalStatus: {
     type: String,

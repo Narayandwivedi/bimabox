@@ -17,6 +17,7 @@ import PremiumCalculator from './pages/PremiumCalculator'
 import KycPage from './pages/Kyc/KycPage'
 import Renewals from './pages/Renewals'
 import Reference from './pages/Reference'
+import IMD from './pages/IMD'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
@@ -77,6 +78,7 @@ function AppContent() {
             <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
             <Route path='/references' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
+            <Route path='/imd' element={<ProtectedRoute><IMD /></ProtectedRoute>} />
             <Route path='/privacy-policy' element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
             <Route path='/terms-and-conditions' element={<ProtectedRoute><TermsAndConditions /></ProtectedRoute>} />
             <Route path='/contact-us' element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />

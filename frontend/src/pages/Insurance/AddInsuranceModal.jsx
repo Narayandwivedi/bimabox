@@ -72,7 +72,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     product: '',
     vehicleClass: '',
     remarks: '',
-    reference: ''
+    reference: '',
+    imd: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scanningFile, setScanningFile] = useState(null)
@@ -84,6 +85,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [referenceSearch, setReferenceSearch] = useState('')
   const [showAddReference, setShowAddReference] = useState(false)
   const [newReferenceName, setNewReferenceName] = useState('')
+
+  const [imds, setImds] = useState([])
+  const [imdDropdownOpen, setImdDropdownOpen] = useState(false)
+  const [imdSearch, setImdSearch] = useState('')
+  const [showAddImd, setShowAddImd] = useState(false)
+  const [newImdName, setNewImdName] = useState('')
 
   useEffect(() => {
     return () => {
@@ -110,7 +117,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         product: initialData.product || '',
         vehicleClass: initialData.vehicleClass || '',
         remarks: initialData.remarks || '',
-        reference: initialData.reference || ''
+        reference: initialData.reference || '',
+        imd: initialData.imd || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -139,7 +147,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         product: '',
         vehicleClass: '',
         remarks: '',
-        reference: ''
+        reference: '',
+        imd: ''
       })
       setScanningFile(null)
       setIsExtractingInsurance(false)
@@ -161,7 +170,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           if (res.data.success) setReferences(res.data.data)
         } catch { }
       }
+      const fetchImds = async () => {
+        try {
+          const res = await axios.get(`${API_URL}/api/imd`, { withCredentials: true })
+          if (res.data.success) setImds(res.data.data)
+        } catch { }
+      }
       fetchReferences()
+      fetchImds()
     }
   }, [isOpen])
 
@@ -189,8 +205,36 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     } catch { }
   }
 
+  const handleImdSelect = (name) => {
+    setFormData(prev => ({ ...prev, imd: name }))
+    setImdDropdownOpen(false)
+    setImdSearch('')
+  }
+
+  const handleAddImd = async () => {
+    const name = newImdName.trim()
+    if (!name) return
+    try {
+      const res = await axios.post(`${API_URL}/api/imd`, { name }, { withCredentials: true })
+      if (res.data.success) {
+        setImds(prev => {
+          const exists = prev.find(r => r.name === name)
+          return exists ? prev : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
+        })
+        setFormData(prev => ({ ...prev, imd: name }))
+        setNewImdName('')
+        setShowAddImd(false)
+        setImdDropdownOpen(false)
+      }
+    } catch { }
+  }
+
   const filteredReferences = references.filter(r =>
     !referenceSearch || r.name.toLowerCase().includes(referenceSearch.toLowerCase())
+  )
+
+  const filteredImds = imds.filter(r =>
+    !imdSearch || r.name.toLowerCase().includes(imdSearch.toLowerCase())
   )
 
   useEffect(() => {
@@ -442,7 +486,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       product: formData.product,
       vehicleClass: formData.vehicleClass,
       remarks: formData.remarks,
-      reference: formData.reference
+      reference: formData.reference,
+      imd: formData.imd
     }
 
     try {
@@ -636,10 +681,79 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                     )}
                   </div>
 
-                  <div>
-                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Notes</label>
-                    <textarea name='remarks' value={formData.remarks} onChange={handleChange} rows='2' placeholder='Any additional notes...' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white resize-none' />
+                  <div className='relative'>
+                    <div className='flex items-center gap-1.5 mb-1'>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>IMD</label>
+                      <button
+                        type='button'
+                        onClick={() => { setShowAddImd(true); setNewImdName('') }}
+                        className='text-xs text-purple-600 hover:text-purple-800 font-semibold flex items-center cursor-pointer'
+                      >
+                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 4v16m8-8H4' />
+                        </svg>
+                        Add
+                      </button>
+                    </div>
+                    <div className='relative'>
+                      <input
+                        type='text'
+                        value={imdDropdownOpen ? imdSearch : formData.imd}
+                        onFocus={() => { setImdSearch(''); setImdDropdownOpen(true) }}
+                        onChange={(e) => { setImdSearch(e.target.value); setImdDropdownOpen(true) }}
+                        onBlur={() => setTimeout(() => setImdDropdownOpen(false), 200)}
+                        placeholder='Select or type IMD...'
+                        className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white pr-10'
+                      />
+                      {formData.imd && !imdDropdownOpen ? (
+                        <button
+                          type='button'
+                          onClick={() => setFormData(prev => ({ ...prev, imd: '' }))}
+                          className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer'
+                          title='Clear IMD'
+                        >
+                          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                          </svg>
+                        </button>
+                      ) : (
+                        <button
+                          type='button'
+                          onClick={() => setImdDropdownOpen(prev => !prev)}
+                          className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer'
+                        >
+                          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {imdDropdownOpen && (
+                      <div className='absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {filteredImds.length > 0 ? (
+                          filteredImds.map((ref) => (
+                            <button
+                              key={ref._id}
+                              type='button'
+                              onMouseDown={() => handleImdSelect(ref.name)}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-purple-50 transition cursor-pointer ${formData.imd === ref.name ? 'bg-purple-50 text-purple-700 font-semibold' : 'text-gray-700'}`}
+                            >
+                              {ref.name}
+                            </button>
+                          ))
+                        ) : (
+                          <div className='px-3 py-2 text-sm text-gray-400'>
+                            {imdSearch ? 'No matching IMD found' : 'No IMDs yet'}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                <div className='md:col-span-4 mt-3 md:mt-4'>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Notes</label>
+                  <textarea name='remarks' value={formData.remarks} onChange={handleChange} rows='2' placeholder='Any additional notes...' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white resize-none' />
                 </div>
 
               </div>
@@ -738,6 +852,27 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             <div className='flex justify-end gap-2'>
               <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
               <button type='button' onClick={handleAddReference} className='px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold cursor-pointer'>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddImd && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName('') }}>
+          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
+            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New IMD</h3>
+            <input
+              type='text'
+              value={newImdName}
+              onChange={(e) => setNewImdName(e.target.value)}
+              placeholder='Enter IMD name'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-4'
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <div className='flex justify-end gap-2'>
+              <button type='button' onClick={() => { setShowAddImd(false); setNewImdName('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={handleAddImd} className='px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold cursor-pointer'>Add</button>
             </div>
           </div>
         </div>

@@ -66,6 +66,13 @@ function AppContent() {
 
       <div className={showNav ? 'lg:ml-[260px]' : ''}>
         <div className={showNav ? 'pt-16 pb-20 lg:pt-0 lg:pb-0' : ''}>
+          {showNav && !isHomePage && (
+            <button onClick={() => navigate(-1)} className='hidden lg:flex fixed top-4 left-[274px] z-30 h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer' title='Go back'>
+              <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+              </svg>
+            </button>
+          )}
           <Routes>
             <Route path='/login' element={<Login />} />
             <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />

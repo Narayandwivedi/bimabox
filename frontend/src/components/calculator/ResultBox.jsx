@@ -102,7 +102,7 @@ const ResultBox = ({
       ${result.otherAddonAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Other Addon Coverage</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.otherAddonAmount)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 && vehicleType !== 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.zeroDepAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Zero Depreciation</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.zeroDepAmount)}</td></tr>` : ''}
-      ${result.tyreCoverAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Tyre Cover</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.tyreCoverAmount)}</td></tr>` : ''}
+      ${result.tyreCoverAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Other Addons (Rate)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.tyreCoverAmount)}</td></tr>` : ''}
     `
 
     const ageLabel = vehicleAge === 'upto_5' ? '1 – 5 Yrs' : vehicleAge === '5_to_7' ? '6 – 7 Yrs' : 'Above 7 Yrs'
@@ -247,7 +247,7 @@ const ResultBox = ({
     if (result.otherAddonAmount > 0) tableRows.push({ desc: 'Other Addon Coverage', rate: '-', amount: result.otherAddonAmount })
     if (result.geoExtentAmount > 0 && vehicleType !== 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
     if (result.zeroDepAmount > 0) tableRows.push({ desc: 'Zero Depreciation', rate: '-', amount: result.zeroDepAmount })
-    if (result.tyreCoverAmount > 0) tableRows.push({ desc: 'Tyre Cover', rate: '-', amount: result.tyreCoverAmount })
+    if (result.tyreCoverAmount > 0) tableRows.push({ desc: 'Other Addons (Rate)', rate: '-', amount: result.tyreCoverAmount })
 
     const netPremiumVal = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
 
@@ -416,7 +416,7 @@ const ResultBox = ({
               ...(result.otherAddonAmount > 0 ? [['Other Addon Coverage', `₹${fmtD(result.otherAddonAmount)}`]] : []),
               ...(result.geoExtentAmount > 0 && vehicleType !== 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(result.zeroDepAmount > 0 ? [['Zero Depreciation', `₹${fmtD(result.zeroDepAmount)}`]] : []),
-              ...(result.tyreCoverAmount > 0 ? [['Tyre Cover', `₹${fmtD(result.tyreCoverAmount)}`]] : []),
+              ...(result.tyreCoverAmount > 0 ? [['Other Addons (Rate)', `₹${fmtD(result.tyreCoverAmount)}`]] : []),
             ].map(([label, value], i) => (
               <div key={i} className='flex items-center justify-between'>
                 <p className='text-[9px] sm:text-[10px] font-bold text-slate-500'>{label}</p>

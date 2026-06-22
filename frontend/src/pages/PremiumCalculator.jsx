@@ -285,7 +285,7 @@ const PremiumCalculator = () => {
                           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                       </div>
                       <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Tyre Cover (%)</label>
+                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addons (Rate)</label>
                         <input type='number' value={tyreCover} onChange={e => setTyreCover(e.target.value)} placeholder='e.g. 2' min={0} max={100}
                           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                       </div>

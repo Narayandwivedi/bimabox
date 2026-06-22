@@ -526,9 +526,9 @@ const Home = () => {
                       <table className='w-full text-left'>
                         <thead>
                           <tr className='border-b border-slate-100 bg-slate-50/50'>
-                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
-                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Insured</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
+                            <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Document</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid From</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                             <th className='px-6 py-4 text-[10px] font-black uppercase tracking-wider text-slate-400 text-right'>Added</th>
@@ -537,6 +537,10 @@ const Home = () => {
                         <tbody className='divide-y divide-slate-50'>
                           {recentDocs.map((doc) => (
                             <tr key={doc.id} onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)} className='transition-colors hover:bg-slate-50/50 group cursor-pointer'>
+                              <td className='px-6 py-3 text-sm font-black text-slate-800'>{doc.insuredName || '—'}</td>
+                              <td className='px-6 py-3'>
+                                <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
+                              </td>
                               <td className='px-6 py-3'>
                                 <div className='flex items-center gap-3'>
                                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg bg-${doc.color}-50 text-${doc.color}-600`}>
@@ -550,10 +554,6 @@ const Home = () => {
                                   <span className='text-sm font-bold text-slate-700'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</span>
                                 </div>
                               </td>
-                              <td className='px-6 py-3'>
-                                <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
-                              </td>
-                              <td className='px-6 py-3 text-sm font-black text-slate-800'>{doc.insuredName || '—'}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validTo}</td>
                               <td className='px-6 py-3 text-right'>

@@ -164,8 +164,10 @@ const PremiumCalculator = () => {
     }
     tpPremium -= restrictedTPPDDiscount
 
+    const geoExtentTPAmount = (vehicleType === 'gcv' && geoExtentAmount > 0) ? 100 : 0
+
     const loadingDiscountPercent = parseFloat(loadingDiscount) || 0
-    const netPremiumBeforeLoading = odPremium + tpPremium + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
+    const netPremiumBeforeLoading = odPremium + tpPremium + geoExtentTPAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
     const loadingAmount = netPremiumBeforeLoading * (loadingDiscountPercent / 100)
     const netPremium = netPremiumBeforeLoading + loadingAmount
 
@@ -178,8 +180,8 @@ const PremiumCalculator = () => {
     if (isGCV) {
       gstTpRate = 5
       gstNonTpRate = 18
-      gstTp = tpPremium * 0.05
-      gstNonTp = (netPremium - tpPremium) * 0.18
+      gstTp = (tpPremium + geoExtentTPAmount) * 0.05
+      gstNonTp = (netPremium - tpPremium - geoExtentTPAmount) * 0.18
       gst = gstTp + gstNonTp
     } else {
       gst = netPremium * 0.18
@@ -188,7 +190,7 @@ const PremiumCalculator = () => {
 
     setResult({
       odPremium, odBeforeDiscount, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
-      rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount,
+      rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount, geoExtentTPAmount,
       imt23Amount, zeroDepAmount, tyreCoverAmount, restrictedTPPDDiscount,
       loadingAmount, loadingDiscount: loadingDiscountPercent,
       depreciation: depreciationPercent, depreciatedIdv,

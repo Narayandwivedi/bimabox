@@ -69,7 +69,7 @@ const ResultBox = ({
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
     const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
 
-    const netPremium = result.odPremium + result.tpPremium + (result.loadingAmount || 0)
+    const netPremium = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + (result.loadingAmount || 0)
     const exactTotal = netPremium + result.gst
 
     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
@@ -95,6 +95,7 @@ const ResultBox = ({
       ${result.llEmployeeAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>LL to Employee (other than Paid Driver)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.llEmployeeAmount)}</td></tr>` : ''}
       ${result.paOdAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Owner Driver</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paOdAmount)}</td></tr>` : ''}
       ${result.paUnnamedAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Unnamed Passenger</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paUnnamedAmount)}</td></tr>` : ''}
+      ${result.geoExtentTPAmount > 0 && vehicleType === 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent (TP)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentTPAmount)}</td></tr>` : ''}
     ` : ''
 
     const addonItems = `
@@ -241,6 +242,7 @@ const ResultBox = ({
       if (result.paOdAmount > 0) tableRows.push({ desc: 'Personal Accident to Owner Driver', rate: '-', amount: result.paOdAmount })
       if (result.llEmployeeAmount > 0) tableRows.push({ desc: 'Legal Liability to Employee (other than Paid Driver)', rate: '-', amount: result.llEmployeeAmount })
       if (result.paUnnamedAmount > 0) tableRows.push({ desc: 'PA to Unnamed Passenger', rate: '-', amount: result.paUnnamedAmount })
+      if (result.geoExtentTPAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent (TP)', rate: '-', amount: result.geoExtentTPAmount })
     }
 
     if (result.rsaAmount > 0) tableRows.push({ desc: 'Roadside Assistance (RSA)', rate: '-', amount: result.rsaAmount })
@@ -249,7 +251,7 @@ const ResultBox = ({
     if (result.zeroDepAmount > 0) tableRows.push({ desc: 'Zero Depreciation', rate: '-', amount: result.zeroDepAmount })
     if (result.tyreCoverAmount > 0) tableRows.push({ desc: 'Other Addons (Rate)', rate: '-', amount: result.tyreCoverAmount })
 
-    const netPremiumVal = result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
+    const netPremiumVal = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
 
     tableRows.push({ desc: 'Premium Before Taxes', rate: '-', amount: netPremiumVal, type: 'total' })
 
@@ -391,6 +393,7 @@ const ResultBox = ({
               ...(result.paOdAmount > 0 ? [['PA to Owner Driver', `₹${fmtD(result.paOdAmount)}`]] : []),
               ...(result.llEmployeeAmount > 0 ? [['LL to Employee (other than Paid Driver)', `₹${fmtD(result.llEmployeeAmount)}`]] : []),
               ...(result.paUnnamedAmount > 0 ? [['PA to Unnamed Passenger', `₹${fmtD(result.paUnnamedAmount)}`]] : []),
+              ...(result.geoExtentTPAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent (TP)', `₹${fmtD(result.geoExtentTPAmount)}`]] : []),
             ].map(([label, value], i) => (
               <div key={i} className='flex items-center justify-between'>
                 <p className='text-[9px] sm:text-[10px] font-bold text-slate-500'>{label}</p>
@@ -399,7 +402,7 @@ const ResultBox = ({
             ))}
             <div className='flex items-center justify-between rounded-lg bg-rose-100/80 px-3 py-2 -mx-2 border-t border-rose-200/70 mt-1.5'>
               <p className='text-[10px] sm:text-[11px] font-black text-rose-900'>Total TP & Liability Premium</p>
-              <p className='text-sm sm:text-base font-black text-rose-700'>₹{fmtD(result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.paUnnamedAmount)}</p>
+              <p className='text-sm sm:text-base font-black text-rose-700'>₹{fmtD(result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.paUnnamedAmount)}</p>
             </div>
           </div>
         )}
@@ -434,7 +437,7 @@ const ResultBox = ({
         <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
           <div className='flex items-center justify-between text-xs'>
             <p className='font-bold text-slate-500'>Total before GST</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
           </div>
           {result.gstTpRate === 5 ? (
             <>

@@ -86,6 +86,8 @@ const PremiumCalculator = () => {
     setDepreciation('')
     setRestrictedTPPD('no')
     setTyreCover('')
+    setBundleOdTerm('1')
+    setBundleTpTerm(vehicleType === 'two_wheeler' ? '5' : '3')
   }
 
   const handleVehicleSelect = (id) => {
@@ -93,6 +95,12 @@ const PremiumCalculator = () => {
     resetForm()
     const defaults = { gcv_3w: 'public', pcv: 'school_bus', pcv_3w: 'c1b', misc_d: 'other', taxi: null }
     if (defaults[id] !== undefined) setSubtype(defaults[id] || '')
+    if (id === 'two_wheeler') {
+      setBundleTpTerm('5')
+      setBundleOdTerm('1')
+    } else {
+      setBundleTpTerm('3')
+    }
     setStep(2)
   }
 

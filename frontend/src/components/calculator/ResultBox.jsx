@@ -59,9 +59,6 @@ const ResultBox = ({
 
   const effectiveIdv = result.depreciatedIdv || (parseFloat(idv) || 0)
   const odBase = showOD ? effectiveIdv * (result.odRate / 100) : 0
-  const ncbDiscount = showOD ? odBase * (ncb / 100) : 0
-  const afterNcbOD = odBase - ncbDiscount
-  const odDiscountAmt = showOD ? afterNcbOD * ((result.odDiscountVal || 0) / 100) : 0
 
   const shareQuotation = () => {
     const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
@@ -79,11 +76,11 @@ const ResultBox = ({
       <tr><td style='padding:4px 8px;color:#64748b'>Final IDV (after depreciation)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(effectiveIdv)}</td></tr>
       <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
       ${vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Extra Weight > 12000 Premium</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.details.gcvExtraPremium)}</td></tr>` : ''}
-      ${ncb > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>NCB Discount (${ncb}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#16a34a'>- ₹${fmtD(ncbDiscount)}</td></tr>` : ''}
-      ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(odDiscountAmt)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 && vehicleType === 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 Loading (15% of sum)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
       <tr style='background:#fef3c7'><td style='padding:6px 8px;font-weight:800;color:#92400e'>Final OD before discounts</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#92400e'>₹${fmtD(result.odBeforeDiscount)}</td></tr>
+      ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(result.odDiscountAmount)}</td></tr>` : ''}
+      ${ncb > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>NCB Discount (${ncb}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#16a34a'>- ₹${fmtD(result.ncbAmount)}</td></tr>` : ''}
       ${result.loadingAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Loading Discount @ ${result.loadingDiscount}%</td><td style='text-align:right;padding:4px 8px;font-weight:700'>+ ₹${fmtD(result.loadingAmount)}</td></tr>` : ''}
       <tr style='background:#f1f5f9'><td style='padding:6px 8px;font-weight:800'>Final OD Premium</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#2563eb'>₹${fmtD(result.odPremium + result.loadingAmount)}</td></tr>
     ` : ''
@@ -217,20 +214,17 @@ const ResultBox = ({
 
     const effectiveIdvForPdf = result.depreciatedIdv || (parseFloat(idv) || 0)
     const odBaseVal = showOD ? effectiveIdvForPdf * (result.odRate / 100) : 0
-    const ncbDiscountVal = showOD ? odBaseVal * (ncb / 100) : 0
-    const afterNcbODVal = odBaseVal - ncbDiscountVal
-    const odDiscountAmtVal = showOD ? afterNcbODVal * ((result.odDiscountVal || 0) / 100) : 0
 
     const tableRows = []
 
     if (showOD) {
       tableRows.push({ desc: 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
       if (vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0) tableRows.push({ desc: 'Extra Weight > 12000 Premium', rate: '-', amount: result.details.gcvExtraPremium })
-      if (ncb > 0) tableRows.push({ desc: 'No Claim Bonus (NCB) Discount', rate: `-${ncb}%`, amount: -ncbDiscountVal, type: 'discount' })
-      if (result.odDiscountVal > 0) tableRows.push({ desc: 'Insurer OD Discount', rate: `-${result.odDiscountVal}%`, amount: -odDiscountAmtVal, type: 'discount' })
       if (result.geoExtentAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of sum)', rate: '15%', amount: result.imt23Amount })
       tableRows.push({ desc: 'Final OD before discounts', rate: '-', amount: result.odBeforeDiscount, type: 'subtotal' })
+      if (result.odDiscountVal > 0) tableRows.push({ desc: 'Insurer OD Discount', rate: `-${result.odDiscountVal}%`, amount: -(result.odDiscountAmount || 0), type: 'discount' })
+      if (ncb > 0) tableRows.push({ desc: 'No Claim Bonus (NCB) Discount', rate: `-${ncb}%`, amount: -(result.ncbAmount || 0), type: 'discount' })
       if (result.loadingAmount > 0) tableRows.push({ desc: `Loading Discount @ ${result.loadingDiscount}%`, rate: `${result.loadingDiscount}%`, amount: result.loadingAmount })
       tableRows.push({ desc: 'Final OD Premium', rate: '-', amount: result.odPremium + result.loadingAmount, type: 'total' })
     }
@@ -285,8 +279,8 @@ const ResultBox = ({
         premiums: {
           odRate: result.odRate,
           odBase: odBaseVal,
-          ncbDiscount: ncbDiscountVal,
-          odDiscountAmt: odDiscountAmtVal,
+          ncbAmount: result.ncbAmount || 0,
+          odDiscountAmount: result.odDiscountAmount || 0,
           finalOd: result.odPremium,
           tp: result.tpPremium,
           llPd: result.llPdAmount,
@@ -334,9 +328,6 @@ const ResultBox = ({
     }
   }
 
-  const odBaseVal = (parseFloat(idv) || 0) * (result.odRate / 100)
-  const ncbDiscountVal = odBaseVal * (ncb / 100)
-
   return (
     <div className='border-t border-slate-200 pt-5 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
       <div className='space-y-3'>
@@ -361,8 +352,8 @@ const ResultBox = ({
               ...(result.geoExtentAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of sum)', `₹${fmtD(result.imt23Amount)}`]] : []),
               ['Final OD before discounts', `₹${fmtD(result.odBeforeDiscount)}`, 'font-black text-amber-700 bg-amber-50 rounded-lg px-3 py-2 -mx-1.5 text-sm'],
-              ...(ncb > 0 ? [[`NCB Discount (${ncb}%)`, `- ₹${fmtD(ncbDiscount)}`]] : []),
-              ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(odDiscountAmt)}`]] : []),
+              ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(result.odDiscountAmount)}`]] : []),
+              ...(ncb > 0 ? [[`NCB Discount (${ncb}%)`, `- ₹${fmtD(result.ncbAmount)}`]] : []),
               ...(result.loadingAmount > 0 ? [[`Loading Discount @ ${result.loadingDiscount}%`, `+ ₹${fmtD(result.loadingAmount)}`]] : []),
               ['Final OD Premium', `₹${fmtD(result.odPremium + result.loadingAmount)}`, 'font-black text-blue-700'],
             ].map(([label, value, cls], i) => {

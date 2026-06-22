@@ -123,6 +123,8 @@ const PremiumCalculator = () => {
     let odPremium = 0
     let imt23Amount = 0
     let odBeforeDiscount = 0
+    let ncbAmount = 0
+    let odDiscountAmount = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
     if (vehicleType === 'private_car' || (vehicleType === 'two_wheeler' && !isElectric)) {
@@ -133,7 +135,9 @@ const PremiumCalculator = () => {
         imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
         const bundleMul = policyType === 'bundle' ? (parseInt(bundleOdTerm) || 1) : 1
         odBeforeDiscount = (imtBase + imt23Amount) * bundleMul
-        odPremium = odBeforeDiscount * (1 - ncb / 100) * (1 - odDiscountVal / 100)
+        odDiscountAmount = odBeforeDiscount * (odDiscountVal / 100)
+        ncbAmount = (odBeforeDiscount - odDiscountAmount) * (ncb / 100)
+        odPremium = odBeforeDiscount - odDiscountAmount - ncbAmount
       }
       if (policyType === 'od') tpPremium = 0
     } else {
@@ -143,7 +147,9 @@ const PremiumCalculator = () => {
         const imtBase = basicOd + extras
         imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
         odBeforeDiscount = imtBase + imt23Amount
-        odPremium = odBeforeDiscount * (1 - ncb / 100) * (1 - odDiscountVal / 100)
+        odDiscountAmount = odBeforeDiscount * (odDiscountVal / 100)
+        ncbAmount = (odBeforeDiscount - odDiscountAmount) * (ncb / 100)
+        odPremium = odBeforeDiscount - odDiscountAmount - ncbAmount
       }
       if (coverageType === 'tp') odPremium = 0
     }
@@ -154,8 +160,8 @@ const PremiumCalculator = () => {
     const rsaAmount = parseFloat(rsa) || 0
     const otherAddonAmount = parseFloat(otherAddon) || 0
     const paUnnamedAmount = parseFloat(paUnnamedPassenger) || 0
-    const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * idvVal : 0
-    const tyreCoverAmount = tyreCover !== '' && tyreCover !== '0' ? (parseFloat(tyreCover) / 100) * idvVal : 0
+    const zeroDepAmount = zeroDep !== '' && zeroDep !== '0' ? (parseFloat(zeroDep) / 100) * depreciatedIdv : 0
+    const tyreCoverAmount = tyreCover !== '' && tyreCover !== '0' ? (parseFloat(tyreCover) / 100) * depreciatedIdv : 0
     let restrictedTPPDDiscount = 0
     if (restrictedTPPD === 'yes') {
       if (vehicleType === 'gcv') restrictedTPPDDiscount = Math.min(tpPremium, 200)
@@ -195,7 +201,7 @@ const PremiumCalculator = () => {
       loadingAmount, loadingDiscount: loadingDiscountPercent,
       depreciation: depreciationPercent, depreciatedIdv,
       gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
-      odRate, details, odDiscountVal,
+      odRate, details, odDiscountVal, odDiscountAmount, ncbAmount,
     })
   }
 

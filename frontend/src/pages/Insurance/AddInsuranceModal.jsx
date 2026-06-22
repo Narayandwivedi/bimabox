@@ -300,7 +300,17 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }))
       return
     }
-    if (name === 'validFrom' || name === 'validTo' || name === 'issueDate') {
+    if (name === 'issueDate') {
+      if (value) {
+        const [year, month, day] = value.split('-')
+        const formatted = `${day}-${month}-${year}`
+        setFormData(prev => ({ ...prev, [name]: formatted }))
+      } else {
+        setFormData(prev => ({ ...prev, [name]: '' }))
+      }
+      return
+    }
+    if (name === 'validFrom' || name === 'validTo') {
       if (name === 'validTo') userEditedValidTo.current = true
       const formatted = handleSmartDateInput(value, formData[name] || '')
       if (formatted !== null) setFormData(prev => ({ ...prev, [name]: formatted }))
@@ -549,7 +559,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               <div className='grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4'>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Issue Date <span className='text-xs text-gray-500'>(Optional)</span></label>
-                  <input type='text' name='issueDate' value={formData.issueDate} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='1' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
+                  <input type='date' name='issueDate' value={formData.issueDate ? formData.issueDate.split('-').reverse().join('-') : ''} onChange={handleChange} tabIndex='1' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number</label>

@@ -383,7 +383,7 @@ const Home = () => {
                             onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)}
                             className='group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm hover:border-blue-400 transition-all cursor-pointer'
                           >
-                            <div className='flex items-center gap-3'>
+                            <div className='flex items-start gap-3'>
                               <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-${doc.color}-50 text-${doc.color}-600`}>
                                 {doc.type === 'Insurance' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' /></svg>}
                                 {doc.type === 'Tax' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>}
@@ -393,11 +393,11 @@ const Home = () => {
                                 {doc.type === 'Permit' && <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
                               </div>
                               <div className='min-w-0 flex-1'>
-                                <h3 className='text-sm font-bold text-slate-900 truncate'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</h3>
-                                <p className='text-[10px] font-mono text-slate-500'>{doc.vehicleNumber}</p>
-                                {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400 truncate'>{doc.insuredName}</p>}
+                                {doc.insuredName && <p className='text-sm font-black text-slate-900 truncate leading-tight'>{doc.insuredName}</p>}
+                                <p className='text-[10px] font-medium text-slate-500 mt-0.5'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</p>
+                                <p className='text-[10px] font-mono text-slate-400'>{doc.vehicleNumber}</p>
                               </div>
-                              <div className='text-right'>
+                              <div className='text-right shrink-0'>
                                 <p className={`text-[11px] font-black ${
                                   doc.daysLeft < 0 ? 'text-red-600' : doc.daysLeft <= 2 ? 'text-orange-600' : 'text-amber-600'
                                 }`}>
@@ -446,9 +446,9 @@ const Home = () => {
                                       {doc.type === 'Permit' && <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' /></svg>}
                                     </div>
                                     <div>
-                                      <h3 className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</h3>
+                                      {doc.insuredName && <p className='text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-tight'>{doc.insuredName}</p>}
+                                      <p className='text-[10px] font-semibold text-slate-500 mt-0.5'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</p>
                                       <p className='text-[10px] font-mono font-bold text-slate-500 uppercase'>{doc.vehicleNumber}</p>
-                                      {doc.insuredName && <p className='text-[9px] font-semibold text-slate-400'>{doc.insuredName}</p>}
                                     </div>
                                   </div>
                                   <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
@@ -498,14 +498,14 @@ const Home = () => {
                       const dotColor = ({ emerald: '#10B981', amber: '#F59E0B', indigo: '#6366F1', rose: '#F43F5E', blue: '#3B82F6', teal: '#14B8A6' })[doc.color] || '#3B82F6'
                       return (
                         <div key={doc.id} onClick={() => navigate(`/rto-documents/${doc.type}/${doc.id}`)} className='rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-[0_4px_16px_-6px_rgba(15,23,42,0.08)] transition-all hover:border-blue-300 hover:shadow-[0_8px_24px_-8px_rgba(59,130,246,0.18)] cursor-pointer'>
-                          <div className='flex items-center gap-3'>
-                            <div className='h-2 w-2 shrink-0 rounded-full' style={{ backgroundColor: dotColor }} />
+                          <div className='flex items-start gap-3'>
+                            <div className='h-2 w-2 shrink-0 rounded-full mt-1' style={{ backgroundColor: dotColor }} />
                             <div className='min-w-0 flex-1'>
-                              <p className='text-sm font-bold text-slate-800'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</p>
-                              <p className='font-mono text-[11px] text-slate-500'>{doc.vehicleNumber}</p>
-                              {doc.insuredName && <p className='text-[10px] text-slate-400 truncate'>{doc.insuredName}</p>}
+                              {doc.insuredName && <p className='text-sm font-black text-slate-800 leading-tight'>{doc.insuredName}</p>}
+                              <p className='font-mono text-[11px] text-slate-400'>{doc.vehicleNumber}</p>
+                              <p className='text-[11px] font-medium text-slate-500 mt-0.5'>{doc.type === 'Tax' ? 'Road Tax' : doc.type}</p>
                             </div>
-                            <p className='whitespace-nowrap text-[11px] font-semibold text-blue-600'>{timeAgo(doc.createdAt)}</p>
+                            <p className='whitespace-nowrap text-[11px] font-semibold text-blue-600 shrink-0'>{timeAgo(doc.createdAt)}</p>
                           </div>
                           <div className='mt-2.5 flex items-center gap-4 border-t border-slate-100 pt-2.5'>
                             <div className='text-[10px] text-slate-400'>
@@ -553,7 +553,7 @@ const Home = () => {
                               <td className='px-6 py-3'>
                                 <span className='font-mono text-xs font-bold text-slate-600'>{doc.vehicleNumber}</span>
                               </td>
-                              <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.insuredName || '—'}</td>
+                              <td className='px-6 py-3 text-sm font-black text-slate-800'>{doc.insuredName || '—'}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validFrom}</td>
                               <td className='px-6 py-3 text-xs font-medium text-slate-500'>{doc.validTo}</td>
                               <td className='px-6 py-3 text-right'>

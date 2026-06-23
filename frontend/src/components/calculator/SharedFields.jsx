@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+
 export const ChevronDown = () => (
   <svg className='pointer-events-none h-4 w-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
@@ -94,26 +96,71 @@ export const ManufacturingYearInput = ({ manufacturingYear, setManufacturingYear
   </div>
 )
 
-export const NCBSelector = ({ ncb, setNcb }) => (
-  <div>
-    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB)</label>
-    <div className='relative'>
-      <select
-        value={ncb}
-        onChange={e => setNcb(Number(e.target.value))}
-        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
-      >
-        <option value={0}>0%</option>
-        <option value={20}>20%</option>
-        <option value={25}>25%</option>
-        <option value={35}>35%</option>
-        <option value={45}>45%</option>
-        <option value={50}>50%</option>
-      </select>
-      <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
+export const NCBSelector = ({ ncb, setNcb }) => {
+  const [showModal, setShowModal] = useState(false)
+  const [tempValue, setTempValue] = useState('')
+  const presets = [0, 20, 25, 35, 45, 50]
+  const isCustom = ncb !== 0 && ncb !== '' && !presets.includes(Number(ncb))
+
+  const handleSelect = (e) => {
+    if (e.target.value === 'custom') {
+      setTempValue('')
+      setShowModal(true)
+      return
+    }
+    setNcb(Number(e.target.value))
+  }
+
+  const handleConfirm = () => {
+    if (tempValue !== '') setNcb(Number(tempValue))
+    setShowModal(false)
+  }
+
+  return (
+    <div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No Claim Bonus (NCB)</label>
+      <div className='relative'>
+        <select
+          value={isCustom ? ncb : (ncb ?? 0)}
+          onChange={handleSelect}
+          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+        >
+          <option value={0}>0%</option>
+          <option value={20}>20%</option>
+          <option value={25}>25%</option>
+          <option value={35}>35%</option>
+          <option value={45}>45%</option>
+          <option value={50}>50%</option>
+          {isCustom && <option value={ncb}>{ncb}%</option>}
+          <option value='custom'>Other</option>
+        </select>
+        <span className='absolute right-3 top-1/2 -translate-y-1/2'><ChevronDown /></span>
+      </div>
+
+      {showModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in'>
+          <div className='mx-4 w-72 rounded-2xl bg-white p-6 shadow-xl'>
+            <p className='mb-3 text-sm font-bold text-slate-700'>Enter NCB %</p>
+            <input
+              type='number'
+              value={tempValue}
+              onChange={e => setTempValue(e.target.value)}
+              placeholder='e.g. 30'
+              min={0}
+              max={100}
+              className='mb-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+              autoFocus
+            />
+            <div className='flex justify-end gap-2'>
+              <button onClick={() => setShowModal(false)} className='rounded-xl px-4 py-2 text-sm font-bold text-slate-500 transition-all hover:bg-slate-100'>Cancel</button>
+              <button onClick={handleConfirm} className='rounded-xl bg-blue-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-blue-600'>Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)
+  )
+}
 
 export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm }) => {
   const is2W = vehicleType === 'two_wheeler'
@@ -161,45 +208,131 @@ export const PolicyTypeSelector = ({ policyType, setPolicyType, vehicleType, bun
   )
 }
 
-export const LoadingDiscountInput = ({ loadingDiscount, setLoadingDiscount }) => (
-  <div>
-    <label className='mb-1.5 block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-500'>Loading on Discount Premium (%)</label>
-    <select
-      value={loadingDiscount}
-      onChange={e => setLoadingDiscount(e.target.value)}
-      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 appearance-none cursor-pointer transition-all'
-    >
-      <option value=''>0%</option>
-      <option value='5'>5%</option>
-      <option value='10'>10%</option>
-      <option value='15'>15%</option>
-      <option value='20'>20%</option>
-      <option value='25'>25%</option>
-      <option value='30'>30%</option>
-    </select>
-  </div>
-)
+export const LoadingDiscountInput = ({ loadingDiscount, setLoadingDiscount }) => {
+  const [showModal, setShowModal] = useState(false)
+  const [tempValue, setTempValue] = useState('')
+  const presets = ['', '5', '10', '15', '20', '25', '30']
+  const isCustom = loadingDiscount && !presets.includes(String(loadingDiscount))
 
-export const DepreciationInput = ({ depreciation, setDepreciation }) => (
-  <div>
-    <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Depreciation</label>
-    <select
-      value={depreciation}
-      onChange={e => setDepreciation(e.target.value)}
-      className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 appearance-none cursor-pointer transition-all'
-    >
-      <option value=''>0%</option>
-      <option value='5'>5%</option>
-      <option value='10'>10%</option>
-      <option value='15'>15%</option>
-      <option value='20'>20%</option>
-      <option value='25'>25%</option>
-      <option value='30'>30%</option>
-      <option value='40'>40%</option>
-      <option value='50'>50%</option>
-    </select>
-  </div>
-)
+  const handleSelect = (e) => {
+    if (e.target.value === 'custom') {
+      setTempValue('')
+      setShowModal(true)
+      return
+    }
+    setLoadingDiscount(e.target.value)
+  }
+
+  const handleConfirm = () => {
+    if (tempValue !== '') setLoadingDiscount(tempValue)
+    setShowModal(false)
+  }
+
+  return (
+    <div>
+      <label className='mb-1.5 block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-500'>Loading on Discount Premium (%)</label>
+      <select
+        value={isCustom ? loadingDiscount : (loadingDiscount || '')}
+        onChange={handleSelect}
+        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 appearance-none cursor-pointer transition-all'
+      >
+        <option value=''>0%</option>
+        <option value='5'>5%</option>
+        <option value='10'>10%</option>
+        <option value='15'>15%</option>
+        <option value='20'>20%</option>
+        <option value='25'>25%</option>
+        <option value='30'>30%</option>
+        {isCustom && <option value={loadingDiscount}>{loadingDiscount}%</option>}
+        <option value='custom'>Other</option>
+      </select>
+
+      {showModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in'>
+          <div className='mx-4 w-72 rounded-2xl bg-white p-6 shadow-xl'>
+            <p className='mb-3 text-sm font-bold text-slate-700'>Enter Loading %</p>
+            <input
+              type='number'
+              value={tempValue}
+              onChange={e => setTempValue(e.target.value)}
+              placeholder='e.g. 8'
+              className='mb-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-300 transition-all'
+              autoFocus
+            />
+            <div className='flex justify-end gap-2'>
+              <button onClick={() => setShowModal(false)} className='rounded-xl px-4 py-2 text-sm font-bold text-slate-500 transition-all hover:bg-slate-100'>Cancel</button>
+              <button onClick={handleConfirm} className='rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-orange-600'>Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export const DepreciationInput = ({ depreciation, setDepreciation }) => {
+  const [showModal, setShowModal] = useState(false)
+  const [tempValue, setTempValue] = useState('')
+  const presets = ['', '5', '10', '15', '20', '25', '30', '40', '50']
+  const isCustom = depreciation && !presets.includes(String(depreciation))
+
+  const handleSelect = (e) => {
+    if (e.target.value === 'custom') {
+      setTempValue('')
+      setShowModal(true)
+      return
+    }
+    setDepreciation(e.target.value)
+  }
+
+  const handleConfirm = () => {
+    if (tempValue !== '') setDepreciation(tempValue)
+    setShowModal(false)
+  }
+
+  return (
+    <div>
+      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Depreciation</label>
+      <select
+        value={isCustom ? depreciation : (depreciation || '')}
+        onChange={handleSelect}
+        className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 appearance-none cursor-pointer transition-all'
+      >
+        <option value=''>0%</option>
+        <option value='5'>5%</option>
+        <option value='10'>10%</option>
+        <option value='15'>15%</option>
+        <option value='20'>20%</option>
+        <option value='25'>25%</option>
+        <option value='30'>30%</option>
+        <option value='40'>40%</option>
+        <option value='50'>50%</option>
+        {isCustom && <option value={depreciation}>{depreciation}%</option>}
+        <option value='custom'>Other</option>
+      </select>
+
+      {showModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in'>
+          <div className='mx-4 w-72 rounded-2xl bg-white p-6 shadow-xl'>
+            <p className='mb-3 text-sm font-bold text-slate-700'>Enter Depreciation %</p>
+            <input
+              type='number'
+              value={tempValue}
+              onChange={e => setTempValue(e.target.value)}
+              placeholder='e.g. 12'
+              className='mb-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20 placeholder:text-slate-300 transition-all'
+              autoFocus
+            />
+            <div className='flex justify-end gap-2'>
+              <button onClick={() => setShowModal(false)} className='rounded-xl px-4 py-2 text-sm font-bold text-slate-500 transition-all hover:bg-slate-100'>Cancel</button>
+              <button onClick={handleConfirm} className='rounded-xl bg-orange-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-orange-600'>Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export const CoverageSelector = ({ coverageType, setCoverageType }) => (
   <div>

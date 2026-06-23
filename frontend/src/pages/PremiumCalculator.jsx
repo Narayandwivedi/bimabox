@@ -40,6 +40,8 @@ const PremiumCalculator = () => {
   const [policyTerm, setPolicyTerm] = useState('1yr')
   const [manufacturingYear, setManufacturingYear] = useState('')
   const [llPaidDriver, setLlPaidDriver] = useState('')
+  const [showLlPdModal, setShowLlPdModal] = useState(false)
+  const [llPdTempValue, setLlPdTempValue] = useState('')
   const [paOwnerDriver, setPaOwnerDriver] = useState('')
   const [llToEmployee, setLlToEmployee] = useState('')
   const [rsa, setRsa] = useState('')
@@ -74,6 +76,7 @@ const PremiumCalculator = () => {
     setPolicyTerm('1yr')
     setManufacturingYear('')
     setLlPaidDriver('')
+    setShowLlPdModal(false)
     setPaOwnerDriver('')
     setLlToEmployee('')
     setRsa('')
@@ -240,167 +243,196 @@ const PremiumCalculator = () => {
   }
 
   return (
-    <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-0 pb-24 pt-4 sm:px-4 md:px-6'>
-      <div className='mx-auto max-w-6xl'>
+    <>
+      <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)] px-0 pb-24 pt-4 sm:px-4 md:px-6'>
+        <div className='mx-auto max-w-6xl'>
 
-        {step === 1 && (
-          <div className='mb-4'>
-            <h1 className='text-center sm:text-left text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
-            <p className='text-center sm:text-left mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
-          </div>
-        )}
+          {step === 1 && (
+            <div className='mb-4'>
+              <h1 className='text-center sm:text-left text-base sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight'>Premium Calculator</h1>
+              <p className='text-center sm:text-left mt-0.5 text-[7px] sm:text-[9px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400'>Indian Motor Tariff Rates • WEF 1st June 2022</p>
+            </div>
+          )}
 
-        {step === 1 && <VehicleTypeGrid handleVehicleSelect={handleVehicleSelect} />}
+          {step === 1 && <VehicleTypeGrid handleVehicleSelect={handleVehicleSelect} />}
 
-        {step === 2 && selectedCategory && (
-          <div className='animate-in fade-in slide-in-from-right-6 duration-300'>
-            <div className='rounded-[32px] border border-slate-200 bg-white p-3 sm:p-7 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
-              <div className='mb-5 flex items-center gap-3'>
-                <button
-                  onClick={() => { setStep(1); setResult(null) }}
-                  className='flex h-8 w-8 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all active:scale-90'
-                >
-                  <FaArrowLeft className='h-3.5 w-3.5' />
-                </button>
-                <div>
-                  <div className='flex items-center gap-2'>
-                    {selectedCategory.icon && <span className='flex items-center'>{selectedCategory.icon}</span>}
-                    <h2 className='text-sm sm:text-base font-black text-slate-800'>{selectedCategory.label}</h2>
-                  </div>
-                  <p className='text-[9px] text-slate-400 font-medium mt-0.5 ml-9'>{selectedCategory.desc}</p>
-                </div>
-              </div>
-
-              <div className='space-y-6'>
-                <div className='rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-[2px] shadow-lg shadow-indigo-200'>
-                  <div className='rounded-2xl bg-white p-5 sm:p-6'>
-                    <p className='mb-4 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
-                      <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
-                      Own Damage & Premium Details
-                    </p>
-                    {renderForm()}
+          {step === 2 && selectedCategory && (
+            <div className='animate-in fade-in slide-in-from-right-6 duration-300'>
+              <div className='rounded-[32px] border border-slate-200 bg-white p-3 sm:p-7 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)]'>
+                <div className='mb-5 flex items-center gap-3'>
+                  <button
+                    onClick={() => { setStep(1); setResult(null) }}
+                    className='flex h-8 w-8 items-center justify-center rounded-xl border-2 border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all active:scale-90'
+                  >
+                    <FaArrowLeft className='h-3.5 w-3.5' />
+                  </button>
+                  <div>
+                    <div className='flex items-center gap-2'>
+                      {selectedCategory.icon && <span className='flex items-center'>{selectedCategory.icon}</span>}
+                      <h2 className='text-sm sm:text-base font-black text-slate-800'>{selectedCategory.label}</h2>
+                    </div>
+                    <p className='text-[9px] text-slate-400 font-medium mt-0.5 ml-9'>{selectedCategory.desc}</p>
                   </div>
                 </div>
 
-                <div className='rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 p-[2px] shadow-lg shadow-amber-200'>
-                  <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
-                    <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
-                      <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M11.42 15.17l-5.25 3.04 1-5.5L3 8.75l5.5-.83L11.42 3l2.92 4.92 5.5.83-4.17 3.96 1 5.5z' /></svg>
-                      Add-on Coverages
-                    </p>
-                    <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Zero Depreciation (%)</label>
-                        <input type='number' value={zeroDep} onChange={e => setZeroDep(e.target.value)} placeholder='e.g. 20' min={0} max={100}
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addons (Rate)</label>
-                        <input type='number' value={tyreCover} onChange={e => setTyreCover(e.target.value)} placeholder='e.g. 2' min={0} max={100}
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Roadside Assistance (₹)</label>
-                        <input type='number' value={rsa} onChange={e => setRsa(e.target.value)} placeholder='e.g. 250'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addon (₹)</label>
-                        <input type='number' value={otherAddon} onChange={e => setOtherAddon(e.target.value)} placeholder='e.g. 500'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                <div className='space-y-6'>
+                  <div className='rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-[2px] shadow-lg shadow-indigo-200'>
+                    <div className='rounded-2xl bg-white p-5 sm:p-6'>
+                      <p className='mb-4 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
+                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
+                        Own Damage & Premium Details
+                      </p>
+                      {renderForm()}
+                    </div>
+                  </div>
+
+                  <div className='rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 p-[2px] shadow-lg shadow-amber-200'>
+                    <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
+                      <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
+                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M11.42 15.17l-5.25 3.04 1-5.5L3 8.75l5.5-.83L11.42 3l2.92 4.92 5.5.83-4.17 3.96 1 5.5z' /></svg>
+                        Add-on Coverages
+                      </p>
+                      <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Zero Depreciation (%)</label>
+                          <input type='number' value={zeroDep} onChange={e => setZeroDep(e.target.value)} placeholder='e.g. 20' min={0} max={100}
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addons (Rate)</label>
+                          <input type='number' value={tyreCover} onChange={e => setTyreCover(e.target.value)} placeholder='e.g. 2' min={0} max={100}
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Roadside Assistance (₹)</label>
+                          <input type='number' value={rsa} onChange={e => setRsa(e.target.value)} placeholder='e.g. 250'
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Other Addon (₹)</label>
+                          <input type='number' value={otherAddon} onChange={e => setOtherAddon(e.target.value)} placeholder='e.g. 500'
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className='rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 p-[2px] shadow-lg shadow-rose-200'>
-                  <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
-                    <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
-                      <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z' /></svg>
-                      Liability / Third Party
-                    </p>
-                    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
-                        <select value={llPaidDriver} onChange={e => setLlPaidDriver(e.target.value)}
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
-                          <option value='0'>0</option>
-                          <option value='50'>50</option>
-                          <option value='100'>100</option>
-                          <option value='150'>150</option>
-                          <option value='200'>200</option>
-                          <option value='250'>250</option>
-                          <option value='300'>300</option>
-                        </select>
+                  <div className='rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 p-[2px] shadow-lg shadow-rose-200'>
+                    <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
+                      <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
+                        <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z' /></svg>
+                        Liability / Third Party
+                      </p>
+                      <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Paid Driver (₹)</label>
+                          <select
+                            value={llPaidDriver && !['0', '50', '100', '150', '200', '250', '300'].includes(llPaidDriver) ? llPaidDriver : (llPaidDriver || '0')}
+                            onChange={e => {
+                              if (e.target.value === 'custom') { setLlPdTempValue(''); setShowLlPdModal(true); return }
+                              setLlPaidDriver(e.target.value)
+                            }}
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'>
+                            <option value='0'>0</option>
+                            <option value='50'>50</option>
+                            <option value='100'>100</option>
+                            <option value='150'>150</option>
+                            <option value='200'>200</option>
+                            <option value='250'>250</option>
+                            <option value='300'>300</option>
+                            {llPaidDriver && !['0', '50', '100', '150', '200', '250', '300'].includes(llPaidDriver) && <option value={llPaidDriver}>₹{llPaidDriver}</option>}
+                            <option value='custom'>Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>
+                          <input type='number' value={paOwnerDriver} onChange={e => setPaOwnerDriver(e.target.value)} placeholder='e.g. 100'
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        {(vehicleType === 'private_car' || vehicleType === 'two_wheeler') && (
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Unnamed Psgr (₹)</label>
+                          <input type='number' value={paUnnamedPassenger} onChange={e => setPaUnnamedPassenger(e.target.value)} placeholder='e.g. 25'
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        )}
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
+                          <select
+                            value={restrictedTPPD}
+                            onChange={e => setRestrictedTPPD(e.target.value)}
+                            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+                          >
+                            <option value="no">No</option>
+                            <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : vehicleType === 'gcv_3w' ? '₹150' : vehicleType === 'private_car' ? '₹100' : '₹50'} discount)</option>
+                          </select>
+                        </div>
+                        {vehicleType !== 'private_car' && vehicleType !== 'two_wheeler' && (
+                        <div>
+                          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (₹)</label>
+                          <input type='number' value={llToEmployee} onChange={e => setLlToEmployee(e.target.value)} placeholder='e.g. 50'
+                            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                        </div>
+                        )}
                       </div>
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Owner Driver (₹)</label>
-                        <input type='number' value={paOwnerDriver} onChange={e => setPaOwnerDriver(e.target.value)} placeholder='e.g. 100'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                      <div className='flex items-center gap-3 pt-2'>
+                        <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GST (18%) included</span>
                       </div>
-                      {(vehicleType === 'private_car' || vehicleType === 'two_wheeler') && (
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>PA to Unnamed Psgr (₹)</label>
-                        <input type='number' value={paUnnamedPassenger} onChange={e => setPaUnnamedPassenger(e.target.value)} placeholder='e.g. 25'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      )}
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Restricted TPPD</label>
-                        <select
-                          value={restrictedTPPD}
-                          onChange={e => setRestrictedTPPD(e.target.value)}
-                          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
-                        >
-                          <option value="no">No</option>
-                          <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : vehicleType === 'gcv_3w' ? '₹150' : vehicleType === 'private_car' ? '₹100' : '₹50'} discount)</option>
-                        </select>
-                      </div>
-                      {vehicleType !== 'private_car' && vehicleType !== 'two_wheeler' && (
-                      <div>
-                        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>LL to Employee (₹)</label>
-                        <input type='number' value={llToEmployee} onChange={e => setLlToEmployee(e.target.value)} placeholder='e.g. 50'
-                          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-                      </div>
-                      )}
-                    </div>
-                    <div className='flex items-center gap-3 pt-2'>
-                      <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GST (18%) included</span>
                     </div>
                   </div>
-                </div>
 
-                {result && (
-                  <ResultBox
-                    result={result}
-                    policyType={policyType}
-                    vehicleType={vehicleType}
-                    isElectric={isElectric}
-                    cc={cc}
-                    kwPower={kwPower}
-                    idv={idv}
-                    ncb={ncb}
-                    odDiscount={odDiscount}
-                    zone={zone}
-                    vehicleAge={vehicleAge}
-                    manufacturingYear={manufacturingYear}
-                    selectedCategory={selectedCategory}
-                    subtype={subtype}
-                    gvw={gvw}
-                    gstEnabled={true}
-                  />
-                )}
+                  {result && (
+                    <ResultBox
+                      result={result}
+                      policyType={policyType}
+                      vehicleType={vehicleType}
+                      isElectric={isElectric}
+                      cc={cc}
+                      kwPower={kwPower}
+                      idv={idv}
+                      ncb={ncb}
+                      odDiscount={odDiscount}
+                      zone={zone}
+                      vehicleAge={vehicleAge}
+                      manufacturingYear={manufacturingYear}
+                      selectedCategory={selectedCategory}
+                      subtype={subtype}
+                      gvw={gvw}
+                      gstEnabled={true}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <p className='mt-4 text-center text-[8px] text-slate-400 px-4'>
-          <svg className='inline-block h-3 w-3 mr-1 -mt-0.5 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24' strokeWidth={2}><path d='M12 9v2m0 4h.01M10.29 3.86l-8.1 14c-.6 1.04.15 2.14 1.21 2.14h16.2c1.06 0 1.81-1.1 1.21-2.14l-8.1-14c-.6-1.04-1.82-1.04-2.42 0z' /></svg>
-          For indicative purposes only. Premiums may vary based on insurer loading, add-ons & discounts. Ref: IRDAI website irdai.gov.in
-        </p>
+          <p className='mt-4 text-center text-[8px] text-slate-400 px-4'>
+            <svg className='inline-block h-3 w-3 mr-1 -mt-0.5 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24' strokeWidth={2}><path d='M12 9v2m0 4h.01M10.29 3.86l-8.1 14c-.6 1.04.15 2.14 1.21 2.14h16.2c1.06 0 1.81-1.1 1.21-2.14l-8.1-14c-.6-1.04-1.82-1.04-2.42 0z' /></svg>
+            For indicative purposes only. Premiums may vary based on insurer loading, add-ons & discounts. Ref: IRDAI website irdai.gov.in
+          </p>
+        </div>
       </div>
-    </div>
+
+      {showLlPdModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in'>
+          <div className='mx-4 w-72 rounded-2xl bg-white p-6 shadow-xl'>
+            <p className='mb-3 text-sm font-bold text-slate-700'>Enter LL to Paid Driver (₹)</p>
+            <input
+              type='number'
+              value={llPdTempValue}
+              onChange={e => setLlPdTempValue(e.target.value)}
+              placeholder='e.g. 75'
+              className='mb-4 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all'
+              autoFocus
+            />
+            <div className='flex justify-end gap-2'>
+              <button onClick={() => setShowLlPdModal(false)} className='rounded-xl px-4 py-2 text-sm font-bold text-slate-500 transition-all hover:bg-slate-100'>Cancel</button>
+              <button onClick={() => { if (llPdTempValue !== '') setLlPaidDriver(llPdTempValue); setShowLlPdModal(false) }} className='rounded-xl bg-blue-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-blue-600'>Apply</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

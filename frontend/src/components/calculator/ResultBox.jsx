@@ -66,7 +66,7 @@ const ResultBox = ({
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
     const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
 
-    const netPremium = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + (result.loadingAmount || 0)
+    const netPremium = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
     const exactTotal = netPremium + result.gst
 
     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
@@ -76,7 +76,7 @@ const ResultBox = ({
       <tr><td style='padding:4px 8px;color:#64748b'>Final IDV (after depreciation)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(effectiveIdv)}</td></tr>
       <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
       ${vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Extra Weight > 12000 Premium</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.details.gcvExtraPremium)}</td></tr>` : ''}
-      ${result.geoExtentAmount > 0 && vehicleType === 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
+      ${result.geoExtentAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 Loading (15% of sum)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
       <tr style='background:#fef3c7'><td style='padding:6px 8px;font-weight:800;color:#92400e'>Final OD before discounts</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#92400e'>₹${fmtD(result.odBeforeDiscount)}</td></tr>
       ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(result.odDiscountAmount)}</td></tr>` : ''}
@@ -98,7 +98,6 @@ const ResultBox = ({
     const addonItems = `
       ${result.rsaAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Roadside Assistance</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.rsaAmount)}</td></tr>` : ''}
       ${result.otherAddonAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Other Addon Coverage</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.otherAddonAmount)}</td></tr>` : ''}
-      ${result.geoExtentAmount > 0 && vehicleType !== 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.zeroDepAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Zero Depreciation</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.zeroDepAmount)}</td></tr>` : ''}
       ${result.tyreCoverAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Other Addons (Rate)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.tyreCoverAmount)}</td></tr>` : ''}
     `
@@ -220,7 +219,7 @@ const ResultBox = ({
     if (showOD) {
       tableRows.push({ desc: 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
       if (vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0) tableRows.push({ desc: 'Extra Weight > 12000 Premium', rate: '-', amount: result.details.gcvExtraPremium })
-      if (result.geoExtentAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
+      if (result.geoExtentAmount > 0) tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of sum)', rate: '15%', amount: result.imt23Amount })
       tableRows.push({ desc: 'Final OD before discounts', rate: '-', amount: result.odBeforeDiscount, type: 'subtotal' })
       if (result.odDiscountVal > 0) tableRows.push({ desc: 'Insurer OD Discount', rate: `-${result.odDiscountVal}%`, amount: -(result.odDiscountAmount || 0), type: 'discount' })
@@ -241,11 +240,10 @@ const ResultBox = ({
 
     if (result.rsaAmount > 0) tableRows.push({ desc: 'Roadside Assistance (RSA)', rate: '-', amount: result.rsaAmount })
     if (result.otherAddonAmount > 0) tableRows.push({ desc: 'Other Addon Coverage', rate: '-', amount: result.otherAddonAmount })
-    if (result.geoExtentAmount > 0 && vehicleType !== 'gcv') tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
     if (result.zeroDepAmount > 0) tableRows.push({ desc: 'Zero Depreciation', rate: '-', amount: result.zeroDepAmount })
     if (result.tyreCoverAmount > 0) tableRows.push({ desc: 'Other Addons (Rate)', rate: '-', amount: result.tyreCoverAmount })
 
-    const netPremiumVal = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
+    const netPremiumVal = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
 
     tableRows.push({ desc: 'Premium Before Taxes', rate: '-', amount: netPremiumVal, type: 'total' })
 
@@ -349,7 +347,7 @@ const ResultBox = ({
               ...(vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? [
                 [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),
-              ...(result.geoExtentAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
+              ...(result.geoExtentAmount > 0 ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of sum)', `₹${fmtD(result.imt23Amount)}`]] : []),
               ['Final OD before discounts', `₹${fmtD(result.odBeforeDiscount)}`, 'font-black text-amber-700 bg-amber-50 rounded-lg px-3 py-2 -mx-1.5 text-sm'],
               ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(result.odDiscountAmount)}`]] : []),
@@ -408,7 +406,6 @@ const ResultBox = ({
             {[
               ...(result.rsaAmount > 0 ? [['Roadside Assistance (RSA)', `₹${fmtD(result.rsaAmount)}`]] : []),
               ...(result.otherAddonAmount > 0 ? [['Other Addon Coverage', `₹${fmtD(result.otherAddonAmount)}`]] : []),
-              ...(result.geoExtentAmount > 0 && vehicleType !== 'gcv' ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(result.zeroDepAmount > 0 ? [['Zero Depreciation', `₹${fmtD(result.zeroDepAmount)}`]] : []),
               ...(result.tyreCoverAmount > 0 ? [['Other Addons (Rate)', `₹${fmtD(result.tyreCoverAmount)}`]] : []),
             ].map(([label, value], i) => (
@@ -419,7 +416,7 @@ const ResultBox = ({
             ))}
             <div className='flex items-center justify-between rounded-lg bg-amber-100/80 px-3 py-2 -mx-2 border-t border-amber-200/70 mt-1.5'>
               <p className='text-[10px] sm:text-[11px] font-black text-amber-900'>Total Add-on Premium</p>
-              <p className='text-sm sm:text-base font-black text-amber-700'>₹{fmtD(result.rsaAmount + result.otherAddonAmount + (vehicleType !== 'gcv' ? result.geoExtentAmount : 0) + result.zeroDepAmount + result.tyreCoverAmount)}</p>
+              <p className='text-sm sm:text-base font-black text-amber-700'>₹{fmtD(result.rsaAmount + result.otherAddonAmount + result.zeroDepAmount + result.tyreCoverAmount)}</p>
             </div>
           </div>
         )}
@@ -428,7 +425,7 @@ const ResultBox = ({
         <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
           <div className='flex items-center justify-between text-xs'>
             <p className='font-bold text-slate-500'>Total before GST</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.geoExtentAmount + result.imt23Amount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
           </div>
           {result.gstTpRate === 5 ? (
             <>

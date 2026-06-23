@@ -8,12 +8,17 @@ export function calcTwoWheeler({
 }) {
   if (isElectric) {
     const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
-    const tpPremium = policyType === 'bundle'
-      ? TARIFF.two_wheeler.tpBundle5yr[kwBracket] || 0
-      : TARIFF.two_wheeler.electricTP1yr[kwBracket]
+    let tpPremium
+    if (policyType === 'bundle') {
+      tpPremium = TARIFF.two_wheeler.electricTP5yr[kwBracket] || 0
+    } else if (policyType === 'od') {
+      tpPremium = 0
+    } else {
+      tpPremium = TARIFF.two_wheeler.electricTP1yr[kwBracket] || 0
+    }
     return {
       tpPremium,
-      odRate: TARIFF.two_wheeler.odRates[vehicleAge][zone][kwBracket >= 3 ? 2 : kwBracket],
+      odRate: TARIFF.two_wheeler.odRates[vehicleAge]?.[zone]?.[kwBracket >= 3 ? 2 : kwBracket] || 0,
       details: { label: `${kwVal} KW (Electric)` },
     }
   }

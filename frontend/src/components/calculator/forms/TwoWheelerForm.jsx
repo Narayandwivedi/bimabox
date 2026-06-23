@@ -1,5 +1,5 @@
 import { FaGasPump, FaBolt } from 'react-icons/fa6'
-import { PolicyTypeSelector, CoverageSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVInput, IDVSection } from '../SharedFields'
+import { PolicyTypeSelector, ZoneSelector, ManufacturingYearInput, AgeSelector, IDVSection } from '../SharedFields'
 
 const TwoWheelerForm = ({
   isElectric, setIsElectric,
@@ -15,7 +15,6 @@ const TwoWheelerForm = ({
   depreciation, setDepreciation,
   policyType, setPolicyType,
   bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
-  coverageType, setCoverageType,
   vehicleType,
   currentYear,
 }) => (
@@ -39,6 +38,7 @@ const TwoWheelerForm = ({
         </button>
       </div>
     </div>
+
     {!isElectric ? (
       <>
         <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
@@ -66,16 +66,26 @@ const TwoWheelerForm = ({
     ) : (
       <>
         <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+        <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+          <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
+          <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
+          <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
           <div>
             <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
             <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 5'
               className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
             <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;3 / 3–7 / 7–16 / {'>'}16 KW</p>
           </div>
-          <IDVInput idv={idv} setIdv={setIdv} />
         </div>
-        <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
+        <IDVSection
+          idv={idv} setIdv={setIdv}
+          depreciation={depreciation} setDepreciation={setDepreciation}
+          ncb={ncb} setNcb={setNcb}
+          odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+          loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+          showNcb={policyType !== 'tp'}
+          showOdDiscount={policyType !== 'tp'}
+        />
       </>
     )}
   </div>

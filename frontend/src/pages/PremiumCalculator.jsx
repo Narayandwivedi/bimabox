@@ -131,7 +131,7 @@ const PremiumCalculator = () => {
     let odDiscountAmount = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
-    if (vehicleType === 'private_car' || (vehicleType === 'two_wheeler' && !isElectric)) {
+    if (vehicleType === 'private_car' || vehicleType === 'two_wheeler') {
       if (policyType !== 'tp' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
         const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
@@ -157,6 +157,7 @@ const PremiumCalculator = () => {
       }
       if (coverageType === 'tp') odPremium = 0
     }
+
 
     const llPdAmount = parseFloat(llPaidDriver) || 0
     const paOdAmount = parseFloat(paOwnerDriver) || 0

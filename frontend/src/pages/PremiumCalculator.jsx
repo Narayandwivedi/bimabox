@@ -184,7 +184,7 @@ const PremiumCalculator = () => {
     let gstNonTp = 0
     let gstTpRate = 18
     let gstNonTpRate = 18
-    const isGCV = vehicleType === 'gcv'
+    const isGCV = vehicleType === 'gcv' || vehicleType === 'gcv_3w'
     if (isGCV) {
       gstTpRate = 5
       gstNonTpRate = 18

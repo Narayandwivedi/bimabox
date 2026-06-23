@@ -21,7 +21,7 @@ const PremiumCalculator = () => {
   const [vehicleType, setVehicleType] = useState(null)
   const [result, setResult] = useState(null)
 
-  const [zone, setZone] = useState('A')
+  const [zone, setZone] = useState('')
   const [vehicleAge, setVehicleAge] = useState('')
   const [idv, setIdv] = useState('')
   const [ncb, setNcb] = useState(0)
@@ -66,8 +66,8 @@ const PremiumCalculator = () => {
     setSubtype('')
     setIdv('')
     setNcb(0)
-    setZone('A')
-    setVehicleAge('upto_5')
+    setZone('')
+    setVehicleAge('')
     setCoverageType('comprehensive')
     setPolicyType('comprehensive')
     setOdDiscount('')
@@ -105,6 +105,7 @@ const PremiumCalculator = () => {
   }
 
   const calculatePremium = () => {
+    if (!zone || !vehicleAge) return setResult(null)
     const idvVal = parseFloat(idv) || 0
     const depreciationPercent = parseFloat(depreciation) || 0
     const depreciatedIdv = idvVal * (1 - depreciationPercent / 100)

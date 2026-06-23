@@ -166,6 +166,7 @@ const PremiumCalculator = () => {
     let restrictedTPPDDiscount = 0
     if (restrictedTPPD === 'yes') {
       if (vehicleType === 'gcv') restrictedTPPDDiscount = Math.min(tpPremium, 200)
+      else if (vehicleType === 'gcv_3w') restrictedTPPDDiscount = Math.min(tpPremium, 150)
       else if (vehicleType === 'private_car') restrictedTPPDDiscount = Math.min(tpPremium, 100)
       else if (vehicleType === 'two_wheeler') restrictedTPPDDiscount = Math.min(tpPremium, 50)
     }
@@ -352,7 +353,7 @@ const PremiumCalculator = () => {
                           className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
                         >
                           <option value="no">No</option>
-                          <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : vehicleType === 'private_car' ? '₹100' : '₹50'} discount)</option>
+                          <option value="yes">Yes ({vehicleType === 'gcv' ? '₹200' : vehicleType === 'gcv_3w' ? '₹150' : vehicleType === 'private_car' ? '₹100' : '₹50'} discount)</option>
                         </select>
                       </div>
                       {vehicleType !== 'private_car' && vehicleType !== 'two_wheeler' && (

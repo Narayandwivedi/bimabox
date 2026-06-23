@@ -8,6 +8,7 @@ export function calcTwoWheeler({
 }) {
   if (isElectric) {
     const kwBracket = kwVal < 3 ? 0 : kwVal <= 7 ? 1 : kwVal <= 16 ? 2 : 3
+    const electricOdBracket = kwVal <= 7 ? 0 : kwVal <= 16 ? 1 : 2
     let tpPremium
     if (policyType === 'bundle') {
       tpPremium = TARIFF.two_wheeler.electricTP5yr[kwBracket] || 0
@@ -18,7 +19,7 @@ export function calcTwoWheeler({
     }
     return {
       tpPremium,
-      odRate: TARIFF.two_wheeler.odRates[vehicleAge]?.[zone]?.[kwBracket >= 3 ? 2 : kwBracket] || 0,
+      odRate: TARIFF.two_wheeler.odRates[vehicleAge]?.[zone]?.[electricOdBracket] || 0,
       details: { label: `${kwVal} KW (Electric)` },
     }
   }

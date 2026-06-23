@@ -55,6 +55,9 @@ const PremiumCalculator = () => {
   const [loadingDiscount, setLoadingDiscount] = useState('')
   const [depreciation, setDepreciation] = useState('')
 
+  const isPrivateOr2W = vehicleType === 'private_car' || vehicleType === 'two_wheeler'
+  const isOdOnly = policyType === 'od'
+  const isTpOnly = isPrivateOr2W ? policyType === 'tp' : coverageType === 'tp'
   const selectedCategory = VEHICLE_CATEGORIES.find(v => v.id === vehicleType)
   const currentYear = new Date().getFullYear()
 
@@ -287,6 +290,7 @@ const PremiumCalculator = () => {
                     </div>
                   </div>
 
+                  {!isTpOnly && (
                   <div className='rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 p-[2px] shadow-lg shadow-amber-200'>
                     <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
                       <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
@@ -317,7 +321,9 @@ const PremiumCalculator = () => {
                       </div>
                     </div>
                   </div>
+                  )}
 
+                  {!isOdOnly && (
                   <div className='rounded-2xl bg-gradient-to-br from-rose-500 to-pink-600 p-[2px] shadow-lg shadow-rose-200'>
                     <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
                       <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
@@ -381,6 +387,7 @@ const PremiumCalculator = () => {
                       </div>
                     </div>
                   </div>
+                  )}
 
                   {result && (
                     <ResultBox

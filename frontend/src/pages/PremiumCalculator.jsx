@@ -188,8 +188,8 @@ const PremiumCalculator = () => {
     if (isGCV) {
       gstTpRate = 5
       gstNonTpRate = 18
-      gstTp = (tpPremium + geoExtentTPAmount) * 0.05
-      gstNonTp = (netPremium - tpPremium - geoExtentTPAmount) * 0.18
+      gstTp = tpPremium * 0.05
+      gstNonTp = (netPremium - tpPremium) * 0.18
       gst = gstTp + gstNonTp
     } else {
       gst = netPremium * 0.18

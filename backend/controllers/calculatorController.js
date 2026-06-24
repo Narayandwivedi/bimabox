@@ -151,11 +151,14 @@ const generatePdf = async (req, res) => {
     if (premiums.odBase > 0) {
       odRows.push(['Vehicle Basic Rate', `${premiums.odRate}%`])
       odRows.push(['Basic OD Premium', fmt(premiums.odBase)])
-      if (premiums.odDiscountAmt > 0) {
-        odRows.push(['Discount on OD Premium', `-${fmt(premiums.odDiscountAmt)}`])
+      const odDiscAmt = premiums.odDiscountAmount || 0
+      if (odDiscAmt > 0) {
+        odRows.push(['Discount on OD Premium', `-${fmt(odDiscAmt)}`])
       }
-      // Always show NCB even if 0
-      odRows.push(['No Claim Bonus (NCB)', premiums.ncbDiscount > 0 ? `-${fmt(premiums.ncbDiscount)}` : fmt(0)])
+      const ncbDisc = premiums.ncbAmount || 0
+      if (ncbDisc > 0) {
+        odRows.push(['No Claim Bonus (NCB)', `-${fmt(ncbDisc)}`])
+      }
       if (premiums.imt23 > 0) {
         odRows.push(['IMT 23 Loading', fmt(premiums.imt23)])
       }

@@ -107,18 +107,18 @@ const generatePdf = async (req, res) => {
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Vehicle & Quotation Details', 40, y)
     y += 15
 
-    const gridH = 52
-    const colW = pageWidth / 4 // 128.75 pt
+    const gridH = 78
+    const colW = pageWidth / 4
 
     doc.rect(40, y, pageWidth, gridH).fillColor('#f8fafc').fill()
     doc.rect(40, y, pageWidth, gridH).strokeColor('#cbd5e1').lineWidth(1).stroke()
 
-    // Vertical lines
-    doc.moveTo(40 + colW, y).lineTo(40 + colW, y + gridH).strokeColor('#cbd5e1').stroke()
-    doc.moveTo(40 + colW * 2, y).lineTo(40 + colW * 2, y + gridH).strokeColor('#cbd5e1').stroke()
-    doc.moveTo(40 + colW * 3, y).lineTo(40 + colW * 3, y + gridH).strokeColor('#cbd5e1').stroke()
-    // Horizontal center line
-    doc.moveTo(40, y + 26).lineTo(40 + pageWidth, y + 26).strokeColor('#cbd5e1').stroke()
+    for (let i = 1; i < 4; i++) {
+      doc.moveTo(40 + colW * i, y).lineTo(40 + colW * i, y + gridH).strokeColor('#cbd5e1').stroke()
+    }
+    for (let i = 1; i < 3; i++) {
+      doc.moveTo(40, y + 26 * i).lineTo(40 + pageWidth, y + 26 * i).strokeColor('#cbd5e1').stroke()
+    }
 
     const drawGridCell = (colIdx, rowIdx, label, val) => {
       const cx = 40 + colIdx * colW
@@ -141,6 +141,9 @@ const generatePdf = async (req, res) => {
       drawGridCell(2, 1, 'IDV OF THE VEHICLE', fmt(data.idv))
     }
     drawGridCell(3, 1, 'NCB / OD / DEPR%', `${data.ncb || 0}% / ${data.odDiscount || 0}% / ${premiums.depreciation || 0}%`)
+
+    drawGridCell(0, 2, 'OD TERM (IN YEARS)', data.odTerm != null ? String(data.odTerm) : '—')
+    drawGridCell(1, 2, 'TP TERM (IN YEARS)', data.tpTerm != null ? String(data.tpTerm) : '—')
 
     y += gridH + 20
 

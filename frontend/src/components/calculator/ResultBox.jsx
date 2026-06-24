@@ -10,7 +10,7 @@ const ResultBox = ({
   result,
   policyType, vehicleType, isElectric, cc, kwPower, idv, ncb, odDiscount,
   zone, vehicleAge, manufacturingYear, selectedCategory, gstEnabled, subtype,
-  gvw,
+  gvw, bundleOdTerm, bundleTpTerm,
 }) => {
   const [showQuotationModal, setShowQuotationModal] = useState(false)
   const [pdfUrl, setPdfUrl] = useState('')
@@ -56,6 +56,8 @@ const ResultBox = ({
   const showOD = policyType !== 'tp'
   const showTP = policyType !== 'od'
   const isBundle = policyType === 'bundle'
+  const odTerm = isBundle ? (parseInt(bundleOdTerm) || 1) : (showOD ? 1 : '—')
+  const tpTerm = isBundle ? (parseInt(bundleTpTerm) || 1) : (showTP ? 1 : '—')
 
   const effectiveIdv = result.depreciatedIdv || (parseFloat(idv) || 0)
   const odBase = showOD ? effectiveIdv * (result.odRate / 100) : 0
@@ -267,6 +269,8 @@ const ResultBox = ({
         vehicleAge: vehicleAge === 'upto_5' ? '1 – 5 Yrs' : vehicleAge === '5_to_7' ? '6 – 7 Yrs' : 'Above 7 Yrs',
         mfgYear: manufacturingYear || undefined,
         policyType: policyLabel,
+        odTerm,
+        tpTerm,
         idv: parseFloat(idv) || 0,
         ncb,
         odDiscount: result.odDiscountVal,

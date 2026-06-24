@@ -408,6 +408,8 @@ const PremiumCalculator = () => {
                       subtype={subtype}
                       gvw={gvw}
                       gstEnabled={true}
+                      bundleOdTerm={bundleOdTerm}
+                      bundleTpTerm={bundleTpTerm}
                     />
                   )}
                 </div>

@@ -78,31 +78,6 @@ const generatePdf = async (req, res) => {
     
     y += 22
 
-    // ── Coverages Paragraphs ─────────────────────────────────────────────────
-    // Build addon & other lists
-    const premiums = data.premiums || {}
-    const addonsList = []
-    if (premiums.zeroDep > 0) addonsList.push(`Zero Depreciation (${fmt(premiums.zeroDep)})`)
-    if (premiums.rsa > 0) addonsList.push(`Roadside Assistance (${fmt(premiums.rsa)})`)
-    if (premiums.otherAddon > 0) addonsList.push(`Other Addon (${fmt(premiums.otherAddon)})`)
-    
-    const otherList = []
-    if (premiums.paOd > 0) otherList.push(`PA to Owner Driver (${fmt(premiums.paOd)})`)
-    if (premiums.llPd > 0) otherList.push(`LL to Paid Driver (${fmt(premiums.llPd)})`)
-    if (premiums.llEmployee > 0) otherList.push(`LL to Employee (${fmt(premiums.llEmployee)})`)
-    if (premiums.paUnnamed > 0) otherList.push(`PA to Unnamed Passenger (${fmt(premiums.paUnnamed)})`)
-
-    doc.rect(40, y, pageWidth, 42).fillColor('#f8fafc').fill()
-    doc.rect(40, y, pageWidth, 42).strokeColor('#e2e8f0').lineWidth(1).stroke()
-    
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#475569').text('Addon Coverage:', 50, y + 8)
-    doc.font('Helvetica').fillColor('#0f172a').text(addonsList.join(', ') || 'None Selected', 135, y + 8, { width: pageWidth - 150 })
-    
-    doc.font('Helvetica-Bold').fillColor('#475569').text('Other Coverage:', 50, y + 24)
-    doc.font('Helvetica').fillColor('#0f172a').text(otherList.join(', ') || 'None Selected', 135, y + 24, { width: pageWidth - 150 })
-
-    y += 52
-
     // ── Vehicle Details Grid ───────────────────────────────────────────────
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Vehicle & Quotation Details', 40, y)
     y += 15

@@ -20,6 +20,12 @@ const ResultBox = ({
   const [selectedCompany, setSelectedCompany] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [customerName, setCustomerName] = useState('')
+  const [vehicleNo, setVehicleNo] = useState('')
+  const [vehicleMake, setVehicleMake] = useState('')
+  const [vehicleModel, setVehicleModel] = useState('')
+  const [vehicleVariant, setVehicleVariant] = useState('')
+  const [modalStep, setModalStep] = useState(1)
   const { user } = useAuth()
 
   const insuranceCompanies = [
@@ -269,6 +275,11 @@ const ResultBox = ({
         vehicleAge: vehicleAge === 'upto_5' ? '1 – 5 Yrs' : vehicleAge === '5_to_7' ? '6 – 7 Yrs' : 'Above 7 Yrs',
         mfgYear: manufacturingYear || undefined,
         policyType: policyLabel,
+        customerName,
+        vehicleNo,
+        vehicleMake,
+        vehicleModel,
+        vehicleVariant,
         odTerm,
         tpTerm,
         idv: parseFloat(idv) || 0,
@@ -472,7 +483,7 @@ const ResultBox = ({
 
       <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
         <button
-          onClick={() => { setShowCompanyModal(true); setDropdownOpen(false); setSearchQuery('') }}
+          onClick={() => { setShowCompanyModal(true); setModalStep(1); setDropdownOpen(false); setSearchQuery('') }}
           className='w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-white font-black text-sm uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200'
         >
           <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -496,91 +507,146 @@ const ResultBox = ({
                   </svg>
                 </div>
                 <div>
-                  <h3 className='text-base font-black text-slate-800'>Select Insurance Company</h3>
-                  <p className='text-xs font-medium text-slate-400'>Choose the insurer for this quotation</p>
+                  <h3 className='text-base font-black text-slate-800'>Quotation Details</h3>
+                  <p className='text-xs font-medium text-slate-400'>Step {modalStep} of 2</p>
                 </div>
               </div>
             </div>
 
-            {/* Scrollable Content */}
-            <div className='p-6 overflow-y-auto flex-1'>
-              <div className='space-y-2'>
-                <button
-                  type='button'
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className='w-full flex items-center justify-between rounded-xl border-2 border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none bg-white transition-all'
-                >
-                  <span className={selectedCompany ? 'text-slate-800' : 'text-slate-400'}>{selectedCompany || '-- Select Insurance Company --'}</span>
-                  <svg className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
-                  </svg>
-                </button>
+            {/* Step 1: Customer & Vehicle Details */}
+            {modalStep === 1 && (
+              <div className='p-6 overflow-y-auto flex-1 space-y-4'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+                  <div>
+                    <label className='mb-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Customer Name</label>
+                    <input type='text' value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder='e.g. Rajesh Kumar'
+                      className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                  </div>
+                  <div>
+                    <label className='mb-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Vehicle No</label>
+                    <input type='text' value={vehicleNo} onChange={e => setVehicleNo(e.target.value)} placeholder='e.g. MH01AB1234'
+                      className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                  </div>
+                  <div>
+                    <label className='mb-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Make</label>
+                    <input type='text' value={vehicleMake} onChange={e => setVehicleMake(e.target.value)} placeholder='e.g. Maruti'
+                      className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                  </div>
+                  <div>
+                    <label className='mb-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Model</label>
+                    <input type='text' value={vehicleModel} onChange={e => setVehicleModel(e.target.value)} placeholder='e.g. Swift'
+                      className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                  </div>
+                  <div>
+                    <label className='mb-1 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Variant</label>
+                    <input type='text' value={vehicleVariant} onChange={e => setVehicleVariant(e.target.value)} placeholder='e.g. VXi'
+                      className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+                  </div>
+                </div>
+              </div>
+            )}
 
-                {dropdownOpen && (
-                  <div className='border-2 border-slate-200 rounded-xl bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-2 duration-150'>
-                    <div className='p-2 border-b border-slate-100'>
-                      <div className='flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2'>
-                        <svg className='h-4 w-4 text-slate-400 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
-                        </svg>
-                        <input
-                          type='text'
-                          placeholder='Search company...'
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className='w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400'
-                          autoFocus
-                        />
+            {/* Step 2: Insurance Company */}
+            {modalStep === 2 && (
+              <div className='p-6 overflow-y-auto flex-1 space-y-4'>
+                <div className='space-y-2'>
+                  <button
+                    type='button'
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className='w-full flex items-center justify-between rounded-xl border-2 border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none bg-white transition-all'
+                  >
+                    <span className={selectedCompany ? 'text-slate-800' : 'text-slate-400'}>{selectedCompany || '-- Select Insurance Company --'}</span>
+                    <svg className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                    </svg>
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className='border-2 border-slate-200 rounded-xl bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-2 duration-150'>
+                      <div className='p-2 border-b border-slate-100'>
+                        <div className='flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2'>
+                          <svg className='h-4 w-4 text-slate-400 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
+                          </svg>
+                          <input
+                            type='text'
+                            placeholder='Search company...'
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className='w-full bg-transparent text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400'
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className='overflow-y-auto' style={{ maxHeight: '200px' }}>
+                        {insuranceCompanies
+                          .filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((company) => (
+                            <button
+                              key={company}
+                              type='button'
+                              onClick={() => { setSelectedCompany(company); setDropdownOpen(false); setSearchQuery('') }}
+                              className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-b-0 ${
+                                selectedCompany === company
+                                  ? 'bg-blue-50 text-blue-700 font-bold'
+                                  : 'text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              {company}
+                            </button>
+                          ))}
+                        {insuranceCompanies.filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                          <p className='px-4 py-8 text-sm text-slate-400 text-center'>No companies found</p>
+                        )}
                       </div>
                     </div>
-                    <div className='overflow-y-auto' style={{ maxHeight: '240px' }}>
-                      {insuranceCompanies
-                        .filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map((company) => (
-                          <button
-                            key={company}
-                            type='button'
-                            onClick={() => { setSelectedCompany(company); setDropdownOpen(false); setSearchQuery('') }}
-                            className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-b-0 ${
-                              selectedCompany === company
-                                ? 'bg-blue-50 text-blue-700 font-bold'
-                                : 'text-slate-700 hover:bg-slate-50'
-                            }`}
-                          >
-                            {company}
-                          </button>
-                        ))}
-                      {insuranceCompanies.filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                        <p className='px-4 py-8 text-sm text-slate-400 text-center'>No companies found</p>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Fixed Bottom Buttons */}
             <div className='p-4 sm:p-6 pt-3 sm:pt-4 border-t border-slate-100'>
               <div className='flex gap-2 sm:gap-3'>
-                <button
-                  onClick={() => { setShowCompanyModal(false); setSelectedCompany(''); setDropdownOpen(false); setSearchQuery('') }}
-                  className='flex-1 rounded-xl border-2 border-slate-200 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98]'
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (!selectedCompany) {
-                      alert('Please select an insurance company.')
-                      return
-                    }
-                    setShowCompanyModal(false)
-                    generateQuotationPdf(selectedCompany)
-                  }}
-                  className='flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2 sm:py-3 text-xs sm:text-sm font-black text-white uppercase tracking-wider hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]'
-                >
-                  Generate Quotation
-                </button>
+                {modalStep === 1 ? (
+                  <>
+                    <button
+                      onClick={() => { setShowCompanyModal(false); setModalStep(1); setSelectedCompany(''); setDropdownOpen(false); setSearchQuery(''); setCustomerName(''); setVehicleNo(''); setVehicleMake(''); setVehicleModel(''); setVehicleVariant('') }}
+                      className='flex-1 rounded-xl border-2 border-slate-200 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98]'
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setModalStep(2)}
+                      className='flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2 sm:py-3 text-xs sm:text-sm font-black text-white uppercase tracking-wider hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]'
+                    >
+                      Next
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setModalStep(1)}
+                      className='flex-1 rounded-xl border-2 border-slate-200 py-2 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.98]'
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!selectedCompany) {
+                          alert('Please select an insurance company.')
+                          return
+                        }
+                        setShowCompanyModal(false)
+                        setModalStep(1)
+                        generateQuotationPdf(selectedCompany)
+                      }}
+                      className='flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2 sm:py-3 text-xs sm:text-sm font-black text-white uppercase tracking-wider hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]'
+                    >
+                      Generate Quotation
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 

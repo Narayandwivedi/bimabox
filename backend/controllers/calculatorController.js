@@ -78,6 +78,17 @@ const generatePdf = async (req, res) => {
     
     y += 22
 
+    // Customer name on top
+    if (data.customerName) {
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e293b').text(`Hi ${data.customerName},`, 40, y)
+      y += 16
+    }
+
+    // Build make/model/variant string
+    const mmv = [data.vehicleMake, data.vehicleModel, data.vehicleVariant].filter(Boolean).join(' ')
+    const vehicleNo = data.vehicleNo || ''
+    const premiums = data.premiums || {}
+
     // ── Vehicle Details Grid ───────────────────────────────────────────────
     doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('Vehicle & Quotation Details', 40, y)
     y += 15
@@ -102,12 +113,12 @@ const generatePdf = async (req, res) => {
       doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8, cy + 13, { width: colW - 16, height: 11, ellipsis: true })
     }
 
-    drawGridCell(0, 0, 'VEHICLE MAKE/MODEL', data.vehicleCategory || 'N/A')
+    drawGridCell(0, 0, vehicleNo ? 'VEHICLE NO' : 'VEHICLE MAKE/MODEL', vehicleNo || mmv || data.vehicleCategory || 'N/A')
     drawGridCell(1, 0, 'ZONE', data.zone || 'N/A')
     drawGridCell(2, 0, 'YEAR OF MANUFACTURE', data.mfgYear || 'N/A')
     drawGridCell(3, 0, 'VEHICLE TYPE', data.policyType || 'N/A')
 
-    drawGridCell(0, 1, 'REGISTRATION NO / SPEC', data.vehicleSpec || 'N/A')
+    drawGridCell(0, 1, vehicleNo ? (mmv ? 'MAKE/MODEL/VARIANT' : 'REGISTRATION NO / SPEC') : 'REGISTRATION NO / SPEC', vehicleNo ? (mmv || data.vehicleSpec || 'N/A') : (data.vehicleSpec || 'N/A'))
     drawGridCell(1, 1, 'VEHICLE AGE', data.vehicleAge || 'N/A')
     const hasDepreciation = premiums.depreciation > 0
     if (hasDepreciation) {

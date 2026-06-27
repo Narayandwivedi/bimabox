@@ -220,8 +220,8 @@ const Search = () => {
       'Valid From': r.validFrom || r.taxFrom || '',
       'Valid To': r.validTo || r.taxTo || '',
       'Remarks': r.remarks || '',
-      'Reference': r.reference || '',
-      'IMD': r.imd || '',
+      'Client Name': r.reference || '',
+      'Agent name (IMD)': r.imd || '',
     }))
     const ws = XLSX.utils.json_to_sheet(exportData)
     const wb = XLSX.utils.book_new()
@@ -509,10 +509,10 @@ const Search = () => {
                                   )}
                                 </div>
 
-                                {/* Reference */}
+                                {/* Client Name */}
                                 <div>
                                   <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                                    Reference
+                                    Client Name
                                   </label>
                                   <div className='relative'>
                                     <select
@@ -520,7 +520,7 @@ const Search = () => {
                                       onChange={(e) => setFilterReference(e.target.value)}
                                       className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
                                     >
-                                      <option value=''>All References</option>
+                                      <option value=''>All Client Names</option>
                                       {referencesList.map((r) => (
                                         <option key={r._id} value={r.name}>{r.name}</option>
                                       ))}
@@ -543,10 +543,10 @@ const Search = () => {
                                   )}
                                   </div>
 
-                                {/* IMD */}
+                                {/* Agent name */}
                                 <div>
                                   <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
-                                    IMD
+                                    Agent name (IMD)
                                   </label>
                                   <div className='relative'>
                                     <select
@@ -554,7 +554,7 @@ const Search = () => {
                                       onChange={(e) => setFilterImd(e.target.value)}
                                       className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/10 transition-all cursor-pointer'
                                     >
-                                      <option value=''>All IMD</option>
+                                      <option value=''>All Agent names</option>
                                       {imdList.map((r) => (
                                         <option key={r._id} value={r.name}>{r.name}</option>
                                       ))}

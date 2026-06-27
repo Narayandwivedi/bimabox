@@ -38,10 +38,10 @@ const IMD = () => {
           return exists ? prev : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
         setNewName('')
-        toast.success('IMD added')
+        toast.success('Agent name added')
       }
     } catch {
-      toast.error('Failed to add IMD')
+      toast.error('Failed to add Agent name')
     }
   }
 
@@ -54,21 +54,21 @@ const IMD = () => {
         setImds(prev => prev.map(r => r._id === id ? res.data.data : r))
         setEditingId(null)
         setEditName('')
-        toast.success('IMD renamed')
+        toast.success('Agent name renamed')
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to rename IMD')
+      toast.error(err.response?.data?.message || 'Failed to rename Agent name')
     }
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this IMD?')) return
+    if (!window.confirm('Delete this Agent name?')) return
     try {
       await axios.delete(`${API_URL}/api/imd/${id}`, { withCredentials: true })
       setImds(prev => prev.filter(r => r._id !== id))
-      toast.success('IMD deleted')
+      toast.success('Agent name deleted')
     } catch {
-      toast.error('Failed to delete IMD')
+      toast.error('Failed to delete Agent name')
     }
   }
 
@@ -88,7 +88,7 @@ const IMD = () => {
         <section className='w-full'>
           <div className='max-w-7xl mx-auto'>
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
-              <h1 className='text-xl font-black text-slate-900 mb-6'>IMD</h1>
+              <h1 className='text-xl font-black text-slate-900 mb-6'>Agent name</h1>
 
               <div className='flex gap-2 mb-6'>
                 <input
@@ -96,7 +96,7 @@ const IMD = () => {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Add new IMD...'
+                  placeholder='Add new Agent name...'
                   className='flex-1 max-w-xs px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
                 />
                 <button
@@ -114,7 +114,7 @@ const IMD = () => {
                 </div>
               ) : imds.length === 0 ? (
                 <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
-                  <p className='text-sm font-bold text-slate-500'>No IMDs yet.</p>
+                  <p className='text-sm font-bold text-slate-500'>No Agent names yet.</p>
                 </div>
               ) : (
                 <div className='space-y-2'>

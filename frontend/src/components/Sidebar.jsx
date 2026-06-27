@@ -45,7 +45,7 @@ const mainNavItems = [
   { name: 'Search', path: '/search', icon: navIcons.search },
   { name: 'Renewals', path: '/renewals', icon: navIcons.renewal },
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
-  { name: 'References', path: '/references', icon: navIcons.reference },
+  { name: 'Client Names', path: '/references', icon: navIcons.reference },
   { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]
 

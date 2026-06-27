@@ -624,7 +624,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 <div className='md:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
                   <div className='relative'>
                     <div className='flex items-center gap-1.5 mb-1'>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>Reference</label>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>Client Name</label>
                       <button
                         type='button'
                         onClick={() => { setShowAddReference(true); setNewReferenceName('') }}
@@ -643,7 +643,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                         onFocus={() => { setReferenceSearch(''); setReferenceDropdownOpen(true) }}
                         onChange={(e) => { setReferenceSearch(e.target.value); setReferenceDropdownOpen(true) }}
                         onBlur={() => setTimeout(() => setReferenceDropdownOpen(false), 200)}
-                        placeholder='Select or type reference...'
+                        placeholder='Select or type Client Name...'
                         className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white pr-10'
                       />
                       {formData.reference && !referenceDropdownOpen ? (
@@ -651,7 +651,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                           type='button'
                           onClick={() => setFormData(prev => ({ ...prev, reference: '' }))}
                           className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer'
-                          title='Clear reference'
+                          title='Clear Client Name'
                         >
                           <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -684,7 +684,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                           ))
                         ) : (
                           <div className='px-3 py-2 text-sm text-gray-400'>
-                            {referenceSearch ? 'No matching reference found' : 'No references yet'}
+                            {referenceSearch ? 'No matching Client Name found' : 'No Client Names yet'}
                           </div>
                         )}
                       </div>
@@ -693,7 +693,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
                   <div className='relative'>
                     <div className='flex items-center gap-1.5 mb-1'>
-                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>IMD</label>
+                      <label className='block text-xs md:text-sm font-semibold text-gray-700'>Agent name (IMD)</label>
                       <button
                         type='button'
                         onClick={() => { setShowAddImd(true); setNewImdName('') }}
@@ -712,7 +712,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                         onFocus={() => { setImdSearch(''); setImdDropdownOpen(true) }}
                         onChange={(e) => { setImdSearch(e.target.value); setImdDropdownOpen(true) }}
                         onBlur={() => setTimeout(() => setImdDropdownOpen(false), 200)}
-                        placeholder='Select or type IMD...'
+                        placeholder='Select or type Agent name...'
                         className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white pr-10'
                       />
                       {formData.imd && !imdDropdownOpen ? (
@@ -720,7 +720,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                           type='button'
                           onClick={() => setFormData(prev => ({ ...prev, imd: '' }))}
                           className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer'
-                          title='Clear IMD'
+                          title='Clear Agent name'
                         >
                           <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -753,7 +753,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                           ))
                         ) : (
                           <div className='px-3 py-2 text-sm text-gray-400'>
-                            {imdSearch ? 'No matching IMD found' : 'No IMDs yet'}
+                            {imdSearch ? 'No matching Agent name found' : 'No Agent names yet'}
                           </div>
                         )}
                       </div>
@@ -849,12 +849,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       {showAddReference && (
         <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName('') }}>
           <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
-            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Reference</h3>
+            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Client Name</h3>
             <input
               type='text'
               value={newReferenceName}
               onChange={(e) => setNewReferenceName(e.target.value)}
-              placeholder='Enter reference name'
+              placeholder='Enter Client Name'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-4'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
@@ -870,12 +870,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       {showAddImd && (
         <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName('') }}>
           <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
-            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New IMD</h3>
+            <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Agent name</h3>
             <input
               type='text'
               value={newImdName}
               onChange={(e) => setNewImdName(e.target.value)}
-              placeholder='Enter IMD name'
+              placeholder='Enter Agent name'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-4'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}

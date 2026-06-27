@@ -201,7 +201,7 @@ const createRecordController = (config) => {
             const parts = req.query.dateFrom.split('-')
             if (parts.length === 3) {
               const fromDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
-              const recordDate = parseDateString(record[expiryField] || record.validFrom || record.taxFrom)
+              const recordDate = parseDateString(record.issueDate)
               if (recordDate && recordDate < fromDate) return false
             }
           }
@@ -210,7 +210,7 @@ const createRecordController = (config) => {
             if (parts.length === 3) {
               const toDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
               toDate.setHours(23, 59, 59, 999)
-              const recordDate = parseDateString(record[expiryField] || record.validFrom || record.taxFrom)
+              const recordDate = parseDateString(record.issueDate)
               if (recordDate && recordDate > toDate) return false
             }
           }

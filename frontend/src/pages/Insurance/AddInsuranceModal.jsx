@@ -446,6 +446,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!formData.issueDate) {
+      toast.error('Issue Date is required')
+      setIsSubmitting(false)
+      return
+    }
+
     setIsSubmitting(true)
 
     let uploadedDocumentPath = formData.insuranceDocument;
@@ -558,8 +564,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               </h3>
               <div className='grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4'>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Issue Date <span className='text-xs text-gray-500'>(Optional)</span></label>
-                  <input type='date' name='issueDate' value={formData.issueDate ? formData.issueDate.split('-').reverse().join('-') : ''} onChange={handleChange} tabIndex='1' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' />
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Issue Date <span className='text-red-500'>*</span></label>
+                  <input type='date' name='issueDate' value={formData.issueDate ? formData.issueDate.split('-').reverse().join('-') : ''} onChange={handleChange} tabIndex='1' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white' required />
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Vehicle Number</label>

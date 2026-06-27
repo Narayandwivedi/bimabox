@@ -16,7 +16,7 @@ const Hero = () => {
         </h1>
         <p className='text-base md:text-lg text-slate-500 mt-4 max-w-3xl mx-auto leading-relaxed'>
           A powerful software built for insurance agents to digitalize their workflow — track policies, 
-          manage client documents, monitor renewals, analyze profits, and grow your business. 
+          manage encrypted client documents, monitor renewals, analyze profits, and grow your business. 
           No more paper clutter, missed follow-ups, or lost files.
         </p>
         <div className='flex flex-col sm:flex-row items-center justify-center gap-3 mt-8'>

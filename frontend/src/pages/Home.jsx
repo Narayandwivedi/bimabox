@@ -40,25 +40,24 @@ const features = [
     title: 'Expiry Alerts',
     description: 'Get smart notifications before your documents expire. Never miss a renewal deadline again.',
   },
-  {
-    icon: (
-      <svg className='h-6 w-6 text-rose-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
-      </svg>
-    ),
-    title: 'Multi-Vehicle',
-    description: 'Manage all your vehicles from a single dashboard. Perfect for fleet owners and families.',
-  },
-  {
-    icon: (
-      <svg className='h-6 w-6 text-indigo-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
-      </svg>
-    ),
-    title: 'Secure & Private',
-    description: 'Your data is encrypted and protected. We never share your information with third parties.',
-  },
+    {
+      icon: (
+        <svg className='h-6 w-6 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' />
+        </svg>
+      ),
+      title: 'WhatsApp Alerts',
+      description: 'Automated renewal reminders and notifications sent directly to your clients via WhatsApp. Never miss a follow-up.',
+    },
+    {
+      icon: (
+        <svg className='h-6 w-6 text-indigo-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z' />
+        </svg>
+      ),
+      title: 'Auto AI Entry',
+      description: 'Upload any document and let AI auto-extract all details in seconds. No manual data entry needed.',
+    },
 ]
 
 const stats = [

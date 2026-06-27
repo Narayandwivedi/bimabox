@@ -53,7 +53,7 @@ const BottomNavigation = () => {
   ]
 
   return (
-    <nav className='fixed bottom-0 left-0 right-0 z-50 block border-t border-slate-200 bg-white/80 pb-safe backdrop-blur-lg md:hidden'>
+    <nav className='fixed bottom-0 left-0 right-0 z-50 block border-t border-slate-200 bg-white/80 pb-safe backdrop-blur-lg lg:hidden'>
       <div className='flex items-center justify-around px-2 py-3'>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path

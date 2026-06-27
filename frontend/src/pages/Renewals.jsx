@@ -173,9 +173,9 @@ const Renewals = () => {
                             </svg>
                           </div>
                           <div className='min-w-0 flex-1'>
-                            <h3 className='text-sm font-bold text-slate-900 truncate'>{policy.insuranceCompany}</h3>
+                            <h3 className='text-sm font-bold text-slate-900 truncate'>{policy.policyHolderName}</h3>
                             <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber}</p>
-                            <p className='text-[9px] text-slate-400'>{policy.policyHolderName}</p>
+                            <p className='text-[9px] text-slate-400'>{policy.insuranceCompany}</p>
                           </div>
                           <div className='text-right'>
                             <p className={`text-[11px] font-black ${policy.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'}`}>
@@ -228,9 +228,8 @@ const Renewals = () => {
                   <table className='w-full text-left'>
                     <thead>
                       <tr className='border-b border-slate-100 bg-slate-50/50'>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Vehicle</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Policy No</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Class</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
@@ -247,14 +246,14 @@ const Renewals = () => {
                             status === 'renewed' ? 'bg-emerald-50/20' : status === 'lost' ? 'bg-red-50/20' : ''
                           }`}>
                             <td className='px-4 py-2'>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-sm font-bold text-slate-800'>{policy.insuranceCompany}</span>
-                              </div>
+                              <div className='text-sm font-bold text-slate-800'>{policy.policyHolderName || '—'}</div>
+                              <div className='font-mono text-[10px] text-slate-500'>{policy.vehicleNumber}</div>
                             </td>
                             <td className='px-4 py-2'>
-                              <span className='font-mono text-xs font-bold text-slate-600'>{policy.vehicleNumber}</span>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-xs font-medium text-slate-500'>{policy.insuranceCompany}</span>
+                              </div>
                             </td>
-                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.policyHolderName || '—'}</td>
                             <td className='px-4 py-2'>
                               <span className='text-xs font-semibold text-slate-600'>{policy.policyNumber || '—'}</span>
                             </td>

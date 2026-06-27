@@ -1,57 +1,36 @@
-import { Link, useLocation } from 'react-router-dom'
-import { getTheme } from '../context/ThemeContext'
-
-const desktopMenuItems = [
-  { name: 'Home', path: '/' },
-  { name: 'Premium', path: '/premium-calculator' },
-  { name: 'Settings', path: '/setting' },
-]
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
-  const location = useLocation()
-  const theme = getTheme()
-
-  const isActive = (path) => location.pathname === path
-
   return (
-    <nav className={`fixed top-0 left-0 right-0 ${theme.navbar} z-50 transition-all duration-300`}>
-      <div className='mx-auto flex h-16 lg:h-20 max-w-screen-2xl items-center px-4 lg:px-48'>
-        {/* Logo Section - Left Aligned with offset */}
-        <div className='flex-none'>
-          <Link to='/' className='flex items-center gap-1.5'>
-            <img src='/bimalogo.png' alt='BimaBox' className='h-[50px] w-auto' />
-            <div className='flex flex-col'>
-              <span className='text-[20px] font-bold leading-none lg:pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}>
-                <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
-              </span>
-              <span className='mt-0.5 text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
-            </div>
-          </Link>
+    <nav className='fixed top-0 left-0 right-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 md:px-8'>
+      <Link to='/' className='flex items-center gap-1.5'>
+        <img src='/bimalogo.png' alt='BimaBox' className='h-[50px] w-auto' />
+        <div className='flex flex-col'>
+          <span className='text-[20px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
+          </span>
+          <span className='mt-0.5 text-[6px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
         </div>
-
-        {/* Desktop Menu - Rightish Center */}
-        <div className='hidden lg:flex flex-1 justify-center items-center gap-10 ml-24 font-inter'>
-          {desktopMenuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`text-sm font-semibold transition-all hover:text-blue-600 hover:-translate-y-0.5 transform active:scale-95 ${
-                isActive(item.path)
-                  ? 'text-blue-600'
-                  : 'text-slate-600'
-              }`}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop Right Spacer to ensure 'rightish' center */}
-        <div className='hidden lg:block w-48'></div>
+      </Link>
+      <div className='flex items-center gap-3'>
+        <Link
+          to='/contact-us'
+          className='hidden sm:inline-flex text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors'
+        >
+          Contact
+        </Link>
+        <Link
+          to='/login'
+          className='inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95'
+        >
+          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1' />
+          </svg>
+          Login
+        </Link>
       </div>
     </nav>
   )
 }
 
 export default Navbar
-

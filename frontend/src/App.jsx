@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './context/AuthContext'
-import { ThemeProvider } from './context/ThemeContext'
+import { ThemeProvider, getTheme } from './context/ThemeContext'
+import { useAuth } from './context/AuthContext'
 import Sidebar from './components/Sidebar'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
@@ -21,19 +23,23 @@ import IMD from './pages/IMD'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
-import { getTheme } from './context/ThemeContext'
-
-import { Agentation } from "agentation";
-
-
 
 function AppContent() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { isAuthenticated, loading } = useAuth()
   const isLoginPage = location.pathname === '/login'
-  const isHomePage = location.pathname === '/'
-  const showNav = !isLoginPage
+  const isLandingPage = location.pathname === '/'
+  const publicPages = ['/privacy-policy', '/terms-and-conditions', '/contact-us']
+  const isPublicPage = publicPages.includes(location.pathname)
+  const showNav = !isLoginPage && !isLandingPage && (isAuthenticated || !isPublicPage)
   const theme = getTheme()
+
+  useEffect(() => {
+    if (isLandingPage && isAuthenticated && !loading) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isLandingPage, isAuthenticated, loading, navigate])
 
   return (
     <>
@@ -42,7 +48,7 @@ function AppContent() {
 
       {showNav && (
         <nav className={`fixed top-0 left-0 right-0 z-20 flex h-16 items-center border-b border-slate-200 lg:hidden ${theme.navbar}`}>
-          {!isHomePage && (
+          {location.pathname !== '/' && (
             <button onClick={() => navigate(-1)} className='ml-3 p-2 text-slate-600 hover:text-slate-900 transition cursor-pointer' title='Go back'>
               <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
@@ -60,13 +66,13 @@ function AppContent() {
               </div>
             </Link>
           </div>
-          {!isHomePage && <div className='w-12' />}
+          {location.pathname !== '/' && <div className='w-12' />}
         </nav>
       )}
 
       <div className={showNav ? 'lg:ml-[260px]' : ''}>
         <div className={showNav ? 'pt-16 pb-20 lg:pt-0 lg:pb-0' : ''}>
-          {showNav && !isHomePage && (
+          {showNav && location.pathname !== '/' && (
             <button onClick={() => navigate(-1)} className='hidden lg:flex fixed top-4 left-[274px] z-30 h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer' title='Go back'>
               <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
@@ -75,7 +81,7 @@ function AppContent() {
           )}
           <Routes>
             <Route path='/login' element={<Login />} />
-            <Route path='/' element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path='/' element={<Home />} />
             <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path='/setting' element={<ProtectedRoute><Setting /></ProtectedRoute>} />
             <Route path='/search' element={<ProtectedRoute><Search /></ProtectedRoute>} />
@@ -86,13 +92,12 @@ function AppContent() {
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
             <Route path='/references' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
             <Route path='/imd' element={<ProtectedRoute><IMD /></ProtectedRoute>} />
-            <Route path='/privacy-policy' element={<ProtectedRoute><PrivacyPolicy /></ProtectedRoute>} />
-            <Route path='/terms-and-conditions' element={<ProtectedRoute><TermsAndConditions /></ProtectedRoute>} />
-            <Route path='/contact-us' element={<ProtectedRoute><ContactUs /></ProtectedRoute>} />
+            <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+            <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
+            <Route path='/contact-us' element={<ContactUs />} />
           </Routes>
         </div>
       </div>
-      {/* {<Agentation />} */}
       {showNav && <BottomNavigation />}
     </>
   )

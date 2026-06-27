@@ -41,7 +41,7 @@ const navIcons = {
 }
 
 const mainNavItems = [
-  { name: 'Home', path: '/', icon: navIcons.home },
+  { name: 'Dashboard', path: '/dashboard', icon: navIcons.home },
   { name: 'Search', path: '/search', icon: navIcons.search },
   { name: 'Renewals', path: '/renewals', icon: navIcons.renewal },
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
@@ -71,7 +71,7 @@ const Sidebar = () => {
     >
       <div className='flex h-full flex-col'>
         <div className='flex-none border-b border-slate-100 px-5 py-5'>
-          <Link to='/' className='flex items-center justify-center gap-1'>
+          <Link to='/dashboard' className='flex items-center justify-center gap-1'>
             <img src='/bimalogo.png' alt='BimaBox' className='h-[72px] w-auto' />
             <div className='flex flex-col'>
               <span className='text-[26px] font-bold leading-none pt-0.5' style={{ fontFamily: "'Poppins', sans-serif" }}><span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span></span>

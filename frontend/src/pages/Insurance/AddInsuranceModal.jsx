@@ -83,6 +83,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [uploadedInsuranceFile, setUploadedInsuranceFile] = useState(null)
   const [uploadedEndorsementDocument, setUploadedEndorsementDocument] = useState(null)
   const [uploadedEndorsementFile, setUploadedEndorsementFile] = useState(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [references, setReferences] = useState([])
   const [referenceDropdownOpen, setReferenceDropdownOpen] = useState(false)
   const [referenceSearch, setReferenceSearch] = useState('')
@@ -422,14 +423,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     }
   }
 
-  const handleManualDocumentUpload = (e) => {
-    const file = e.target.files?.[0]
+  const processInsuranceFile = (file) => {
     if (!file) return
     
     if (file.size > 15 * 1024 * 1024) {
       toast.error('File size must be less than 15MB.', { position: 'top-right', autoClose: 3000 })
-      e.target.value = ''
-      return
+      return false
     }
 
     if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
@@ -444,10 +443,50 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         }
       })
       toast.success('Document attached successfully!', { position: 'top-right', autoClose: 2000 })
-      e.target.value = ''
-      return
+      return true
     }
     toast.error('Please upload an image or PDF file.', { position: 'top-right', autoClose: 3000 })
+    return false
+  }
+
+  const handleManualDocumentUpload = (e) => {
+    const file = e.target.files?.[0]
+    processInsuranceFile(file)
+    e.target.value = ''
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDragEnter = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragOver(false)
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    const success = processInsuranceFile(file)
+    if (success && file) {
+      if (file.type === 'application/pdf') {
+        processExtraction(file)
+      } else if (file.type.startsWith('image/')) {
+        setScanningFile(file)
+      }
+    }
   }
 
   const handleManualEndorsementUpload = (e) => {
@@ -603,8 +642,25 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
-      <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] md:max-h-[95vh] overflow-hidden flex flex-col'>
+    <div
+      className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] md:max-h-[95vh] overflow-hidden flex flex-col relative'>
+        {isDragOver && (
+          <div className='absolute inset-0 z-50 flex items-center justify-center bg-indigo-600/90 rounded-xl md:rounded-2xl'>
+            <div className='text-white text-center px-6'>
+              <svg className='w-12 h-12 mx-auto mb-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
+              </svg>
+              <p className='text-xl font-bold'>Drop your file here</p>
+              <p className='text-sm text-indigo-200 mt-1'>PDF or Image (max 15MB)</p>
+            </div>
+          </div>
+        )}
         <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-3 md:p-4 text-white flex-shrink-0'>
           <div className='flex justify-between items-center'>
             <div>

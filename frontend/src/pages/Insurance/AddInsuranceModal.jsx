@@ -611,19 +611,19 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               <h2 className='text-lg md:text-2xl font-bold'>{isEditMode ? 'Edit Insurance' : 'Add New Insurance'}</h2>
               <p className='text-blue-100 text-xs md:text-sm mt-1'>{isEditMode ? 'Update insurance record' : 'Add insurance record'}</p>
             </div>
-            <div className='flex items-center gap-3'>
+            <div className='flex items-center gap-1 md:gap-3'>
               <div className='relative overflow-hidden'>
-                <button type='button' className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 max-w-full'>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type='button' className='relative px-1.5 py-1 md:px-3 md:py-1.5 bg-white/20 hover:bg-white/30 text-white text-[10px] md:text-sm font-semibold rounded-lg transition flex items-center gap-1 md:gap-2 max-w-full'>
+                  <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  Upload Document
+                  Upload Doc
                 </button>
                 <input type='file' accept='image/*, application/pdf' onChange={handleManualDocumentUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
               </div>
               <div className='relative overflow-hidden'>
-                <button type='button' className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 max-w-full'>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type='button' className='relative px-1.5 py-1 md:px-3 md:py-1.5 bg-white/20 hover:bg-white/30 text-white text-[10px] md:text-sm font-semibold rounded-lg transition flex items-center gap-1 md:gap-2 max-w-full'>
+                  <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" />
                   </svg>
                   Upload Endorsement

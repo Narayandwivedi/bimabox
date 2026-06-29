@@ -9,7 +9,7 @@ const base = createRecordController({
   requiredDateField: 'validFrom',
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'reference', 'imd'],
-  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'remarks', 'reference', 'imd', 'renewalStatus'],
+  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'endorsementDocument', 'remarks', 'reference', 'imd', 'renewalStatus'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
   numberFields: ['premium'],
   documentField: 'insuranceDocument',

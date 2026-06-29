@@ -78,7 +78,7 @@ const Renewals = () => {
     if (statusFilter === 'renewed') return s === 'renewed'
     if (statusFilter === 'lost') return s === 'lost'
     return s === 'pending'
-  }).filter((p) => p.daysLeft <= expiryFilter)
+  }).filter((p) => p.daysLeft >= 0 && p.daysLeft <= expiryFilter)
 
   const statusTabs = [
     { key: 'pending', label: 'Pending' },

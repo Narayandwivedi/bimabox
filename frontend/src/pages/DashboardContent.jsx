@@ -52,7 +52,7 @@ const DashboardContent = () => {
   const [showAddVehicleModal, setShowAddVehicleModal] = useState(false)
   const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
   const [showUploadOptions, setShowUploadOptions] = useState(false)
-  const [expiryFilter, setExpiryFilter] = useState(30)
+
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
   const [loadingDocs, setLoadingDocs] = useState(true)
@@ -135,15 +135,15 @@ const DashboardContent = () => {
     try {
       setLoadingDocs(true)
       const endpoints = [
-        { type: 'Tax', url: `${API_URL}/api/tax`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald' },
-        { type: 'PUC', url: `${API_URL}/api/puc`, fromField: 'validFrom', toField: 'validTo', color: 'amber' },
-        { type: 'GPS', url: `${API_URL}/api/gps`, fromField: 'validFrom', toField: 'validTo', color: 'indigo' },
-        { type: 'Fitness', url: `${API_URL}/api/fitness`, fromField: 'validFrom', toField: 'validTo', color: 'rose' },
-        { type: 'Insurance', url: `${API_URL}/api/insurance`, fromField: 'validFrom', toField: 'validTo', color: 'blue' },
-        { type: 'Permit', url: `${API_URL}/api/permit`, fromField: 'validFrom', toField: 'validTo', color: 'teal' },
+        { type: 'Tax', url: `${API_URL}/api/tax/expiring-soon`, fromField: 'taxFrom', toField: 'taxTo', color: 'emerald' },
+        { type: 'PUC', url: `${API_URL}/api/puc/expiring-soon`, fromField: 'validFrom', toField: 'validTo', color: 'amber' },
+        { type: 'GPS', url: `${API_URL}/api/gps/expiring-soon`, fromField: 'validFrom', toField: 'validTo', color: 'indigo' },
+        { type: 'Fitness', url: `${API_URL}/api/fitness/expiring-soon`, fromField: 'validFrom', toField: 'validTo', color: 'rose' },
+        { type: 'Insurance', url: `${API_URL}/api/insurance/expiring-soon`, fromField: 'validFrom', toField: 'validTo', color: 'blue' },
+        { type: 'Permit', url: `${API_URL}/api/permit/expiring-soon`, fromField: 'validFrom', toField: 'validTo', color: 'teal' },
       ]
 
-      const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true, params: { limit: 1000 } }))
+      const requests = endpoints.map(ep => axios.get(ep.url, { withCredentials: true }))
       const responses = await Promise.allSettled(requests)
 
       let allDocs = []
@@ -170,12 +170,7 @@ const DashboardContent = () => {
         }
       })
 
-      allDocs.sort((a, b) => {
-        const aExpired = a.daysLeft < 0 ? 1 : 0
-        const bExpired = b.daysLeft < 0 ? 1 : 0
-        if (aExpired !== bExpired) return aExpired - bExpired
-        return a.daysLeft - b.daysLeft
-      })
+      allDocs.sort((a, b) => a.daysLeft - b.daysLeft)
       setRealExpiringDocs(allDocs)
     } catch (error) {
       console.error('Error fetching expiring documents:', error)
@@ -335,30 +330,12 @@ const DashboardContent = () => {
                 </button>
               </div>
 
-              <div className='mb-6 flex items-center justify-between'>
-                <h2 className='text-lg font-black text-slate-900'>Expiring Soon</h2>
-                <div className='flex items-center gap-1.5 rounded-xl bg-slate-100 p-1'>
-                  {[15, 30, 60].map((days) => (
-                    <button
-                      key={days}
-                      onClick={() => setExpiryFilter(days)}
-                      className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        expiryFilter === days
-                          ? 'bg-white text-blue-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      {days}<span className='lowercase'>d</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <h2 className='mb-6 text-lg font-black text-slate-900'>Expiring Soon</h2>
 
               {(() => {
                 const filteredDocs = realExpiringDocs.filter(doc => 
-                  (doc.vehicleNumber.toUpperCase().includes(searchQuery.toUpperCase()) || 
-                   doc.type.toUpperCase().includes(searchQuery.toUpperCase())) && 
-                  doc.daysLeft <= expiryFilter
+                  doc.vehicleNumber.toUpperCase().includes(searchQuery.toUpperCase()) || 
+                  doc.type.toUpperCase().includes(searchQuery.toUpperCase())
                 ).slice(0, 12)
 
                 return (

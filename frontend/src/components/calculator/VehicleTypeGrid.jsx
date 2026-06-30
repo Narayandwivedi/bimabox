@@ -10,8 +10,7 @@ const VehicleTypeGrid = ({ handleVehicleSelect }) => (
             onClick={() => handleVehicleSelect(v.id)}
             className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border-2 bg-white px-3 py-2 sm:py-4 md:py-2 text-center transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] ${v.light}`}
           >
-            <div className={`absolute -right-4 -top-4 h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 rounded-full bg-gradient-to-br ${v.gradient} opacity-10 transition-all group-hover:opacity-20 group-hover:scale-110`} />
-            <span className='flex-1 flex items-center justify-center mb-2'>{v.image ? <div className={`w-full flex items-center justify-center rounded-xl p-2 sm:p-3 ${v.imageBg}`}><img src={v.image} alt={v.label} className='h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain' /></div> : <span className='text-5xl sm:text-6xl'>{v.icon}</span>}</span>
+            <span className='flex-1 flex items-center justify-center mb-2'>{v.image ? <div className='w-full flex items-center justify-center rounded-xl p-2 sm:p-3'><img src={v.image} alt={v.label} className='h-28 w-28 sm:h-32 sm:w-32 md:h-40 md:w-40 object-contain' /></div> : <span className='text-5xl sm:text-6xl'>{v.icon}</span>}</span>
             <h3 className='text-[11px] sm:text-sm font-black text-slate-900 leading-tight'>{v.label}</h3>
             <p className='mt-0.5 text-[9px] sm:text-[10px] font-bold text-slate-400'>{v.desc}</p>
           </button>

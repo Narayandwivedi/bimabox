@@ -13,6 +13,9 @@ const Renewals = () => {
   const [statusFilter, setStatusFilter] = useState('pending')
   const [confirmModal, setConfirmModal] = useState(null)
 
+  // Max days past expiry to still show in renewals
+  const MAX_EXPIRED_DAYS = 60
+
   const calculateDaysLeft = (validTo) => {
     if (!validTo || validTo === 'N/A' || validTo === 'None') return 9999
     const expiryDate = parseDate(validTo)
@@ -39,9 +42,15 @@ const Renewals = () => {
           const daysLeft = calculateDaysLeft(record.validTo)
           return { ...record, daysLeft }
         })
-        const upcoming = records.filter((r) => r.daysLeft > 0)
-        upcoming.sort((a, b) => a.daysLeft - b.daysLeft)
-        setPolicies(upcoming)
+        // Include all policies within range OR with action already taken
+        const relevant = records.filter((r) => {
+          const status = r.renewalStatus || 'pending'
+          if (status === 'renewed' || status === 'lost') return true
+          // Pending: show expiring soon OR expired within MAX_EXPIRED_DAYS
+          return r.daysLeft !== 9999 && r.daysLeft >= -MAX_EXPIRED_DAYS
+        })
+        relevant.sort((a, b) => a.daysLeft - b.daysLeft)
+        setPolicies(relevant)
       }
     } catch (err) {
       console.error('Error fetching insurance:', err)
@@ -77,13 +86,31 @@ const Renewals = () => {
     const s = p.renewalStatus || 'pending'
     if (statusFilter === 'renewed') return s === 'renewed'
     if (statusFilter === 'lost') return s === 'lost'
-    return s === 'pending'
-  }).filter((p) => p.daysLeft >= 0 && p.daysLeft <= expiryFilter)
+    // Pending tab: show expired (within 60 days past) OR expiring within expiryFilter days
+    if (s !== 'pending') return false
+    const isExpired = p.daysLeft < 0
+    const isExpiringSoon = p.daysLeft >= 0 && p.daysLeft <= expiryFilter
+    return isExpired || isExpiringSoon
+  })
+
+  // Count badges for tabs
+  const expiredPendingCount = policies.filter(
+    (p) => (p.renewalStatus || 'pending') === 'pending' && p.daysLeft < 0
+  ).length
+
+  const pendingCount = policies.filter((p) => {
+    const s = p.renewalStatus || 'pending'
+    if (s !== 'pending') return false
+    return (p.daysLeft < 0) || (p.daysLeft >= 0 && p.daysLeft <= expiryFilter)
+  }).length
+
+  const renewedCount = policies.filter((p) => p.renewalStatus === 'renewed').length
+  const lostCount = policies.filter((p) => p.renewalStatus === 'lost').length
 
   const statusTabs = [
-    { key: 'pending', label: 'Pending' },
-    { key: 'renewed', label: 'Renewal Done' },
-    { key: 'lost', label: 'Business Lost' },
+    { key: 'pending', label: 'Pending', count: pendingCount },
+    { key: 'renewed', label: 'Renewal Done', count: renewedCount },
+    { key: 'lost', label: 'Business Lost', count: lostCount },
   ]
 
   return (
@@ -91,47 +118,72 @@ const Renewals = () => {
       <main className='px-2 pt-3 pb-32 lg:px-8 lg:pt-4'>
         <div className='max-w-7xl mx-auto'>
           <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
-            <div className='mb-4 flex items-center justify-between'>
+
+            {/* Header Row */}
+            <div className='mb-4 flex items-center justify-between flex-wrap gap-3'>
               <div className='flex items-center gap-3'>
                 <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600'>
                   <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' />
                   </svg>
                 </div>
-                <h2 className='text-lg font-black text-slate-900'>Renewals</h2>
+                <div>
+                  <h2 className='text-lg font-black text-slate-900'>Renewals</h2>
+                  {expiredPendingCount > 0 && statusFilter === 'pending' && (
+                    <p className='text-[10px] font-bold text-rose-500 uppercase tracking-wide'>
+                      {expiredPendingCount} expired · action needed
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className='flex items-center gap-1.5 rounded-xl bg-slate-100 p-1'>
-                {[15, 30, 60].map((days) => (
-                  <button
-                    key={days}
-                    onClick={() => setExpiryFilter(days)}
-                    className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                      expiryFilter === days
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {days}<span className='lowercase'>d</span>
-                  </button>
-                ))}
-              </div>
+
+              {/* Day-range filter — only for Pending tab */}
+              {statusFilter === 'pending' && (
+                <div className='flex items-center gap-1 rounded-xl bg-slate-100 p-1'>
+                  {[15, 30, 60, 90].map((days) => (
+                    <button
+                      key={days}
+                      onClick={() => setExpiryFilter(days)}
+                      className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                        expiryFilter === days
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      {days}<span className='lowercase'>d</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className='mb-6 flex items-center gap-1.5 rounded-xl bg-slate-100 p-1 w-fit'>
+            {/* Status Tabs */}
+            <div className='mb-4 flex items-center gap-1 rounded-xl bg-slate-100 p-1 w-full lg:w-fit'>
               {statusTabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`rounded-lg px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`flex flex-1 lg:flex-none items-center justify-center gap-1 rounded-lg px-2 py-2 lg:px-4 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider transition-all ${
                     statusFilter === tab.key
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  {tab.label}
+                  <span className='truncate'>{tab.label}</span>
+                  {tab.count > 0 && (
+                    <span className={`inline-flex flex-shrink-0 items-center justify-center rounded-full px-1 py-0.5 text-[8px] lg:text-[9px] font-black leading-none ${
+                      statusFilter === tab.key
+                        ? tab.key === 'lost' ? 'bg-red-100 text-red-600' : tab.key === 'renewed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                        : 'bg-slate-300 text-slate-600'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+
+
 
             {loading ? (
               <div className='text-center py-12'>
@@ -151,9 +203,10 @@ const Renewals = () => {
             ) : (
               <>
                 <div className='space-y-3 lg:hidden'>
-                    {filteredPolicies.map((policy) => {
+                  {filteredPolicies.map((policy) => {
                     const status = policy.renewalStatus || ''
                     const isResolved = status === 'renewed' || status === 'lost'
+                    const isExpired = policy.daysLeft < 0
                     return (
                       <div
                         key={policy._id}
@@ -163,23 +216,37 @@ const Renewals = () => {
                             ? 'border-emerald-300 bg-emerald-50/30'
                             : status === 'lost'
                             ? 'border-red-300 bg-red-50/30'
+                            : isExpired
+                            ? 'border-rose-300 bg-rose-50/30'
                             : 'border-slate-200 bg-white hover:border-amber-400'
                         }`}
                       >
+                        {/* Expired ribbon */}
+                        {isExpired && !isResolved && (
+                          <div className='absolute top-0 right-0 bg-rose-500 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-bl-lg rounded-tr-xl'>
+                            EXPIRED
+                          </div>
+                        )}
                         <div className='flex items-center gap-3'>
-                          <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600'>
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isExpired && !isResolved ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600'}`}>
                             <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' />
                             </svg>
                           </div>
                           <div className='min-w-0 flex-1'>
-                            <h3 className='text-sm font-bold text-slate-900 truncate'>{policy.policyHolderName}</h3>
+                            <h3 className='text-sm font-bold text-slate-900 truncate pr-12'>{policy.policyHolderName}</h3>
                             <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber}</p>
                             <p className='text-[9px] text-slate-400'>{policy.insuranceCompany}</p>
                           </div>
                           <div className='text-right'>
-                            <p className={`text-[11px] font-black ${policy.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'}`}>
-                              {policy.daysLeft < 0 ? 'Expired' : policy.daysLeft === 0 ? 'Today' : `${policy.daysLeft}d left`}
+                            <p className={`text-[11px] font-black ${
+                              isExpired && !isResolved ? 'text-rose-600' : policy.daysLeft <= 5 ? 'text-rose-600' : 'text-amber-600'
+                            }`}>
+                              {policy.daysLeft < 0
+                                ? `${Math.abs(policy.daysLeft)}d ago`
+                                : policy.daysLeft === 0
+                                ? 'Today'
+                                : `${policy.daysLeft}d left`}
                             </p>
                             <p className='text-[10px] text-slate-400'>{policy.validTo}</p>
                           </div>
@@ -241,18 +308,27 @@ const Renewals = () => {
                       {filteredPolicies.map((policy) => {
                         const status = policy.renewalStatus || ''
                         const isResolved = status === 'renewed' || status === 'lost'
+                        const isExpired = policy.daysLeft < 0
                         return (
-                          <tr key={policy._id} onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)} className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${
-                            status === 'renewed' ? 'bg-emerald-50/20' : status === 'lost' ? 'bg-red-50/20' : ''
-                          }`}>
+                          <tr
+                            key={policy._id}
+                            onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)}
+                            className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${
+                              status === 'renewed'
+                                ? 'bg-emerald-50/20'
+                                : status === 'lost'
+                                ? 'bg-red-50/20'
+                                : isExpired
+                                ? 'bg-rose-50/30'
+                                : ''
+                            }`}
+                          >
                             <td className='px-4 py-2'>
                               <div className='text-sm font-bold text-slate-800'>{policy.policyHolderName || '—'}</div>
                               <div className='font-mono text-[10px] text-slate-500'>{policy.vehicleNumber}</div>
                             </td>
                             <td className='px-4 py-2'>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-xs font-medium text-slate-500'>{policy.insuranceCompany}</span>
-                              </div>
+                              <span className='text-xs font-medium text-slate-500'>{policy.insuranceCompany}</span>
                             </td>
                             <td className='px-4 py-2'>
                               <span className='text-xs font-semibold text-slate-600'>{policy.policyNumber || '—'}</span>
@@ -265,11 +341,21 @@ const Renewals = () => {
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                   : status === 'lost'
                                   ? 'bg-red-50 text-red-600 border border-red-100'
+                                  : isExpired
+                                  ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                   : policy.daysLeft <= 5
                                   ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                   : 'bg-amber-50 text-amber-600 border border-amber-100'
                               }`}>
-                                {status === 'renewed' ? 'Renewed' : status === 'lost' ? 'Lost' : policy.daysLeft < 0 ? 'Expired' : policy.daysLeft === 0 ? 'Today' : `${policy.daysLeft}d`}
+                                {status === 'renewed'
+                                  ? 'Renewed'
+                                  : status === 'lost'
+                                  ? 'Lost'
+                                  : isExpired
+                                  ? `${Math.abs(policy.daysLeft)}d ago`
+                                  : policy.daysLeft === 0
+                                  ? 'Today'
+                                  : `${policy.daysLeft}d`}
                               </span>
                             </td>
                             <td className='px-4 py-2'>

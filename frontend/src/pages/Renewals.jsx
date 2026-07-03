@@ -254,6 +254,7 @@ const Renewals = () => {
                         <div className='mt-2.5 flex items-start justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
                           <div className='flex flex-col gap-0.5 min-w-0'>
                             <span><span className='font-semibold text-slate-500'>Policy:</span> {policy.policyNumber || '—'}</span>
+                            <span><span className='font-semibold text-slate-500'>Product:</span> {policy.product || '—'}</span>
                             <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
                           </div>
                           {isResolved ? (
@@ -298,6 +299,7 @@ const Renewals = () => {
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Policy No</th>
+                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Product</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Class</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Days</th>
@@ -333,6 +335,7 @@ const Renewals = () => {
                             <td className='px-4 py-2'>
                               <span className='text-xs font-semibold text-slate-600'>{policy.policyNumber || '—'}</span>
                             </td>
+                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.product || '—'}</td>
                             <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.insuranceClass || '—'}</td>
                             <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.validTo}</td>
                             <td className='px-4 py-2'>

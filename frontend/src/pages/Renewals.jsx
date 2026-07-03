@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { parseDate } from '../utils/dateFormatter'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -13,47 +12,22 @@ const Renewals = () => {
   const [statusFilter, setStatusFilter] = useState('pending')
   const [confirmModal, setConfirmModal] = useState(null)
 
-  // Max days past expiry to still show in renewals
-  const MAX_EXPIRED_DAYS = 60
-
-  const calculateDaysLeft = (validTo) => {
-    if (!validTo || validTo === 'N/A' || validTo === 'None') return 9999
-    const expiryDate = parseDate(validTo)
-    if (!expiryDate) return 9999
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const diffTime = expiryDate.getTime() - today.getTime()
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  }
-
   useEffect(() => {
-    fetchInsurance()
+    fetchRenewals()
   }, [])
 
-  const fetchInsurance = async () => {
+  const fetchRenewals = async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/api/insurance`, {
+      // Dedicated endpoint — only fetches records relevant for renewals
+      const response = await axios.get(`${API_URL}/api/insurance/renewals`, {
         withCredentials: true,
-        params: { limit: 1000 },
       })
       if (response.data?.success) {
-        const records = response.data.data.map((record) => {
-          const daysLeft = calculateDaysLeft(record.validTo)
-          return { ...record, daysLeft }
-        })
-        // Include all policies within range OR with action already taken
-        const relevant = records.filter((r) => {
-          const status = r.renewalStatus || 'pending'
-          if (status === 'renewed' || status === 'lost') return true
-          // Pending: show expiring soon OR expired within MAX_EXPIRED_DAYS
-          return r.daysLeft !== 9999 && r.daysLeft >= -MAX_EXPIRED_DAYS
-        })
-        relevant.sort((a, b) => a.daysLeft - b.daysLeft)
-        setPolicies(relevant)
+        setPolicies(response.data.data)
       }
     } catch (err) {
-      console.error('Error fetching insurance:', err)
+      console.error('Error fetching renewals:', err)
     } finally {
       setLoading(false)
     }

@@ -706,15 +706,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 </button>
                 <input type='file' accept='image/*, application/pdf' onChange={handleManualDocumentUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
               </div>
-              <div className='relative overflow-hidden'>
-                <button type='button' className='relative px-1.5 py-1 md:px-3 md:py-1.5 bg-white/20 hover:bg-white/30 text-white text-[10px] md:text-sm font-semibold rounded-lg transition flex items-center gap-1 md:gap-2 max-w-full'>
-                  <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" />
-                  </svg>
-                  Upload Endorsement
-                </button>
-                <input type='file' accept='image/*, application/pdf' onChange={handleManualEndorsementUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
-              </div>
               <button onClick={onClose} className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'>
                 <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -988,6 +979,35 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className='bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" />
+                </svg>
+                Upload Endorsement
+              </h3>
+              <div className='relative overflow-hidden'>
+                <button type='button' className='w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer'>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Choose Endorsement File
+                </button>
+                <input type='file' accept='image/*, application/pdf' onChange={handleManualEndorsementUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+              </div>
+              {uploadedEndorsementDocument && (
+                <div className='mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-amber-200'>
+                  <div className='min-w-0 flex items-center gap-2'>
+                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedEndorsementDocument.name}</p>
+                  </div>
+                  <button type='button' onClick={() => { setUploadedEndorsementDocument(null); setUploadedEndorsementFile(null); setFormData(prev => ({ ...prev, endorsementDocument: '' })) }} className='text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer'>Remove</button>
+                </div>
+              )}
             </div>
 
             {uploadedInsuranceDocument && (

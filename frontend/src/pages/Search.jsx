@@ -33,8 +33,31 @@ const INSURANCE_COMPANIES = [
   'The New India Assurance Company Limited',
   'The Oriental Insurance Company Limited',
   'United India Insurance Company Limited',
-  'Universal Sompo General Insurance Company Limited'
-]
+  'Universal Sompo General Insurance Company Limited',
+  'Life Insurance Corporation of India (LIC)',
+  'HDFC Life Insurance Co. Ltd.',
+  'Max Life Insurance Co. Ltd.',
+  'ICICI Prudential Life Insurance Co. Ltd.',
+  'Kotak Mahindra Life Insurance Co. Ltd.',
+  'Aditya Birla Sun Life Insurance Co. Ltd.',
+  'Tata AIA Life Insurance Co. Ltd.',
+  'SBI Life Insurance Co. Ltd.',
+  'Bajaj Allianz Life Insurance Co. Ltd.',
+  'PNB MetLife India Insurance Co. Ltd.',
+  'Reliance Nippon Life Insurance Company Limited',
+  'Aviva Life Insurance Company India Ltd.',
+  'Sahara India Life Insurance Co. Ltd.',
+  'Shriram Life Insurance Co. Ltd.',
+  'Bharti AXA Life Insurance Company Ltd.',
+  'Future Generali India Life Insurance Company Limited',
+  'Ageas Federal Life Insurance Company Limited',
+  'Canara HSBC Life Insurance Company Limited',
+  'Aegon Life Insurance Company Limited',
+  'Pramerica Life Insurance Co. Ltd.',
+  'Star Union Dai-ichi Life Insurance Co. Ltd.',
+  'IndiaFirst Life Insurance Company Ltd.',
+  'Edelweiss Tokio Life Insurance Company Limited'
+].sort()
 
 const PRODUCT_TYPES = [
   'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',

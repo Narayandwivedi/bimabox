@@ -211,6 +211,7 @@ const Renewals = () => {
                             <h3 className='text-sm font-bold text-slate-900 truncate pr-12'>{policy.policyHolderName}</h3>
                             <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber}</p>
                             <p className='text-[9px] text-slate-400'>{policy.insuranceCompany}</p>
+                            <p className='text-[10px] font-semibold text-indigo-600 mt-0.5'>{policy.product || '—'}</p>
                           </div>
                           <div className='text-right'>
                             <p className={`text-[11px] font-black ${
@@ -228,7 +229,6 @@ const Renewals = () => {
                         <div className='mt-2.5 flex items-start justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
                           <div className='flex flex-col gap-0.5 min-w-0'>
                             <span><span className='font-semibold text-slate-500'>Policy:</span> {policy.policyNumber || '—'}</span>
-                            <span><span className='font-semibold text-slate-500'>Product:</span> {policy.product || '—'}</span>
                             <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
                           </div>
                           {isResolved ? (
@@ -303,7 +303,7 @@ const Renewals = () => {
                               <div className='font-mono text-[10px] text-slate-500'>{policy.vehicleNumber}</div>
                             </td>
                             <td className='px-4 py-2 text-xs font-medium text-slate-500'>
-                              <div>{policy.product || '—'}</div>
+                              <div className='text-sm font-bold text-indigo-700'>{policy.product || '—'}</div>
                               <div className='text-[10px] text-slate-400'>{policy.insuranceClass || '—'}</div>
                             </td>
                             <td className='px-4 py-2'>

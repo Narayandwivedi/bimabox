@@ -175,7 +175,7 @@ const Setting = () => {
                 </svg>
               </div>
               <div className='min-w-0 flex-1'>
-                <p className='text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors'>Agent name</p>
+                <p className='text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors'>Agent Name</p>
                 <p className='text-[10px] font-semibold text-slate-400'>Manage agent names used in insurance</p>
               </div>
               <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

@@ -7,61 +7,32 @@ import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const INSURANCE_COMPANIES = [
-  'ACKO',
   'Acko General Insurance Limited',
-  'BAJAJ GENERAL INSURANCE',
   'Bajaj Allianz General Insurance Company Limited',
-  'BHARTI AXA',
-  'CHOLAMANDALAM MS',
   'Cholamandalam MS General Insurance Company Limited',
-  'EDELWEISS',
-  'Edelweiss General Insurance Company Limited',
-  'FUTURE GENERALI',
-  'Future Generali India Insurance Company Limited',
-  'GO DIGIT',
-  'Go Digit General Insurance Limited',
-  'HDFC ERGO',
-  'HDFC ERGO General Insurance Company Limited',
-  'ICICI LOMBARD',
-  'ICICI Lombard General Insurance Company Limited',
-  'IFFCO TOKIO',
-  'IFFCO Tokio General Insurance Company Limited',
-  'INDUSIND',
-  'KOTAK MAHINDRA',
-  'Kotak Mahindra General Insurance Company Limited',
-  'KSHEMA',
-  'LIBERTY GENERAL INSURANCE',
-  'Liberty General Insurance Limited',
-  'MAGMA GENERAL INSURANCE',
-  'Magma HDI General Insurance Company Limited',
-  'NATIONAL INSURANCE',
-  'National Insurance Company Limited',
-  'NAVI INSURANCE',
   'Navi General Insurance Limited',
-  'NEW INDIA ASSURANCE',
-  'The New India Assurance Company Limited',
+  'Edelweiss General Insurance Company Limited',
+  'Future Generali India Insurance Company Limited',
+  'Go Digit General Insurance Limited',
+  'HDFC ERGO General Insurance Company Limited',
+  'ICICI Lombard General Insurance Company Limited',
+  'IFFCO Tokio General Insurance Company Limited',
+  'Kotak Mahindra General Insurance Company Limited',
+  'Liberty General Insurance Limited',
+  'Magma HDI General Insurance Company Limited',
   'Niva Bupa Health Insurance Company Limited',
-  'ORIENTAL INSURANCE',
-  'The Oriental Insurance Company Limited',
-  'RAHEJA QBE',
+  'National Insurance Company Limited',
   'Raheja QBE General Insurance Company Limited',
-  'RELIANCE GENERAL INSURANCE',
   'Reliance General Insurance Company Limited',
-  'ROYAL SUNDARAM',
   'Royal Sundaram General Insurance Company Limited',
-  'SBI GENERAL INSURANCE',
   'SBI General Insurance Company Limited',
-  'SHRIRAM GENERAL INSURANCE',
   'Shriram General Insurance Company Limited',
   'Star Health & Allied Insurance Company Limited',
-  'TATA AIG GENERAL INSURANCE',
   'Tata AIG General Insurance Company Limited',
-  'UNITED INDIA INSURANCE',
+  'The New India Assurance Company Limited',
+  'The Oriental Insurance Company Limited',
   'United India Insurance Company Limited',
-  'UNIVERSAL SOMPO',
-  'Universal Sompo General Insurance Company Limited',
-  'ZUNO',
-  'ZURICH KOTAK'
+  'Universal Sompo General Insurance Company Limited'
 ].sort()
 
 
@@ -746,19 +717,17 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 <div className='md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                   <div>
                     <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Insurance Company</label>
-                    <input 
-                      list='insurance-companies-list'
+                    <select 
                       name='insuranceCompany' 
                       value={formData.insuranceCompany} 
                       onChange={handleChange} 
-                      placeholder="Select or type Company"
                       className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'
-                    />
-                    <datalist id='insurance-companies-list'>
+                    >
+                      <option value="">Select Company</option>
                       {INSURANCE_COMPANIES.map(company => (
-                        <option key={company} value={company} />
+                        <option key={company} value={company}>{company}</option>
                       ))}
-                    </datalist>
+                    </select>
                   </div>
 
                   <div>

@@ -1,78 +1,159 @@
 const axios = require('axios')
 const pdfParse = require('pdf-parse')
 
-const callGroqAPI = async (imageBase64, textPrompt, isPdf = false) => {
+const HIGH_VALUE_KEYWORDS = [
+  'registration no', 'vehicle no', 'engine number', 'chassis', 'make', 'model',
+  'policy no', 'policy number', 'valid from', 'valid till', 'period of insurance',
+  'premium', 'total premium', 'insured', 'insured name', 'receipt', 'proposal',
+  'certificate of insurance', 'policy schedule', 'fuel type', 'seating capacity',
+  'mfg. year', 'manufacture year', 'date of registration', 'body type'
+]
+
+const extractRelevantPdfText = (fullText) => {
+  let cleaned = fullText.replace(/[\u0900-\u097F]+/g, '').trim()
+
+  const BOILERPLATE = [
+    /Motor Vehicles? Act[^\n]{0,300}/gi,
+    /Central Motor Vehicle[^\n]{0,250}/gi,
+    /amended from time to time[^\n]{0,200}/gi,
+    /Arbitration Clause[^\n]{0,200}/gi,
+    /AVOIDANCE OF CERTAIN[^\n]{0,300}/gi,
+    /RIGHT OF RECOVERY[^\n]{0,300}/gi,
+    /Office of the Insurance Ombudsman[^\n]{0,400}/gi,
+    /IN WITNESS WHEREOF[^\n]{0,400}/gi,
+    /PersonsorClassofPersons[^\n]{0,400}/gi,
+    /Usein connection[^\n]{0,400}/gi,
+    /Thepolicydoesnot[^\n]{0,400}/gi,
+    /IRDAI\/NL\/CIR[^\n]{0,300}/gi,
+  ]
+  for (const pattern of BOILERPLATE) cleaned = cleaned.replace(pattern, '')
+
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim()
+
+  const segments = cleaned.split(/(?:Page\s*(?:no\.?|number)?\s*[:\-]?\s*\d+\s*(?:of\s*\d+)?)/i)
+    .filter(s => s.trim().length > 50)
+
+  if (segments.length <= 1) {
+    return cleaned.slice(0, 6000)
+  }
+
+  const scored = segments.map((seg, i) => {
+    const lower = seg.toLowerCase()
+    const score = HIGH_VALUE_KEYWORDS.reduce((acc, kw) => acc + (lower.includes(kw) ? 1 : 0), 0)
+    return { seg, score, i }
+  })
+
+  const topSegments = scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .sort((a, b) => a.i - b.i)
+
+  const result = topSegments.map(s => s.seg.trim()).join('\n\n---\n\n')
+
+  return result.slice(0, 7000)
+}
+
+const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase64 = null) => {
   if (!process.env.GROQ_API_KEY) {
     throw new Error('GROQ_API_KEY is not configured')
   }
 
   if (isPdf) {
-    return axios.post(
-      'https://api.groq.com/openai/v1/chat/completions',
+    const sanitizedText = imageBase64
+      .replace(/ﬀ/g, 'ff').replace(/ﬁ/g, 'fi').replace(/ﬂ/g, 'fl')
+      .replace(/ﬃ/g, 'ffi').replace(/ﬄ/g, 'ffl').replace(/ﬅ/g, 'st')
+      .replace(/\u0000/g, ' ')
+      .replace(/[^\x09\x0A\x0D\x20-\x7E\u00A0-\uFFFF]/g, ' ')
+      .replace(/[ \t]{3,}/g, '  ')
+      .trim()
+
+    const messages = [
       {
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a document extraction assistant. Respond ONLY with a raw JSON object string. Do not include markdown formatting or explanations.',
-          },
-          {
-            role: 'user',
-            content: `${textPrompt}\n\nHere is the raw text from the document:\n\n${imageBase64}`,
-          },
-        ],
-        temperature: 0.1,
-        max_tokens: 1024,
+        role: 'system',
+        content: 'You are a precise insurance document data extractor. Extract ONLY values that literally appear in the document text. Never guess or invent values. Output valid JSON only.'
       },
       {
+        role: 'user',
+        content: `<DOCUMENT>\n${sanitizedText}\n</DOCUMENT>\n\n${textPrompt}`
+      }
+    ]
+
+    const makeRequest = (withFormat) => {
+      const body = {
+        model: 'llama-3.3-70b-versatile',
+        messages,
+        temperature: 0,
+        max_tokens: 512
+      }
+      if (withFormat) body.response_format = { type: 'json_object' }
+      return axios.post('https://api.groq.com/openai/v1/chat/completions', body, {
         headers: {
           Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
           'Content-Type': 'application/json',
         },
+      })
+    }
+
+    try {
+      return await makeRequest(true)
+    } catch (firstErr) {
+      const errCode = firstErr.response?.data?.error?.code
+      if (errCode === 'json_validate_failed' || errCode === 'invalid_request_error') {
+        console.warn('Groq json_object mode failed, retrying in free-text mode...')
+        return await makeRequest(false)
       }
-    )
+      throw firstErr
+    }
   }
 
   const formattedImage = imageBase64.startsWith('data:image')
     ? imageBase64
     : `data:image/jpeg;base64,${imageBase64}`
 
-  return axios.post(
-    'https://api.groq.com/openai/v1/chat/completions',
-    {
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: textPrompt,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: formattedImage,
-              },
-            },
-          ],
-        },
-      ],
+  const contentArray = [
+    { type: 'text', text: textPrompt },
+    { type: 'image_url', image_url: { url: formattedImage } }
+  ]
+
+  if (backImageBase64) {
+    const formattedBack = backImageBase64.startsWith('data:image')
+      ? backImageBase64
+      : `data:image/jpeg;base64,${backImageBase64}`
+    contentArray.push({ type: 'image_url', image_url: { url: formattedBack } })
+  }
+
+  const makeVisionRequest = (withFormat) => {
+    const body = {
+      model: 'qwen/qwen3.6-27b',
+      messages: [{ role: 'user', content: contentArray }],
       temperature: 0.1,
-      max_tokens: 1024,
-    },
-    {
+      max_completion_tokens: 2048,
+      reasoning_format: 'hidden'
+    }
+    if (withFormat) body.response_format = { type: 'json_object' }
+    return axios.post('https://api.groq.com/openai/v1/chat/completions', body, {
       headers: {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
+    })
+  }
+
+  try {
+    return await makeVisionRequest(true)
+  } catch (firstErr) {
+    const errCode = firstErr.response?.data?.error?.code
+    if (errCode === 'json_validate_failed' || errCode === 'invalid_request_error') {
+      console.warn('Groq json_object mode failed for vision, retrying in free-text mode...')
+      return await makeVisionRequest(false)
     }
-  )
+    throw firstErr
+  }
 }
 
 const processOcrRequest = async (req, res, promptText, jsonTemplate) => {
   try {
-    const { imageBase64 } = req.body
+    const { imageBase64, backImageBase64 } = req.body
 
     if (!imageBase64) {
       return res.status(400).json({ success: false, message: 'Document base64 string is required' })
@@ -86,15 +167,28 @@ const processOcrRequest = async (req, res, promptText, jsonTemplate) => {
       const base64Data = imageBase64.replace(/^data:application\/pdf;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
       const pdfData = await pdfParse(buffer)
-      payload = pdfData.text
+      const extractedText = extractRelevantPdfText(pdfData.text)
+
+      if (extractedText.trim().length < 100) {
+        console.warn('PDF appears to be scanned (image-only) — no text extracted. Pages:', pdfData.numpages)
+        return res.status(422).json({
+          success: false,
+          message: 'This PDF appears to be a scanned image. Please convert it to a text-based PDF or upload a photo of the document instead.',
+          isScannedPdf: true
+        })
+      }
+
+      payload = extractedText
     }
 
     const fullPrompt = `${promptText}
 Respond ONLY with a valid JSON object matching this structure exactly (use empty string "" if a field is not found):
 ${jsonTemplate}`
 
-    const response = await callGroqAPI(payload, fullPrompt, isPdf)
-    const messageContent = response.data.choices?.[0]?.message?.content || ''
+    const response = await callGroqAPI(payload, fullPrompt, isPdf, backImageBase64)
+    let messageContent = response.data.choices?.[0]?.message?.content || ''
+
+    messageContent = messageContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
 
     let jsonStr = messageContent
     const fencedMatch = messageContent.match(/```(?:json)?\n([\s\S]*?)\n```/)
@@ -119,15 +213,13 @@ ${jsonTemplate}`
       })
     }
 
-    // Normalize vehicle number formats (e.g., "CG-23-J-8800" -> "CG23J8800")
-    if (extractedData.vehicleNumber) {
-      extractedData.vehicleNumber = extractedData.vehicleNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (typeof extractedData.vehicleNumber === 'string') {
+      extractedData.vehicleNumber = extractedData.vehicleNumber.replace(/[\s-]/g, '')
     }
-    if (extractedData.registrationNumber) {
-      extractedData.registrationNumber = extractedData.registrationNumber.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (typeof extractedData.registrationNumber === 'string') {
+      extractedData.registrationNumber = extractedData.registrationNumber.replace(/[\s-]/g, '')
     }
 
-    // Normalize insurance company if extracted
     if (extractedData.insuranceCompany) {
       const companies = [
         'HDFC ERGO',
@@ -251,18 +343,18 @@ const gpsOcr = async (req, res) => {
 }
 
 const insuranceOcr = async (req, res) => {
-  const prompt = 'Extract the details from this vehicle insurance policy/document. Extract vehicle number, policy number, policy holder name, valid from date, valid to date, premium amount (net premium or total premium amount paid in rupees/INR. You MUST extract the exact decimal value including paise/cents if present on the document, e.g., 1182.71 instead of 1182. Do not omit the decimal or round the value. Return it strictly as a number or decimal string without commas, currency symbols, or GST/taxes if separated), insurance company name, class of insurance (Comprehensive or Third Party), and product (GCV, GCV-3W, Pvt. Car, Taxi, Two Wheeler, Mis-D, PCV, PCV-3W, Health, Life, Fire, Burglary, WC, CPM, Travel, Marine, GPA, GMC). Map the insured or proposer name to policyHolderName. Map the premium amount to premium. For insuranceCompany, try to match or normalize the company name to one of these standard companies: "Acko General Insurance Limited", "Bajaj Allianz General Insurance Company Limited", "Cholamandalam MS General Insurance Company Limited", "Navi General Insurance Limited", "Edelweiss General Insurance Company Limited", "Future Generali India Insurance Company Limited", "Go Digit General Insurance Limited", "HDFC ERGO General Insurance Company Limited", "ICICI Lombard General Insurance Company Limited", "IFFCO Tokio General Insurance Company Limited", "Kotak Mahindra General Insurance Company Limited", "Liberty General Insurance Limited", "Magma HDI General Insurance Company Limited", "Niva Bupa Health Insurance Company Limited", "National Insurance Company Limited", "Raheja QBE General Insurance Company Limited", "Reliance General Insurance Company Limited", "Royal Sundaram General Insurance Company Limited", "SBI General Insurance Company Limited", "Shriram General Insurance Company Limited", "Star Health & Allied Insurance Company Limited", "Tata AIG General Insurance Company Limited", "The New India Assurance Company Limited", "The Oriental Insurance Company Limited", "United India Insurance Company Limited", "Universal Sompo General Insurance Company Limited", "Life Insurance Corporation of India (LIC)", "HDFC Life Insurance Co. Ltd.", "Max Life Insurance Co. Ltd.", "ICICI Prudential Life Insurance Co. Ltd.", "Kotak Mahindra Life Insurance Co. Ltd.", "Aditya Birla Sun Life Insurance Co. Ltd.", "Tata AIA Life Insurance Co. Ltd.", "SBI Life Insurance Co. Ltd.", "Bajaj Allianz Life Insurance Co. Ltd.", "PNB MetLife India Insurance Co. Ltd.", "Reliance Nippon Life Insurance Company Limited", "Aviva Life Insurance Company India Ltd.", "Sahara India Life Insurance Co. Ltd.", "Shriram Life Insurance Co. Ltd.", "Bharti AXA Life Insurance Company Ltd.", "Future Generali India Life Insurance Company Limited", "Ageas Federal Life Insurance Company Limited", "Canara HSBC Life Insurance Company Limited", "Aegon Life Insurance Company Limited", "Pramerica Life Insurance Co. Ltd.", "Star Union Dai-ichi Life Insurance Co. Ltd.", "IndiaFirst Life Insurance Company Ltd.", "Edelweiss Tokio Life Insurance Company Limited". If there is no clear match, use empty string "". Do not invent values.'
-  const template = `{
-  "vehicleNumber": "",
-  "policyNumber": "",
-  "policyHolderName": "",
-  "validFrom": "",
-  "validTo": "",
-  "premium": "",
-  "insuranceCompany": "",
-  "insuranceClass": "",
-  "product": ""
-}`
+  const prompt = `Extract fields from this vehicle insurance policy document.
+- vehicleNumber: remove hyphens/spaces (e.g. CG-23-J-8800 → CG23J8800)
+- policyNumber: as printed
+- policyHolderName: primary insured person/company name
+- validFrom / validTo: the main policy period (Own Damage section if present, otherwise overall policy period). DD-MM-YYYY format.
+- issueDate: the date the policy document was issued. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
+- premium: numeric value of the net/total premium in rupees/INR. Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. No currency symbols, commas, or GST/taxes if separated.
+- insuranceCompany: full insurer name as it appears (e.g. "HDFC ERGO", "National Insurance Company Limited")
+- insuranceClass: "Comprehensive" or "Third Party" (if not found, infer from policy type)
+- product: type of insured vehicle/policy. Common values: "Private Car", "Two-Wheeler", "Goods Carrying Vehicle", "GCV", "Passenger Carrying Vehicle", "PCV", "Taxi", "Commercial Vehicle", "Health", "Life", "Fire", "Burglary", "WC", "CPM", "Travel", "Marine", "GPA", "GMC"
+- Use empty string "" for any absent field`;
+  const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","issueDate":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
   return processOcrRequest(req, res, prompt, template)
 }
 

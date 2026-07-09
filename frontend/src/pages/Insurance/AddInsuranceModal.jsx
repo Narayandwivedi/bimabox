@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
+import { pdfToImages } from '../../utils/pdfToImages'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -367,6 +368,40 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const applyOcrResult = (resultData) => {
+    setFormData(prev => {
+      const updated = { ...prev }
+      Object.keys(resultData).forEach((key) => {
+        const value = resultData[key]
+        if (!value || !Object.prototype.hasOwnProperty.call(updated, key)) return
+        if (key === 'validFrom' || key === 'validTo' || key === 'issueDate') {
+          const normalizedStr = normalizeAIExtractedDate(value)
+          const formatted = handleSmartDateInput(normalizedStr, '')
+          if (formatted) updated[key] = formatted
+          return
+        }
+        if (key === 'vehicleNumber') {
+          updated[key] = value.toUpperCase().replace(/\s+/g, '')
+          return
+        }
+        if (key === 'policyNumber') {
+          updated[key] = value.toUpperCase()
+          return
+        }
+        if (key === 'insuranceCompany') {
+          updated[key] = normalizeInsuranceCompany(value)
+          return
+        }
+        if (key === 'premium') {
+          updated[key] = String(value).replace(/[^0-9.]/g, '')
+          return
+        }
+        updated[key] = value
+      })
+      return updated
+    })
+  }
+
   const processExtraction = async (fileToProcess) => {
     setIsExtractingInsurance(true)
     const updateToast = toast.info('Analyzing insurance document, please wait...', { autoClose: false, isLoading: true })
@@ -379,40 +414,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           if (response.data.success && response.data.data) {
             const resultData = response.data.data
             isOcrUpdate.current = true
-
-            setFormData(prev => {
-              const updated = { ...prev }
-              Object.keys(resultData).forEach((key) => {
-                const value = resultData[key]
-                if (!value || !Object.prototype.hasOwnProperty.call(updated, key)) return
-                if (key === 'validFrom' || key === 'validTo' || key === 'issueDate') {
-                  const normalizedStr = normalizeAIExtractedDate(value)
-                  const formatted = handleSmartDateInput(normalizedStr, '')
-                  if (formatted) updated[key] = formatted
-                  return
-                }
-                if (key === 'vehicleNumber') {
-                  updated[key] = value.toUpperCase().replace(/\s+/g, '')
-                  return
-                }
-                if (key === 'policyNumber') {
-                  updated[key] = value.toUpperCase()
-                  return
-                }
-                if (key === 'insuranceCompany') {
-                  updated[key] = normalizeInsuranceCompany(value)
-                  return
-                }
-                if (key === 'premium') {
-                  updated[key] = String(value).replace(/[^0-9.]/g, '')
-                  return
-                }
-                updated[key] = value
-              })
-
-              return updated
-            })
-
+            applyOcrResult(resultData)
             setTimeout(() => { isOcrUpdate.current = false }, 200)
             setUploadedInsuranceDocument(prev => {
               if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
@@ -430,9 +432,46 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             toast.error('Failed to extract data correctly.', { position: 'top-right', autoClose: 3000 })
           }
         } catch (error) {
-          console.error(error)
-          toast.dismiss(updateToast)
-          toast.error('Server error during OCR processing.', { position: 'top-right', autoClose: 3000 })
+          if (error.response?.status === 422 && error.response?.data?.isScannedPdf && fileToProcess) {
+            const fallbackToast = toast.info('Scanned PDF detected. Converting to images for visual analysis...', { autoClose: false, isLoading: true })
+            try {
+              const pageImages = await pdfToImages(fileToProcess, 2, 1.2, 0.7)
+              if (pageImages && pageImages.length > 0) {
+                toast.update(fallbackToast, { render: 'Analyzing scanned document with Vision AI...', isLoading: true })
+                const visionResponse = await axios.post(
+                  `${API_URL}/api/ocr/insurance`,
+                  { imageBase64: pageImages[0], backImageBase64: pageImages[1] || null },
+                  { withCredentials: true }
+                )
+                if (visionResponse.data.success && visionResponse.data.data) {
+                  const resultData = visionResponse.data.data
+                  isOcrUpdate.current = true
+                  applyOcrResult(resultData)
+                  setTimeout(() => { isOcrUpdate.current = false }, 500)
+                  setUploadedInsuranceDocument(prev => {
+                    if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
+                    return {
+                      name: fileToProcess.name || 'insurance-document',
+                      type: 'pdf',
+                      previewUrl: URL.createObjectURL(fileToProcess),
+                      revokeOnCleanup: true
+                    }
+                  })
+                  toast.dismiss(fallbackToast)
+                  toast.success('Insurance details extracted successfully via Vision!', { position: 'top-right', autoClose: 3000 })
+                  return
+                }
+              }
+            } catch (visionErr) {
+              console.error('Vision fallback failed:', visionErr)
+            }
+            toast.dismiss(fallbackToast)
+            toast.error('Could not analyze the scanned PDF. Please fill details manually.', { position: 'top-right', autoClose: 4000 })
+          } else {
+            console.error(error)
+            toast.dismiss(updateToast)
+            toast.error('Server error during OCR processing.', { position: 'top-right', autoClose: 3000 })
+          }
         } finally {
           setIsExtractingInsurance(false)
         }
@@ -474,8 +513,15 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
   const handleManualDocumentUpload = (e) => {
     const file = e.target.files?.[0]
-    processInsuranceFile(file)
+    const success = processInsuranceFile(file)
     e.target.value = ''
+    if (success && file) {
+      if (file.type === 'application/pdf') {
+        processExtraction(file)
+      } else if (file.type.startsWith('image/')) {
+        setScanningFile(file)
+      }
+    }
   }
 
   const handleDragOver = (e) => {

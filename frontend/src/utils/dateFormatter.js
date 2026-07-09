@@ -399,11 +399,34 @@ export const normalizeAIExtractedDate = (dateStr) => {
   const months = { jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' };
   const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
-  const parsedDate = new Date(dateStr);
-  if (!Number.isNaN(parsedDate.getTime())) {
-    return formatDateToString(parsedDate);
+  const raw = String(dateStr).trim();
+
+  // ISO format YYYY-MM-DD (year first) -> DD-MM-YYYY
+  const isoMatch = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return `${day.padStart(2, '0')}-${month.padStart(2, '0')}-${year}`;
   }
-  
+
+  // Purely numeric separators (e.g. 07-05-2026, 07/05/2026) are already DD-MM-YYYY.
+  // Do NOT feed these to new Date(), which misreads them as MM-DD-YYYY and swaps day/month.
+  const numericMatch = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+  if (numericMatch) {
+    let [, day, month, year] = numericMatch;
+    day = day.padStart(2, '0');
+    month = month.padStart(2, '0');
+    if (year.length === 2) year = parseInt(year, 10) <= 50 ? '20' + year : '19' + year;
+    return `${day}-${month}-${year}`;
+  }
+
+  // Only trust native Date parsing when a textual month is present (e.g. "01-Mar-2026").
+  if (/[a-z]/i.test(raw)) {
+    const parsedDate = new Date(dateStr);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return formatDateToString(parsedDate);
+    }
+  }
+
   let str = String(dateStr).toLowerCase().replace(/[^a-z0-9]/g, ' ');
   let parts = str.split(/\s+/).filter(Boolean);
 

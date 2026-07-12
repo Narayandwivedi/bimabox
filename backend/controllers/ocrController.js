@@ -352,7 +352,7 @@ const insuranceOcr = async (req, res) => {
 - premium: numeric value of the net/total premium in rupees/INR. Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. No currency symbols, commas, or GST/taxes if separated.
 - insuranceCompany: full insurer name as it appears (e.g. "HDFC ERGO", "National Insurance Company Limited")
 - insuranceClass: "Comprehensive" or "Third Party" (if not found, infer from policy type)
-- product: type of insured vehicle/policy. Common values: "Private Car", "Two-Wheeler", "Goods Carrying Vehicle", "GCV", "Passenger Carrying Vehicle", "PCV", "Taxi", "Commercial Vehicle", "Health", "Life", "Fire", "Burglary", "WC", "CPM", "Travel", "Marine", "GPA", "GMC"
+- product: type of insured vehicle/policy. Look for phrases like "Private Car", "Motor Cycle", "Two Wheeler", "Fire", "Marine", "Health" etc. in the document, and map to EXACTLY one of these values (return the value on the left, verbatim): "Pvt. Car" (private car / motor car), "Two Wheeler" (motorcycle/scooter/bike/two-wheeler), "GCV" (goods carrying vehicle/truck/commercial goods vehicle), "GCV-3W" (3-wheeler goods vehicle), "PCV" (passenger carrying vehicle/bus), "PCV-3W" (3-wheeler passenger/auto rickshaw), "Taxi", "Mis-D", "Health", "Life", "Fire", "Burglary", "WC" (workmen's compensation), "CPM", "Travel", "Marine", "GPA" (group personal accident), "GMC" (group mediclaim). If none match, return empty string.
 - Use empty string "" for any absent field`;
   const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","issueDate":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
   return processOcrRequest(req, res, prompt, template)

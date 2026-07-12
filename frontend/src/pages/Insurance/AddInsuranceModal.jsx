@@ -60,6 +60,11 @@ const INSURANCE_COMPANIES = [
 ].sort()
 
 
+const PRODUCT_TYPE_OPTIONS = [
+  'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
+  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC'
+]
+
 const resolveStoredDocumentPreview = (documentPath) => {
   if (!documentPath) return null
   if (documentPath.startsWith('data:')) return documentPath
@@ -75,6 +80,38 @@ const normalizeInsuranceCompany = (companyName) => {
     return cleaned.includes(cCleaned) || cCleaned.includes(cleaned)
   })
   return match || ''
+}
+
+const PRODUCT_TYPE_KEYWORD_MAP = [
+  { value: 'Two Wheeler', keywords: ['two wheeler', 'two-wheeler', '2 wheeler', '2-wheeler', 'motor cycle', 'motorcycle', 'motor bike', 'bike', 'scooter'] },
+  { value: 'Taxi', keywords: ['taxi', 'cab'] },
+  { value: 'GCV-3W', keywords: ['gcv-3w', 'gcv 3w', 'goods carrying vehicle 3 wheeler', 'goods 3 wheeler'] },
+  { value: 'PCV-3W', keywords: ['pcv-3w', 'pcv 3w', 'passenger carrying vehicle 3 wheeler', 'passenger 3 wheeler', 'auto rickshaw', 'three wheeler'] },
+  { value: 'GCV', keywords: ['gcv', 'goods carrying vehicle', 'goods carrying', 'commercial vehicle', 'truck', 'lorry'] },
+  { value: 'PCV', keywords: ['pcv', 'passenger carrying vehicle', 'passenger carrying', 'bus'] },
+  { value: 'Pvt. Car', keywords: ['private car', 'pvt car', 'pvt. car', 'personal car', 'own damage car', 'car policy'] },
+  { value: 'Mis-D', keywords: ['miscellaneous d', 'mis-d', 'mis d'] },
+  { value: 'Health', keywords: ['health', 'mediclaim', 'medical insurance'] },
+  { value: 'Life', keywords: ['life insurance', 'term insurance', 'term plan'] },
+  { value: 'Fire', keywords: ['fire insurance', 'fire policy', 'standard fire', 'fire and special perils'] },
+  { value: 'Burglary', keywords: ['burglary'] },
+  { value: 'WC', keywords: ['workmen', 'workmens compensation', "workmen's compensation", 'wc policy'] },
+  { value: 'CPM', keywords: ['contractors plant', 'cpm'] },
+  { value: 'Travel', keywords: ['travel insurance', 'travel policy'] },
+  { value: 'Marine', keywords: ['marine'] },
+  { value: 'GPA', keywords: ['group personal accident', 'gpa', 'personal accident'] },
+  { value: 'GMC', keywords: ['group mediclaim', 'gmc'] }
+]
+
+const normalizeProductType = (productType) => {
+  if (!productType) return ''
+  const cleaned = productType.trim().toLowerCase()
+  const directMatch = PRODUCT_TYPE_OPTIONS.find(p => p.toLowerCase() === cleaned)
+  if (directMatch) return directMatch
+  for (const entry of PRODUCT_TYPE_KEYWORD_MAP) {
+    if (entry.keywords.some(k => cleaned.includes(k))) return entry.value
+  }
+  return ''
 }
 
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
@@ -390,6 +427,11 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         }
         if (key === 'insuranceCompany') {
           updated[key] = normalizeInsuranceCompany(value)
+          return
+        }
+        if (key === 'product') {
+          const normalized = normalizeProductType(value)
+          if (normalized) updated[key] = normalized
           return
         }
         if (key === 'premium') {
@@ -803,24 +845,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                     <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product Type</label>
                     <select name='product' value={formData.product} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                       <option value="">Select Product Type</option>
-                      <option value="GCV">GCV</option>
-                      <option value="GCV-3W">GCV-3W</option>
-                      <option value="Pvt. Car">Pvt. Car</option>
-                      <option value="Taxi">Taxi</option>
-                      <option value="Two Wheeler">Two Wheeler</option>
-                      <option value="Mis-D">Mis-D</option>
-                      <option value="PCV">PCV</option>
-                      <option value="PCV-3W">PCV-3W</option>
-                      <option value="Health">Health</option>
-                      <option value="Life">Life</option>
-                      <option value="Fire">Fire</option>
-                      <option value="Burglary">Burglary</option>
-                      <option value="WC">WC</option>
-                      <option value="CPM">CPM</option>
-                      <option value="Travel">Travel</option>
-                      <option value="Marine">Marine</option>
-                      <option value="GPA">GPA</option>
-                      <option value="GMC">GMC</option>
+                      {PRODUCT_TYPE_OPTIONS.map(product => (
+                        <option key={product} value={product}>{product}</option>
+                      ))}
                     </select>
                   </div>
 

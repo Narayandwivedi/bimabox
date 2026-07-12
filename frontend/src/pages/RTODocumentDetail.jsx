@@ -83,8 +83,12 @@ const TYPE_CONFIG = {
       { label: 'Product', key: 'product' },
       { label: 'Premium', key: 'premium', prefix: '₹' },
       { label: 'Mobile Number', key: 'mobileNumber' },
+      { label: 'Issue Date', key: 'issueDate' },
       { label: 'Client Name', key: 'reference' },
       { label: 'Agent name (IMD)', key: 'imd' },
+      { label: 'Claim Raised', key: 'claimRaised' },
+      { label: 'Claim Date', key: 'claimDate' },
+      { label: 'Claim Remarks', key: 'claimRemarks' },
       { label: 'Remarks', key: 'remarks' },
       { label: 'Notes', key: 'notes' },
     ],
@@ -403,14 +407,24 @@ const RTODocumentDetail = () => {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                   {config.extraFields
                     .filter(f => record[f.key] !== undefined && record[f.key] !== null && record[f.key] !== '')
-                    .map(({ label, key, prefix }) => (
-                      <div key={key} className="flex flex-col rounded-lg bg-slate-50 p-2 border border-slate-100">
-                        <p className="text-[9px] font-semibold text-slate-400">{label}</p>
-                        <p className="text-[11px] font-black text-slate-800">
-                          {prefix ? `${prefix}${record[key]}` : record[key]}
-                        </p>
-                      </div>
-                    ))}
+                    .map(({ label, key, prefix }) => {
+                      const val = record[key]
+                      const display = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : prefix ? `${prefix}${val}` : val
+                      return (
+                        <div key={key} className={`flex flex-col rounded-lg p-2 border ${
+                          key === 'claimRaised'
+                            ? val ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100'
+                            : 'bg-slate-50 border-slate-100'
+                        }`}>
+                          <p className="text-[9px] font-semibold text-slate-400">{label}</p>
+                          <p className={`text-[11px] font-black ${
+                            key === 'claimRaised' ? (val ? 'text-green-700' : 'text-slate-500') : 'text-slate-800'
+                          }`}>
+                            {display}
+                          </p>
+                        </div>
+                      )
+                    })}
                 </div>
               </div>
             )}

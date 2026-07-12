@@ -111,14 +111,16 @@ const Search = () => {
   const [referencesList, setReferencesList] = useState([])
   const [filterImd, setFilterImd] = useState('')
   const [filterClaimStatus, setFilterClaimStatus] = useState('')
+  const [filterFinancialYear, setFilterFinancialYear] = useState('')
+  const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [imdList, setImdList] = useState([])
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
-  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd, filterClaimStatus].filter(Boolean).length : 0
+  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd, filterClaimStatus, filterFinancialYear].filter(Boolean).length : 0
   const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0) + (filterDateFrom ? 1 : 0) + (filterDateTo ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '', claimStatus = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '', claimStatus = '', financialYear = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -134,6 +136,7 @@ const Search = () => {
         if (reference) params.reference = reference
         if (imd) params.imd = imd
         if (claimStatus) params.claimStatus = claimStatus
+        if (financialYear) params.financialYear = financialYear
       }
       if (validity) params.validity = validity
       if (dateFrom) params.dateFrom = dateFrom
@@ -153,6 +156,7 @@ const Search = () => {
         setPage(pagination.currentPage)
         setTotalRecords(pagination.totalRecords)
         setHasMore(pagination.currentPage < pagination.totalPages)
+        if (res.data.financialYears) setAvailableFinancialYears(res.data.financialYears)
       }
     } catch (err) {
       console.error('Search error:', err)
@@ -202,8 +206,8 @@ const Search = () => {
   useEffect(() => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus)
-  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, fetchRecords])
+    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear)
+  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear, fetchRecords])
 
   // Lock body scroll when filter panel is open
   useEffect(() => {
@@ -644,6 +648,40 @@ const Search = () => {
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Financial Year */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    Financial Year
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterFinancialYear}
+                                      onChange={(e) => setFilterFinancialYear(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All Financial Years</option>
+                                      {availableFinancialYears.map((y) => (
+                                        <option key={y} value={String(y)}>{y}-{String(y + 1).slice(2)}</option>
+                                      ))}
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterFinancialYear && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-teal-600 truncate max-w-[200px]'>FY {filterFinancialYear}-{String(Number(filterFinancialYear) + 1).slice(2)}</span>
+                                      <button onClick={() => setFilterFinancialYear('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </>
                             )}
 
@@ -826,6 +864,19 @@ const Search = () => {
                       </svg>
                       {filterClaimStatus === 'raised' ? 'Claim Raised' : 'No Claim'}
                       <button onClick={() => setFilterClaimStatus('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
+                  {filterType === 'Insurance' && filterFinancialYear && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-cyan-50 px-2.5 py-1 text-[10px] font-bold text-cyan-700 ring-1 ring-inset ring-cyan-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                      FY {filterFinancialYear}-{String(Number(filterFinancialYear) + 1).slice(2)}
+                      <button onClick={() => setFilterFinancialYear('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
                         </svg>

@@ -10,21 +10,31 @@ const Renewals = () => {
   const [loading, setLoading] = useState(true)
   const [expiryFilter, setExpiryFilter] = useState(60)
   const [statusFilter, setStatusFilter] = useState('pending')
+  const [financialYear, setFinancialYear] = useState('')
+  const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [confirmModal, setConfirmModal] = useState(null)
 
   useEffect(() => {
     fetchRenewals()
   }, [])
 
-  const fetchRenewals = async () => {
+  useEffect(() => {
+    fetchRenewals(financialYear)
+  }, [financialYear])
+
+  const fetchRenewals = async (fy = '') => {
     try {
       setLoading(true)
+      const params = {}
+      if (fy) params.financialYear = fy
       // Dedicated endpoint — only fetches records relevant for renewals
       const response = await axios.get(`${API_URL}/api/insurance/renewals`, {
         withCredentials: true,
+        params,
       })
       if (response.data?.success) {
         setPolicies(response.data.data)
+        if (response.data.financialYears) setAvailableFinancialYears(response.data.financialYears)
       }
     } catch (err) {
       console.error('Error fetching renewals:', err)
@@ -132,6 +142,25 @@ const Renewals = () => {
                   ))}
                 </div>
               )}
+
+              {/* Financial Year filter */}
+              <div className='relative'>
+                <select
+                  value={financialYear}
+                  onChange={(e) => setFinancialYear(e.target.value)}
+                  className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-1.5 pl-3 pr-7 text-[10px] font-bold text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                >
+                  <option value=''>All FY</option>
+                  {availableFinancialYears.map((y) => (
+                    <option key={y} value={String(y)}>FY {y}-{String(y + 1).slice(2)}</option>
+                  ))}
+                </select>
+                <div className='pointer-events-none absolute inset-y-0 right-2 flex items-center'>
+                  <svg className='w-3 h-3 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Status Tabs */}

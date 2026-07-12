@@ -1,5 +1,5 @@
 const Insurance = require('../models/Insurance')
-const { createRecordController } = require('./recordControllerFactory')
+const { createRecordController, getFinancialYears } = require('./recordControllerFactory')
 
 const base = createRecordController({
   name: 'insurance',
@@ -65,8 +65,19 @@ const getRenewalsList = async (req, res) => {
         return r.daysLeft >= -MAX_EXPIRED_DAYS && r.daysLeft <= MAX_UPCOMING_DAYS
       })
       .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
+      .filter((r) => {
+        if (!req.query.financialYear) return true
+        const year = parseInt(req.query.financialYear, 10)
+        if (!r.issueDate) return false
+        const parts = r.issueDate.split('-')
+        if (parts.length !== 3) return false
+        const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]))
+        const fyStart = new Date(year, 3, 1)
+        const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
+        return d >= fyStart && d <= fyEnd
+      })
 
-    res.json({ success: true, data: result })
+    res.json({ success: true, data: result, financialYears: getFinancialYears(all) })
   } catch (error) {
     console.error('Error fetching renewals list:', error)
     res.status(500).json({ success: false, message: 'Failed to fetch renewals list' })

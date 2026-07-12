@@ -68,6 +68,23 @@ const generateDocumentName = (label, vehicleNumber) => {
   return `${label}_${vehicle}_${dd}-${mm}-${yy}_${hh}:${min}`
 }
 
+const getFinancialYears = (records) => {
+  const years = new Set()
+  for (const r of records) {
+    if (!r.issueDate) continue
+    const parts = r.issueDate.trim().split(/[/-]/)
+    if (parts.length !== 3) continue
+    const day = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10)
+    const year = parseInt(parts[2], 10)
+    if (isNaN(day) || isNaN(month) || isNaN(year)) continue
+    // Indian financial year: Apr-Mar → year starts in April
+    const fy = month >= 4 ? year : year - 1
+    years.add(fy)
+  }
+  return Array.from(years).sort((a, b) => b - a)
+}
+
 const buildPayload = (body, config, userId, isCreate = false) => {
   const payload = {}
 
@@ -228,6 +245,13 @@ const createRecordController = (config) => {
               if (recordDate && recordDate > toDate) return false
             }
           }
+          if (req.query.financialYear) {
+            const year = parseInt(req.query.financialYear, 10)
+            const fyStart = new Date(year, 3, 1)
+            const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
+            const recordDate = parseDateString(record.issueDate)
+            if (recordDate && (recordDate < fyStart || recordDate > fyEnd)) return false
+          }
           return true
         })
 
@@ -243,6 +267,7 @@ const createRecordController = (config) => {
           totalRecords,
           limit,
         },
+        financialYears: getFinancialYears(rawRecords),
       })
     } catch (error) {
       console.error(`Error fetching ${config.name} records:`, error)
@@ -431,4 +456,4 @@ const createRecordController = (config) => {
   }
 }
 
-module.exports = { createRecordController }
+module.exports = { createRecordController, getFinancialYears }

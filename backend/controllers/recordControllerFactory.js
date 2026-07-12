@@ -90,6 +90,14 @@ const buildPayload = (body, config, userId, isCreate = false) => {
     }
   })
 
+  if (config.booleanFields) {
+    config.booleanFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(body, field)) {
+        payload[field] = Boolean(body[field])
+      }
+    })
+  }
+
   if (config.arrayField && Array.isArray(body[config.arrayField])) {
     payload[config.arrayField] = body[config.arrayField]
       .map((item) => ({
@@ -186,6 +194,12 @@ const createRecordController = (config) => {
             return false
           }
           if (req.query.imd && record.imd !== req.query.imd) {
+            return false
+          }
+          if (req.query.claimStatus === 'raised' && !record.claimRaised) {
+            return false
+          }
+          if (req.query.claimStatus === 'not_raised' && record.claimRaised) {
             return false
           }
           if (req.query.validity) {

@@ -110,14 +110,15 @@ const Search = () => {
   const [filterReference, setFilterReference] = useState('')
   const [referencesList, setReferencesList] = useState([])
   const [filterImd, setFilterImd] = useState('')
+  const [filterClaimStatus, setFilterClaimStatus] = useState('')
   const [imdList, setImdList] = useState([])
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
-  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd].filter(Boolean).length : 0
+  const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd, filterClaimStatus].filter(Boolean).length : 0
   const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0) + (filterDateFrom ? 1 : 0) + (filterDateTo ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '', claimStatus = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -132,6 +133,7 @@ const Search = () => {
         if (policyType) params.insuranceClass = policyType
         if (reference) params.reference = reference
         if (imd) params.imd = imd
+        if (claimStatus) params.claimStatus = claimStatus
       }
       if (validity) params.validity = validity
       if (dateFrom) params.dateFrom = dateFrom
@@ -200,8 +202,8 @@ const Search = () => {
   useEffect(() => {
     setRecords([])
     setPage(1)
-    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd)
-  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, fetchRecords])
+    fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus)
+  }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, fetchRecords])
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -599,6 +601,39 @@ const Search = () => {
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Claim Status */}
+                                <div>
+                                  <label className='block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5'>
+                                    Claim Status
+                                  </label>
+                                  <div className='relative'>
+                                    <select
+                                      value={filterClaimStatus}
+                                      onChange={(e) => setFilterClaimStatus(e.target.value)}
+                                      className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/10 transition-all cursor-pointer'
+                                    >
+                                      <option value=''>All — Any Claim</option>
+                                      <option value='raised'>Claim Raised</option>
+                                      <option value='not_raised'>No Claim</option>
+                                    </select>
+                                    <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
+                                      <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                  {filterClaimStatus && (
+                                    <div className='mt-1.5 flex items-center justify-between'>
+                                      <span className='text-[10px] font-bold text-teal-600 truncate max-w-[200px]'>{filterClaimStatus === 'raised' ? 'Claim Raised' : 'No Claim'}</span>
+                                      <button onClick={() => setFilterClaimStatus('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
+                                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </>
                             )}
 
@@ -767,6 +802,19 @@ const Search = () => {
                       </svg>
                       {filterImd}
                       <button onClick={() => setFilterImd('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
+                        <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  )}
+                  {filterType === 'Insurance' && filterClaimStatus && (
+                    <span className='inline-flex items-center gap-1.5 rounded-lg bg-teal-50 px-2.5 py-1 text-[10px] font-bold text-teal-700 ring-1 ring-inset ring-teal-200'>
+                      <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
+                      </svg>
+                      {filterClaimStatus === 'raised' ? 'Claim Raised' : 'No Claim'}
+                      <button onClick={() => setFilterClaimStatus('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
                         </svg>

@@ -157,6 +157,20 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Claim tracking
+  claimRaised: {
+    type: Boolean,
+    default: false
+  },
+  claimDate: {
+    type: String,
+    trim: true
+  },
+  claimRemarks: {
+    type: String,
+    trim: true
+  },
+
   // Renewal tracking
   renewalStatus: {
     type: String,

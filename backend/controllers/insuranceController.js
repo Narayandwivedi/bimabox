@@ -9,9 +9,10 @@ const base = createRecordController({
   requiredDateField: 'validFrom',
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'reference', 'imd'],
-  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'endorsementDocument', 'remarks', 'reference', 'imd', 'renewalStatus'],
+  stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'endorsementDocument', 'remarks', 'reference', 'imd', 'renewalStatus', 'claimDate', 'claimRemarks'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
   numberFields: ['premium'],
+  booleanFields: ['claimRaised'],
   documentField: 'insuranceDocument',
   documentDataField: 'insuranceDocumentData',
 })
@@ -51,7 +52,7 @@ const getRenewalsList = async (req, res) => {
 
     const all = await Insurance.find({ userId: req.user._id })
       .lean()
-      .select('policyHolderName vehicleNumber policyNumber insuranceCompany product insuranceClass validFrom validTo renewalStatus premium')
+      .select('policyHolderName vehicleNumber policyNumber insuranceCompany product insuranceClass validFrom validTo renewalStatus premium claimRaised claimDate claimRemarks')
 
     const result = all
       .map((r) => ({ ...r, daysLeft: getDaysLeft(r.validTo) }))

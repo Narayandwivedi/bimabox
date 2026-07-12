@@ -136,7 +136,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     vehicleClass: '',
     remarks: '',
     reference: '',
-    imd: ''
+    imd: '',
+    claimRaised: false,
+    claimDate: '',
+    claimRemarks: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [scanningFile, setScanningFile] = useState(null)
@@ -192,7 +195,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         vehicleClass: initialData.vehicleClass || '',
         remarks: initialData.remarks || '',
         reference: initialData.reference || '',
-        imd: initialData.imd || ''
+        imd: initialData.imd || '',
+        claimRaised: initialData.claimRaised || false,
+        claimDate: initialData.claimDate || '',
+        claimRemarks: initialData.claimRemarks || ''
       })
       setUploadedInsuranceDocument(
         initialData.insuranceDocument
@@ -234,7 +240,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         vehicleClass: '',
         remarks: '',
         reference: '',
-        imd: ''
+        imd: '',
+        claimRaised: false,
+        claimDate: '',
+        claimRemarks: ''
       })
       setScanningFile(null)
       setIsExtractingInsurance(false)
@@ -412,6 +421,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       return
     }
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleClaimToggle = () => {
+    setFormData(prev => ({ ...prev, claimRaised: !prev.claimRaised }))
   }
 
   const applyOcrResult = (resultData) => {
@@ -739,7 +752,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       vehicleClass: formData.vehicleClass,
       remarks: formData.remarks,
       reference: formData.reference,
-      imd: formData.imd
+      imd: formData.imd,
+      claimRaised: formData.claimRaised,
+      claimDate: formData.claimDate,
+      claimRemarks: formData.claimRemarks
     }
 
     try {
@@ -1055,6 +1071,62 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               </div>
             </div>
 
+            <div className='bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                <span className='bg-teal-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                Claim Details
+              </h3>
+              <div className='flex items-center gap-3 mb-4'>
+                <button
+                  type='button'
+                  onClick={handleClaimToggle}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                    formData.claimRaised ? 'bg-teal-600' : 'bg-slate-300'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.claimRaised ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+                <span className='text-sm font-semibold text-gray-700'>
+                  {formData.claimRaised ? 'Claim raised' : 'No claim raised'}
+                </span>
+              </div>
+              {formData.claimRaised && (
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+                  <div>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Claim Date</label>
+                    <input
+                      type='date'
+                      name='claimDate'
+                      value={formData.claimDate ? formData.claimDate.split('-').reverse().join('-') : ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (value) {
+                          const [year, month, day] = value.split('-')
+                          setFormData(prev => ({ ...prev, claimDate: `${day}-${month}-${year}` }))
+                        } else {
+                          setFormData(prev => ({ ...prev, claimDate: '' }))
+                        }
+                      }}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white'
+                    />
+                  </div>
+                  <div className='md:col-span-2'>
+                    <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Claim Remarks</label>
+                    <textarea
+                      name='claimRemarks'
+                      value={formData.claimRemarks}
+                      onChange={handleChange}
+                      rows='2'
+                      placeholder='Any remarks about the claim...'
+                      className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white resize-none'
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className='bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1087,7 +1159,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             {uploadedInsuranceDocument && (
               <div className='bg-gradient-to-r from-slate-50 to-violet-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                 <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>4</span>
                   Uploaded Insurance Document
                 </h3>
                 <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>

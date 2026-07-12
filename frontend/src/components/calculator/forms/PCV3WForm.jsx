@@ -31,6 +31,7 @@ const PCV3WForm = ({
         ))}
       </div>
     </div>
+    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
       <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
@@ -43,7 +44,6 @@ const PCV3WForm = ({
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
       </div>
     </div>
-    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <IDVSection
       idv={idv} setIdv={setIdv}
       depreciation={depreciation} setDepreciation={setDepreciation}

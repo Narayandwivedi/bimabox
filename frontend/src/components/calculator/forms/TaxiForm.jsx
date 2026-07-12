@@ -38,6 +38,7 @@ const TaxiForm = ({
         </button>
       </div>
     </div>
+    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
       {!isElectric ? (
         <>
@@ -70,7 +71,6 @@ const TaxiForm = ({
       </div>
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
     </div>
-    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <IDVSection
       idv={idv} setIdv={setIdv}
       depreciation={depreciation} setDepreciation={setDepreciation}

@@ -35,6 +35,7 @@ const PCVForm = ({
         ))}
       </div>
     </div>
+    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
       <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
@@ -48,7 +49,6 @@ const PCVForm = ({
         <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
       </div>
     </div>
-    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <IDVSection
       idv={idv} setIdv={setIdv}
       depreciation={depreciation} setDepreciation={setDepreciation}

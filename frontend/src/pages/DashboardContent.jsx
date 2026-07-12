@@ -54,6 +54,7 @@ const DashboardContent = () => {
   const [showUploadOptions, setShowUploadOptions] = useState(false)
 
   const [initialExtractionFile, setInitialExtractionFile] = useState(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const [realExpiringDocs, setRealExpiringDocs] = useState([])
   const [loadingDocs, setLoadingDocs] = useState(true)
   const [recentDocs, setRecentDocs] = useState([])
@@ -570,7 +571,21 @@ const DashboardContent = () => {
       )}
 
       {showUploadOptions && (
-        <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4'>
+        <div
+          className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4'
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true) }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false) }}
+          onDrop={(e) => {
+            e.preventDefault(); e.stopPropagation(); setIsDragOver(false)
+            const file = e.dataTransfer.files?.[0]
+            if (file) {
+              setShowUploadOptions(false)
+              setInitialExtractionFile(file)
+              setShowAddInsuranceModal(true)
+            }
+          }}
+        >
           <div className='bg-white rounded-2xl shadow-2xl max-w-md w-full p-6'>
             <div className='flex justify-between items-center mb-6'>
               <h2 className='text-xl font-bold text-slate-900'>Upload Insurance</h2>
@@ -630,6 +645,13 @@ const DashboardContent = () => {
                   <p className='text-xs text-slate-500 font-medium mt-0.5'>Fill insurance details manually</p>
                 </div>
               </button>
+              <div className={`hidden md:flex flex-col items-center gap-2 border-2 border-dashed rounded-xl p-5 text-center transition-colors ${isDragOver ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-transparent'}`}>
+                <svg className='w-8 h-8 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
+                </svg>
+                <p className='text-sm font-semibold text-slate-600'>Drag &amp; drop your insurance document here</p>
+                <p className='text-xs text-slate-400'>PDF or Image (max 15MB)</p>
+              </div>
             </div>
           </div>
         </div>

@@ -11,6 +11,15 @@ const IMDSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  mobile: {
+    type: String,
+    trim: true
+  },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true
   }
 }, {
   timestamps: true

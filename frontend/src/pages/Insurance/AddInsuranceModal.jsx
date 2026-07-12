@@ -3,6 +3,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
 import { pdfToImages } from '../../utils/pdfToImages'
+import { enforceMobileNumberFormat } from '../../utils/contactValidation'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -150,12 +151,16 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [referenceSearch, setReferenceSearch] = useState('')
   const [showAddReference, setShowAddReference] = useState(false)
   const [newReferenceName, setNewReferenceName] = useState('')
+  const [newReferenceMobile, setNewReferenceMobile] = useState('')
+  const [newReferenceEmail, setNewReferenceEmail] = useState('')
 
   const [imds, setImds] = useState([])
   const [imdDropdownOpen, setImdDropdownOpen] = useState(false)
   const [imdSearch, setImdSearch] = useState('')
   const [showAddImd, setShowAddImd] = useState(false)
   const [newImdName, setNewImdName] = useState('')
+  const [newImdMobile, setNewImdMobile] = useState('')
+  const [newImdEmail, setNewImdEmail] = useState('')
 
   useEffect(() => {
     return () => {
@@ -277,14 +282,16 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     const name = newReferenceName.trim()
     if (!name) return
     try {
-      const res = await axios.post(`${API_URL}/api/references`, { name }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/references`, { name, mobile: newReferenceMobile, email: newReferenceEmail }, { withCredentials: true })
       if (res.data.success) {
         setReferences(prev => {
           const exists = prev.find(r => r.name === name)
-          return exists ? prev : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
+          return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
         setFormData(prev => ({ ...prev, reference: name }))
         setNewReferenceName('')
+        setNewReferenceMobile('')
+        setNewReferenceEmail('')
         setShowAddReference(false)
         setReferenceDropdownOpen(false)
       }
@@ -301,14 +308,16 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     const name = newImdName.trim()
     if (!name) return
     try {
-      const res = await axios.post(`${API_URL}/api/imd`, { name }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/imd`, { name, mobile: newImdMobile, email: newImdEmail }, { withCredentials: true })
       if (res.data.success) {
         setImds(prev => {
           const exists = prev.find(r => r.name === name)
-          return exists ? prev : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
+          return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
         setFormData(prev => ({ ...prev, imd: name }))
         setNewImdName('')
+        setNewImdMobile('')
+        setNewImdEmail('')
         setShowAddImd(false)
         setImdDropdownOpen(false)
       }
@@ -1138,20 +1147,37 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       )}
 
       {showAddReference && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName('') }}>
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail('') }}>
           <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
             <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Client Name</h3>
             <input
               type='text'
               value={newReferenceName}
               onChange={(e) => setNewReferenceName(e.target.value)}
-              placeholder='Enter Client Name'
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-4'
+              placeholder='Client Name *'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
             />
+            <input
+              type='text'
+              value={newReferenceMobile}
+              onChange={(e) => setNewReferenceMobile(enforceMobileNumberFormat(e.target.value))}
+              placeholder='Mobile (optional)'
+              maxLength={10}
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
+            <input
+              type='email'
+              value={newReferenceEmail}
+              onChange={(e) => setNewReferenceEmail(e.target.value)}
+              placeholder='Email (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-4'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
             <div className='flex justify-end gap-2'>
-              <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
               <button type='button' onClick={handleAddReference} className='px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold cursor-pointer'>Add</button>
             </div>
           </div>
@@ -1159,20 +1185,37 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       )}
 
       {showAddImd && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName('') }}>
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail('') }}>
           <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
             <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Agent name</h3>
             <input
               type='text'
               value={newImdName}
               onChange={(e) => setNewImdName(e.target.value)}
-              placeholder='Enter Agent name'
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-4'
+              placeholder='Agent Name *'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
             />
+            <input
+              type='text'
+              value={newImdMobile}
+              onChange={(e) => setNewImdMobile(enforceMobileNumberFormat(e.target.value))}
+              placeholder='Mobile (optional)'
+              maxLength={10}
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <input
+              type='email'
+              value={newImdEmail}
+              onChange={(e) => setNewImdEmail(e.target.value)}
+              placeholder='Email (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-4'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
             <div className='flex justify-end gap-2'>
-              <button type='button' onClick={() => { setShowAddImd(false); setNewImdName('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
               <button type='button' onClick={handleAddImd} className='px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold cursor-pointer'>Add</button>
             </div>
           </div>

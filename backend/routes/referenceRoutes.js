@@ -23,15 +23,21 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { name } = req.body
+    const { name, mobile, email } = req.body
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Reference name is required' })
     }
     const existing = await Reference.findOne({ userId: req.user._id, name: name.trim() })
     if (existing) {
+      if (mobile !== undefined || email !== undefined) {
+        existing.mobile = mobile || ''
+        existing.email = email || ''
+        await existing.save()
+        return res.json({ success: true, data: existing })
+      }
       return res.json({ success: true, data: existing })
     }
-    const reference = await Reference.create({ userId: req.user._id, name: name.trim() })
+    const reference = await Reference.create({ userId: req.user._id, name: name.trim(), mobile: mobile || '', email: email || '' })
     res.status(201).json({ success: true, data: reference })
   } catch (error) {
     console.error('Error creating reference:', error)
@@ -54,7 +60,7 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { name } = req.body
+    const { name, mobile, email } = req.body
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Reference name is required' })
     }
@@ -64,7 +70,7 @@ router.put('/:id', async (req, res) => {
     }
     const reference = await Reference.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { name: name.trim() },
+      { name: name.trim(), mobile: mobile || '', email: email || '' },
       { new: true }
     )
     if (!reference) {

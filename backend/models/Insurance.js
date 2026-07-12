@@ -160,7 +160,7 @@ const InsuranceSchema = new mongoose.Schema({
   // Renewal tracking
   renewalStatus: {
     type: String,
-    enum: ['pending', 'renewed', 'lost'],
+    enum: ['pending', 'renewed', 'lost', 'opportunity'],
     default: 'pending'
   },
 

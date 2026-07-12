@@ -34,7 +34,7 @@ const Renewals = () => {
   }
 
   const handleStatusChange = (id, status) => {
-    const labels = { renewed: 'Renewal Done', lost: 'Business Lost', pending: 'Reset to Pending' }
+    const labels = { renewed: 'Renewed', lost: 'Lost', opportunity: 'Opportunity', pending: 'Reset to Pending' }
     setConfirmModal({ id, status, label: labels[status] })
   }
 
@@ -59,6 +59,7 @@ const Renewals = () => {
   const filteredPolicies = policies.filter((p) => {
     const s = p.renewalStatus || 'pending'
     if (statusFilter === 'renewed') return s === 'renewed'
+    if (statusFilter === 'opportunity') return s === 'opportunity'
     if (statusFilter === 'lost') return s === 'lost'
     // Pending tab: show expired (within 60 days past) OR expiring within expiryFilter days
     if (s !== 'pending') return false
@@ -79,12 +80,14 @@ const Renewals = () => {
   }).length
 
   const renewedCount = policies.filter((p) => p.renewalStatus === 'renewed').length
+  const opportunityCount = policies.filter((p) => p.renewalStatus === 'opportunity').length
   const lostCount = policies.filter((p) => p.renewalStatus === 'lost').length
 
   const statusTabs = [
     { key: 'pending', label: 'Pending', count: pendingCount },
-    { key: 'renewed', label: 'Renewal Done', count: renewedCount },
-    { key: 'lost', label: 'Business Lost', count: lostCount },
+    { key: 'renewed', label: 'Renewed', count: renewedCount },
+    { key: 'opportunity', label: 'Opportunity', count: opportunityCount },
+    { key: 'lost', label: 'Lost', count: lostCount },
   ]
 
   return (
@@ -147,7 +150,7 @@ const Renewals = () => {
                   {tab.count > 0 && (
                     <span className={`inline-flex flex-shrink-0 items-center justify-center rounded-full px-1 py-0.5 text-[8px] lg:text-[9px] font-black leading-none ${
                       statusFilter === tab.key
-                        ? tab.key === 'lost' ? 'bg-red-100 text-red-600' : tab.key === 'renewed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                        ? tab.key === 'lost' ? 'bg-red-100 text-red-600' : tab.key === 'renewed' ? 'bg-emerald-100 text-emerald-600' : tab.key === 'opportunity' ? 'bg-sky-100 text-sky-600' : 'bg-amber-100 text-amber-600'
                         : 'bg-slate-300 text-slate-600'
                     }`}>
                       {tab.count}
@@ -171,7 +174,7 @@ const Renewals = () => {
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
                   </svg>
                 </div>
-                <p className='text-sm text-slate-500 font-bold'>No {statusFilter === 'renewed' ? 'renewed' : statusFilter === 'lost' ? 'lost' : 'pending'} policies.</p>
+                <p className='text-sm text-slate-500 font-bold'>No {statusFilter === 'renewed' ? 'renewed' : statusFilter === 'opportunity' ? 'opportunity' : statusFilter === 'lost' ? 'lost' : 'pending'} policies.</p>
                 <p className='text-xs text-slate-400 mt-1'>All insurance policies are up to date.</p>
               </div>
             ) : (
@@ -190,6 +193,8 @@ const Renewals = () => {
                             ? 'border-emerald-300 bg-emerald-50/30'
                             : status === 'lost'
                             ? 'border-red-300 bg-red-50/30'
+                            : status === 'opportunity'
+                            ? 'border-sky-300 bg-sky-50/30'
                             : isExpired
                             ? 'border-rose-300 bg-rose-50/30'
                             : 'border-slate-200 bg-white hover:border-amber-400'
@@ -238,6 +243,33 @@ const Renewals = () => {
                             >
                               Reset
                             </button>
+                          ) : status === 'opportunity' ? (
+                            <div className='flex items-center gap-2'>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
+                                className='flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
+                              >
+                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
+                                </svg>
+                                Renewed
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
+                                className='flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-all'
+                              >
+                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                </svg>
+                                Lost
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
+                                className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
+                              >
+                                Reset
+                              </button>
+                            </div>
                           ) : (
                             <div className='flex items-center gap-2'>
                               <button
@@ -247,7 +279,16 @@ const Renewals = () => {
                                 <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
                                 </svg>
-                                Done
+                                Renewed
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'opportunity') }}
+                                className='flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-600 hover:bg-sky-100 transition-all'
+                              >
+                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                                </svg>
+                                Opportunity
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
@@ -293,6 +334,8 @@ const Renewals = () => {
                                 ? 'bg-emerald-50/20'
                                 : status === 'lost'
                                 ? 'bg-red-50/20'
+                                : status === 'opportunity'
+                                ? 'bg-sky-50/20'
                                 : isExpired
                                 ? 'bg-rose-50/30'
                                 : ''
@@ -319,6 +362,8 @@ const Renewals = () => {
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                   : status === 'lost'
                                   ? 'bg-red-50 text-red-600 border border-red-100'
+                                  : status === 'opportunity'
+                                  ? 'bg-sky-50 text-sky-600 border border-sky-100'
                                   : isExpired
                                   ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                   : policy.daysLeft <= 5
@@ -329,6 +374,8 @@ const Renewals = () => {
                                   ? 'Renewed'
                                   : status === 'lost'
                                   ? 'Lost'
+                                  : status === 'opportunity'
+                                  ? 'Opportunity'
                                   : isExpired
                                   ? `${Math.abs(policy.daysLeft)}d ago`
                                   : policy.daysLeft === 0
@@ -344,6 +391,33 @@ const Renewals = () => {
                                 >
                                   Reset
                                 </button>
+                              ) : status === 'opportunity' ? (
+                                <div className='flex items-center gap-1'>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
+                                    className='flex items-center gap-0.5 rounded-lg bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
+                                  >
+                                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
+                                    </svg>
+                                    Renewed
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
+                                    className='flex items-center gap-0.5 rounded-lg bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all'
+                                  >
+                                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                                    </svg>
+                                    Lost
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
+                                    className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
                               ) : (
                                 <div className='flex items-center gap-1'>
                                   <button
@@ -353,7 +427,16 @@ const Renewals = () => {
                                     <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
                                     </svg>
-                                    Done
+                                    Renewed
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'opportunity') }}
+                                    className='flex items-center gap-0.5 rounded-lg bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-600 hover:bg-sky-100 transition-all'
+                                  >
+                                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                                    </svg>
+                                    Opp
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
@@ -384,7 +467,7 @@ const Renewals = () => {
           <div className='bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm'>
             <div className='text-center mb-6'>
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                confirmModal.status === 'renewed' ? 'bg-emerald-100' : confirmModal.status === 'lost' ? 'bg-red-100' : 'bg-slate-100'
+                confirmModal.status === 'renewed' ? 'bg-emerald-100' : confirmModal.status === 'lost' ? 'bg-red-100' : confirmModal.status === 'opportunity' ? 'bg-sky-100' : 'bg-slate-100'
               }`}>
                 {confirmModal.status === 'renewed' ? (
                   <svg className='w-7 h-7 text-emerald-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -393,6 +476,10 @@ const Renewals = () => {
                 ) : confirmModal.status === 'lost' ? (
                   <svg className='w-7 h-7 text-red-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' />
+                  </svg>
+                ) : confirmModal.status === 'opportunity' ? (
+                  <svg className='w-7 h-7 text-sky-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
                   </svg>
                 ) : (
                   <svg className='w-7 h-7 text-slate-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -419,6 +506,8 @@ const Renewals = () => {
                     ? 'bg-emerald-600 hover:bg-emerald-700'
                     : confirmModal.status === 'lost'
                     ? 'bg-red-600 hover:bg-red-700'
+                    : confirmModal.status === 'opportunity'
+                    ? 'bg-sky-600 hover:bg-sky-700'
                     : 'bg-slate-600 hover:bg-slate-700'
                 }`}
               >

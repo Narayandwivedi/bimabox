@@ -58,7 +58,7 @@ const getRenewalsList = async (req, res) => {
       .filter((r) => {
         const status = r.renewalStatus || 'pending'
         // Always include renewed / lost so their tabs are populated
-        if (status === 'renewed' || status === 'lost') return true
+        if (status === 'renewed' || status === 'lost' || status === 'opportunity') return true
         // Pending: only if daysLeft is calculable and within range
         if (r.daysLeft === null) return false
         return r.daysLeft >= -MAX_EXPIRED_DAYS && r.daysLeft <= MAX_UPCOMING_DAYS
@@ -75,8 +75,8 @@ const getRenewalsList = async (req, res) => {
 const updateRenewalStatus = async (req, res) => {
   try {
     const { status } = req.body
-    if (!['pending', 'renewed', 'lost'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status. Must be pending, renewed, or lost' })
+    if (!['pending', 'renewed', 'lost', 'opportunity'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status. Must be pending, renewed, lost, or opportunity' })
     }
 
     const record = await Insurance.findOneAndUpdate(

@@ -23,6 +23,8 @@ const sanitizeUser = (user) => ({
   isActive: user.isActive !== false,
   hasPassword: !!user.password,
   lastLogin: user.lastLogin || null,
+  address: user.address || '',
+  businessName: user.businessName || '',
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 })
@@ -333,6 +335,59 @@ const updateName = async (req, res) => {
   }
 }
 
+const updateProfile = async (req, res) => {
+  try {
+    const { name, mobile, address, businessName } = req.body
+    const updateData = {}
+
+    if (name !== undefined) {
+      const trimmedName = String(name).trim()
+      if (!trimmedName) {
+        return res.status(400).json({ success: false, message: 'Name is required' })
+      }
+      updateData.name = trimmedName
+    }
+
+    if (mobile !== undefined) {
+      const trimmedMobile = String(mobile).trim()
+      if (trimmedMobile && !/^\d{10}$/.test(trimmedMobile)) {
+        return res.status(400).json({ success: false, message: 'Mobile number must be 10 digits' })
+      }
+      if (trimmedMobile) {
+        const existing = await User.findOne({ mobile: trimmedMobile, _id: { $ne: req.user._id } })
+        if (existing) {
+          return res.status(409).json({ success: false, message: 'Mobile number already registered' })
+        }
+        updateData.mobile = trimmedMobile
+      } else {
+        updateData.mobile = ''
+      }
+    }
+
+    if (address !== undefined) {
+      updateData.address = String(address).trim()
+    }
+
+    if (businessName !== undefined) {
+      updateData.businessName = String(businessName).trim()
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      updateData,
+      { new: true }
+    )
+
+    res.json({
+      success: true,
+      data: { user: sanitizeUser(updatedUser) },
+    })
+  } catch (error) {
+    console.error('Update profile error:', error)
+    res.status(500).json({ success: false, message: 'Failed to update profile' })
+  }
+}
+
 const accessUser = async (req, res) => {
   try {
     const { id } = req.params
@@ -503,6 +558,7 @@ module.exports = {
   profile,
   updateMobile,
   updateName,
+  updateProfile,
   adminLogin,
   adminProfile,
   logout,

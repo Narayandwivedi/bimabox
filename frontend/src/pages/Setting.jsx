@@ -2,39 +2,54 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import { toast } from 'react-toastify'
+import { enforceMobileNumberFormat } from '../utils/contactValidation'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const Setting = () => {
   const navigate = useNavigate()
   const { logout, user, setUser } = useAuth()
-  const [editingName, setEditingName] = useState(false)
-  const [nameInput, setNameInput] = useState(user?.name || '')
-  const [savingName, setSavingName] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editMobile, setEditMobile] = useState('')
+  const [editAddress, setEditAddress] = useState('')
+  const [editBusinessName, setEditBusinessName] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const handleLogout = async () => {
     await logout()
     navigate('/login')
   }
 
-  const handleSaveName = async () => {
-    if (!nameInput.trim()) return
-    setSavingName(true)
-    try {
-      const response = await axios.put(`${API_URL}/api/auth/name`, { name: nameInput.trim() }, { withCredentials: true })
-      if (response.data.success) {
-        setUser(response.data.data.user)
-        setEditingName(false)
-      }
-    } catch (_err) {
-    } finally {
-      setSavingName(false)
-    }
+  const openEditModal = () => {
+    setEditName(user?.name || '')
+    setEditMobile(user?.mobile || '')
+    setEditAddress(user?.address || '')
+    setEditBusinessName(user?.businessName || '')
+    setShowEditModal(true)
   }
 
-  const handleCancelName = () => {
-    setNameInput(user?.name || '')
-    setEditingName(false)
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) return
+    setSaving(true)
+    try {
+      const response = await axios.put(`${API_URL}/api/auth/profile`, {
+        name: editName.trim(),
+        mobile: editMobile,
+        address: editAddress,
+        businessName: editBusinessName
+      }, { withCredentials: true })
+      if (response.data.success) {
+        setUser(response.data.data.user)
+        setShowEditModal(false)
+        toast.success('Profile updated successfully')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -71,38 +86,7 @@ const Setting = () => {
                 <div className='absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-white bg-emerald-500' />
               </div>
               <div className='min-w-0 flex-1'>
-                {editingName ? (
-                  <div className='flex flex-wrap items-center gap-2'>
-                    <input
-                      type='text'
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      className='flex-1 min-w-[120px] px-3 py-1.5 text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all'
-                      autoFocus
-                      disabled={savingName}
-                    />
-                    <div className='flex items-center gap-1.5'>
-                      <button type='button' onClick={handleSaveName} disabled={savingName || !nameInput.trim()} className='px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white text-xs font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer'>
-                        {savingName ? (
-                          <svg className='h-3.5 w-3.5 animate-spin' fill='none' viewBox='0 0 24 24'>
-                            <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                            <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
-                          </svg>
-                        ) : 'Save'}
-                      </button>
-                      <button type='button' onClick={handleCancelName} disabled={savingName} className='px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer'>
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button type='button' onClick={() => { setNameInput(user?.name || ''); setEditingName(true) }} className='group flex items-center gap-2 cursor-pointer'>
-                    <h2 className='text-base font-black text-slate-900 truncate group-hover:text-blue-600 transition-colors'>{user?.name || 'User'}</h2>
-                    <svg className='h-3.5 w-3.5 text-slate-300 group-hover:text-blue-500 transition-colors' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
-                    </svg>
-                  </button>
-                )}
+                <h2 className='text-base font-black text-slate-900 truncate'>{user?.name || 'User'}</h2>
                 <div className='flex items-center gap-1.5 mt-0.5'>
                   <div className='h-1.5 w-1.5 rounded-full bg-emerald-500' />
                   <p className='text-[9px] font-bold text-emerald-600 uppercase tracking-widest'>Active Member</p>
@@ -133,7 +117,44 @@ const Setting = () => {
                   <p className='text-xs font-semibold text-slate-900 truncate'>{user?.email || 'Not linked'}</p>
                 </div>
               </div>
+              {user?.businessName && (
+                <div className='flex items-center gap-3 rounded-xl bg-gradient-to-r from-amber-50 to-amber-100/50 px-4 py-3 border border-amber-100'>
+                  <div className='h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0'>
+                    <svg className='h-4 w-4 text-amber-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
+                    </svg>
+                  </div>
+                  <div className='min-w-0'>
+                    <p className='text-[9px] font-bold uppercase tracking-wider text-slate-400'>Business Name</p>
+                    <p className='text-xs font-semibold text-slate-900 truncate'>{user.businessName}</p>
+                  </div>
+                </div>
+              )}
+              {user?.address && (
+                <div className='flex items-center gap-3 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-100/50 px-4 py-3 border border-emerald-100'>
+                  <div className='h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0'>
+                    <svg className='h-4 w-4 text-emerald-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                    </svg>
+                  </div>
+                  <div className='min-w-0'>
+                    <p className='text-[9px] font-bold uppercase tracking-wider text-slate-400'>Address</p>
+                    <p className='text-xs font-semibold text-slate-900 truncate'>{user.address}</p>
+                  </div>
+                </div>
+              )}
             </div>
+
+            <button
+              onClick={openEditModal}
+              className='mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold hover:shadow-lg hover:shadow-blue-500/25 transition-all cursor-pointer'
+            >
+              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
+              </svg>
+              Edit Profile
+            </button>
           </div>
         </div>
 
@@ -267,7 +288,6 @@ const Setting = () => {
               <h3 className='text-[11px] font-black uppercase tracking-widest text-slate-500'>Legal &amp; Support</h3>
             </div>
             <div className='space-y-2.5'>
-              {/* Contact Us */}
               <Link
                 to='/contact-us'
                 className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-rose-200 hover:from-rose-50/50 hover:to-rose-50/30 transition-all duration-200'
@@ -286,7 +306,6 @@ const Setting = () => {
                 </svg>
               </Link>
 
-              {/* Privacy Policy */}
               <Link
                 to='/privacy-policy'
                 className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-blue-200 hover:from-blue-50/50 hover:to-blue-50/30 transition-all duration-200'
@@ -305,7 +324,6 @@ const Setting = () => {
                 </svg>
               </Link>
 
-              {/* Terms & Conditions */}
               <Link
                 to='/terms-and-conditions'
                 className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-violet-200 hover:from-violet-50/50 hover:to-violet-50/30 transition-all duration-200'
@@ -331,7 +349,7 @@ const Setting = () => {
         <div className='animate-slideUp'>
           <button
             onClick={handleLogout}
-            className='group flex w-full items-center justify-center gap-3 rounded-[32px] border border-rose-200 bg-gradient-to-br from-rose-50 to-rose-50/50 py-4 text-xs font-black uppercase tracking-widest text-rose-600 transition-all hover:from-rose-100 hover:to-rose-100 hover:shadow-lg hover:shadow-rose-500/20 active:scale-[0.98]'
+            className='group flex w-full items-center justify-center gap-3 rounded-[32px] border border-rose-200 bg-gradient-to-br from-rose-50 to-rose-50/50 py-4 text-xs font-black uppercase tracking-widest text-rose-600 transition-all hover:from-rose-100 hover:to-rose-100 hover:shadow-lg hover:shadow-rose-500/20 active:scale-[0.98] cursor-pointer'
           >
             <svg className='h-4 w-4 transition-transform group-hover:translate-x-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1' />
@@ -340,6 +358,99 @@ const Setting = () => {
           </button>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4' onClick={() => setShowEditModal(false)}>
+          <div className='bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden' onClick={e => e.stopPropagation()}>
+            <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white'>
+              <div className='flex justify-between items-center'>
+                <div>
+                  <h2 className='text-lg font-bold'>Edit Profile</h2>
+                  <p className='text-blue-100 text-xs mt-0.5'>Update your personal information</p>
+                </div>
+                <button onClick={() => setShowEditModal(false)} className='text-white hover:bg-white/20 rounded-lg p-1.5 transition cursor-pointer'>
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className='p-5 space-y-4'>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Name <span className='text-red-500'>*</span></label>
+                <input
+                  type='text'
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder='Your name'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Mobile</label>
+                <input
+                  type='text'
+                  value={editMobile}
+                  onChange={(e) => setEditMobile(enforceMobileNumberFormat(e.target.value))}
+                  placeholder='Mobile number'
+                  maxLength={10}
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Email</label>
+                <input
+                  type='email'
+                  value={user?.email || ''}
+                  disabled
+                  className='w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm cursor-not-allowed'
+                />
+                <p className='text-[10px] text-gray-400 mt-0.5'>Email cannot be changed</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Business Name</label>
+                <input
+                  type='text'
+                  value={editBusinessName}
+                  onChange={(e) => setEditBusinessName(e.target.value)}
+                  placeholder='Your business name'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Address</label>
+                <textarea
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  placeholder='Your address'
+                  rows={2}
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm resize-none'
+                />
+              </div>
+            </div>
+            <div className='border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3'>
+              <button type='button' onClick={() => setShowEditModal(false)} className='px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 cursor-pointer'>Cancel</button>
+              <button
+                type='button'
+                onClick={handleSaveProfile}
+                disabled={saving || !editName.trim()}
+                className='px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition disabled:opacity-50 cursor-pointer'
+              >
+                {saving ? (
+                  <span className='flex items-center gap-2'>
+                    <svg className='h-4 w-4 animate-spin' fill='none' viewBox='0 0 24 24'>
+                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                      <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
+                    </svg>
+                    Saving...
+                  </span>
+                ) : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

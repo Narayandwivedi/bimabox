@@ -119,6 +119,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const isOcrUpdate = useRef(false)
   const processedInitialFile = useRef(false)
   const userEditedValidTo = useRef(false)
+  const validFromDateRef = useRef(null)
+  const validToDateRef = useRef(null)
   const getTodayDate = () => utilGetTodayDate()
   const [formData, setFormData] = useState({
     vehicleNumber: prefilledVehicleNumber,
@@ -421,6 +423,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       return
     }
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleDatePickerSelect = (field, e) => {
+    if (!e.target.value) return
+    const [year, month, day] = e.target.value.split('-')
+    const formatted = `${day}-${month}-${year}`
+    setFormData(prev => ({ ...prev, [field]: formatted }))
+    if (field === 'validTo') userEditedValidTo.current = true
   }
 
   const handleClaimToggle = () => {
@@ -1042,11 +1052,27 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid From <span className='text-red-500'>*</span></label>
-                  <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='5' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
+                  <div className='relative'>
+                    <input type='text' name='validFrom' value={formData.validFrom} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder={getTodayDate()} tabIndex='5' className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' required />
+                    <button type='button' onClick={() => validFromDateRef.current?.showPicker()} className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 cursor-pointer p-1' title='Pick date from calendar'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                    </button>
+                    <input type='date' ref={validFromDateRef} onChange={(e) => handleDatePickerSelect('validFrom', e)} className='hidden' />
+                  </div>
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated, editable)</span></label>
-                  <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='6' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                  <div className='relative'>
+                    <input type='text' name='validTo' value={formData.validTo} onChange={handleChange} onKeyDown={handleInputKeyDown} placeholder='DD-MM-YYYY' tabIndex='6' className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                    <button type='button' onClick={() => validToDateRef.current?.showPicker()} className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 cursor-pointer p-1' title='Pick date from calendar'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+                      </svg>
+                    </button>
+                    <input type='date' ref={validToDateRef} onChange={(e) => handleDatePickerSelect('validTo', e)} className='hidden' />
+                  </div>
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>

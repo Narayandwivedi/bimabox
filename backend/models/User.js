@@ -44,6 +44,14 @@ const userSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  businessName: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

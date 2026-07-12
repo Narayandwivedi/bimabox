@@ -443,7 +443,7 @@ const RTODocumentDetail = () => {
                 )}
               </div>
             ) : fullDocUrl && (
-              <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden flex flex-col">
+              <div className="rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
                 <div className="bg-slate-50 p-2.5 border-b border-slate-200 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
@@ -487,11 +487,12 @@ const RTODocumentDetail = () => {
                     />
                   </div>
                 ) : (
-                  <div className="relative bg-slate-50 rounded-b-xl overflow-hidden">
+                  <div className="relative bg-slate-50 rounded-b-xl">
                     <iframe
                       src={fullDocUrl}
                       title="Document PDF"
-                      className="w-full h-[480px] border-none"
+                      className="w-full border-none"
+                      style={{ height: 'calc(100vh - 220px)', minHeight: '480px' }}
                     />
                   </div>
                 )}
@@ -499,7 +500,7 @@ const RTODocumentDetail = () => {
             )}
 
             {type === 'Insurance' && fullEndorsementUrl && (
-              <div className="rounded-xl border border-amber-200 bg-white shadow-sm overflow-hidden flex flex-col mt-4">
+              <div className="rounded-xl border border-amber-200 bg-white shadow-sm flex flex-col mt-4">
                 <div className="bg-amber-50 p-2.5 border-b border-amber-200 flex flex-col gap-2">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
@@ -542,11 +543,12 @@ const RTODocumentDetail = () => {
                     />
                   </div>
                 ) : (
-                  <div className="relative bg-slate-50 rounded-b-xl overflow-hidden">
+                  <div className="relative bg-slate-50 rounded-b-xl">
                     <iframe
                       src={fullEndorsementUrl}
                       title="Endorsement PDF"
-                      className="w-full h-[480px] border-none"
+                      className="w-full border-none"
+                      style={{ height: 'calc(100vh - 220px)', minHeight: '480px' }}
                     />
                   </div>
                 )}

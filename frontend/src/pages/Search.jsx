@@ -385,18 +385,18 @@ const Search = () => {
                     <>
                       {/* Overlay backdrop */}
                       <div
-                        className='fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:bg-black/20'
+                        className='fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm lg:bg-black/20'
                         onClick={() => setShowFilterPanel(false)}
                       />
 
-                      <div className='fixed inset-0 z-50 flex items-center justify-center'>
+                      <div className='fixed inset-0 z-[60] flex items-center justify-center'>
                         <div
                           onClick={(e) => e.stopPropagation()}
                           className={`
                             bg-white lg:bg-white/80 lg:backdrop-blur-xl
                             rounded-2xl border border-slate-200 shadow-2xl shadow-slate-300/50
                             overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150
-                            w-72 lg:w-[30rem]
+                            w-72 lg:w-[30rem] max-h-[85vh] lg:max-h-[90vh] flex flex-col
                           `}
                         >
                           {/* Panel Header */}
@@ -428,7 +428,7 @@ const Search = () => {
                             </div>
                           </div>
 
-                          <div className='p-4 lg:p-6 space-y-4 lg:space-y-5'>
+                          <div className='p-4 lg:p-6 space-y-4 lg:space-y-5 flex-1 overflow-y-auto'>
 
                             {filterType === 'Insurance' && (
                               <>

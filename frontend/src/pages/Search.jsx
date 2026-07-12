@@ -205,6 +205,16 @@ const Search = () => {
     fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus)
   }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, fetchRecords])
 
+  // Lock body scroll when filter panel is open
+  useEffect(() => {
+    if (showFilterPanel) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [showFilterPanel])
+
   // Close filter panel on outside click
   useEffect(() => {
     const handleClick = (e) => {
@@ -396,7 +406,7 @@ const Search = () => {
                             bg-white lg:bg-white/80 lg:backdrop-blur-xl
                             rounded-2xl border border-slate-200 shadow-2xl shadow-slate-300/50
                             overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150
-                            w-72 lg:w-[30rem] max-h-[85vh] lg:max-h-[90vh] flex flex-col
+                            w-[88vw] lg:w-[30rem] max-h-[85vh] lg:max-h-[90vh] flex flex-col
                           `}
                         >
                           {/* Panel Header */}
@@ -719,8 +729,9 @@ const Search = () => {
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Close button */}
+                          <div className='flex-shrink-0 border-t border-slate-100 bg-white px-4 pb-4 pt-3 lg:px-6 lg:pb-6'>
                             <button
                               onClick={() => setShowFilterPanel(false)}
                               className='w-full py-2 lg:py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs lg:text-sm font-bold shadow-lg shadow-blue-200 transition-all hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 active:scale-95'

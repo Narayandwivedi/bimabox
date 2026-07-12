@@ -174,7 +174,7 @@ const Setting = () => {
                   <h3 className='text-[11px] font-black uppercase tracking-widest text-slate-500'>Manage Data</h3>
                 </div>
                 <button
-                  onClick={() => navigate('/references')}
+                  onClick={() => navigate('/client-name')}
                   className='group flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-indigo-200 hover:from-indigo-50/50 hover:to-indigo-50/30 transition-all duration-200 cursor-pointer'
                 >
                   <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/20 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-shadow'>
@@ -191,7 +191,7 @@ const Setting = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => navigate('/imd')}
+                  onClick={() => navigate('/agent-name')}
                   className='group mt-2 flex w-full items-center gap-4 rounded-2xl bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-3.5 border border-slate-100 hover:border-purple-200 hover:from-purple-50/50 hover:to-purple-50/30 transition-all duration-200 cursor-pointer'
                 >
                   <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-purple-500/20 group-hover:shadow-lg group-hover:shadow-purple-500/30 transition-shadow'>

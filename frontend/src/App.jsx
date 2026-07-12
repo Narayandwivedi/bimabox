@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Link, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -90,8 +90,10 @@ function AppContent() {
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
             <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
-            <Route path='/references' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
-            <Route path='/imd' element={<ProtectedRoute><IMD /></ProtectedRoute>} />
+            <Route path='/references' element={<Navigate to='/client-name' replace />} />
+            <Route path='/client-name' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
+            <Route path='/imd' element={<Navigate to='/agent-name' replace />} />
+            <Route path='/agent-name' element={<ProtectedRoute><IMD /></ProtectedRoute>} />
             <Route path='/privacy-policy' element={<PrivacyPolicy />} />
             <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
             <Route path='/contact-us' element={<ContactUs />} />

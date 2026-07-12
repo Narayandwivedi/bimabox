@@ -101,7 +101,7 @@ const IMD = () => {
         <section className='w-full'>
           <div className='max-w-7xl mx-auto'>
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
-              <h1 className='text-xl font-black text-slate-900 mb-6'>Agent name</h1>
+              <h1 className='text-xl font-black text-slate-900 mb-6'>Agent Name</h1>
 
               <div className='flex flex-wrap gap-2 mb-6'>
                 <input

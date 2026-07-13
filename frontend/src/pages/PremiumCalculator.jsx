@@ -117,7 +117,7 @@ const PremiumCalculator = () => {
     const depreciatedIdv = idvVal * (1 - depreciationPercent / 100)
     const ccVal = parseFloat(cc) || 0
     const gvwVal = parseFloat(gvw) || 0
-    const passengerVal = parseInt(passengers) || 1
+    const passengerVal = parseInt(passengers) || 0
     const kwVal = parseFloat(kwPower) || 0
 
     const calcFn = CALCULATORS[vehicleType]

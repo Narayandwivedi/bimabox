@@ -164,18 +164,18 @@ const Renewals = () => {
             </div>
 
             {/* Status Tabs */}
-            <div className='mb-4 flex items-center gap-1 rounded-xl bg-slate-100 p-1 w-full lg:w-fit'>
+            <div className='mb-4 flex items-center gap-1 rounded-xl bg-slate-100 p-1 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden'>
               {statusTabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`flex flex-1 lg:flex-none items-center justify-center gap-1 rounded-lg px-2 py-2 lg:px-4 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`flex-none items-center justify-center gap-1 rounded-lg px-2 py-2 lg:px-4 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider transition-all ${
                     statusFilter === tab.key
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  <span className='truncate'>{tab.label}</span>
+                  <span>{tab.label}</span>
                   {tab.count > 0 && (
                     <span className={`inline-flex flex-shrink-0 items-center justify-center rounded-full px-1 py-0.5 text-[8px] lg:text-[9px] font-black leading-none ${
                       statusFilter === tab.key
@@ -260,77 +260,52 @@ const Renewals = () => {
                             <p className='text-[10px] text-slate-400'>{policy.validTo}</p>
                           </div>
                         </div>
-                        <div className='mt-2.5 flex items-start justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
+                        <div className='mt-2.5 border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
                           <div className='flex flex-col gap-0.5 min-w-0'>
                             <span><span className='font-semibold text-slate-500'>Policy:</span> {policy.policyNumber || '—'}</span>
                             <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
                           </div>
-                          {isResolved ? (
+                        </div>
+                        {isResolved ? (
+                          <div className='mt-2 flex justify-center border-t border-slate-100 pt-2'>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
                               className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
                             >
                               Reset
                             </button>
-                          ) : status === 'opportunity' ? (
-                            <div className='flex items-center gap-2'>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
-                                className='flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
-                              >
-                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
-                                </svg>
-                                Renewed
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
-                                className='flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-all'
-                              >
-                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                </svg>
-                                Lost
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'pending') }}
-                                className='text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline'
-                              >
-                                Reset
-                              </button>
-                            </div>
-                          ) : (
-                            <div className='flex items-center gap-2'>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
-                                className='flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
-                              >
-                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
-                                </svg>
-                                Renewed
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'opportunity') }}
-                                className='flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-600 hover:bg-sky-100 transition-all'
-                              >
-                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                                </svg>
-                                Opportunity
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
-                                className='flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-all'
-                              >
-                                <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
-                                </svg>
-                                Lost
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                          </div>
+                        ) : (
+                          <div className='mt-2 grid grid-cols-3 gap-1 border-t border-slate-100 pt-2'>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'renewed') }}
+                              className='flex items-center justify-center gap-1 rounded-lg bg-emerald-50 px-1 py-2 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all'
+                            >
+                              <svg className='h-3.5 w-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
+                              </svg>
+                              Renewed
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'opportunity') }}
+                              className='flex items-center justify-center gap-1 rounded-lg bg-sky-50 px-1 py-2 text-[10px] font-bold text-sky-600 hover:bg-sky-100 transition-all'
+                            >
+                              <svg className='h-3.5 w-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                              </svg>
+                              Opp
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
+                              className='flex items-center justify-center gap-1 rounded-lg bg-red-50 px-1 py-2 text-[10px] font-bold text-red-600 hover:bg-red-100 transition-all'
+                            >
+                              <svg className='h-3.5 w-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                              </svg>
+                              Lost
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )
                   })}

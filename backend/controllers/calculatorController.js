@@ -23,6 +23,7 @@ const generatePdf = async (req, res) => {
     const producerContact = data.producerContact || 'N/A'
     const producerEmail = data.producerEmail || 'N/A'
     const insuranceCompany = data.insuranceCompany || 'BIMABOX'
+    const insuranceCompanyId = data.insuranceCompanyId || null
 
     // Compute policy dates
     const startDate = new Date()
@@ -308,7 +309,7 @@ const generatePdf = async (req, res) => {
 
     stream.on('finish', () => {
       const pdfUrl = `/uploads/quotations/${filename}`
-      res.json({ success: true, url: pdfUrl, filename })
+      res.json({ success: true, url: pdfUrl, filename, insuranceCompanyId })
     })
 
     stream.on('error', (err) => {

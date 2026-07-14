@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { fmt, fmtD } from './helpers'
 import PdfPreviewModal from './PdfPreviewModal'
@@ -17,7 +17,7 @@ const ResultBox = ({
   const [pdfLoading, setPdfLoading] = useState(false)
   const [generatedQuoteId, setGeneratedQuoteId] = useState('')
   const [showCompanyModal, setShowCompanyModal] = useState(false)
-  const [selectedCompany, setSelectedCompany] = useState('')
+  const [selectedCompany, setSelectedCompany] = useState(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [customerName, setCustomerName] = useState('')
@@ -27,58 +27,13 @@ const ResultBox = ({
   const [vehicleVariant, setVehicleVariant] = useState('')
   const [modalStep, setModalStep] = useState(1)
   const { user } = useAuth()
+  const [insuranceCompanies, setInsuranceCompanies] = useState([])
 
-  const insuranceCompanies = [
-    'Acko General Insurance Limited',
-    'Aditya Birla Sun Life Insurance Co. Ltd.',
-    'Aegon Life Insurance Company Limited',
-    'Ageas Federal Life Insurance Company Limited',
-    'Aviva Life Insurance Company India Ltd.',
-    'Bajaj Allianz General Insurance Company Limited',
-    'Bajaj Allianz Life Insurance Co. Ltd.',
-    'Bharti AXA Life Insurance Company Ltd.',
-    'Canara HSBC Life Insurance Company Limited',
-    'Cholamandalam MS General Insurance Company Limited',
-    'Edelweiss General Insurance Company Limited',
-    'Edelweiss Tokio Life Insurance Company Limited',
-    'Future Generali India Insurance Company Limited',
-    'Future Generali India Life Insurance Company Limited',
-    'Go Digit General Insurance Limited',
-    'HDFC ERGO General Insurance Company Limited',
-    'HDFC Life Insurance Co. Ltd.',
-    'ICICI Lombard General Insurance Company Limited',
-    'ICICI Prudential Life Insurance Co. Ltd.',
-    'IFFCO Tokio General Insurance Company Limited',
-    'IndiaFirst Life Insurance Company Ltd.',
-    'Kotak Mahindra General Insurance Company Limited',
-    'Kotak Mahindra Life Insurance Co. Ltd.',
-    'Liberty General Insurance Limited',
-    'Life Insurance Corporation of India (LIC)',
-    'Magma HDI General Insurance Company Limited',
-    'Max Life Insurance Co. Ltd.',
-    'National Insurance Company Limited',
-    'Navi General Insurance Limited',
-    'Niva Bupa Health Insurance Company Limited',
-    'PNB MetLife India Insurance Co. Ltd.',
-    'Pramerica Life Insurance Co. Ltd.',
-    'Raheja QBE General Insurance Company Limited',
-    'Reliance General Insurance Company Limited',
-    'Reliance Nippon Life Insurance Company Limited',
-    'Royal Sundaram General Insurance Company Limited',
-    'SBI General Insurance Company Limited',
-    'SBI Life Insurance Co. Ltd.',
-    'Sahara India Life Insurance Co. Ltd.',
-    'Shriram General Insurance Company Limited',
-    'Shriram Life Insurance Co. Ltd.',
-    'Star Health & Allied Insurance Company Limited',
-    'Star Union Dai-ichi Life Insurance Co. Ltd.',
-    'Tata AIA Life Insurance Co. Ltd.',
-    'Tata AIG General Insurance Company Limited',
-    'The New India Assurance Company Limited',
-    'The Oriental Insurance Company Limited',
-    'United India Insurance Company Limited',
-    'Universal Sompo General Insurance Company Limited',
-  ]
+  useEffect(() => {
+    axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
+      .then(res => { if (res.data?.success) setInsuranceCompanies(res.data.data) })
+      .catch(() => {})
+  }, [])
 
   if (!result) return null
 
@@ -314,6 +269,7 @@ const ResultBox = ({
         producerContact: user?.mobile || 'N/A',
         producerEmail: user?.email || 'N/A',
         insuranceCompany,
+        insuranceCompanyId: insuranceCompany?._id || null,
         premiums: {
           odRate: result.odRate,
           odBase: odBaseVal,
@@ -584,7 +540,7 @@ const ResultBox = ({
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className='w-full flex items-center justify-between rounded-xl border-2 border-slate-200 p-3 text-sm font-bold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none bg-white transition-all'
                   >
-                    <span className={selectedCompany ? 'text-slate-800' : 'text-slate-400'}>{selectedCompany || '-- Select Insurance Company --'}</span>
+                    <span className={selectedCompany?.name ? 'text-slate-800' : 'text-slate-400'}>{selectedCompany?.name || '-- Select Insurance Company --'}</span>
                     <svg className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
                     </svg>
@@ -609,22 +565,22 @@ const ResultBox = ({
                       </div>
                       <div className='overflow-y-auto' style={{ maxHeight: '200px' }}>
                         {insuranceCompanies
-                          .filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
-                          .map((company) => (
+                          .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((c) => (
                             <button
-                              key={company}
+                              key={c._id}
                               type='button'
-                              onClick={() => { setSelectedCompany(company); setDropdownOpen(false); setSearchQuery('') }}
+                              onClick={() => { setSelectedCompany(c); setDropdownOpen(false); setSearchQuery('') }}
                               className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-slate-50 last:border-b-0 ${
-                                selectedCompany === company
+                                selectedCompany?._id === c._id
                                   ? 'bg-blue-50 text-blue-700 font-bold'
                                   : 'text-slate-700 hover:bg-slate-50'
                               }`}
                             >
-                              {company}
+                              {c.name}
                             </button>
                           ))}
-                        {insuranceCompanies.filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                        {insuranceCompanies.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                           <p className='px-4 py-8 text-sm text-slate-400 text-center'>No companies found</p>
                         )}
                       </div>
@@ -662,7 +618,7 @@ const ResultBox = ({
                     </button>
                     <button
                       onClick={() => {
-                        if (!selectedCompany) {
+                        if (!selectedCompany?.name) {
                           alert('Please select an insurance company.')
                           return
                         }

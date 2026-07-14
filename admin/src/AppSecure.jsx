@@ -11,6 +11,11 @@ const initialForm = {
   isActive: true,
 }
 
+const initialCompanyForm = {
+  _id: '',
+  name: '',
+}
+
 const initialLoginForm = {
   email: '',
   password: '',
@@ -61,6 +66,14 @@ function AppSecure() {
     error: '',
   })
   const [whatsAppForm, setWhatsAppForm] = useState(initialWhatsAppForm)
+  const [companies, setCompanies] = useState([])
+  const [companiesLoading, setCompaniesLoading] = useState(false)
+  const [companyForm, setCompanyForm] = useState(initialCompanyForm)
+  const [showCompanyModal, setShowCompanyModal] = useState(false)
+  const [isEditCompany, setIsEditCompany] = useState(false)
+  const [companyMessage, setCompanyMessage] = useState({ type: '', text: '' })
+  const [companySaving, setCompanySaving] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const apiFetch = async (endpoint, options = {}) => {
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -139,6 +152,25 @@ function AppSecure() {
     if (!loginState.authenticated) return
     fetchUsers()
   }, [loginState.authenticated])
+
+  const fetchCompanies = async () => {
+    try {
+      setCompaniesLoading(true)
+      setCompanyMessage({ type: '', text: '' })
+      const result = await apiFetch('/api/insurance-companies')
+      setCompanies(result.data || [])
+    } catch (error) {
+      console.error('Error fetching insurance companies:', error)
+      setCompanyMessage({ type: 'error', text: error.message || 'Failed to fetch companies' })
+    } finally {
+      setCompaniesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!loginState.authenticated || activeSection !== 'companies') return
+    fetchCompanies()
+  }, [activeSection, loginState.authenticated])
 
   const fetchWhatsAppStatus = async ({ silent = false } = {}) => {
     try {
@@ -739,6 +771,13 @@ function AppSecure() {
           </button>
           <button
             type="button"
+            onClick={() => setActiveSection('companies')}
+            className={`sidebar-link ${activeSection === 'companies' ? 'sidebar-link-active' : ''}`}
+          >
+            Insurance Co.
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveSection('settings')}
             className={`sidebar-link ${activeSection === 'settings' ? 'sidebar-link-active' : ''}`}
           >
@@ -1034,6 +1073,164 @@ function AppSecure() {
                 <div className="message message-success" style={{ marginTop: '20px' }}>{whatsAppState.result}</div>
               ) : null}
             </section>
+          </>
+        ) : activeSection === 'companies' ? (
+          <>
+            <section className="panel panel-full" style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div className="panel-header panel-header-row">
+                <h2>Insurance Companies</h2>
+                <div className="toolbar">
+                  <button type="button" className="secondary-btn" onClick={fetchCompanies}>Refresh</button>
+                  <button type="button" className="primary-btn small-btn" onClick={() => {
+                    setCompanyForm(initialCompanyForm)
+                    setCompanyMessage({ type: '', text: '' })
+                    setIsEditCompany(false)
+                    setShowCompanyModal(true)
+                  }}>
+                    Add Company
+                  </button>
+                </div>
+              </div>
+
+              {companiesLoading ? (
+                <div className="empty-state">Loading companies...</div>
+              ) : companies.length === 0 ? (
+                <div className="empty-state">No insurance companies found.</div>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Company Name</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {companies.map((c, i) => (
+                        <tr key={c._id}>
+                          <td style={{ color: '#94a3b8', fontSize: '12px' }}>{i + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{c.name}</td>
+                          <td>
+                            <div className="flex gap-2" style={{ display: 'flex', gap: '8px' }}>
+                              <button type="button" className="secondary-btn table-btn" onClick={() => {
+                                setCompanyForm({ _id: c._id, name: c.name })
+                                setCompanyMessage({ type: '', text: '' })
+                                setIsEditCompany(true)
+                                setShowCompanyModal(true)
+                              }}>
+                                Edit
+                              </button>
+                              <button type="button" className="secondary-btn table-btn" style={{ borderColor: '#fca5a5', color: '#b91c1c' }} onClick={() => setDeleteConfirm(c)}>
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            {showCompanyModal ? (
+              <div className="modal-overlay">
+                <div className="modal-card">
+                  <div className="modal-header">
+                    <div>
+                      <p className="eyebrow">Insurance Company</p>
+                      <h2>{isEditCompany ? 'Edit Company' : 'Add Company'}</h2>
+                    </div>
+                    <button type="button" className="icon-btn" onClick={() => setShowCompanyModal(false)}>x</button>
+                  </div>
+                  <form className="user-form" onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (!companyForm.name.trim()) {
+                      setCompanyMessage({ type: 'error', text: 'Company name is required' })
+                      return
+                    }
+                    try {
+                      setCompanySaving(true)
+                      await apiFetch(isEditCompany ? `/api/insurance-companies/${companyForm._id}` : '/api/insurance-companies', {
+                        method: isEditCompany ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: companyForm.name.trim() }),
+                      })
+                      setCompanyForm(initialCompanyForm)
+                      setCompanyMessage({ type: 'success', text: isEditCompany ? 'Company updated successfully' : 'Company added successfully' })
+                      setShowCompanyModal(false)
+                      fetchCompanies()
+                    } catch (error) {
+                      console.error(`Error ${isEditCompany ? 'updating' : 'creating'} company:`, error)
+                      setCompanyMessage({ type: 'error', text: error.message || `Failed to ${isEditCompany ? 'update' : 'create'} company` })
+                    } finally {
+                      setCompanySaving(false)
+                    }
+                  }}>
+                    <label>
+                      <span>Company Name</span>
+                      <input name="name" value={companyForm.name} onChange={(e) => {
+                        setCompanyForm(prev => ({ ...prev, name: e.target.value }))
+                        if (companyMessage.text) setCompanyMessage({ type: '', text: '' })
+                      }} />
+                    </label>
+                    {companyMessage.text ? (
+                      <div className={`message ${companyMessage.type === 'error' ? 'message-error' : 'message-success'}`}>
+                        {companyMessage.text}
+                      </div>
+                    ) : null}
+                    <div className="modal-actions">
+                      <button type="button" className="secondary-btn" onClick={() => setShowCompanyModal(false)}>Cancel</button>
+                      <button type="submit" className="primary-btn" disabled={companySaving}>
+                        {companySaving ? (isEditCompany ? 'Saving...' : 'Adding...') : (isEditCompany ? 'Save Company' : 'Add Company')}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            ) : null}
+
+            {deleteConfirm ? (
+              <div className="modal-overlay">
+                <div className="modal-card" style={{ maxWidth: '400px' }}>
+                  <div className="modal-header">
+                    <div>
+                      <p className="eyebrow">Delete Company</p>
+                      <h2>Confirm Deletion</h2>
+                    </div>
+                    <button type="button" className="icon-btn" onClick={() => setDeleteConfirm(null)}>x</button>
+                  </div>
+                  <div style={{ padding: '16px 24px' }}>
+                    <p className="section-text">
+                      Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+                    </p>
+                    <p className="section-text" style={{ fontSize: '12px', marginTop: '8px', color: '#b91c1c' }}>
+                      This action cannot be undone.
+                    </p>
+                  </div>
+                  <div className="modal-actions" style={{ padding: '0 24px 24px' }}>
+                    <button type="button" className="secondary-btn" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+                    <button type="button" className="primary-btn" style={{ background: '#dc2626' }} onClick={async () => {
+                      try {
+                        setCompanySaving(true)
+                        await apiFetch(`/api/insurance-companies/${deleteConfirm._id}`, { method: 'DELETE' })
+                        setDeleteConfirm(null)
+                        fetchCompanies()
+                      } catch (error) {
+                        console.error('Error deleting company:', error)
+                        setCompanyMessage({ type: 'error', text: error.message || 'Failed to delete company' })
+                        setDeleteConfirm(null)
+                      } finally {
+                        setCompanySaving(false)
+                      }
+                    }} disabled={companySaving}>
+                      {companySaving ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </>
         ) : activeSection === 'settings' ? (
           <>

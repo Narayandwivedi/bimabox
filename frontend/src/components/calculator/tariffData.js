@@ -24,6 +24,7 @@ const TARIFF = {
   },
   gcv: {
     tpByGVW: [16049, 27186, 35313, 43950, 44242],
+    electricTpByGVW: [13642, 23108, 30016, 37357, 37606],
     extraPer100kg: 27,
     odRates: {
       upto_5: { A: 1.751, B: 1.743, C: 1.726 },

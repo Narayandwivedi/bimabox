@@ -40,28 +40,24 @@ const TaxiForm = ({
     </div>
     <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-      {!isElectric ? (
-        <>
-          <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
-          <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
-          <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
-        </>
-      ) : (
-        <div className='col-span-3'>
-          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
-          <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 40'
-            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-          <p className='mt-1 text-[8px] text-slate-400'>&lt;30 / 30–65 / {'>'}65 KW</p>
-        </div>
-      )}
+      <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
+      <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
+      <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
     </div>
     <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
-      {!isElectric && (
+      {!isElectric ? (
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
           <input type='number' value={cc} onChange={e => setCc(e.target.value)} placeholder='e.g. 1200'
             className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
           <p className='mt-1 text-[8px] text-slate-400'>≤1000 / 1001–1500 / {'>'}1500 CC</p>
+        </div>
+      ) : (
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
+          <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 40'
+            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+          <p className='mt-1 text-[8px] text-slate-400'>&lt;30 / 30–65 / {'>'}65 KW</p>
         </div>
       )}
       <div>
@@ -69,7 +65,6 @@ const TaxiForm = ({
         <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 4' min={0} max={6}
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
       </div>
-      <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
     </div>
     <IDVSection
       idv={idv} setIdv={setIdv}

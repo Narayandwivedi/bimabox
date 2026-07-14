@@ -7,11 +7,15 @@ export function calcTaxi({
   vehicleAge, zone,
 }) {
   if (isElectric) {
-    const kwBracket = kwVal < 30 ? 0 : kwVal <= 65 ? 1 : 2
+    const kwBracket = kwVal <= 30 ? 0 : kwVal <= 65 ? 1 : 2
     return {
       tpPremium: TARIFF.taxi.electricTP[kwBracket] + (passengerVal * TARIFF.taxi.electricTPPerPsgr[kwBracket]),
       odRate: TARIFF.taxi.odRates[vehicleAge][zone][kwBracket],
-      details: { label: `${kwVal} KW (Electric)` },
+      details: {
+        label: kwVal <= 30 ? '≤30 KW' : kwVal <= 65 ? '30–65 KW' : '>65 KW',
+        tpBase: TARIFF.taxi.electricTP[kwBracket],
+        tpPsgr: passengerVal * TARIFF.taxi.electricTPPerPsgr[kwBracket],
+      },
     }
   }
 

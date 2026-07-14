@@ -150,7 +150,9 @@ const PremiumCalculator = () => {
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
-        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
+        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0)
+                    + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0)
+                    + geoExtentAmount
         const imtBase = basicOd + extras
         imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
         odBeforeDiscount = imtBase + imt23Amount
@@ -212,6 +214,7 @@ const PremiumCalculator = () => {
       depreciation: depreciationPercent, depreciatedIdv,
       gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
       odRate, details, odDiscountVal, odDiscountAmount, ncbAmount,
+      addODVal: details?.addOD || 0,
     })
   }
 

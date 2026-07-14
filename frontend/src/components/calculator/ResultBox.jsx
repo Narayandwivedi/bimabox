@@ -106,6 +106,7 @@ const ResultBox = ({
     const odItems = showOD ? `
       <tr><td style='padding:4px 8px;color:#64748b'>Final IDV (after depreciation)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(effectiveIdv)}</td></tr>
       <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
+      ${vehicleType === 'pcv' && result.addODVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Add. OD (Passenger Capacity)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.addODVal)}</td></tr>` : ''}
       ${vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Extra Weight > 12000 Premium</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.details.gcvExtraPremium)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 Loading (15% of sum)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
@@ -249,6 +250,7 @@ const ResultBox = ({
 
     if (showOD) {
       tableRows.push({ desc: 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
+      if (vehicleType === 'pcv' && result.addODVal > 0) tableRows.push({ desc: 'Add. OD (Passenger Capacity)', rate: '-', amount: result.addODVal })
       if (vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0) tableRows.push({ desc: 'Extra Weight > 12000 Premium', rate: '-', amount: result.details.gcvExtraPremium })
       if (result.geoExtentAmount > 0) tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of sum)', rate: '15%', amount: result.imt23Amount })
@@ -336,6 +338,7 @@ const ResultBox = ({
           depreciatedIdv: result.depreciatedIdv,
           gcvExtraUnits: result.details?.gcvExtraUnits || 0,
           gcvExtraPremium: result.details?.gcvExtraPremium || 0,
+          addODVal: result.addODVal || 0,
         },
         gst: {
           enabled: gstEnabled,
@@ -382,6 +385,9 @@ const ResultBox = ({
             {[
               ['Final IDV (after depreciation)', `₹${fmtD(effectiveIdv)}`],
               ['Basic OD Premium', `₹${fmtD(odBase)}`],
+              ...(vehicleType === 'pcv' && result.addODVal > 0 ? [
+                [`Add. OD (Passenger Capacity)`, `₹${fmtD(result.addODVal)}`],
+              ] : []),
               ...(vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? [
                 [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),

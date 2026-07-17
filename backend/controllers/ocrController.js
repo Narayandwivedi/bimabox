@@ -1,5 +1,6 @@
 const axios = require('axios')
 const pdfParse = require('pdf-parse')
+const InsuranceCompany = require('../models/InsuranceCompany')
 
 const HIGH_VALUE_KEYWORDS = [
   'registration no', 'vehicle no', 'engine number', 'chassis', 'make', 'model',
@@ -221,39 +222,13 @@ ${jsonTemplate}`
     }
 
     if (extractedData.insuranceCompany) {
-      const companies = [
-        'HDFC ERGO',
-        'ICICI Lombard',
-        'Bajaj Allianz',
-        'Tata AIG',
-        'Reliance General',
-        'IFFCO Tokio',
-        'National Insurance',
-        'New India Assurance',
-        'Oriental Insurance',
-        'United India Insurance',
-        'Magma HDI',
-        'Go Digit',
-        'Acko',
-        'Cholamandalam MS',
-        'Future Generali',
-        'Royal Sundaram',
-        'SBI General',
-        'Shriram General',
-        'Liberty General',
-        'Universal Sompo',
-        'Kotak General',
-        'Zuno General',
-        'Raheja QBE',
-        'Navi General',
-        'Star Health'
-      ];
+      const companies = await InsuranceCompany.find().select('name').lean();
       const cleaned = extractedData.insuranceCompany.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
       const match = companies.find(c => {
-        const cCleaned = c.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+        const cCleaned = c.name.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
         return cleaned.includes(cCleaned) || cCleaned.includes(cleaned);
       });
-      extractedData.insuranceCompany = match || '';
+      extractedData.insuranceCompany = match?.name || '';
     }
 
     return res.json({

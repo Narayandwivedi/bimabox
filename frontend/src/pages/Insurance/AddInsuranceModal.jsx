@@ -21,14 +21,14 @@ const resolveStoredDocumentPreview = (documentPath) => {
   return `${API_URL}${documentPath}`
 }
 
-const normalizeInsuranceCompany = (companyName) => {
-  if (!companyName) return ''
+const normalizeInsuranceCompany = (companyName, companies) => {
+  if (!companyName || !companies?.length) return ''
   const cleaned = companyName.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
-  const match = INSURANCE_COMPANIES.find(c => {
-    const cCleaned = c.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
+  const match = companies.find(c => {
+    const cCleaned = c.name.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
     return cleaned.includes(cCleaned) || cCleaned.includes(cleaned)
   })
-  return match || ''
+  return match?.name || ''
 }
 
 const PRODUCT_TYPE_KEYWORD_MAP = [
@@ -417,7 +417,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           return
         }
         if (key === 'insuranceCompany') {
-          updated[key] = normalizeInsuranceCompany(value)
+          updated[key] = normalizeInsuranceCompany(value, insuranceCompanies)
           return
         }
         if (key === 'product') {

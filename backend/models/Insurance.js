@@ -1,58 +1,5 @@
 const mongoose = require('mongoose')
 
-const INSURANCE_COMPANIES = [
-  'Acko General Insurance Limited',
-  'Bajaj Allianz General Insurance Company Limited',
-  'Cholamandalam MS General Insurance Company Limited',
-  'Navi General Insurance Limited',
-  'Edelweiss General Insurance Company Limited',
-  'Future Generali India Insurance Company Limited',
-  'Go Digit General Insurance Limited',
-  'HDFC ERGO General Insurance Company Limited',
-  'ICICI Lombard General Insurance Company Limited',
-  'IFFCO Tokio General Insurance Company Limited',
-  'Kotak Mahindra General Insurance Company Limited',
-  'Liberty General Insurance Limited',
-  'Magma HDI General Insurance Company Limited',
-  'Niva Bupa Health Insurance Company Limited',
-  'National Insurance Company Limited',
-  'Raheja QBE General Insurance Company Limited',
-  'Reliance General Insurance Company Limited',
-  'Royal Sundaram General Insurance Company Limited',
-  'SBI General Insurance Company Limited',
-  'Shriram General Insurance Company Limited',
-  'Star Health & Allied Insurance Company Limited',
-  'Tata AIG General Insurance Company Limited',
-  'The New India Assurance Company Limited',
-  'The Oriental Insurance Company Limited',
-  'United India Insurance Company Limited',
-  'Universal Sompo General Insurance Company Limited',
-  'Life Insurance Corporation of India (LIC)',
-  'HDFC Life Insurance Co. Ltd.',
-  'Max Life Insurance Co. Ltd.',
-  'ICICI Prudential Life Insurance Co. Ltd.',
-  'Kotak Mahindra Life Insurance Co. Ltd.',
-  'Aditya Birla Sun Life Insurance Co. Ltd.',
-  'Tata AIA Life Insurance Co. Ltd.',
-  'SBI Life Insurance Co. Ltd.',
-  'Bajaj Allianz Life Insurance Co. Ltd.',
-  'PNB MetLife India Insurance Co. Ltd.',
-  'Reliance Nippon Life Insurance Company Limited',
-  'Aviva Life Insurance Company India Ltd.',
-  'Sahara India Life Insurance Co. Ltd.',
-  'Shriram Life Insurance Co. Ltd.',
-  'Bharti AXA Life Insurance Company Ltd.',
-  'Future Generali India Life Insurance Company Limited',
-  'Ageas Federal Life Insurance Company Limited',
-  'Canara HSBC Life Insurance Company Limited',
-  'Aegon Life Insurance Company Limited',
-  'Pramerica Life Insurance Co. Ltd.',
-  'Star Union Dai-ichi Life Insurance Co. Ltd.',
-  'IndiaFirst Life Insurance Company Ltd.',
-  'Edelweiss Tokio Life Insurance Company Limited',
-  '' // Allow empty string
-]
-
 const InsuranceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -79,8 +26,7 @@ const InsuranceSchema = new mongoose.Schema({
 
   insuranceCompany: {
     type: String,
-    trim: true,
-    enum: INSURANCE_COMPANIES
+    trim: true
   },
 
   vehicleClass: {

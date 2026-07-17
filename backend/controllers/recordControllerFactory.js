@@ -124,6 +124,16 @@ const buildPayload = (body, config, userId, isCreate = false) => {
       .filter((item) => item.name)
   }
 
+  if (config.arrayStringFields) {
+    config.arrayStringFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(body, field) && Array.isArray(body[field])) {
+        payload[field] = body[field]
+          .map((val) => typeof val === 'string' ? val.trim() : '')
+          .filter(Boolean)
+      }
+    })
+  }
+
   if (config.documentField && body[config.documentDataField]) {
     payload[config.documentField] = body[config.documentDataField]
   } else if (config.documentField && Object.prototype.hasOwnProperty.call(body, config.documentField)) {

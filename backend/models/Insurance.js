@@ -82,6 +82,11 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  endorsementDocuments: [{
+    type: String,
+    trim: true
+  }],
+
   premium: {
     type: Number,
     default: 0

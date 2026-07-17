@@ -94,8 +94,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [isExtractingInsurance, setIsExtractingInsurance] = useState(false)
   const [uploadedInsuranceDocument, setUploadedInsuranceDocument] = useState(null)
   const [uploadedInsuranceFile, setUploadedInsuranceFile] = useState(null)
-  const [uploadedEndorsementDocument, setUploadedEndorsementDocument] = useState(null)
-  const [uploadedEndorsementFile, setUploadedEndorsementFile] = useState(null)
+  const [endorsements, setEndorsements] = useState([])
   const [isDragOver, setIsDragOver] = useState(false)
   const [references, setReferences] = useState([])
   const [referenceDropdownOpen, setReferenceDropdownOpen] = useState(false)
@@ -115,16 +114,40 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
 
+  const createNewEndorsement = (file = null, existingUrl = '', name = '') => {
+    const isPdf = file 
+      ? (file.type === 'application/pdf')
+      : (existingUrl.startsWith('data:application/pdf') || existingUrl.toLowerCase().includes('.pdf') || existingUrl.toLowerCase().endsWith('.pdf'))
+    return {
+      file,
+      existingUrl,
+      name: name || (file ? file.name : (existingUrl ? existingUrl.split('/').pop() || 'endorsement-document' : '')),
+      type: isPdf ? 'pdf' : 'image',
+      previewUrl: file ? URL.createObjectURL(file) : (existingUrl ? resolveStoredDocumentPreview(existingUrl) : ''),
+      revokeOnCleanup: !!file
+    }
+  }
+
   useEffect(() => {
     return () => {
       if (uploadedInsuranceDocument?.revokeOnCleanup && uploadedInsuranceDocument.previewUrl) {
         URL.revokeObjectURL(uploadedInsuranceDocument.previewUrl)
       }
-      if (uploadedEndorsementDocument?.revokeOnCleanup && uploadedEndorsementDocument.previewUrl) {
-        URL.revokeObjectURL(uploadedEndorsementDocument.previewUrl)
-      }
     }
-  }, [uploadedInsuranceDocument, uploadedEndorsementDocument])
+  }, [uploadedInsuranceDocument])
+
+  useEffect(() => {
+    return () => {
+      setEndorsements(prev => {
+        prev.forEach(item => {
+          if (item.revokeOnCleanup && item.previewUrl) {
+            URL.revokeObjectURL(item.previewUrl)
+          }
+        })
+        return []
+      })
+    }
+  }, [])
 
   useEffect(() => {
     if (initialData && isOpen) {
@@ -160,18 +183,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             }
           : null
       )
-      setUploadedEndorsementDocument(
-        initialData.endorsementDocument
-          ? {
-              name: 'endorsement-document',
-              type: initialData.endorsementDocument.startsWith('data:application/pdf') || initialData.endorsementDocument.toLowerCase().includes('.pdf') ? 'pdf' : 'image',
-              previewUrl: resolveStoredDocumentPreview(initialData.endorsementDocument),
-              revokeOnCleanup: false
-            }
-          : null
-      )
       setUploadedInsuranceFile(null)
-      setUploadedEndorsementFile(null)
+      let initialEndorsements = []
+      if (initialData.endorsementDocuments && initialData.endorsementDocuments.length > 0) {
+        initialEndorsements = initialData.endorsementDocuments.map(url => createNewEndorsement(null, url))
+      } else if (initialData.endorsementDocument) {
+        initialEndorsements = [createNewEndorsement(null, initialData.endorsementDocument)]
+      }
+      setEndorsements(initialEndorsements)
       userEditedValidTo.current = true
     } else if (!isOpen) {
       setFormData({
@@ -202,11 +221,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         return null
       })
       setUploadedInsuranceFile(null)
-      setUploadedEndorsementDocument(prev => {
-        if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
-        return null
+      setEndorsements(prev => {
+        prev.forEach(item => {
+          if (item.revokeOnCleanup && item.previewUrl) {
+            URL.revokeObjectURL(item.previewUrl)
+          }
+        })
+        return []
       })
-      setUploadedEndorsementFile(null)
       processedInitialFile.current = false
       userEditedValidTo.current = false
     }
@@ -576,32 +598,33 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     }
   }
 
-  const handleManualEndorsementUpload = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleMultipleEndorsementUpload = (e) => {
+    const files = Array.from(e.target.files || [])
+    files.forEach(file => {
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error(`File ${file.name} is larger than 15MB.`, { position: 'top-right', autoClose: 3000 })
+        return
+      }
+      if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+        const newItem = createNewEndorsement(file)
+        setEndorsements(prev => [...prev, newItem])
+        toast.success(`Attached: ${file.name}`, { position: 'top-right', autoClose: 1500 })
+      } else {
+        toast.error(`Unsupported format for ${file.name}`, { position: 'top-right', autoClose: 3000 })
+      }
+    })
+    e.target.value = ''
+  }
 
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error('File size must be less than 15MB.', { position: 'top-right', autoClose: 3000 })
-      e.target.value = ''
-      return
-    }
-
-    if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
-      setUploadedEndorsementFile(file)
-      setUploadedEndorsementDocument(prev => {
-        if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
-        return {
-          name: file.name || 'endorsement-document',
-          type: file.type === 'application/pdf' ? 'pdf' : 'image',
-          previewUrl: URL.createObjectURL(file),
-          revokeOnCleanup: true
-        }
-      })
-      toast.success('Endorsement attached successfully!', { position: 'top-right', autoClose: 2000 })
-      e.target.value = ''
-      return
-    }
-    toast.error('Please upload an image or PDF file.', { position: 'top-right', autoClose: 3000 })
+  const removeEndorsementItem = (index) => {
+    setEndorsements(prev => {
+      const target = prev[index]
+      if (target?.revokeOnCleanup && target.previewUrl) {
+        URL.revokeObjectURL(target.previewUrl)
+      }
+      return prev.filter((_, i) => i !== index)
+    })
+    toast.info('Endorsement file removed.')
   }
 
   const handleScannerConfirm = async (processedImageFile) => {
@@ -633,7 +656,6 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     setIsSubmitting(true)
 
     let uploadedDocumentPath = formData.insuranceDocument;
-    let uploadedEndorsementPath = formData.endorsementDocument;
 
     if (uploadedInsuranceFile) {
       const formDataUpload = new FormData();
@@ -667,26 +689,31 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       }
     }
 
-    if (uploadedEndorsementFile) {
-      const formDataUpload = new FormData();
-      formDataUpload.append('document', uploadedEndorsementFile);
-      try {
-        const uploadResponse = await axios.post(`${API_URL}/api/upload/document`, formDataUpload, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          withCredentials: true
-        });
-        if (uploadResponse.data.success) {
-           uploadedEndorsementPath = uploadResponse.data.data.path;
-        } else {
-           toast.error('Failed to upload endorsement to server');
-           setIsSubmitting(false);
-           return;
+    const endorsementPaths = []
+    for (const item of endorsements) {
+      if (item.file) {
+        const formDataUpload = new FormData()
+        formDataUpload.append('document', item.file)
+        try {
+          const uploadResponse = await axios.post(`${API_URL}/api/upload/document`, formDataUpload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            withCredentials: true
+          })
+          if (uploadResponse.data.success) {
+            endorsementPaths.push(uploadResponse.data.data.path)
+          } else {
+            toast.error(`Failed to upload ${item.name} to server`)
+            setIsSubmitting(false)
+            return
+          }
+        } catch (err) {
+          console.error('Endorsement upload error:', err)
+          toast.error(err.response?.data?.message || `Failed to upload endorsement ${item.name}: ${err.message}. Ensure it is not larger than 15MB.`)
+          setIsSubmitting(false)
+          return
         }
-      } catch (err) {
-         console.error('Endorsement Upload Error:', err);
-         toast.error(err.response?.data?.message || `Failed to upload endorsement: ${err.message}. Ensure it is not larger than 15MB.`);
-         setIsSubmitting(false);
-         return;
+      } else {
+        endorsementPaths.push(item.existingUrl)
       }
     }
 
@@ -699,7 +726,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       premium: formData.premium !== '' ? Number(formData.premium) : 0,
       issueDate: formData.issueDate,
       insuranceDocument: uploadedDocumentPath,
-      endorsementDocument: uploadedEndorsementPath,
+      endorsementDocument: endorsementPaths[0] || '',
+      endorsementDocuments: endorsementPaths,
       insuranceCompany: formData.insuranceCompany,
       insuranceClass: formData.insuranceClass,
       product: formData.product,
@@ -1086,30 +1114,92 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             </div>
 
             <div className='bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
-              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" />
-                </svg>
-                Upload Endorsement
-              </h3>
-              <div className='relative overflow-hidden'>
-                <button type='button' className='w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer'>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              {/* Header row with title and + button */}
+              <div className='flex items-center justify-between mb-3'>
+                <h3 className='text-base md:text-lg font-bold text-gray-800 flex items-center gap-2'>
+                  <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" />
                   </svg>
-                  Choose Endorsement File
-                </button>
-                <input type='file' accept='image/*, application/pdf' onChange={handleManualEndorsementUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
-              </div>
-              {uploadedEndorsementDocument && (
-                <div className='mt-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-amber-200'>
-                  <div className='min-w-0 flex items-center gap-2'>
-                    <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  Endorsement Documents
+                  {endorsements.length > 0 && (
+                    <span className='bg-amber-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0'>
+                      {endorsements.length}
+                    </span>
+                  )}
+                </h3>
+                {/* + Add button always visible */}
+                <div className='relative overflow-hidden flex-shrink-0'>
+                  <button
+                    type='button'
+                    className='flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition cursor-pointer shadow-sm'
+                    title='Add endorsement file(s)'
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
-                    <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedEndorsementDocument.name}</p>
+                    Add
+                  </button>
+                  <input
+                    type='file'
+                    multiple
+                    accept='image/*, application/pdf'
+                    onChange={handleMultipleEndorsementUpload}
+                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+                  />
+                </div>
+              </div>
+
+              {/* Empty-state dashed drop-zone */}
+              {endorsements.length === 0 ? (
+                <div className='relative overflow-hidden'>
+                  <div className='border-2 border-dashed border-amber-300 rounded-xl py-8 px-4 flex flex-col items-center gap-2 bg-white/40 hover:bg-white/60 transition cursor-pointer'>
+                    <svg className="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p className='text-sm font-semibold text-amber-700'>Click or drop endorsement files here</p>
+                    <p className='text-xs text-amber-500'>PDF, JPG, PNG — max 15 MB each · Multiple files allowed</p>
                   </div>
-                  <button type='button' onClick={() => { setUploadedEndorsementDocument(null); setUploadedEndorsementFile(null); setFormData(prev => ({ ...prev, endorsementDocument: '' })) }} className='text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer'>Remove</button>
+                  <input
+                    type='file'
+                    multiple
+                    accept='image/*, application/pdf'
+                    onChange={handleMultipleEndorsementUpload}
+                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+                  />
+                </div>
+              ) : (
+                <div className='space-y-2'>
+                  {endorsements.map((endo, idx) => (
+                    <div key={idx} className='flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2.5 border border-amber-200 shadow-sm'>
+                      <div className='min-w-0 flex items-center gap-2'>
+                        <div className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center ${endo.type === 'pdf' ? 'bg-red-100' : 'bg-blue-100'}`}>
+                          {endo.type === 'pdf' ? (
+                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className='min-w-0'>
+                          <p className='text-sm font-semibold text-slate-800 truncate'>{endo.name}</p>
+                          <p className='text-[10px] text-slate-400 uppercase font-semibold'>{endo.type === 'pdf' ? 'PDF' : 'Image'}</p>
+                        </div>
+                      </div>
+                      <button
+                        type='button'
+                        onClick={() => removeEndorsementItem(idx)}
+                        className='flex-shrink-0 flex items-center gap-1 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs font-bold px-2 py-1 rounded-md transition cursor-pointer'
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Remove
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1136,27 +1226,21 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               </div>
             )}
 
-            {uploadedEndorsementDocument && (
-              <div className='bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+            {endorsements.map((endo, idx) => (
+              <div key={idx} className='bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                 <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                  <span className='bg-amber-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>E</span>
-                  Uploaded Endorsement Document
+                  <span className='bg-amber-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>{idx + 1}</span>
+                  Uploaded Endorsement Document: {endo.name}
                 </h3>
-                <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-amber-200'>
-                  <div className='min-w-0'>
-                    <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedEndorsementDocument.name}</p>
-                    <p className='text-xs text-slate-500'>{uploadedEndorsementDocument.type === 'pdf' ? 'PDF preview' : 'Image preview'}</p>
-                  </div>
-                </div>
-                {uploadedEndorsementDocument.type === 'pdf' ? (
-                  <iframe src={uploadedEndorsementDocument.previewUrl} title='Uploaded Endorsement PDF' className='w-full h-80 rounded-xl border border-slate-200 bg-white' />
+                {endo.type === 'pdf' ? (
+                  <iframe src={endo.previewUrl} title={`Uploaded Endorsement PDF ${idx}`} className='w-full h-80 rounded-xl border border-slate-200 bg-white' />
                 ) : (
                   <div className='rounded-xl border border-slate-200 bg-white p-2'>
-                    <img src={uploadedEndorsementDocument.previewUrl} alt='Uploaded Endorsement document' className='w-full max-h-80 object-contain rounded-lg' />
+                    <img src={endo.previewUrl} alt={`Uploaded Endorsement document ${idx}`} className='w-full max-h-80 object-contain rounded-lg' />
                   </div>
                 )}
               </div>
-            )}
+            ))}
           </div>
 
           <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>

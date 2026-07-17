@@ -273,13 +273,18 @@ const RTODocumentDetail = () => {
 
   const displayFilename = record?.documentName || (fullDocUrl && !fullDocUrl.startsWith('data:') ? fullDocUrl.split('/').pop() : null)
 
-  const endorsementUrl = record && config.endorsementField ? record[config.endorsementField] : null
-  const fullEndorsementUrl = endorsementUrl
-    ? (endorsementUrl.startsWith('http') || endorsementUrl.startsWith('data:') ? endorsementUrl : `${API_URL}${endorsementUrl}`)
-    : null
-  const endorsementFilename = fullEndorsementUrl && !fullEndorsementUrl.startsWith('data:') ? fullEndorsementUrl.split('/').pop() : null
+  const endorsementUrls = (() => {
+    if (!record) return []
+    const docs = record.endorsementDocuments
+    if (Array.isArray(docs) && docs.length > 0) return docs
+    const single = config.endorsementField ? record[config.endorsementField] : null
+    return single ? [single] : []
+  })()
+  const fullEndorsementUrls = endorsementUrls.map(url =>
+    url.startsWith('http') || url.startsWith('data:') ? url : `${API_URL}${url}`
+  )
 
-  const [endorsementImgLoaded, setEndorsementImgLoaded] = useState(false)
+  const [endorsementImgsLoaded, setEndorsementImgsLoaded] = useState({})
 
   const handleDownload = async () => {
     if (!fullDocUrl) return
@@ -300,21 +305,22 @@ const RTODocumentDetail = () => {
     }
   }
 
-  const handleEndorsementDownload = async () => {
-    if (!fullEndorsementUrl) return
+  const handleEndorsementDownload = async (url) => {
+    if (!url) return
+    const filename = !url.startsWith('data:') ? url.split('/').pop() : null
     try {
-      const response = await fetch(fullEndorsementUrl)
+      const response = await fetch(url)
       const blob = await response.blob()
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
-      link.download = endorsementFilename || `endorsement.${blob.type.split('/')[1] || 'pdf'}`
+      link.download = filename || `endorsement.${blob.type.split('/')[1] || 'pdf'}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(blobUrl)
     } catch {
-      window.open(fullEndorsementUrl, '_blank')
+      window.open(url, '_blank')
     }
   }
 
@@ -513,61 +519,63 @@ const RTODocumentDetail = () => {
               </div>
             )}
 
-            {type === 'Insurance' && fullEndorsementUrl && (
-              <div className="rounded-xl border border-amber-200 bg-white shadow-sm flex flex-col mt-4">
-                <div className="bg-amber-50 p-2.5 border-b border-amber-200 flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-                      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" /></svg>
-                      Endorsement Document
-                    </h3>
-                    <button
-                      onClick={handleEndorsementDownload}
-                      className='flex items-center gap-1 rounded-lg bg-white border border-amber-200 px-2.5 py-1.5 text-[10px] font-bold text-amber-700 hover:text-amber-800 hover:border-amber-400 hover:bg-amber-100 transition-all shadow-sm cursor-pointer'
-                      title='Download endorsement'
-                    >
-                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-                      </svg>
-                      Download
-                    </button>
+            {type === 'Insurance' && fullEndorsementUrls.length > 0 && fullEndorsementUrls.map((url, idx) => {
+              const filename = !url.startsWith('data:') ? url.split('/').pop() : null
+              return (
+                <div key={idx} className="rounded-xl border border-amber-200 bg-white shadow-sm flex flex-col mt-4">
+                  <div className="bg-amber-50 p-2.5 border-b border-amber-200 flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.414 6.586a6 6 0 108.484 8.484L20.5 13" /></svg>
+                        Endorsement{fullEndorsementUrls.length > 1 ? ` #${idx + 1}` : ' Document'}
+                      </h3>
+                      <button
+                        onClick={() => handleEndorsementDownload(url)}
+                        className='flex items-center gap-1 rounded-lg bg-white border border-amber-200 px-2.5 py-1.5 text-[10px] font-bold text-amber-700 hover:text-amber-800 hover:border-amber-400 hover:bg-amber-100 transition-all shadow-sm cursor-pointer'
+                        title='Download endorsement'
+                      >
+                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                        </svg>
+                        Download
+                      </button>
+                    </div>
+                    {filename && (
+                      <div className="bg-white rounded-md border border-amber-200 px-2.5 py-1.5 flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                        <span className="font-mono text-[10px] font-semibold text-slate-600 truncate">{filename}</span>
+                      </div>
+                    )}
                   </div>
-                  {endorsementFilename && (
-                    <div className="bg-white rounded-md border border-amber-200 px-2.5 py-1.5 flex items-center gap-2">
-                      <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                      <span className="font-mono text-[10px] font-semibold text-slate-600 truncate">{endorsementFilename}</span>
+                  {!isPdf(url) ? (
+                    <div className="relative rounded-b-xl overflow-hidden bg-slate-50 min-h-[200px] flex items-center justify-center p-2">
+                      {!endorsementImgsLoaded[idx] && (
+                        <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-50">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-amber-300 border-r-transparent" />
+                        </div>
+                      )}
+                      <img
+                        src={url}
+                        alt={`Endorsement document ${idx + 1}`}
+                        className={`w-full object-contain rounded-lg transition-opacity duration-300 ${endorsementImgsLoaded[idx] ? 'opacity-100 block' : 'opacity-0 hidden'}`}
+                        style={{ maxHeight: '480px' }}
+                        onLoad={() => setEndorsementImgsLoaded(prev => ({ ...prev, [idx]: true }))}
+                        onError={() => setEndorsementImgsLoaded(prev => ({ ...prev, [idx]: true }))}
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative bg-slate-50 rounded-b-xl">
+                      <iframe
+                        src={url}
+                        title={`Endorsement PDF ${idx + 1}`}
+                        className="w-full border-none"
+                        style={{ height: 'calc(100vh - 220px)', minHeight: '480px' }}
+                      />
                     </div>
                   )}
                 </div>
-
-                {!isPdf(fullEndorsementUrl) ? (
-                  <div className="relative rounded-b-xl overflow-hidden bg-slate-50 min-h-[200px] flex items-center justify-center p-2">
-                    {!endorsementImgLoaded && (
-                      <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-50">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-amber-300 border-r-transparent" />
-                      </div>
-                    )}
-                    <img
-                      src={fullEndorsementUrl}
-                      alt="Endorsement document"
-                      className={`w-full object-contain rounded-lg transition-opacity duration-300 ${endorsementImgLoaded ? 'opacity-100 block' : 'opacity-0 hidden'}`}
-                      style={{ maxHeight: '480px' }}
-                      onLoad={() => setEndorsementImgLoaded(true)}
-                      onError={() => setEndorsementImgLoaded(true)}
-                    />
-                  </div>
-                ) : (
-                  <div className="relative bg-slate-50 rounded-b-xl">
-                    <iframe
-                      src={fullEndorsementUrl}
-                      title="Endorsement PDF"
-                      className="w-full border-none"
-                      style={{ height: 'calc(100vh - 220px)', minHeight: '480px' }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+              )
+            })}
           </div>
         )}
       </div>

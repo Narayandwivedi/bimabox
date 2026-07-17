@@ -15,6 +15,7 @@ const base = createRecordController({
   booleanFields: ['claimRaised'],
   documentField: 'insuranceDocument',
   documentDataField: 'insuranceDocumentData',
+  arrayStringFields: ['endorsementDocuments'],
 })
 
 /**

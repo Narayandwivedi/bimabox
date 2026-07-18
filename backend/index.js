@@ -78,6 +78,8 @@ app.use('/api/upload', uploadRoutes)
 app.use('/api/whatsapp', whatsAppRoutes)
 app.use('/api/calculator', require('./routes/calculatorRoutes'))
 app.use('/api/insurance-companies', require('./routes/insuranceCompanyRoutes'))
+app.use('/api/subscription-plans', require('./routes/subscriptionPlanRoutes'))
+app.use('/api/user-plans', require('./routes/userPlanRoutes'))
 
 mongoose
   .connect(MONGODB_URI)

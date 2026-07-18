@@ -1,20 +1,48 @@
 const User = require('../models/User')
+const UserPlan = require('../models/UserPlan')
 const bcrypt = require('bcryptjs')
 const whatsAppSessionManager = require('../services/whatsAppSessionManager')
 
-const sanitizeUser = (user) => ({
-  _id: user._id,
-  name: user.name || '',
-  mobile: user.mobile || '',
-  isActive: user.isActive !== false,
-  lastLogin: user.lastLogin || null,
-  createdAt: user.createdAt,
-})
+const sanitizeUser = async (user) => {
+  const base = {
+    _id: user._id,
+    name: user.name || '',
+    mobile: user.mobile || '',
+    isActive: user.isActive !== false,
+    lastLogin: user.lastLogin || null,
+    createdAt: user.createdAt,
+  }
+
+  try {
+    const activePlan = await UserPlan.findOne({
+      userId: user._id,
+      status: 'active',
+      expiryDate: { $gte: new Date() },
+    })
+      .populate('planId', 'name')
+      .select('planId expiryDate')
+      .lean()
+
+    if (activePlan) {
+      base.planName = activePlan.planId?.name || null
+      base.planExpiry = activePlan.expiryDate || null
+    } else {
+      base.planName = null
+      base.planExpiry = null
+    }
+  } catch (_err) {
+    base.planName = null
+    base.planExpiry = null
+  }
+
+  return base
+}
 
 const listUsers = async (_req, res) => {
   try {
     const users = await User.find({}).sort({ createdAt: -1 }).lean()
-    res.json({ success: true, data: users.map(sanitizeUser) })
+    const sanitized = await Promise.all(users.map(sanitizeUser))
+    res.json({ success: true, data: sanitized })
   } catch (error) {
     console.error('Error listing users:', error)
     res.status(500).json({ success: false, message: 'Failed to fetch users' })
@@ -75,7 +103,7 @@ const createUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: sanitizeUser(user),
+      data: await sanitizeUser(user),
       message: whatsappNotice || 'User created successfully',
     })
   } catch (error) {
@@ -121,7 +149,7 @@ const updateUser = async (req, res) => {
 
     res.json({
       success: true,
-      data: sanitizeUser(user),
+      data: await sanitizeUser(user),
     })
   } catch (error) {
     console.error('Error updating user:', error)

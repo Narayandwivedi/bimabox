@@ -235,6 +235,21 @@ function UsersPage({ apiFetch }) {
     return [user.name, user.mobile].some((value) => String(value || '').toLowerCase().includes(query))
   })
 
+  const formatTimeAgo = (date) => {
+    if (!date) return 'Never'
+    const now = new Date()
+    const d = new Date(date)
+    const diffMs = now - d
+    const diffMins = Math.floor(diffMs / 60000)
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours}h ago`
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays < 30) return `${diffDays}d ago`
+    return d.toLocaleDateString()
+  }
+
   return (
     <>
       <div className="panel-grid">
@@ -271,6 +286,8 @@ function UsersPage({ apiFetch }) {
                     <th>Plan</th>
                     <th>Expiry</th>
                     <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Last Activity</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -292,6 +309,8 @@ function UsersPage({ apiFetch }) {
                           {user.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </td>
+                      <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{formatTimeAgo(user.lastLogin)}</td>
+                      <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{formatTimeAgo(user.lastActivity)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button

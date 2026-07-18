@@ -14,6 +14,12 @@ const requireAuth = async (req, res, next) => {
     }
 
     req.user = user
+
+    User.updateOne(
+      { _id: payload.userId, $or: [{ lastActivity: null }, { lastActivity: { $lt: new Date(Date.now() - 5 * 60 * 1000) } }] },
+      { $set: { lastActivity: new Date() } }
+    ).catch(err => console.error('Failed to update lastActivity:', err))
+
     next()
   } catch (error) {
     console.error('Auth middleware error:', error)

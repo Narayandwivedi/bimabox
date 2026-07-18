@@ -11,6 +11,7 @@ const sanitizeUser = async (user) => {
     mobile: user.mobile || '',
     isActive: user.isActive !== false,
     lastLogin: user.lastLogin || null,
+    lastActivity: user.lastActivity || null,
     createdAt: user.createdAt,
   }
 

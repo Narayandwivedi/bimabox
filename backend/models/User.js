@@ -45,6 +45,9 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date
   },
+  lastActivity: {
+    type: Date
+  },
   address: {
     type: String,
     trim: true

@@ -390,7 +390,7 @@ const Setting = () => {
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <p className='text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors'>Client Directory</p>
+                    <p className='text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors'>Client Name</p>
                     <p className='text-[10px] font-semibold text-slate-400 mt-0.5'>List of clients linked to vehicles</p>
                   </div>
                   <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -408,7 +408,7 @@ const Setting = () => {
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>
-                    <p className='text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors'>Agent Directory</p>
+                    <p className='text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors'>Agent Name</p>
                     <p className='text-[10px] font-semibold text-slate-400 mt-0.5'>Manage agent IDs and names</p>
                   </div>
                   <svg className='h-4 w-4 shrink-0 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

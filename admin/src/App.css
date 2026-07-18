@@ -664,3 +664,130 @@ td {
 .sidebar-logout {
   margin-top: auto;
 }
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 24px;
+}
+
+@media (max-width: 1400px) {
+  .plans-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1100px) {
+  .plans-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 680px) {
+  .plans-grid { grid-template-columns: 1fr; }
+}
+
+.plan-card {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  border: 1px solid #d9e1ea;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -24px rgba(14, 165, 233, 0.35);
+}
+
+.plan-card-inactive {
+  opacity: 0.6;
+}
+
+.plan-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 0;
+}
+
+.plan-card-name {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+}
+
+.plan-card-price-area {
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.plan-card-price {
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+}
+
+.plan-card-duration {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.plan-card-body {
+  padding: 16px 20px 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.plan-card-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 4px 0 2px;
+}
+
+.plan-card-feature {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  padding: 4px 0;
+}
+
+.plan-card-feature-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.plan-card-feature-value {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.plan-card-feature-check {
+  color: #16a34a;
+  font-size: 15px;
+}
+
+.plan-card-feature-cross {
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.plan-card-foot {
+  padding: 0 20px 18px;
+}

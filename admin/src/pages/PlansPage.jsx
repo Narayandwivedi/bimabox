@@ -54,83 +54,130 @@ function PlansPage({ apiFetch }) {
         ) : plans.length === 0 ? (
           <div className="empty-state">No subscription plans found.</div>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Price</th>
-                  <th>Duration</th>
-                  <th>AI Docs</th>
-                  <th>Manual Docs</th>
-                  <th>Clients</th>
-                  <th>Desktop</th>
-                  <th>Mobile</th>
-                  <th>Excel</th>
-                  <th>WhatsApp</th>
-                  <th>Speed</th>
-                  <th>Support</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((p, i) => (
-                  <tr key={p._id} style={p.isActive ? {} : { opacity: 0.5 }}>
-                    <td style={{ color: '#94a3b8', fontSize: '12px' }}>{i + 1}</td>
-                    <td style={{ fontWeight: 700 }}>{p.name}</td>
-                    <td>₹{p.price}</td>
-                    <td>{p.durationDays > 0 ? `${p.durationDays}d` : 'No Expiry'}</td>
-                    <td>{p.features?.aiDocuments ?? 0}</td>
-                    <td>{p.features?.manualDocuments ?? 0}</td>
-                    <td>{p.features?.clientLimit === 0 ? 'Unlimited' : p.features?.clientLimit ?? 0}</td>
-                    <td>{p.features?.desktopAccess ? 'Yes' : 'No'}</td>
-                    <td>{p.features?.mobileAppAccess ? 'Yes' : 'No'}</td>
-                    <td>{p.features?.excelDownload ? 'Yes' : 'No'}</td>
-                    <td>{p.features?.whatsappRenewal ? 'Yes' : 'No'}</td>
-                    <td>{p.features?.processingSpeed || 'Standard'}</td>
-                    <td>{p.features?.support || 'Standard'}</td>
-                    <td>
-                      <span className={`status-pill ${p.isActive ? 'status-active' : 'status-inactive'}`}>
-                        {p.isActive ? 'Active' : 'Inactive'}
+          <div className="plans-grid">
+            {plans.map((p) => {
+              const feat = p.features || {}
+
+              const openEdit = () => {
+                setPlanForm({
+                  _id: p._id,
+                  name: p.name,
+                  price: String(p.price),
+                  durationDays: String(p.durationDays),
+                  sortOrder: p.sortOrder || 0,
+                  features: {
+                    aiDocuments: feat.aiDocuments ?? 0,
+                    manualDocuments: feat.manualDocuments ?? 0,
+                    desktopAccess: feat.desktopAccess ?? false,
+                    mobileAppAccess: feat.mobileAppAccess ?? false,
+                    excelDownload: feat.excelDownload ?? false,
+                    clientLimit: feat.clientLimit ?? 0,
+                    appNotificationRenewal: feat.appNotificationRenewal ?? false,
+                    whatsappRenewal: feat.whatsappRenewal ?? false,
+                    customizedPolicyDownload: feat.customizedPolicyDownload ?? false,
+                    processingSpeed: feat.processingSpeed || 'Standard',
+                    support: feat.support || 'Standard',
+                  },
+                })
+                setPlanMessage({ type: '', text: '' })
+                setIsEditPlan(true)
+                setShowPlanModal(true)
+              }
+
+              return (
+                <div key={p._id} className={`plan-card ${p.isActive ? '' : 'plan-card-inactive'}`}>
+                  <div className="plan-card-head">
+                    <h3 className="plan-card-name">{p.name}</h3>
+                    <span className={`status-pill ${p.isActive ? 'status-active' : 'status-inactive'}`}>
+                      {p.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  <div className="plan-card-price-area">
+                    <div className="plan-card-price">₹{p.price}</div>
+                    <div className="plan-card-duration">
+                      {p.durationDays > 0 ? `/ ${p.durationDays} days` : 'Never Expires'}
+                    </div>
+                  </div>
+
+                  <div className="plan-card-body">
+                    <div className="plan-card-section-label">Documents</div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">AI Documents</span>
+                      <span className="plan-card-feature-value">{feat.aiDocuments ?? 0}</span>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Manual Documents</span>
+                      <span className="plan-card-feature-value">{feat.manualDocuments ?? 0}</span>
+                    </div>
+
+                    <div className="plan-card-section-label">Access</div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Desktop App</span>
+                      <span className={feat.desktopAccess ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.desktopAccess ? '✓' : '✗'}
                       </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button type="button" className="secondary-btn table-btn" onClick={() => {
-                          setPlanForm({
-                            _id: p._id,
-                            name: p.name,
-                            price: String(p.price),
-                            durationDays: String(p.durationDays),
-                            sortOrder: p.sortOrder || 0,
-                            features: {
-                              aiDocuments: p.features?.aiDocuments ?? 0,
-                              manualDocuments: p.features?.manualDocuments ?? 0,
-                              desktopAccess: p.features?.desktopAccess ?? false,
-                              mobileAppAccess: p.features?.mobileAppAccess ?? false,
-                              excelDownload: p.features?.excelDownload ?? false,
-                              clientLimit: p.features?.clientLimit ?? 0,
-                              appNotificationRenewal: p.features?.appNotificationRenewal ?? false,
-                              whatsappRenewal: p.features?.whatsappRenewal ?? false,
-                              customizedPolicyDownload: p.features?.customizedPolicyDownload ?? false,
-                              processingSpeed: p.features?.processingSpeed || 'Standard',
-                              support: p.features?.support || 'Standard',
-                            },
-                          })
-                          setPlanMessage({ type: '', text: '' })
-                          setIsEditPlan(true)
-                          setShowPlanModal(true)
-                        }}>
-                          Edit
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Mobile App</span>
+                      <span className={feat.mobileAppAccess ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.mobileAppAccess ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Excel Download</span>
+                      <span className={feat.excelDownload ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.excelDownload ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Custom Policy Download</span>
+                      <span className={feat.customizedPolicyDownload ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.customizedPolicyDownload ? '✓' : '✗'}
+                      </span>
+                    </div>
+
+                    <div className="plan-card-section-label">Limits</div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Client Limit</span>
+                      <span className="plan-card-feature-value">
+                        {feat.clientLimit === 0 ? 'Unlimited' : feat.clientLimit ?? 0}
+                      </span>
+                    </div>
+
+                    <div className="plan-card-section-label">Service</div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Processing Speed</span>
+                      <span className="plan-card-feature-value">{feat.processingSpeed || 'Standard'}</span>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">Support</span>
+                      <span className="plan-card-feature-value">{feat.support || 'Standard'}</span>
+                    </div>
+
+                    <div className="plan-card-section-label">Notifications</div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">WhatsApp Renewal</span>
+                      <span className={feat.whatsappRenewal ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.whatsappRenewal ? '✓' : '✗'}
+                      </span>
+                    </div>
+                    <div className="plan-card-feature">
+                      <span className="plan-card-feature-label">App Notification</span>
+                      <span className={feat.appNotificationRenewal ? 'plan-card-feature-check' : 'plan-card-feature-cross'}>
+                        {feat.appNotificationRenewal ? '✓' : '✗'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="plan-card-foot">
+                    <button type="button" className="secondary-btn table-btn" style={{ width: '100%' }} onClick={openEdit}>
+                      Edit Plan
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </section>

@@ -40,7 +40,7 @@ const normalizeInsuranceCompany = (companyName, companies) => {
     const cCleaned = cleanStr(c.name)
     return cleaned.includes(cCleaned) || cCleaned.includes(cleaned)
   })
-  if (exactMatch) return exactMatch.name
+  if (exactMatch) return exactMatch
 
   // 2. Word-overlap scoring
   const ocrWords = new Set(cleaned.split(/\s+/).filter(w => w.length > 2))
@@ -64,7 +64,14 @@ const normalizeInsuranceCompany = (companyName, companies) => {
       bestMatch = c
     }
   }
-  return bestMatch?.name || ''
+  return bestMatch || null
+}
+
+// Exact (case-insensitive) name match — used to link legacy records that only have a stored name
+const findCompanyByExactName = (name, companies) => {
+  if (!name || !companies?.length) return null
+  const target = name.trim().toLowerCase()
+  return companies.find(c => c.name.trim().toLowerCase() === target) || null
 }
 
 const PRODUCT_TYPE_KEYWORD_MAP = [
@@ -116,6 +123,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     insuranceDocument: '',
     endorsementDocument: '',
     insuranceCompany: '',
+    insuranceCompanyId: '',
     insuranceClass: '',
     product: '',
     vehicleClass: '',
@@ -201,6 +209,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: initialData.insuranceDocument || '',
         endorsementDocument: initialData.endorsementDocument || '',
         insuranceCompany: initialData.insuranceCompany || '',
+        insuranceCompanyId: initialData.insuranceCompanyId || '',
         insuranceClass: initialData.insuranceClass || '',
         product: initialData.product || '',
         vehicleClass: initialData.vehicleClass || '',
@@ -242,6 +251,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceDocument: '',
         endorsementDocument: '',
         insuranceCompany: '',
+        insuranceCompanyId: '',
         insuranceClass: '',
         product: '',
         vehicleClass: '',
@@ -416,10 +426,16 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           if (pendingOcrCompanyName.current) {
             const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
             if (matched) {
-              setFormData(prev => ({ ...prev, insuranceCompany: matched }))
+              setFormData(prev => ({ ...prev, insuranceCompany: matched.name, insuranceCompanyId: matched._id }))
             }
             pendingOcrCompanyName.current = null
           }
+          // Legacy records only stored the company name — link them to a company id now that the list is loaded
+          setFormData(prev => {
+            if (prev.insuranceCompanyId || !prev.insuranceCompany) return prev
+            const legacyMatch = findCompanyByExactName(prev.insuranceCompany, loaded)
+            return legacyMatch ? { ...prev, insuranceCompanyId: legacyMatch._id } : prev
+          })
         }
       })
       .catch(() => {})
@@ -477,11 +493,13 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         if (key === 'insuranceCompany') {
           const matched = normalizeInsuranceCompany(value, insuranceCompanies)
           if (matched) {
-            updated[key] = matched
+            updated[key] = matched.name
+            updated.insuranceCompanyId = matched._id
           } else {
             // Companies list may not be loaded yet — store raw value and retry after load
             pendingOcrCompanyName.current = value
             updated[key] = '' // don't put garbage in the dropdown
+            updated.insuranceCompanyId = ''
           }
           return
         }
@@ -787,6 +805,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       endorsementDocument: endorsementPaths[0] || '',
       endorsementDocuments: endorsementPaths,
       insuranceCompany: formData.insuranceCompany,
+      insuranceCompanyId: formData.insuranceCompanyId || null,
       insuranceClass: formData.insuranceClass,
       product: formData.product,
       vehicleClass: formData.vehicleClass,
@@ -893,10 +912,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 <div className='md:col-span-4 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                   <div>
                     <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Insurance Company</label>
-                    <select 
-                      name='insuranceCompany' 
-                      value={formData.insuranceCompany} 
-                      onChange={handleChange} 
+                    <select
+                      name='insuranceCompanyId'
+                      value={formData.insuranceCompanyId}
+                      onChange={(e) => {
+                        const id = e.target.value
+                        const company = insuranceCompanies.find(c => c._id === id)
+                        setFormData(prev => ({ ...prev, insuranceCompanyId: id, insuranceCompany: company ? company.name : '' }))
+                      }}
                       className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'
                     >
                       <option value="">Select Company</option>
@@ -904,7 +927,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                         <option value="" disabled>Loading...</option>
                       ) : (
                         insuranceCompanies.map(c => (
-                          <option key={c._id} value={c.name}>{c.name}</option>
+                          <option key={c._id} value={c._id}>{c.name}</option>
                         ))
                       )}
                     </select>

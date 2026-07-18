@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const mongoose = require('mongoose')
 const expiryReminderService = require('../services/expiryReminderService')
 
 const parseDateString = (dateStr) => {
@@ -127,6 +128,15 @@ const buildPayload = (body, config, userId, isCreate = false) => {
       .filter((item) => item.name)
   }
 
+  if (config.objectIdFields) {
+    config.objectIdFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(body, field)) {
+        const value = body[field]
+        payload[field] = value && mongoose.Types.ObjectId.isValid(value) ? value : null
+      }
+    })
+  }
+
   if (config.arrayStringFields) {
     config.arrayStringFields.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(body, field) && Array.isArray(body[field])) {
@@ -211,7 +221,7 @@ const createRecordController = (config) => {
           return true
         })
         .filter((record) => {
-          if (req.query.insuranceCompany && record.insuranceCompany !== req.query.insuranceCompany) {
+          if (req.query.insuranceCompanyId && String(record.insuranceCompanyId || '') !== req.query.insuranceCompanyId) {
             return false
           }
           if (req.query.product && record.product !== req.query.product) {

@@ -7,58 +7,6 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const PAGE_SIZE = 40
 
-const INSURANCE_COMPANIES = [
-  'Acko General Insurance Limited',
-  'Bajaj Allianz General Insurance Company Limited',
-  'Cholamandalam MS General Insurance Company Limited',
-  'Navi General Insurance Limited',
-  'Edelweiss General Insurance Company Limited',
-  'Future Generali India Insurance Company Limited',
-  'Go Digit General Insurance Limited',
-  'HDFC ERGO General Insurance Company Limited',
-  'ICICI Lombard General Insurance Company Limited',
-  'IFFCO Tokio General Insurance Company Limited',
-  'Kotak Mahindra General Insurance Company Limited',
-  'Liberty General Insurance Limited',
-  'Magma HDI General Insurance Company Limited',
-  'Niva Bupa Health Insurance Company Limited',
-  'National Insurance Company Limited',
-  'Raheja QBE General Insurance Company Limited',
-  'Reliance General Insurance Company Limited',
-  'Royal Sundaram General Insurance Company Limited',
-  'SBI General Insurance Company Limited',
-  'Shriram General Insurance Company Limited',
-  'Star Health & Allied Insurance Company Limited',
-  'Tata AIG General Insurance Company Limited',
-  'The New India Assurance Company Limited',
-  'The Oriental Insurance Company Limited',
-  'United India Insurance Company Limited',
-  'Universal Sompo General Insurance Company Limited',
-  'Life Insurance Corporation of India (LIC)',
-  'HDFC Life Insurance Co. Ltd.',
-  'Max Life Insurance Co. Ltd.',
-  'ICICI Prudential Life Insurance Co. Ltd.',
-  'Kotak Mahindra Life Insurance Co. Ltd.',
-  'Aditya Birla Sun Life Insurance Co. Ltd.',
-  'Tata AIA Life Insurance Co. Ltd.',
-  'SBI Life Insurance Co. Ltd.',
-  'Bajaj Allianz Life Insurance Co. Ltd.',
-  'PNB MetLife India Insurance Co. Ltd.',
-  'Reliance Nippon Life Insurance Company Limited',
-  'Aviva Life Insurance Company India Ltd.',
-  'Sahara India Life Insurance Co. Ltd.',
-  'Shriram Life Insurance Co. Ltd.',
-  'Bharti AXA Life Insurance Company Ltd.',
-  'Future Generali India Life Insurance Company Limited',
-  'Ageas Federal Life Insurance Company Limited',
-  'Canara HSBC Life Insurance Company Limited',
-  'Aegon Life Insurance Company Limited',
-  'Pramerica Life Insurance Co. Ltd.',
-  'Star Union Dai-ichi Life Insurance Co. Ltd.',
-  'IndiaFirst Life Insurance Company Ltd.',
-  'Edelweiss Tokio Life Insurance Company Limited'
-].sort()
-
 const PRODUCT_TYPES = [
   'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
   'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC'
@@ -114,6 +62,7 @@ const Search = () => {
   const [filterFinancialYear, setFilterFinancialYear] = useState('')
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [imdList, setImdList] = useState([])
+  const [companiesList, setCompaniesList] = useState([])
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
@@ -130,7 +79,7 @@ const Search = () => {
     try {
       const params = { search: q, limit: PAGE_SIZE, page: pageNum }
       if (type === 'Insurance') {
-        if (company) params.insuranceCompany = company
+        if (company) params.insuranceCompanyId = company
         if (productType) params.product = productType
         if (policyType) params.insuranceClass = policyType
         if (reference) params.reference = reference
@@ -179,7 +128,18 @@ const Search = () => {
         if (res.data.success) setImdList(res.data.data)
       })
       .catch(() => {})
+    axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
+      .then((res) => {
+        if (res.data.success) setCompaniesList(res.data.data)
+      })
+      .catch(() => {})
   }, [])
+
+  const companyNameById = useCallback((id) => companiesList.find(c => c._id === id)?.name || '', [companiesList])
+  // Current (live) company name for a record — falls back to the name snapshot stored on the record
+  const recordCompanyName = useCallback((record) => (
+    (record.insuranceCompanyId && companyNameById(record.insuranceCompanyId)) || record.insuranceCompany || ''
+  ), [companyNameById])
 
   // Initial load
   useEffect(() => {
@@ -251,7 +211,7 @@ const Search = () => {
       'Vehicle Number': r.vehicleNumber || 'N/A',
       'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
       'Mobile': r.mobileNumber || '',
-      'Insurance Company': r.insuranceCompany || '',
+      'Insurance Company': recordCompanyName(r),
       'Product': r.product || '',
       'Policy Type': r.insuranceClass || '',
       'Policy Number': r.policyNumber || '',
@@ -458,8 +418,8 @@ const Search = () => {
                                       className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
                                     >
                                       <option value=''>All Companies</option>
-                                      {INSURANCE_COMPANIES.map(c => (
-                                        <option key={c} value={c}>{c}</option>
+                                      {companiesList.map(c => (
+                                        <option key={c._id} value={c._id}>{c.name}</option>
                                       ))}
                                     </select>
                                     <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
@@ -470,7 +430,7 @@ const Search = () => {
                                   </div>
                                   {filterCompany && (
                                     <div className='mt-1.5 flex items-center justify-between'>
-                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterCompany}</span>
+                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{companyNameById(filterCompany)}</span>
                                       <button onClick={() => setFilterCompany('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
                                         <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -797,7 +757,7 @@ const Search = () => {
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16' />
                       </svg>
-                      {filterCompany}
+                      {companyNameById(filterCompany)}
                       <button onClick={() => setFilterCompany('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -1019,9 +979,9 @@ const Search = () => {
                                 <span className='inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[9px] font-black text-slate-600 ring-1 ring-inset ring-slate-300/50 whitespace-nowrap shadow-sm'>
                                   {filterType}
                                 </span>
-                                {filterType === 'Insurance' && record.insuranceCompany && (
+                                {filterType === 'Insurance' && recordCompanyName(record) && (
                                   <span className='inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-[9px] font-black text-blue-700 ring-1 ring-inset ring-blue-700/10 whitespace-nowrap shadow-sm'>
-                                    {record.insuranceCompany}
+                                    {recordCompanyName(record)}
                                   </span>
                                 )}
                                 {filterType === 'Insurance' && record.product && (

@@ -24,9 +24,17 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Snapshot of the company name at the time this record was saved (kept even if the company is later renamed)
   insuranceCompany: {
     type: String,
     trim: true
+  },
+
+  // Reference to the InsuranceCompany doc so renames/filtering stay correct going forward
+  insuranceCompanyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'InsuranceCompany',
+    index: true
   },
 
   vehicleClass: {

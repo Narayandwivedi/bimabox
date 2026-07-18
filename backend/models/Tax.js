@@ -52,7 +52,11 @@ const taxSchema = new mongoose.Schema({
     required: true
   },
 
-
+  renewalStatus: {
+    type: String,
+    enum: ['pending', 'renewed', 'lost', 'opportunity'],
+    default: 'pending'
+  },
 
   // WhatsApp message tracking
   whatsappMessageCount: {

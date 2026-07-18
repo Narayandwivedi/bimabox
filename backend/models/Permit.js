@@ -36,6 +36,11 @@ const permitSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  renewalStatus: {
+    type: String,
+    enum: ['pending', 'renewed', 'lost', 'opportunity'],
+    default: 'pending'
+  },
 
   // WhatsApp message tracking
   whatsappMessageCount: {

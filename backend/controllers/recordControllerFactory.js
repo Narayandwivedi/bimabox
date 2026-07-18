@@ -68,11 +68,12 @@ const generateDocumentName = (label, vehicleNumber) => {
   return `${label}_${vehicle}_${dd}-${mm}-${yy}_${hh}:${min}`
 }
 
-const getFinancialYears = (records) => {
+const getFinancialYearsByField = (records, dateField) => {
   const years = new Set()
   for (const r of records) {
-    if (!r.issueDate) continue
-    const parts = r.issueDate.trim().split(/[/-]/)
+    const value = r[dateField]
+    if (!value) continue
+    const parts = value.trim().split(/[/-]/)
     if (parts.length !== 3) continue
     const day = parseInt(parts[0], 10)
     const month = parseInt(parts[1], 10)
@@ -84,6 +85,8 @@ const getFinancialYears = (records) => {
   }
   return Array.from(years).sort((a, b) => b - a)
 }
+
+const getFinancialYears = (records) => getFinancialYearsByField(records, 'issueDate')
 
 const buildPayload = (body, config, userId, isCreate = false) => {
   const payload = {}
@@ -436,6 +439,68 @@ const createRecordController = (config) => {
     }
   }
 
+  const getRenewalsList = async (req, res) => {
+    try {
+      const MAX_EXPIRED_DAYS = 60   // how far past expiry to still show
+      const MAX_UPCOMING_DAYS = 90  // widest upcoming filter shown in UI
+
+      const all = await Model.find({ userId: req.user._id }).lean()
+
+      const result = all
+        .map((r) => ({ ...r, daysLeft: getDaysToExpiry(r, expiryField) }))
+        .filter((r) => {
+          const status = r.renewalStatus || 'pending'
+          // Always include renewed / lost / opportunity so their tabs are populated
+          if (status === 'renewed' || status === 'lost' || status === 'opportunity') return true
+          // Pending: only if daysLeft is calculable and within range
+          if (r.daysLeft === null) return false
+          return r.daysLeft >= -MAX_EXPIRED_DAYS && r.daysLeft <= MAX_UPCOMING_DAYS
+        })
+        .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
+        .filter((r) => {
+          if (!req.query.financialYear) return true
+          const year = parseInt(req.query.financialYear, 10)
+          const dateValue = r[config.requiredDateField]
+          if (!dateValue) return false
+          const parts = dateValue.split('-')
+          if (parts.length !== 3) return false
+          const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]))
+          const fyStart = new Date(year, 3, 1)
+          const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
+          return d >= fyStart && d <= fyEnd
+        })
+
+      res.json({ success: true, data: result, financialYears: getFinancialYearsByField(all, config.requiredDateField) })
+    } catch (error) {
+      console.error(`Error fetching ${config.name} renewals list:`, error)
+      res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })
+    }
+  }
+
+  const updateRenewalStatus = async (req, res) => {
+    try {
+      const { status } = req.body
+      if (!['pending', 'renewed', 'lost', 'opportunity'].includes(status)) {
+        return res.status(400).json({ success: false, message: 'Invalid status. Must be pending, renewed, lost, or opportunity' })
+      }
+
+      const record = await Model.findOneAndUpdate(
+        { _id: req.params.id, userId: req.user._id },
+        { renewalStatus: status },
+        { returnDocument: 'after', runValidators: true }
+      ).lean()
+
+      if (!record) {
+        return res.status(404).json({ success: false, message: `${config.label} record not found` })
+      }
+
+      res.json({ success: true, data: record })
+    } catch (error) {
+      console.error(`Error updating ${config.name} renewal status:`, error)
+      res.status(500).json({ success: false, message: `Failed to update ${config.label} renewal status` })
+    }
+  }
+
   const getById = async (req, res) => {
     try {
       const record = await Model.findOne({ _id: req.params.id, userId: req.user._id }).lean()
@@ -463,6 +528,8 @@ const createRecordController = (config) => {
     remove,
     markAsPaid,
     incrementWhatsapp,
+    getRenewalsList,
+    updateRenewalStatus,
   }
 }
 

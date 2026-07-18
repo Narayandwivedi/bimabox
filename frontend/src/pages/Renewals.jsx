@@ -5,8 +5,19 @@ import * as XLSX from 'xlsx'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
+// Document type -> API base + field mapping so the same Renewals view can drive any type.
+const DOCUMENT_TYPES = [
+  { value: 'Insurance', label: 'Insurance', endpoint: '/api/insurance', holderField: 'policyHolderName', subField: 'insuranceCompany', numberField: 'policyNumber', numberLabel: 'Policy No', validFromField: 'validFrom', validToField: 'validTo' },
+  { value: 'Tax', label: 'Road Tax', endpoint: '/api/tax', holderField: 'ownerName', subField: null, numberField: null, numberLabel: null, validFromField: 'taxFrom', validToField: 'taxTo' },
+  { value: 'PUC', label: 'PUC', endpoint: '/api/puc', holderField: 'ownerName', subField: null, numberField: null, numberLabel: null, validFromField: 'validFrom', validToField: 'validTo' },
+  { value: 'GPS', label: 'GPS', endpoint: '/api/gps', holderField: 'ownerName', subField: null, numberField: null, numberLabel: null, validFromField: 'validFrom', validToField: 'validTo' },
+  { value: 'Fitness', label: 'Fitness', endpoint: '/api/fitness', holderField: 'ownerName', subField: null, numberField: null, numberLabel: null, validFromField: 'validFrom', validToField: 'validTo' },
+  { value: 'Permit', label: 'Permit', endpoint: '/api/permit', holderField: 'name', subField: null, numberField: null, numberLabel: null, validFromField: 'validFrom', validToField: 'validTo' },
+]
+
 const Renewals = () => {
   const navigate = useNavigate()
+  const [docType, setDocType] = useState('Insurance')
   const [policies, setPolicies] = useState([])
   const [loading, setLoading] = useState(true)
   const [expiryFilter, setExpiryFilter] = useState(60)
@@ -15,21 +26,25 @@ const Renewals = () => {
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [confirmModal, setConfirmModal] = useState(null)
 
-  useEffect(() => {
-    fetchRenewals()
-  }, [])
+  const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
 
   useEffect(() => {
-    fetchRenewals(financialYear)
+    setFinancialYear('')
+    fetchRenewals('', docType)
+  }, [docType])
+
+  useEffect(() => {
+    fetchRenewals(financialYear, docType)
   }, [financialYear])
 
-  const fetchRenewals = async (fy = '') => {
+  const fetchRenewals = async (fy = '', type = docType) => {
     try {
       setLoading(true)
+      const endpoint = (DOCUMENT_TYPES.find((d) => d.value === type) || DOCUMENT_TYPES[0]).endpoint
       const params = {}
       if (fy) params.financialYear = fy
       // Dedicated endpoint — only fetches records relevant for renewals
-      const response = await axios.get(`${API_URL}/api/insurance/renewals`, {
+      const response = await axios.get(`${API_URL}${endpoint}/renewals`, {
         withCredentials: true,
         params,
       })
@@ -55,7 +70,7 @@ const Renewals = () => {
     setConfirmModal(null)
     try {
       await axios.patch(
-        `${API_URL}/api/insurance/${id}/renewal-status`,
+        `${API_URL}${docConfig.endpoint}/${id}/renewal-status`,
         { status },
         { withCredentials: true }
       )
@@ -103,27 +118,34 @@ const Renewals = () => {
 
   const handleExport = () => {
     if (!filteredPolicies.length) return
-    const exportData = filteredPolicies.map((r) => ({
-      'Policy Holder': r.policyHolderName || '',
-      'Vehicle Number': r.vehicleNumber || '',
-      'Mobile': r.mobileNumber || '',
-      'Insurance Company': r.insuranceCompany || '',
-      'Product': r.product || '',
-      'Policy Type': r.insuranceClass || '',
-      'Policy Number': r.policyNumber || '',
-      'Valid From': r.validFrom || '',
-      'Valid To': r.validTo || '',
-      'Premium': r.premium ?? '',
-      'Days Left': r.daysLeft ?? '',
-      'Client Name': r.reference || '',
-      'Agent Name (IMD)': r.imd || '',
-      'Renewal Status': r.renewalStatus || 'pending',
-      'Remarks': r.remarks || '',
-    }))
+    const exportData = filteredPolicies.map((r) => {
+      const row = {
+        'Holder Name': r[docConfig.holderField] || '',
+        'Vehicle Number': r.vehicleNumber || '',
+        'Mobile': r.mobileNumber || '',
+      }
+      if (docConfig.subField) row[docType === 'Insurance' ? 'Insurance Company' : docConfig.subField] = r[docConfig.subField] || ''
+      if (docType === 'Insurance') {
+        row['Product'] = r.product || ''
+        row['Policy Type'] = r.insuranceClass || ''
+      }
+      if (docConfig.numberField) row[docConfig.numberLabel] = r[docConfig.numberField] || ''
+      row['Valid From'] = r[docConfig.validFromField] || ''
+      row['Valid To'] = r[docConfig.validToField] || ''
+      if (docType === 'Insurance') {
+        row['Premium'] = r.premium ?? ''
+        row['Client Name'] = r.reference || ''
+        row['Agent Name (IMD)'] = r.imd || ''
+      }
+      row['Days Left'] = r.daysLeft ?? ''
+      row['Renewal Status'] = r.renewalStatus || 'pending'
+      row['Remarks'] = r.remarks || ''
+      return row
+    })
     const ws = XLSX.utils.json_to_sheet(exportData)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Renewals')
-    XLSX.writeFile(wb, `renewals_${statusFilter}_${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.writeFile(wb, `renewals_${docType}_${statusFilter}_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   return (
@@ -168,6 +190,24 @@ const Renewals = () => {
                   ))}
                 </div>
               )}
+
+              {/* Document Type filter */}
+              <div className='relative'>
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-1.5 pl-3 pr-7 text-[10px] font-bold text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                >
+                  {DOCUMENT_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                <div className='pointer-events-none absolute inset-y-0 right-2 flex items-center'>
+                  <svg className='w-3 h-3 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </div>
+              </div>
 
               {/* Financial Year filter */}
               <div className='relative'>
@@ -241,8 +281,8 @@ const Renewals = () => {
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
                   </svg>
                 </div>
-                <p className='text-sm text-slate-500 font-bold'>No {statusFilter === 'renewed' ? 'renewed' : statusFilter === 'opportunity' ? 'opportunity' : statusFilter === 'lost' ? 'lost' : 'pending'} policies.</p>
-                <p className='text-xs text-slate-400 mt-1'>All insurance policies are up to date.</p>
+                <p className='text-sm text-slate-500 font-bold'>No {statusFilter === 'renewed' ? 'renewed' : statusFilter === 'opportunity' ? 'opportunity' : statusFilter === 'lost' ? 'lost' : 'pending'} {docConfig.label} records.</p>
+                <p className='text-xs text-slate-400 mt-1'>All {docConfig.label} records are up to date.</p>
               </div>
             ) : (
               <>
@@ -254,7 +294,7 @@ const Renewals = () => {
                     return (
                       <div
                         key={policy._id}
-                        onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)}
+                        onClick={() => navigate(`/rto-documents/${docType}/${policy._id}`)}
                         className={`group relative overflow-hidden rounded-xl border-2 p-3 shadow-sm transition-all cursor-pointer ${
                           status === 'renewed'
                             ? 'border-emerald-300 bg-emerald-50/30'
@@ -280,10 +320,10 @@ const Renewals = () => {
                             </svg>
                           </div>
                           <div className='min-w-0 flex-1'>
-                            <h3 className='text-sm font-bold text-slate-900 truncate pr-12'>{policy.policyHolderName}</h3>
+                            <h3 className='text-sm font-bold text-slate-900 truncate pr-12'>{policy[docConfig.holderField]}</h3>
                             <p className='text-[10px] font-mono text-slate-500'>{policy.vehicleNumber}</p>
-                            <p className='text-[9px] text-slate-400'>{policy.insuranceCompany}</p>
-                            <p className='text-[10px] font-semibold text-indigo-600 mt-0.5'>{policy.product || '—'}</p>
+                            {docConfig.subField && <p className='text-[9px] text-slate-400'>{policy[docConfig.subField]}</p>}
+                            {docType === 'Insurance' && <p className='text-[10px] font-semibold text-indigo-600 mt-0.5'>{policy.product || '—'}</p>}
                           </div>
                           <div className='text-right'>
                             <p className={`text-[11px] font-black ${
@@ -295,15 +335,21 @@ const Renewals = () => {
                                 ? 'Today'
                                 : `${policy.daysLeft}d left`}
                             </p>
-                            <p className='text-[10px] text-slate-400'>{policy.validTo}</p>
+                            <p className='text-[10px] text-slate-400'>{policy[docConfig.validToField]}</p>
                           </div>
                         </div>
-                        <div className='mt-2.5 border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
-                          <div className='flex flex-col gap-0.5 min-w-0'>
-                            <span><span className='font-semibold text-slate-500'>Policy:</span> {policy.policyNumber || '—'}</span>
-                            <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
+                        {(docConfig.numberField || docType === 'Insurance') && (
+                          <div className='mt-2.5 border-t border-slate-100 pt-2.5 text-[10px] text-slate-400'>
+                            <div className='flex flex-col gap-0.5 min-w-0'>
+                              {docConfig.numberField && (
+                                <span><span className='font-semibold text-slate-500'>{docConfig.numberLabel}:</span> {policy[docConfig.numberField] || '—'}</span>
+                              )}
+                              {docType === 'Insurance' && (
+                                <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                         {isResolved ? (
                           <div className='mt-2 flex justify-center border-t border-slate-100 pt-2'>
                             <button
@@ -354,9 +400,9 @@ const Renewals = () => {
                     <thead>
                       <tr className='border-b border-slate-100 bg-slate-50/50'>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Product / Class</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Policy No</th>
+                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Product / Class</th>}
+                        {docConfig.subField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>}
+                        {docConfig.numberField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>{docConfig.numberLabel}</th>}
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Days</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Actions</th>
@@ -370,7 +416,7 @@ const Renewals = () => {
                         return (
                           <tr
                             key={policy._id}
-                            onClick={() => navigate(`/rto-documents/Insurance/${policy._id}`)}
+                            onClick={() => navigate(`/rto-documents/${docType}/${policy._id}`)}
                             className={`transition-colors hover:bg-slate-50/50 cursor-pointer ${
                               status === 'renewed'
                                 ? 'bg-emerald-50/20'
@@ -384,20 +430,26 @@ const Renewals = () => {
                             }`}
                           >
                             <td className='px-4 py-2'>
-                              <div className='text-sm font-bold text-slate-800'>{policy.policyHolderName || '—'}</div>
+                              <div className='text-sm font-bold text-slate-800'>{policy[docConfig.holderField] || '—'}</div>
                               <div className='font-mono text-[10px] text-slate-500'>{policy.vehicleNumber}</div>
                             </td>
-                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>
-                              <div className='text-sm font-bold text-indigo-700'>{policy.product || '—'}</div>
-                              <div className='text-[10px] text-slate-400'>{policy.insuranceClass || '—'}</div>
-                            </td>
-                            <td className='px-4 py-2'>
-                              <span className='text-xs font-medium text-slate-500'>{policy.insuranceCompany}</span>
-                            </td>
-                            <td className='px-4 py-2'>
-                              <span className='text-xs font-semibold text-slate-600'>{policy.policyNumber || '—'}</span>
-                            </td>
-                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy.validTo}</td>
+                            {docType === 'Insurance' && (
+                              <td className='px-4 py-2 text-xs font-medium text-slate-500'>
+                                <div className='text-sm font-bold text-indigo-700'>{policy.product || '—'}</div>
+                                <div className='text-[10px] text-slate-400'>{policy.insuranceClass || '—'}</div>
+                              </td>
+                            )}
+                            {docConfig.subField && (
+                              <td className='px-4 py-2'>
+                                <span className='text-xs font-medium text-slate-500'>{policy[docConfig.subField]}</span>
+                              </td>
+                            )}
+                            {docConfig.numberField && (
+                              <td className='px-4 py-2'>
+                                <span className='text-xs font-semibold text-slate-600'>{policy[docConfig.numberField] || '—'}</span>
+                              </td>
+                            )}
+                            <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy[docConfig.validToField]}</td>
                             <td className='px-4 py-2'>
                               <span className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
                                 status === 'renewed'

@@ -34,6 +34,11 @@ const pucSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  renewalStatus: {
+    type: String,
+    enum: ['pending', 'renewed', 'lost', 'opportunity'],
+    default: 'pending'
+  },
   totalFee: {
     type: Number,
     default: 0

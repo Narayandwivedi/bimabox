@@ -7,6 +7,7 @@ import PlansPage from './pages/PlansPage'
 import UserPlansPage from './pages/UserPlansPage'
 import WhatsAppPage from './pages/WhatsAppPage'
 import SettingsPage from './pages/SettingsPage'
+import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
 
 const initialLoginForm = {
   email: '',
@@ -190,6 +191,12 @@ function AppSecure() {
             WhatsApp
           </NavLink>
           <NavLink
+            to="/insurance-companies"
+            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
+          >
+            Insurance Companies
+          </NavLink>
+          <NavLink
             to="/settings"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
@@ -208,6 +215,7 @@ function AppSecure() {
           <Route path="/plans" element={<PlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/user-plans" element={<UserPlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/whatsapp" element={<WhatsAppPage apiFetch={wrappedApiFetch} />} />
+          <Route path="/insurance-companies" element={<InsuranceCompaniesPage apiFetch={wrappedApiFetch} />} />
           <Route path="/settings" element={<SettingsPage apiFetch={wrappedApiFetch} onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/users" replace />} />
         </Routes>

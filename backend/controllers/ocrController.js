@@ -320,11 +320,50 @@ ${jsonTemplate}`
 
     if (extractedData.insuranceCompany) {
       const companies = await InsuranceCompany.find().select('name').lean();
-      const cleaned = extractedData.insuranceCompany.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
-      const match = companies.find(c => {
-        const cCleaned = c.name.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      
+      const cleanStr = (str) => {
+        return (str || '')
+          .trim()
+          .replace(/[-\/]/g, ' ') // replace hyphens and slashes with space
+          .replace(/[^a-zA-Z0-9\s]/g, '') // remove special characters
+          .replace(/\s+/g, ' ') // collapse multiple spaces
+          .toLowerCase();
+      };
+
+      const cleaned = cleanStr(extractedData.insuranceCompany);
+
+      // 1. Exact substring match
+      let match = companies.find(c => {
+        const cCleaned = cleanStr(c.name);
         return cleaned.includes(cCleaned) || cCleaned.includes(cleaned);
       });
+
+      // 2. Word-overlap scoring fallback
+      if (!match) {
+        const ocrWords = new Set(cleaned.split(/\s+/).filter(w => w.length > 2));
+        const stopwords = new Set(['general', 'insurance', 'company', 'limited', 'ltd', 'services', 'co']);
+        const filteredOcrWords = new Set([...ocrWords].filter(w => !stopwords.has(w)));
+
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const c of companies) {
+          const cCleaned = cleanStr(c.name);
+          const cWords = cCleaned.split(/\s+/).filter(w => w.length > 2);
+          const filteredCWords = cWords.filter(w => !stopwords.has(w));
+          
+          if (filteredCWords.length === 0) continue;
+
+          const overlap = filteredCWords.filter(w => filteredOcrWords.has(w)).length;
+          const score = overlap / filteredCWords.length;
+          if (overlap >= 1 && score > bestScore) {
+            bestScore = score;
+            bestMatch = c;
+          }
+        }
+        match = bestMatch;
+      }
+
       extractedData.insuranceCompany = match?.name || '';
     }
 

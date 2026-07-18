@@ -23,12 +23,48 @@ const resolveStoredDocumentPreview = (documentPath) => {
 
 const normalizeInsuranceCompany = (companyName, companies) => {
   if (!companyName || !companies?.length) return ''
-  const cleaned = companyName.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
-  const match = companies.find(c => {
-    const cCleaned = c.name.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase()
+  
+  const cleanStr = (str) => {
+    return (str || '')
+      .trim()
+      .replace(/[-\/]/g, ' ') // replace hyphens and slashes with space
+      .replace(/[^a-zA-Z0-9\s]/g, '') // remove special characters
+      .replace(/\s+/g, ' ') // collapse multiple spaces
+      .toLowerCase();
+  }
+
+  const cleaned = cleanStr(companyName)
+
+  // 1. Exact substring match
+  const exactMatch = companies.find(c => {
+    const cCleaned = cleanStr(c.name)
     return cleaned.includes(cCleaned) || cCleaned.includes(cleaned)
   })
-  return match?.name || ''
+  if (exactMatch) return exactMatch.name
+
+  // 2. Word-overlap scoring
+  const ocrWords = new Set(cleaned.split(/\s+/).filter(w => w.length > 2))
+  const stopwords = new Set(['general', 'insurance', 'company', 'limited', 'ltd', 'services', 'co'])
+  const filteredOcrWords = new Set([...ocrWords].filter(w => !stopwords.has(w)))
+
+  let bestMatch = null
+  let bestScore = 0
+  
+  for (const c of companies) {
+    const cCleaned = cleanStr(c.name)
+    const cWords = cCleaned.split(/\s+/).filter(w => w.length > 2)
+    const filteredCWords = cWords.filter(w => !stopwords.has(w))
+    
+    if (filteredCWords.length === 0) continue
+
+    const overlap = filteredCWords.filter(w => filteredOcrWords.has(w)).length
+    const score = overlap / filteredCWords.length
+    if (overlap >= 1 && score > bestScore) {
+      bestScore = score
+      bestMatch = c
+    }
+  }
+  return bestMatch?.name || ''
 }
 
 const PRODUCT_TYPE_KEYWORD_MAP = [
@@ -113,6 +149,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [newImdEmail, setNewImdEmail] = useState('')
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
+  const pendingOcrCompanyName = useRef(null) // stores raw OCR company name if companies weren't loaded yet
 
   const createNewEndorsement = (file = null, existingUrl = '', name = '') => {
     const isPdf = file 
@@ -370,7 +407,20 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     if (!isOpen) return
     setLoadingCompanies(true)
     axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
-      .then(res => { if (res.data?.success) setInsuranceCompanies(res.data.data) })
+      .then(res => {
+        if (res.data?.success) {
+          const loaded = res.data.data
+          setInsuranceCompanies(loaded)
+          // Re-attempt matching if OCR ran before companies were loaded
+          if (pendingOcrCompanyName.current) {
+            const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
+            if (matched) {
+              setFormData(prev => ({ ...prev, insuranceCompany: matched }))
+            }
+            pendingOcrCompanyName.current = null
+          }
+        }
+      })
       .catch(() => {})
       .finally(() => setLoadingCompanies(false))
   }, [isOpen])
@@ -424,7 +474,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           return
         }
         if (key === 'insuranceCompany') {
-          updated[key] = normalizeInsuranceCompany(value, insuranceCompanies)
+          const matched = normalizeInsuranceCompany(value, insuranceCompanies)
+          if (matched) {
+            updated[key] = matched
+          } else {
+            // Companies list may not be loaded yet — store raw value and retry after load
+            pendingOcrCompanyName.current = value
+            updated[key] = '' // don't put garbage in the dropdown
+          }
           return
         }
         if (key === 'product') {

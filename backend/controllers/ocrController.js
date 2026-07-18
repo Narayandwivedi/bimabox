@@ -2,6 +2,103 @@ const axios = require('axios')
 const pdfParse = require('pdf-parse')
 const InsuranceCompany = require('../models/InsuranceCompany')
 
+/**
+ * IFFCO Tokio PDFs have a combined line like:
+ *   "COMPANY NAMEPolicy #:1-8H9WT9SUP400 Policy #N7964694"
+ * where the FIRST Policy # is the Tax Invoice / internal ref and
+ * the SECOND Policy # is the actual policy number.
+ * This helper detects that pattern and returns the correct policy number.
+ */
+const extractIffcoTokioPolicyNumber = (rawText) => {
+  if (!rawText) return null
+
+  // Pattern: one line containing two "Policy #" occurrences
+  // e.g. "...Policy #:1-8H9WT9SUP400 Policy #N7964694"
+  // The actual policy number follows the LAST "Policy #" on that line.
+  const lines = rawText.split('\n')
+  for (const line of lines) {
+    // Count occurrences of "Policy #" (case-insensitive)
+    const matches = [...line.matchAll(/Policy\s*#\s*:?\s*([^\s]+)/gi)]
+    if (matches.length >= 2) {
+      // The last match is the actual policy number
+      const actualPolicyNo = matches[matches.length - 1][1].trim()
+      if (actualPolicyNo) {
+        console.log('[IFFCO-Tokio] Detected dual Policy# line. Overriding policy number to:', actualPolicyNo)
+        return actualPolicyNo
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * Indian vehicle registration numbers follow the pattern:
+ *   <2-letter state code><2-digit district><1-3 letter series><4-digit number>
+ * Total length after stripping hyphens/spaces: 9 or 10 characters.
+ * Examples: CG04NS0396, MH12AB1234, DL1CAB1234
+ *
+ * If the AI returns a vehicleNumber that is clearly wrong (too long, looks like
+ * Engine No or Chassis No concatenation), this helper scans the raw PDF text
+ * for a valid Indian registration number and returns it.
+ */
+const INDIAN_REG_NO_PATTERN = /\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})\b/g
+
+const isValidIndianVehicleNumber = (val) => {
+  if (!val) return false
+  const stripped = val.replace(/[\s-]/g, '').toUpperCase()
+  return /^[A-Z]{2}\d{2}[A-Z]{1,3}\d{4}$/.test(stripped) // 9 or 10 chars
+}
+
+const extractValidIndianVehicleNumber = (rawText) => {
+  if (!rawText) return null
+
+  // 1. Try labeled matches: look for lines containing Registration keywords
+  const labeledPattern = /(?:Registration\s*(?:Mark\s*&?\s*)?No\.?|Reg(?:istration)?\s*No\.?|Vehicle\s*No\.?)\s*[:\-]?\s*([A-Z]{2}[\s-]?\d{2}[\s-]?[A-Z]{1,3}[\s-]?\d{4})/gi
+  const labeledMatch = rawText.match(labeledPattern)
+  if (labeledMatch) {
+    for (const m of labeledMatch) {
+      const numMatch = m.match(/([A-Z]{2}[\s-]?\d{2}[\s-]?[A-Z]{1,3}[\s-]?\d{4})/i)
+      if (numMatch) {
+        const candidate = numMatch[1].replace(/[\s-]/g, '').toUpperCase()
+        if (isValidIndianVehicleNumber(candidate)) {
+          console.log('[VehicleNo] Extracted from label:', candidate)
+          return candidate
+        }
+      }
+    }
+  }
+
+  // 2. Fallback: scan all tokens in the text for Indian reg-no shaped strings
+  //    Prefer shorter valid matches (9-10 chars) over concatenated junk
+  const candidates = []
+  let m
+  const re = new RegExp(INDIAN_REG_NO_PATTERN.source, 'g')
+  while ((m = re.exec(rawText.replace(/[\s-]/g, ' ').replace(/ /g, ''))) !== null) {
+    // Run on original text lines to avoid cross-line concatenation
+    candidates.push(m[1])
+  }
+
+  // Also scan line by line to catch values concatenated with year (e.g. "CG04NS03962022")
+  const lines = rawText.split('\n')
+  for (const line of lines) {
+    const stripped = line.replace(/[\s-]/g, '').toUpperCase()
+    // Match Indian reg no possibly followed by 4-digit year
+    const lineMatch = stripped.match(/^([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})(\d{4})?/)
+    if (lineMatch && isValidIndianVehicleNumber(lineMatch[1])) {
+      candidates.push(lineMatch[1])
+    }
+  }
+
+  if (candidates.length > 0) {
+    // Return the first valid unique candidate
+    const unique = [...new Set(candidates)]
+    console.log('[VehicleNo] Candidates found:', unique)
+    return unique[0]
+  }
+
+  return null
+}
+
 const HIGH_VALUE_KEYWORDS = [
   'registration no', 'vehicle no', 'engine number', 'chassis', 'make', 'model',
   'policy no', 'policy number', 'valid from', 'valid till', 'period of insurance',
@@ -152,7 +249,7 @@ const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase
   }
 }
 
-const processOcrRequest = async (req, res, promptText, jsonTemplate) => {
+const processOcrRequest = async (req, res, promptText, jsonTemplate, postProcessor = null) => {
   try {
     const { imageBase64, backImageBase64 } = req.body
 
@@ -223,12 +320,56 @@ ${jsonTemplate}`
 
     if (extractedData.insuranceCompany) {
       const companies = await InsuranceCompany.find().select('name').lean();
-      const cleaned = extractedData.insuranceCompany.trim().replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
-      const match = companies.find(c => {
-        const cCleaned = c.name.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      
+      const cleanStr = (str) => {
+        return (str || '')
+          .trim()
+          .replace(/[-\/]/g, ' ') // replace hyphens and slashes with space
+          .replace(/[^a-zA-Z0-9\s]/g, '') // remove special characters
+          .replace(/\s+/g, ' ') // collapse multiple spaces
+          .toLowerCase();
+      };
+
+      const cleaned = cleanStr(extractedData.insuranceCompany);
+
+      // 1. Exact substring match
+      let match = companies.find(c => {
+        const cCleaned = cleanStr(c.name);
         return cleaned.includes(cCleaned) || cCleaned.includes(cleaned);
       });
+
+      // 2. Word-overlap scoring fallback
+      if (!match) {
+        const ocrWords = new Set(cleaned.split(/\s+/).filter(w => w.length > 2));
+        const stopwords = new Set(['general', 'insurance', 'company', 'limited', 'ltd', 'services', 'co']);
+        const filteredOcrWords = new Set([...ocrWords].filter(w => !stopwords.has(w)));
+
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const c of companies) {
+          const cCleaned = cleanStr(c.name);
+          const cWords = cCleaned.split(/\s+/).filter(w => w.length > 2);
+          const filteredCWords = cWords.filter(w => !stopwords.has(w));
+          
+          if (filteredCWords.length === 0) continue;
+
+          const overlap = filteredCWords.filter(w => filteredOcrWords.has(w)).length;
+          const score = overlap / filteredCWords.length;
+          if (overlap >= 1 && score > bestScore) {
+            bestScore = score;
+            bestMatch = c;
+          }
+        }
+        match = bestMatch;
+      }
+
       extractedData.insuranceCompany = match?.name || '';
+    }
+
+    // Run any caller-supplied post-processor (e.g. IFFCO Tokio policy# correction)
+    if (typeof postProcessor === 'function') {
+      extractedData = postProcessor(extractedData) || extractedData
     }
 
     return res.json({
@@ -319,8 +460,8 @@ const gpsOcr = async (req, res) => {
 
 const insuranceOcr = async (req, res) => {
   const prompt = `Extract fields from this vehicle insurance policy document.
-- vehicleNumber: remove hyphens/spaces (e.g. CG-23-J-8800 → CG23J8800)
-- policyNumber: as printed
+- vehicleNumber: the vehicle registration number — EXACTLY 9 or 10 characters after removing hyphens/spaces (format: 2 state letters + 2 district digits + 1-3 series letters + 4 digits, e.g. CG04NS0396, MH12AB1234). Remove hyphens/spaces. Do NOT return engine numbers, chassis numbers, or any value longer than 10 characters.
+- policyNumber: the OFFICIAL policy number issued by the insurer. IMPORTANT: Some documents (e.g. IFFCO Tokio) show TWO "Policy #" values on the same line — the first is an internal transaction/invoice reference (often starts with "1-" or looks like "1-XXXXXXXX"), and the SECOND is the actual policy number. Always use the LAST/SECOND "Policy #" value as the policyNumber. The "Tax Invoice No" field is NOT the policy number.
 - policyHolderName: primary insured person/company name
 - validFrom / validTo: the main policy period (Own Damage section if present, otherwise overall policy period). DD-MM-YYYY format.
 - issueDate: the date the policy document was issued. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
@@ -330,7 +471,41 @@ const insuranceOcr = async (req, res) => {
 - product: type of insured vehicle/policy. Look for phrases like "Private Car", "Motor Cycle", "Two Wheeler", "Fire", "Marine", "Health" etc. in the document, and map to EXACTLY one of these values (return the value on the left, verbatim): "Pvt. Car" (private car / motor car), "Two Wheeler" (motorcycle/scooter/bike/two-wheeler), "GCV" (goods carrying vehicle/truck/commercial goods vehicle), "GCV-3W" (3-wheeler goods vehicle), "PCV" (passenger carrying vehicle/bus), "PCV-3W" (3-wheeler passenger/auto rickshaw), "Taxi", "Mis-D", "Health", "Life", "Fire", "Burglary", "WC" (workmen's compensation), "CPM", "Travel", "Marine", "GPA" (group personal accident), "GMC" (group mediclaim). If none match, return empty string.
 - Use empty string "" for any absent field`;
   const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","issueDate":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
-  return processOcrRequest(req, res, prompt, template)
+
+  // Store raw PDF text for post-processing override (IFFCO Tokio and similar)
+  req._rawPdfText = null
+  if (req.body.imageBase64?.startsWith('data:application/pdf')) {
+    try {
+      const base64Data = req.body.imageBase64.replace(/^data:application\/pdf;base64,/, '')
+      const buffer = Buffer.from(base64Data, 'base64')
+      const pdfParse = require('pdf-parse')
+      const pdfData = await pdfParse(buffer)
+      req._rawPdfText = pdfData.text
+    } catch (_) { /* ignore, will fall back to AI result */ }
+  }
+
+  return processOcrRequest(req, res, prompt, template, (extractedData) => {
+    if (req._rawPdfText) {
+      // 1. Fix IFFCO Tokio dual-Policy# line — pick the actual (last) policy number
+      const correctedPolicyNo = extractIffcoTokioPolicyNumber(req._rawPdfText)
+      if (correctedPolicyNo) {
+        extractedData.policyNumber = correctedPolicyNo
+      }
+
+      // 2. Fix vehicle number — Indian reg nos are 9-10 chars.
+      //    If the AI returned something clearly wrong (too long or invalid pattern),
+      //    scan the raw PDF text for the correct registration number.
+      const currentVehicle = (extractedData.vehicleNumber || '').replace(/[\s-]/g, '')
+      if (!isValidIndianVehicleNumber(currentVehicle)) {
+        const correctedVehicleNo = extractValidIndianVehicleNumber(req._rawPdfText)
+        if (correctedVehicleNo) {
+          console.log('[VehicleNo] Overriding', currentVehicle, '->', correctedVehicleNo)
+          extractedData.vehicleNumber = correctedVehicleNo
+        }
+      }
+    }
+    return extractedData
+  })
 }
 
 module.exports = {

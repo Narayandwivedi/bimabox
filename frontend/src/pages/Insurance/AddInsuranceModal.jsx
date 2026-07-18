@@ -100,6 +100,7 @@ const normalizeProductType = (productType) => {
 }
 
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
+  const isManualMode = isEditMode || !initialExtractionFile
   const isOcrUpdate = useRef(false)
   const processedInitialFile = useRef(false)
   const userEditedValidTo = useRef(false)
@@ -612,7 +613,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     const file = e.target.files?.[0]
     const success = processInsuranceFile(file)
     e.target.value = ''
-    if (success && file) {
+    if (success && file && !isManualMode) {
       if (file.type === 'application/pdf') {
         processExtraction(file)
       } else if (file.type.startsWith('image/')) {
@@ -646,7 +647,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     setIsDragOver(false)
     const file = e.dataTransfer.files?.[0]
     const success = processInsuranceFile(file)
-    if (success && file) {
+    if (success && file && !isManualMode) {
       if (file.type === 'application/pdf') {
         processExtraction(file)
       } else if (file.type.startsWith('image/')) {

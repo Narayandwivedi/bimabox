@@ -14,6 +14,12 @@ const Navbar = () => {
       </Link>
       <div className='flex items-center gap-3'>
         <Link
+          to='/pricing'
+          className='hidden sm:inline-flex text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors'
+        >
+          Pricing
+        </Link>
+        <Link
           to='/contact-us'
           className='hidden sm:inline-flex text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors'
         >

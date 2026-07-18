@@ -1,6 +1,8 @@
 const UserPlan = require('../models/UserPlan')
 const SubscriptionPlan = require('../models/SubscriptionPlan')
 const User = require('../models/User')
+const Vehicle = require('../models/Vehicle')
+const { ensureCurrentCycle } = require('../utils/planCycle')
 
 const listUserPlans = async (req, res) => {
   try {
@@ -146,14 +148,19 @@ const getUserPlanHistory = async (req, res) => {
 const getMyPlan = async (req, res) => {
   try {
     const userId = req.userId || req.user?._id
+    const clientsUsed = await Vehicle.countDocuments({ userId })
 
-    const activePlan = await UserPlan.findOne({
+    const activePlanDoc = await UserPlan.findOne({
       userId,
       status: 'active',
       expiryDate: { $gte: new Date() },
-    })
-      .populate('planId', 'name price features durationDays')
-      .lean()
+    }).populate('planId', 'name price features durationDays')
+
+    if (activePlanDoc) {
+      await ensureCurrentCycle(activePlanDoc)
+    }
+
+    const activePlan = activePlanDoc ? activePlanDoc.toObject() : null
 
     if (!activePlan) {
       const latestPlan = await UserPlan.findOne({ userId })
@@ -182,16 +189,16 @@ const getMyPlan = async (req, res) => {
           .populate('planId', 'name price features durationDays')
           .lean()
 
-        return res.json({ success: true, data: populated })
+        return res.json({ success: true, data: { ...populated, clientsUsed } })
       }
 
       return res.json({
         success: true,
-        data: { ...latestPlan, status: 'expired' },
+        data: { ...latestPlan, status: 'expired', clientsUsed },
       })
     }
 
-    res.json({ success: true, data: activePlan })
+    res.json({ success: true, data: { ...activePlan, clientsUsed } })
   } catch (error) {
     console.error('Error fetching my plan:', error)
     res.status(500).json({ success: false, message: 'Failed to fetch plan' })

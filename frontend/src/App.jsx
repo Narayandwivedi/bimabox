@@ -23,6 +23,7 @@ import IMD from './pages/IMD'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
+import PricingPage from './pages/Pricing/PricingPage'
 
 function AppContent() {
   const location = useLocation()
@@ -30,7 +31,7 @@ function AppContent() {
   const { isAuthenticated, loading } = useAuth()
   const isLoginPage = location.pathname === '/login'
   const isLandingPage = location.pathname === '/'
-  const publicPages = ['/privacy-policy', '/terms-and-conditions', '/contact-us']
+  const publicPages = ['/privacy-policy', '/terms-and-conditions', '/contact-us', '/pricing']
   const isPublicPage = publicPages.includes(location.pathname)
   const showNav = !isLoginPage && !isLandingPage && (isAuthenticated || !isPublicPage)
   const theme = getTheme()
@@ -90,6 +91,7 @@ function AppContent() {
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
             <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
+            <Route path='/pricing' element={<PricingPage />} />
             <Route path='/references' element={<Navigate to='/client-name' replace />} />
             <Route path='/client-name' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
             <Route path='/imd' element={<Navigate to='/agent-name' replace />} />

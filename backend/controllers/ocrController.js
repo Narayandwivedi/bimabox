@@ -151,8 +151,40 @@ const extractRelevantPdfText = (fullText) => {
   return result.slice(0, 7000)
 }
 
+// Groq free-tier keys have a daily token/request limit. We keep a small pool
+// of keys and rotate to the next one whenever the current key gets rate
+// limited (HTTP 429 / rate_limit_exceeded), so OCR keeps working across the
+// combined daily quota of all configured keys.
+const GROQ_API_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean)
+let activeGroqKeyIndex = 0
+
+const isRateLimitError = (err) => {
+  const status = err.response?.status
+  const code = err.response?.data?.error?.code
+  return status === 429 || code === 'rate_limit_exceeded'
+}
+
+const withGroqKeyRotation = async (requestFn) => {
+  let lastErr
+  for (let attempt = 0; attempt < GROQ_API_KEYS.length; attempt++) {
+    const key = GROQ_API_KEYS[activeGroqKeyIndex]
+    try {
+      return await requestFn(key)
+    } catch (err) {
+      lastErr = err
+      if (isRateLimitError(err) && GROQ_API_KEYS.length > 1) {
+        console.warn(`Groq API key #${activeGroqKeyIndex + 1} hit its rate limit, switching to next key...`)
+        activeGroqKeyIndex = (activeGroqKeyIndex + 1) % GROQ_API_KEYS.length
+        continue
+      }
+      throw err
+    }
+  }
+  throw lastErr
+}
+
 const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase64 = null) => {
-  if (!process.env.GROQ_API_KEY) {
+  if (GROQ_API_KEYS.length === 0) {
     throw new Error('GROQ_API_KEY is not configured')
   }
 
@@ -176,7 +208,7 @@ const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase
       }
     ]
 
-    const makeRequest = (withFormat) => {
+    const makeRequest = (withFormat) => withGroqKeyRotation((key) => {
       const body = {
         model: 'llama-3.3-70b-versatile',
         messages,
@@ -186,11 +218,11 @@ const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase
       if (withFormat) body.response_format = { type: 'json_object' }
       return axios.post('https://api.groq.com/openai/v1/chat/completions', body, {
         headers: {
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          Authorization: `Bearer ${key}`,
           'Content-Type': 'application/json',
         },
       })
-    }
+    })
 
     try {
       return await makeRequest(true)
@@ -220,7 +252,7 @@ const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase
     contentArray.push({ type: 'image_url', image_url: { url: formattedBack } })
   }
 
-  const makeVisionRequest = (withFormat) => {
+  const makeVisionRequest = (withFormat) => withGroqKeyRotation((key) => {
     const body = {
       model: 'qwen/qwen3.6-27b',
       messages: [{ role: 'user', content: contentArray }],
@@ -231,11 +263,11 @@ const callGroqAPI = async (imageBase64, textPrompt, isPdf = false, backImageBase
     if (withFormat) body.response_format = { type: 'json_object' }
     return axios.post('https://api.groq.com/openai/v1/chat/completions', body, {
       headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
       },
     })
-  }
+  })
 
   try {
     return await makeVisionRequest(true)

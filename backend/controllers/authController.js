@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const { sendOtpEmail } = require('../utils/email')
+const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
 const {
   signToken,
   buildAuthCookie,
@@ -215,6 +216,7 @@ const register = async (req, res) => {
     }
     const user = new User(userData)
     await user.save()
+    await assignFreePlanIfNone(user._id)
 
     const token = signToken({ userId: String(user._id), type: 'user' })
     res.setHeader('Set-Cookie', buildAuthCookie(token))
@@ -265,6 +267,7 @@ const googleLogin = async (req, res) => {
         lastLogin: new Date()
       })
       await user.save()
+      await assignFreePlanIfNone(user._id)
     }
 
     const token = signToken({ userId: String(user._id), type: 'user' })

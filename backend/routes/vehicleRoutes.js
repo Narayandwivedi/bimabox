@@ -1,5 +1,6 @@
 const express = require('express')
 const { requireAuth } = require('../middleware/auth')
+const { planEnforcer } = require('../middleware/planEnforcer')
 const {
   createVehicle,
   updateVehicle,
@@ -10,7 +11,7 @@ const router = express.Router()
 
 router.use(requireAuth)
 
-router.post('/', createVehicle)
+router.post('/', planEnforcer('client'), createVehicle)
 router.put('/:id', updateVehicle)
 router.delete('/:id', deleteVehicle)
 

@@ -1,6 +1,7 @@
 const express = require('express')
 const controller = require('../controllers/insuranceController')
 const { requireAuth } = require('../middleware/auth')
+const { planEnforcer, incrementUsage } = require('../middleware/planEnforcer')
 
 const router = express.Router()
 
@@ -12,7 +13,7 @@ router.get('/expired', controller.getExpired)
 router.get('/renewals', controller.getRenewalsList)
 router.get('/', controller.getAll)
 router.get('/:id', controller.getById)
-router.post('/', controller.create)
+router.post('/', planEnforcer('manual'), incrementUsage('manual'), controller.create)
 router.put('/:id', controller.update)
 router.delete('/:id', controller.remove)
 router.patch('/:id/mark-as-paid', controller.markAsPaid)

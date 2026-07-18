@@ -1,5 +1,7 @@
 const UserPlan = require('../models/UserPlan')
 const SubscriptionPlan = require('../models/SubscriptionPlan')
+const Vehicle = require('../models/Vehicle')
+const { ensureCurrentCycle } = require('../utils/planCycle')
 
 const planEnforcer = (docType = 'manual') => {
   return async (req, res, next) => {
@@ -13,7 +15,7 @@ const planEnforcer = (docType = 'manual') => {
         userId,
         status: 'active',
         expiryDate: { $gte: new Date() },
-      }).populate('planId').lean()
+      }).populate('planId')
 
       if (!activePlan || !activePlan.planId) {
         return res.status(403).json({
@@ -21,6 +23,8 @@ const planEnforcer = (docType = 'manual') => {
           message: 'No active subscription plan found. Please contact admin.',
         })
       }
+
+      await ensureCurrentCycle(activePlan)
 
       const plan = activePlan.planId
       const usage = activePlan.usage || { aiDocumentsUsed: 0, manualDocumentsUsed: 0 }
@@ -30,15 +34,26 @@ const planEnforcer = (docType = 'manual') => {
         if (limit > 0 && usage.aiDocumentsUsed >= limit) {
           return res.status(403).json({
             success: false,
-            message: `AI document limit reached (${limit}). Please upgrade your plan.`,
+            message: `AI document limit reached (${limit}/month). Please upgrade your plan.`,
           })
+        }
+      } else if (docType === 'client') {
+        const limit = plan.features?.clientLimit || 0
+        if (limit > 0) {
+          const clientCount = await Vehicle.countDocuments({ userId })
+          if (clientCount >= limit) {
+            return res.status(403).json({
+              success: false,
+              message: `Client limit reached (${limit}). Please upgrade your plan.`,
+            })
+          }
         }
       } else {
         const limit = plan.features?.manualDocuments || 0
         if (limit > 0 && usage.manualDocumentsUsed >= limit) {
           return res.status(403).json({
             success: false,
-            message: `Manual document limit reached (${limit}). Please upgrade your plan.`,
+            message: `Manual document limit reached (${limit}/month). Please upgrade your plan.`,
           })
         }
       }
@@ -60,7 +75,7 @@ const incrementUsage = (docType = 'manual') => {
       if (res.statusCode >= 200 && res.statusCode < 300 && body?.success) {
         try {
           const userId = req.userId || req.user?._id
-          if (userId && req.userPlan) {
+          if (userId && req.userPlan && (docType === 'ai' || docType === 'manual')) {
             const field = docType === 'ai' ? 'usage.aiDocumentsUsed' : 'usage.manualDocumentsUsed'
             await UserPlan.updateOne(
               { _id: req.userPlan._id },

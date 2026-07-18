@@ -2,6 +2,7 @@ const User = require('../models/User')
 const UserPlan = require('../models/UserPlan')
 const bcrypt = require('bcryptjs')
 const whatsAppSessionManager = require('../services/whatsAppSessionManager')
+const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
 
 const sanitizeUser = async (user) => {
   const base = {
@@ -84,6 +85,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
       isActive: true,
     })
+    await assignFreePlanIfNone(user._id)
 
     let whatsappNotice = null
     if (whatsAppSessionManager.hasClient()) {

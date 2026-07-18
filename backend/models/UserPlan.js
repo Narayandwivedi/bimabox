@@ -11,6 +11,7 @@ const userPlanSchema = new mongoose.Schema({
   usage: {
     aiDocumentsUsed: { type: Number, default: 0 },
     manualDocumentsUsed: { type: Number, default: 0 },
+    cycleStart: { type: Date, default: Date.now },
   },
 }, { timestamps: true })
 

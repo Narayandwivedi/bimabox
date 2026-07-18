@@ -5,7 +5,7 @@ const DEFAULT_PLANS = [
   {
     name: 'Free',
     price: 0,
-    durationDays: 30,
+    durationDays: 0, // never expires — only the monthly usage limit resets
     sortOrder: 1,
     features: {
       aiDocuments: 10,

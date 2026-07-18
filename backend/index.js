@@ -17,7 +17,7 @@ const uploadRoutes = require('./routes/uploadRoutes')
 const whatsAppRoutes = require('./routes/whatsAppRoutes')
 const whatsAppSessionManager = require('./services/whatsAppSessionManager')
 const expiryReminderService = require('./services/expiryReminderService')
-const { seedDefaultPlansIfMissing } = require('./utils/seedPlans')
+const { seedDefaultPlansIfMissing, clearFreePlanExpiries } = require('./utils/seedPlans')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -88,6 +88,7 @@ mongoose
     console.log('MongoDB connected')
 
     await seedDefaultPlansIfMissing()
+    await clearFreePlanExpiries()
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)

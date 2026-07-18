@@ -1,7 +1,7 @@
 const UserPlan = require('../models/UserPlan')
 const SubscriptionPlan = require('../models/SubscriptionPlan')
 const Vehicle = require('../models/Vehicle')
-const { ensureCurrentCycle } = require('../utils/planCycle')
+const { ensureCurrentCycle, activePlanExpiryFilter } = require('../utils/planCycle')
 
 const planEnforcer = (docType = 'manual') => {
   return async (req, res, next) => {
@@ -14,7 +14,7 @@ const planEnforcer = (docType = 'manual') => {
       const activePlan = await UserPlan.findOne({
         userId,
         status: 'active',
-        expiryDate: { $gte: new Date() },
+        ...activePlanExpiryFilter(),
       }).populate('planId')
 
       if (!activePlan || !activePlan.planId) {

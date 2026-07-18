@@ -58,7 +58,7 @@ function UserPlansPage({ apiFetch }) {
                     </span>
                   </td>
                   <td style={{ fontSize: '13px' }}>{new Date(up.startDate).toLocaleDateString()}</td>
-                  <td style={{ fontSize: '13px' }}>{new Date(up.expiryDate).toLocaleDateString()}</td>
+                  <td style={{ fontSize: '13px' }}>{up.expiryDate ? new Date(up.expiryDate).toLocaleDateString() : 'No Expiry'}</td>
                   <td>
                     <span className={`status-pill ${up.status === 'active' ? 'status-active' : up.status === 'expired' ? 'status-inactive' : 'status-pending'}`}>
                       {up.status}

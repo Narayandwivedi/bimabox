@@ -285,7 +285,7 @@ function UsersPage({ apiFetch }) {
                         </span>
                       </td>
                       <td style={{ fontSize: '13px' }}>
-                        {user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'N/A'}
+                        {user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'No Expiry'}
                       </td>
                       <td>
                         <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
@@ -369,7 +369,7 @@ function UsersPage({ apiFetch }) {
                       <option value="">No plan change</option>
                       {plans.filter((p) => p.isActive).map((p) => (
                         <option key={p._id} value={p._id}>
-                          {p.name} - ₹{p.price} / {p.durationDays} days
+                          {p.name} - ₹{p.price} / {p.durationDays > 0 ? `${p.durationDays} days` : 'No Expiry'}
                         </option>
                       ))}
                     </select>
@@ -471,7 +471,7 @@ function UsersPage({ apiFetch }) {
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px', color: '#64748b' }}>
                         <span>Start: {new Date(hp.startDate).toLocaleDateString()}</span>
-                        <span>Expiry: {new Date(hp.expiryDate).toLocaleDateString()}</span>
+                        <span>Expiry: {hp.expiryDate ? new Date(hp.expiryDate).toLocaleDateString() : 'No Expiry'}</span>
                         {hp.usage ? (
                           <>
                             <span>AI Used: {hp.usage.aiDocumentsUsed ?? 0}</span>

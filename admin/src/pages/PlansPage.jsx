@@ -81,7 +81,7 @@ function PlansPage({ apiFetch }) {
                     <td style={{ color: '#94a3b8', fontSize: '12px' }}>{i + 1}</td>
                     <td style={{ fontWeight: 700 }}>{p.name}</td>
                     <td>₹{p.price}</td>
-                    <td>{p.durationDays}d</td>
+                    <td>{p.durationDays > 0 ? `${p.durationDays}d` : 'No Expiry'}</td>
                     <td>{p.features?.aiDocuments ?? 0}</td>
                     <td>{p.features?.manualDocuments ?? 0}</td>
                     <td>{p.features?.clientLimit === 0 ? 'Unlimited' : p.features?.clientLimit ?? 0}</td>
@@ -156,7 +156,7 @@ function PlansPage({ apiFetch }) {
                 const payload = {
                   name: planForm.name.trim(),
                   price: Number(planForm.price) || 0,
-                  durationDays: Number(planForm.durationDays) || 30,
+                  durationDays: Number(planForm.durationDays) || 0,
                   sortOrder: Number(planForm.sortOrder) || 0,
                   features: { ...planForm.features },
                 }
@@ -191,8 +191,8 @@ function PlansPage({ apiFetch }) {
                   <input type="number" value={planForm.price} onChange={(e) => setPlanForm(p => ({ ...p, price: e.target.value }))} />
                 </label>
                 <label>
-                  <span>Duration (Days)</span>
-                  <input type="number" value={planForm.durationDays} onChange={(e) => setPlanForm(p => ({ ...p, durationDays: e.target.value }))} />
+                  <span>Duration (Days, 0 = Never Expires)</span>
+                  <input type="number" min="0" value={planForm.durationDays} onChange={(e) => setPlanForm(p => ({ ...p, durationDays: e.target.value }))} />
                 </label>
                 <label>
                   <span>Sort Order</span>

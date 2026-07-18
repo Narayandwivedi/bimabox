@@ -4,7 +4,8 @@ const userPlanSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true },
   startDate: { type: Date, default: Date.now },
-  expiryDate: { type: Date, required: true },
+  // null = never expires (e.g. Free plan — only its monthly usage limit resets)
+  expiryDate: { type: Date, default: null },
   status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active' },
   assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
   notes: { type: String, trim: true },

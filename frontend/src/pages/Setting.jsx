@@ -311,10 +311,10 @@ const Setting = () => {
                         </div>
                         <div className='text-left sm:text-right'>
                           <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>
-                            {isExpired ? 'Expired On' : 'Expiration / Renewal Date'}
+                            {isExpired ? 'Expired On' : myPlan.expiryDate ? 'Expiration / Renewal Date' : 'Plan Duration'}
                           </p>
                           <p className={`text-sm font-extrabold ${isExpired ? 'text-rose-600' : 'text-slate-800'} mt-1`}>
-                            {myPlan.expiryDate ? new Date(myPlan.expiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                            {myPlan.expiryDate ? new Date(myPlan.expiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Never Expires'}
                             {!isExpired && daysLeft !== null && daysLeft <= 7 && (
                               <span className='ml-2 text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-100'>({daysLeft <= 0 ? 'today' : `${daysLeft}d left`})</span>
                             )}

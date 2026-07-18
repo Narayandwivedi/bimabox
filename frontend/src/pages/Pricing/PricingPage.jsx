@@ -115,10 +115,10 @@ const PricingPage = () => {
               </div>
               <div className='text-right'>
                 <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400'>
-                  {myPlan.status === 'expired' ? 'Expired On' : 'Renews / Expires On'}
+                  {myPlan.status === 'expired' ? 'Expired On' : myPlan.expiryDate ? 'Renews / Expires On' : 'Plan Duration'}
                 </p>
                 <p className={`text-sm font-bold ${myPlan.status === 'expired' ? 'text-rose-600' : 'text-slate-800'}`}>
-                  {myPlan.expiryDate ? new Date(myPlan.expiryDate).toLocaleDateString() : 'N/A'}
+                  {myPlan.expiryDate ? new Date(myPlan.expiryDate).toLocaleDateString() : 'Never Expires'}
                 </p>
               </div>
             </div>

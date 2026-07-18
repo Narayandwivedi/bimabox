@@ -2,7 +2,7 @@ const UserPlan = require('../models/UserPlan')
 const SubscriptionPlan = require('../models/SubscriptionPlan')
 const User = require('../models/User')
 const Vehicle = require('../models/Vehicle')
-const { ensureCurrentCycle } = require('../utils/planCycle')
+const { ensureCurrentCycle, computeExpiryDate, activePlanExpiryFilter } = require('../utils/planCycle')
 
 const listUserPlans = async (req, res) => {
   try {
@@ -57,8 +57,7 @@ const assignPlan = async (req, res) => {
     }
 
     const effectiveStartDate = startDate ? new Date(startDate) : new Date()
-    const expiryDate = new Date(effectiveStartDate)
-    expiryDate.setDate(expiryDate.getDate() + plan.durationDays)
+    const expiryDate = computeExpiryDate(plan.durationDays, effectiveStartDate)
 
     await UserPlan.updateMany(
       { userId, status: 'active' },
@@ -105,13 +104,11 @@ const updateUserPlan = async (req, res) => {
       userPlan.planId = planId
 
       if (!expiryDate) {
-        const newExpiry = new Date(userPlan.startDate || new Date())
-        newExpiry.setDate(newExpiry.getDate() + plan.durationDays)
-        userPlan.expiryDate = newExpiry
+        userPlan.expiryDate = computeExpiryDate(plan.durationDays, userPlan.startDate || new Date())
       }
     }
 
-    if (expiryDate !== undefined) userPlan.expiryDate = new Date(expiryDate)
+    if (expiryDate !== undefined) userPlan.expiryDate = expiryDate ? new Date(expiryDate) : null
     if (status !== undefined) userPlan.status = status
     if (notes !== undefined) userPlan.notes = notes
 
@@ -153,7 +150,7 @@ const getMyPlan = async (req, res) => {
     const activePlanDoc = await UserPlan.findOne({
       userId,
       status: 'active',
-      expiryDate: { $gte: new Date() },
+      ...activePlanExpiryFilter(),
     }).populate('planId', 'name price features durationDays')
 
     if (activePlanDoc) {
@@ -174,14 +171,11 @@ const getMyPlan = async (req, res) => {
           return res.json({ success: true, data: null })
         }
 
-        const expiry = new Date()
-        expiry.setDate(expiry.getDate() + defaultPlan.durationDays)
-
         const newPlan = await UserPlan.create({
           userId,
           planId: defaultPlan._id,
           startDate: new Date(),
-          expiryDate: expiry,
+          expiryDate: computeExpiryDate(defaultPlan.durationDays),
           status: 'active',
         })
 

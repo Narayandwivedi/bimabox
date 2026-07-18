@@ -387,7 +387,7 @@ const EditFitnessModal = ({ isOpen, onClose, onSuccess, fitness }) => {
       const fitnessId = fitness._id || fitness.id
 
       const response = await axios.put(
-        `${API_URL}/api/fitness/id/${fitnessId}`,
+        `${API_URL}/api/fitness/${fitnessId}`,
         {
           vehicleNumber: formData.vehicleNumber,
           ownerName: formData.ownerName,

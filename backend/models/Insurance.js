@@ -95,6 +95,20 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   }],
 
+  // Premium breakdown
+  odPremium: {
+    type: Number,
+    default: 0
+  },
+  tpPremium: {
+    type: Number,
+    default: 0
+  },
+  netPremium: {
+    type: Number,
+    default: 0
+  },
+  // Gross Premium (net premium + taxes) — kept as `premium` for backward compatibility
   premium: {
     type: Number,
     default: 0

@@ -32,6 +32,51 @@ const extractIffcoTokioPolicyNumber = (rawText) => {
 }
 
 /**
+ * Some insurers (e.g. Go Digit) print a clean "ENDORSEMENT" invoice table:
+ *   "Invoice Number Invoice Date Net Premium Igst Cgst Sgst Utgst Cess Gross Premium
+ *    IA250592477 2026-04-11 1002.29 0.00 90.21 90.21 0.00 0.00 1182.71"
+ * pdf-parse concatenates the row's numbers with no separators (each is a clean
+ * 2-decimal amount, so they can be split unambiguously), while the OD/TP
+ * breakdown table above it gets its labels and values scrambled out of order.
+ * This table is unambiguous, so use it to correct netPremium/premium (gross)
+ * when present, overriding whatever the AI guessed.
+ */
+const extractNetGrossPremiumFromEndorsementTable = (rawText) => {
+  if (!rawText) return null
+  const match = rawText.match(/Net\s*Premium\s*Igst\s*Cgst\s*Sgst\s*Utgst\s*Cess\s*Gross\s*Premium[\s\S]{0,60}?\d{4}-\d{2}-\d{2}((?:\d+\.\d{2}){7})/i)
+  if (!match) return null
+  const numbers = match[1].match(/\d+\.\d{2}/g)
+  if (!numbers || numbers.length !== 7) return null
+  const [netPremium, , , , , , grossPremium] = numbers
+  return { netPremium: Number(netPremium), premium: Number(grossPremium) }
+}
+
+/**
+ * Go Digit policy schedules print an OD/TP premium breakdown table where
+ * pdf-parse scrambles the labels away from their values (columns get
+ * flattened out of reading order), so the AI regularly grabs the wrong
+ * number (e.g. picks the TP figure for OD, or vice-versa). However the
+ * table always ends with one clean, unambiguous final summary row right
+ * before the "Note:...total OD premium..." disclaimer:
+ *   "(`) 288.29 96.10 714.00 Note:The above total OD premium is..."
+ * which is always [Total OD Premium, NCB amount, Total Act/TP Premium] in
+ * that fixed order. Cross-check against the known netPremium (OD + TP)
+ * before trusting it, so a template change can't silently corrupt data.
+ */
+const extractDigitOdTpPremium = (rawText, knownNetPremium) => {
+  if (!rawText) return null
+  const match = rawText.match(/\(`\)\s*(\d+\.\d{2})\s*(\d+\.\d{2})\s*(\d+\.\d{2})\s*Note:\s*The above total OD premium/i)
+  if (!match) return null
+  const odPremium = Number(match[1])
+  const tpPremium = Number(match[3])
+  if (knownNetPremium != null) {
+    const diff = Math.abs(odPremium + tpPremium - knownNetPremium)
+    if (diff > 2) return null // doesn't reconcile with net premium, don't risk a bad override
+  }
+  return { odPremium, tpPremium }
+}
+
+/**
  * Indian vehicle registration numbers follow the pattern:
  *   <2-letter state code><2-digit district><1-3 letter series><4-digit number>
  * Total length after stripping hyphens/spaces: 9 or 10 characters.
@@ -102,7 +147,10 @@ const extractValidIndianVehicleNumber = (rawText) => {
 const HIGH_VALUE_KEYWORDS = [
   'registration no', 'vehicle no', 'engine number', 'chassis', 'make', 'model',
   'policy no', 'policy number', 'valid from', 'valid till', 'period of insurance',
-  'premium', 'total premium', 'insured', 'insured name', 'receipt', 'proposal',
+  'premium', 'total premium', 'od premium', 'own damage premium', 'tp premium',
+  'third party premium', 'liability premium', 'net premium', 'gross premium',
+  'total od premium', 'total act premium', 'final premium', 'ncb',
+  'insured', 'insured name', 'receipt', 'proposal',
   'certificate of insurance', 'policy schedule', 'fuel type', 'seating capacity',
   'mfg. year', 'manufacture year', 'date of registration', 'body type'
 ]
@@ -497,12 +545,16 @@ const insuranceOcr = async (req, res) => {
 - policyHolderName: primary insured person/company name
 - validFrom / validTo: the main policy period (Own Damage section if present, otherwise overall policy period). DD-MM-YYYY format.
 - issueDate: the date the policy document was issued. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
-- premium: numeric value of the net/total premium in rupees/INR. Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. No currency symbols, commas, or GST/taxes if separated.
+- odPremium: numeric value of the "Total OD Premium" (own damage), the FINAL own-damage figure AFTER NCB discount is applied. IMPORTANT: many policies (e.g. Digit, ICICI Lombard) show a table with an intermediate "Own Damage Premium" subtotal (before NCB discount) plus a separate "NCB (xx%)" deduction line, and then a "Total OD Premium" line which is the final figure (Own Damage Premium minus NCB) — you MUST use the "Total OD Premium" value, NOT the intermediate "Own Damage Premium" subtotal. Do NOT use the Final/Gross Premium value here even if it appears near this section. Empty string if the policy has no OD component (Third Party only policy).
+- tpPremium: numeric value of the "Total Act Premium" / "Total Liability Premium" / "Total TP Premium" — the final total of the Liability/Act premium section (Basic Third-Party Liability + Legal Liability add-ons + PA cover add-ons, if any). If the document has no separate add-ons, this equals "Basic Third-Party Liability". Do NOT use the Final/Gross Premium value here.
+- netPremium: numeric value labeled exactly "Net Premium" — this is odPremium + tpPremium (before GST/taxes). It is a DISTINCT, smaller number than the Final/Gross Premium — do not confuse the two.
+- premium: numeric value of the Gross Premium — labeled "Final Premium" or "Gross Premium", the LARGEST of the four premium figures, equal to Net Premium + GST/CGST+SGST/IGST (roughly netPremium × 1.18). Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. If only one premium figure exists on the document (no OD/TP/Net split), put that value here as premium and leave odPremium/tpPremium/netPremium empty.
+- SELF-CHECK before answering: odPremium + tpPremium should be close to netPremium (within a few rupees, allowing for small add-ons), and netPremium should be meaningfully smaller than premium (premium ≈ netPremium × 1.18 for 18% GST). If your extracted values don't satisfy this, re-examine the document for the correct "Total OD Premium" / "Total Act Premium" / "Net Premium" / "Final Premium" labels rather than reusing the same number for multiple fields.
 - insuranceCompany: full insurer name as it appears (e.g. "HDFC ERGO", "National Insurance Company Limited")
 - insuranceClass: "Comprehensive" or "Third Party" (if not found, infer from policy type)
 - product: type of insured vehicle/policy. Look for phrases like "Private Car", "Motor Cycle", "Two Wheeler", "Fire", "Marine", "Health" etc. in the document, and map to EXACTLY one of these values (return the value on the left, verbatim): "Pvt. Car" (private car / motor car), "Two Wheeler" (motorcycle/scooter/bike/two-wheeler), "GCV" (goods carrying vehicle/truck/commercial goods vehicle), "GCV-3W" (3-wheeler goods vehicle), "PCV" (passenger carrying vehicle/bus), "PCV-3W" (3-wheeler passenger/auto rickshaw), "Taxi", "Mis-D", "Health", "Life", "Fire", "Burglary", "WC" (workmen's compensation), "CPM", "Travel", "Marine", "GPA" (group personal accident), "GMC" (group mediclaim). If none match, return empty string.
 - Use empty string "" for any absent field`;
-  const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","issueDate":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
+  const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","issueDate":"","odPremium":"","tpPremium":"","netPremium":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
 
   // Store raw PDF text for post-processing override (IFFCO Tokio and similar)
   req._rawPdfText = null
@@ -534,6 +586,25 @@ const insuranceOcr = async (req, res) => {
           console.log('[VehicleNo] Overriding', currentVehicle, '->', correctedVehicleNo)
           extractedData.vehicleNumber = correctedVehicleNo
         }
+      }
+
+      // 3. Fix Net Premium / Gross Premium using the clean ENDORSEMENT invoice
+      //    table (Go Digit and similar) — this table is unambiguous, unlike
+      //    the OD/TP breakdown table which pdf-parse often scrambles.
+      const endorsementPremiums = extractNetGrossPremiumFromEndorsementTable(req._rawPdfText)
+      if (endorsementPremiums) {
+        console.log('[Premium] Overriding netPremium/premium from ENDORSEMENT table:', endorsementPremiums)
+        extractedData.netPremium = endorsementPremiums.netPremium
+        extractedData.premium = endorsementPremiums.premium
+      }
+
+      // 4. Fix OD/TP premium split for Go Digit-style scrambled breakdown tables
+      const knownNetPremium = endorsementPremiums?.netPremium ?? (extractedData.netPremium ? Number(extractedData.netPremium) : null)
+      const digitOdTp = extractDigitOdTpPremium(req._rawPdfText, knownNetPremium)
+      if (digitOdTp) {
+        console.log('[Premium] Overriding odPremium/tpPremium from Go Digit summary row:', digitOdTp)
+        extractedData.odPremium = digitOdTp.odPremium
+        extractedData.tpPremium = digitOdTp.tpPremium
       }
     }
     return extractedData

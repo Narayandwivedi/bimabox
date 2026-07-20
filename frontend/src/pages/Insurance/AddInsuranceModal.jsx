@@ -119,6 +119,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     validFrom: '',
     validTo: '',
     issueDate: utilGetTodayDate(),
+    odPremium: '',
+    tpPremium: '',
+    netPremium: '',
     premium: '',
     insuranceDocument: '',
     endorsementDocument: '',
@@ -205,6 +208,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
         issueDate: initialData.issueDate || utilGetTodayDate(),
+        odPremium: initialData.odPremium != null ? String(initialData.odPremium) : '',
+        tpPremium: initialData.tpPremium != null ? String(initialData.tpPremium) : '',
+        netPremium: initialData.netPremium != null ? String(initialData.netPremium) : '',
         premium: initialData.premium != null ? String(initialData.premium) : '',
         insuranceDocument: initialData.insuranceDocument || '',
         endorsementDocument: initialData.endorsementDocument || '',
@@ -247,6 +253,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         validFrom: '',
         validTo: '',
         issueDate: utilGetTodayDate(),
+        odPremium: '',
+        tpPremium: '',
+        netPremium: '',
         premium: '',
         insuranceDocument: '',
         endorsementDocument: '',
@@ -508,7 +517,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           if (normalized) updated[key] = normalized
           return
         }
-        if (key === 'premium') {
+        if (key === 'premium' || key === 'odPremium' || key === 'tpPremium' || key === 'netPremium') {
           updated[key] = String(value).replace(/[^0-9.]/g, '')
           return
         }
@@ -799,6 +808,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       policyHolderName: formData.policyHolderName,
       validFrom: formData.validFrom,
       validTo: formData.validTo,
+      odPremium: formData.odPremium !== '' ? Number(formData.odPremium) : 0,
+      tpPremium: formData.tpPremium !== '' ? Number(formData.tpPremium) : 0,
+      netPremium: formData.netPremium !== '' ? Number(formData.netPremium) : 0,
       premium: formData.premium !== '' ? Number(formData.premium) : 0,
       issueDate: formData.issueDate,
       insuranceDocument: uploadedDocumentPath,
@@ -1115,10 +1127,62 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated, editable)</span></label>
                   <input type='date' name='validTo' value={formData.validTo ? formData.validTo.split('-').reverse().join('-') : ''} onChange={handleChange} onKeyDown={handleInputKeyDown} tabIndex='6' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
                 </div>
+                <div></div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>OD Premium (₹)</label>
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
+                    <input
+                      type='number'
+                      name='odPremium'
+                      value={formData.odPremium}
+                      onChange={handleChange}
+                      placeholder='0'
+                      min='0'
+                      step='any'
+                      tabIndex='7'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Premium (₹)</label>
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
+                    <input
+                      type='number'
+                      name='tpPremium'
+                      value={formData.tpPremium}
+                      onChange={handleChange}
+                      placeholder='0'
+                      min='0'
+                      step='any'
+                      tabIndex='8'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Net Premium (₹)</label>
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
+                    <input
+                      type='number'
+                      name='netPremium'
+                      value={formData.netPremium}
+                      onChange={handleChange}
+                      placeholder='0'
+                      min='0'
+                      step='any'
+                      tabIndex='9'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Premium (₹)
-                    <span className='ml-1 text-xs text-purple-500 font-normal'>Annual amount</span>
+                    Gross Premium (₹)
+                    <span className='ml-1 text-xs text-purple-500 font-normal'>Total incl. GST</span>
                   </label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
@@ -1130,7 +1194,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       placeholder='0'
                       min='0'
                       step='any'
-                      tabIndex='7'
+                      tabIndex='10'
                       className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
                     />
                   </div>

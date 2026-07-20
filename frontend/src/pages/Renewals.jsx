@@ -133,7 +133,10 @@ const Renewals = () => {
       row['Valid From'] = r[docConfig.validFromField] || ''
       row['Valid To'] = r[docConfig.validToField] || ''
       if (docType === 'Insurance') {
-        row['Premium'] = r.premium ?? ''
+        row['OD Premium'] = r.odPremium ?? ''
+        row['TP Premium'] = r.tpPremium ?? ''
+        row['Net Premium'] = r.netPremium ?? ''
+        row['Gross Premium'] = r.premium ?? ''
         row['Client Name'] = r.reference || ''
         row['Agent Name (IMD)'] = r.imd || ''
       }

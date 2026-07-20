@@ -12,7 +12,7 @@ const base = createRecordController({
   stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'issueDate', 'insuranceDocument', 'endorsementDocument', 'remarks', 'reference', 'imd', 'renewalStatus', 'claimDate', 'claimRemarks'],
   objectIdFields: ['insuranceCompanyId'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
-  numberFields: ['premium'],
+  numberFields: ['premium', 'odPremium', 'tpPremium', 'netPremium'],
   booleanFields: ['claimRaised'],
   documentField: 'insuranceDocument',
   documentDataField: 'insuranceDocumentData',
@@ -54,7 +54,7 @@ const getRenewalsList = async (req, res) => {
 
     const all = await Insurance.find({ userId: req.user._id })
       .lean()
-      .select('policyHolderName vehicleNumber policyNumber insuranceCompany insuranceCompanyId product insuranceClass validFrom validTo renewalStatus premium claimRaised claimDate claimRemarks')
+      .select('policyHolderName vehicleNumber policyNumber insuranceCompany insuranceCompanyId product insuranceClass validFrom validTo renewalStatus premium odPremium tpPremium netPremium claimRaised claimDate claimRemarks')
 
     const result = all
       .map((r) => ({ ...r, daysLeft: getDaysLeft(r.validTo) }))

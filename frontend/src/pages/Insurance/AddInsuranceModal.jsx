@@ -5,8 +5,14 @@ import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtr
 import { pdfToImages } from '../../utils/pdfToImages'
 import { enforceMobileNumberFormat } from '../../utils/contactValidation'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
+import { getInsuranceCompanies, initInsuranceCompanyCache } from '../../utils/insuranceCompanyCache'
+import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit'
+import AiLimitModal from '../../components/AiLimitModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+
+// Bootstrap the midnight cache-refresh scheduler once when this module loads
+initInsuranceCompanyCache(API_URL)
 
 
 const PRODUCT_TYPE_OPTIONS = [
@@ -109,6 +115,7 @@ const normalizeProductType = (productType) => {
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
   const isManualMode = isEditMode || !initialExtractionFile
   const isOcrUpdate = useRef(false)
+  const { checkLimit, limitModalOpen, closeLimitModal, used: aiUsed, limit: aiLimit } = useAiLimit()
   const processedInitialFile = useRef(false)
   const userEditedValidTo = useRef(false)
   const getTodayDate = () => utilGetTodayDate()
@@ -160,6 +167,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [newImdMobile, setNewImdMobile] = useState('')
   const [newImdEmail, setNewImdEmail] = useState('')
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
+  // Mirror of insuranceCompanies in a ref so applyOcrResult closure always reads the latest list
+  const insuranceCompaniesRef = useRef([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
   const pendingOcrCompanyName = useRef(null) // stores raw OCR company name if companies weren't loaded yet
 
@@ -375,10 +384,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       processedInitialFile.current = true
       if (initialExtractionFile.type === 'application/pdf') {
         setUploadedInsuranceFile(initialExtractionFile)
-        processExtraction(initialExtractionFile)
+        checkLimit().then(canUse => { if (canUse) processExtraction(initialExtractionFile) })
       } else if (initialExtractionFile.type.startsWith('image/')) {
-        setUploadedInsuranceFile(initialExtractionFile)
-        setScanningFile(initialExtractionFile)
+        checkLimit().then(canUse => {
+          if (canUse) {
+            setUploadedInsuranceFile(initialExtractionFile)
+            setScanningFile(initialExtractionFile)
+          }
+        })
       }
     }
   }, [isOpen, initialExtractionFile])
@@ -426,26 +439,24 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   useEffect(() => {
     if (!isOpen) return
     setLoadingCompanies(true)
-    axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
-      .then(res => {
-        if (res.data?.success) {
-          const loaded = res.data.data
-          setInsuranceCompanies(loaded)
-          // Re-attempt matching if OCR ran before companies were loaded
-          if (pendingOcrCompanyName.current) {
-            const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
-            if (matched) {
-              setFormData(prev => ({ ...prev, insuranceCompany: matched.name, insuranceCompanyId: matched._id }))
-            }
-            pendingOcrCompanyName.current = null
+    getInsuranceCompanies(API_URL)
+      .then(loaded => {
+        setInsuranceCompanies(loaded)
+        insuranceCompaniesRef.current = loaded
+        // Re-attempt matching if OCR ran before companies were loaded
+        if (pendingOcrCompanyName.current) {
+          const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
+          if (matched) {
+            setFormData(prev => ({ ...prev, insuranceCompany: matched.name, insuranceCompanyId: matched._id }))
           }
-          // Legacy records only stored the company name — link them to a company id now that the list is loaded
-          setFormData(prev => {
-            if (prev.insuranceCompanyId || !prev.insuranceCompany) return prev
-            const legacyMatch = findCompanyByExactName(prev.insuranceCompany, loaded)
-            return legacyMatch ? { ...prev, insuranceCompanyId: legacyMatch._id } : prev
-          })
+          pendingOcrCompanyName.current = null
         }
+        // Legacy records only stored the company name — link them to a company id now that the list is loaded
+        setFormData(prev => {
+          if (prev.insuranceCompanyId || !prev.insuranceCompany) return prev
+          const legacyMatch = findCompanyByExactName(prev.insuranceCompany, loaded)
+          return legacyMatch ? { ...prev, insuranceCompanyId: legacyMatch._id } : prev
+        })
       })
       .catch(() => {})
       .finally(() => setLoadingCompanies(false))
@@ -500,7 +511,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           return
         }
         if (key === 'insuranceCompany') {
-          const matched = normalizeInsuranceCompany(value, insuranceCompanies)
+          // Use the ref so we always read the latest list, even if the closure
+          // was created before the companies state had loaded
+          const currentCompanies = insuranceCompaniesRef.current
+          const matched = normalizeInsuranceCompany(value, currentCompanies)
           if (matched) {
             updated[key] = matched.name
             updated.insuranceCompanyId = matched._id
@@ -528,6 +542,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   }
 
   const processExtraction = async (fileToProcess) => {
+    // Pre-flight limit check (fast, cached)
+    const canUse = await checkLimit()
+    if (!canUse) return
+
     setIsExtractingInsurance(true)
     const updateToast = toast.info('Analyzing insurance document, please wait...', { autoClose: false, isLoading: true })
 
@@ -550,6 +568,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 revokeOnCleanup: true
               }
             })
+            invalidateAiLimitCache()
             toast.dismiss(updateToast)
             toast.success('Insurance details extracted successfully!', { position: 'top-right', autoClose: 3000 })
           } else {
@@ -557,6 +576,15 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             toast.error('Failed to extract data correctly.', { position: 'top-right', autoClose: 3000 })
           }
         } catch (error) {
+          // 403 = AI limit reached (race condition between check and actual request)
+          if (error.response?.status === 403) {
+            toast.dismiss(updateToast)
+            const { used: u = 0, limit: l = 0 } = error.response.data || {}
+            invalidateAiLimitCache()
+            // Re-check to populate the modal with fresh values then show it
+            await checkLimit()
+            return
+          }
           if (error.response?.status === 422 && error.response?.data?.isScannedPdf && fileToProcess) {
             const fallbackToast = toast.info('Scanned PDF detected. Converting to images for visual analysis...', { autoClose: false, isLoading: true })
             try {
@@ -582,12 +610,19 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       revokeOnCleanup: true
                     }
                   })
+                  invalidateAiLimitCache()
                   toast.dismiss(fallbackToast)
                   toast.success('Insurance details extracted successfully via Vision!', { position: 'top-right', autoClose: 3000 })
                   return
                 }
               }
             } catch (visionErr) {
+              if (visionErr.response?.status === 403) {
+                toast.dismiss(fallbackToast)
+                invalidateAiLimitCache()
+                await checkLimit()
+                return
+              }
               console.error('Vision fallback failed:', visionErr)
             }
             toast.dismiss(fallbackToast)
@@ -636,11 +671,13 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     return false
   }
 
-  const handleManualDocumentUpload = (e) => {
+  const handleManualDocumentUpload = async (e) => {
     const file = e.target.files?.[0]
     const success = processInsuranceFile(file)
     e.target.value = ''
     if (success && file && !isManualMode) {
+      const canUse = await checkLimit()
+      if (!canUse) return
       if (file.type === 'application/pdf') {
         processExtraction(file)
       } else if (file.type.startsWith('image/')) {
@@ -668,13 +705,15 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     }
   }
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragOver(false)
     const file = e.dataTransfer.files?.[0]
     const success = processInsuranceFile(file)
     if (success && file && !isManualMode) {
+      const canUse = await checkLimit()
+      if (!canUse) return
       if (file.type === 'application/pdf') {
         processExtraction(file)
       } else if (file.type.startsWith('image/')) {
@@ -715,7 +754,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const handleScannerConfirm = async (processedImageFile) => {
     setScanningFile(null)
     setUploadedInsuranceFile(processedImageFile)
-    await processExtraction(processedImageFile)
+    const canUse = await checkLimit()
+    if (canUse) await processExtraction(processedImageFile)
   }
 
   const handleInputKeyDown = (e) => {
@@ -849,7 +889,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   if (!isOpen) return null
 
   return (
-    <div
+    <>
+      <AiLimitModal isOpen={limitModalOpen} onClose={closeLimitModal} used={aiUsed} limit={aiLimit} />
+      <div
       className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
@@ -1481,6 +1523,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         </div>
       )}
     </div>
+    </>
   )
 }
 

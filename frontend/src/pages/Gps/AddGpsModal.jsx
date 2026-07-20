@@ -4,10 +4,13 @@ import { toast } from 'react-toastify'
 import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck'
 import { handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
+import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit'
+import AiLimitModal from '../../components/AiLimitModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const AddGpsModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
+  const { checkLimit, limitModalOpen, closeLimitModal, used: aiUsed, limit: aiLimit } = useAiLimit()
   const isOcrUpdate = useRef(false)
   const processedInitialFile = useRef(false)
   const dropdownItemRefs = useRef([])
@@ -37,7 +40,12 @@ const AddGpsModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
 
   useEffect(() => {
     if (!isOpen) {
-      setFormData({ vehicleNumber: prefilledVehicleNumber, ownerName: prefilledOwnerName, validFrom: '', validTo: '' })
+      setFormData({
+        vehicleNumber: prefilledVehicleNumber,
+        ownerName: prefilledOwnerName,
+        validFrom: '',
+        validTo: ''
+      })
       setVehicleValidation({ isValid: false, message: '' })
       setFetchingVehicle(false)
       setVehicleError('')
@@ -60,10 +68,14 @@ const AddGpsModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
       processedInitialFile.current = true
       if (initialExtractionFile.type === 'application/pdf') {
         setUploadedGpsFile(initialExtractionFile)
-        processExtraction(initialExtractionFile)
+        checkLimit().then(canUse => { if (canUse) processExtraction(initialExtractionFile) })
       } else if (initialExtractionFile.type.startsWith('image/')) {
-        setUploadedGpsFile(initialExtractionFile)
-        setScanningFile(initialExtractionFile)
+        checkLimit().then(canUse => {
+          if (canUse) {
+            setUploadedGpsFile(initialExtractionFile)
+            setScanningFile(initialExtractionFile)
+          }
+        })
       }
     }
   }, [isOpen, initialExtractionFile])
@@ -225,6 +237,9 @@ if (e.key === 'Escape') onClose()
   }
 
   const processExtraction = async (fileToProcess) => {
+    const canUse = await checkLimit()
+    if (!canUse) return
+
     setIsExtractingGps(true)
     const updateToast = toast.info('Analyzing GPS document, please wait...', { autoClose: false, isLoading: true })
     try {
@@ -267,13 +282,20 @@ if (e.key === 'Escape') onClose()
                 previewUrl: URL.createObjectURL(fileToProcess)
               }
             })
+            invalidateAiLimitCache()
             toast.dismiss(updateToast)
             toast.success('GPS details extracted successfully!', { position: 'top-right', autoClose: 3000 })
           } else {
             toast.dismiss(updateToast)
             toast.error('Failed to extract data correctly.', { position: 'top-right', autoClose: 3000 })
           }
-        } catch {
+        } catch (err) {
+          if (err.response?.status === 403) {
+            toast.dismiss(updateToast)
+            invalidateAiLimitCache()
+            await checkLimit()
+            return
+          }
           toast.dismiss(updateToast)
           toast.error('Server error during OCR processing.', { position: 'top-right', autoClose: 3000 })
         } finally {
@@ -312,7 +334,8 @@ if (e.key === 'Escape') onClose()
   const handleScannerConfirm = async (processedImageFile) => {
     setScanningFile(null)
     setUploadedGpsFile(processedImageFile)
-    await processExtraction(processedImageFile)
+    const canUse = await checkLimit()
+    if (canUse) await processExtraction(processedImageFile)
   }
 
   const handleSubmit = async (e) => {
@@ -361,6 +384,7 @@ if (e.key === 'Escape') onClose()
 
   return (
     <>
+      <AiLimitModal isOpen={limitModalOpen} onClose={closeLimitModal} used={aiUsed} limit={aiLimit} />
       {scanningFile && <DocumentScannerPreview file={scanningFile} onCancel={() => setScanningFile(null)} onConfirm={handleScannerConfirm} />}
       <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
         <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col'>

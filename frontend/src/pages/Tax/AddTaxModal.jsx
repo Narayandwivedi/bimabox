@@ -4,10 +4,13 @@ import { toast } from 'react-toastify'
 import { handleDateBlur as utilHandleDateBlur, handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter'
 import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
+import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit'
+import AiLimitModal from '../../components/AiLimitModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', prefilledMobileNumber = '', initialExtractionFile = null }) => {
+  const { checkLimit, limitModalOpen, closeLimitModal, used: aiUsed, limit: aiLimit } = useAiLimit()
   const [fetchingVehicle, setFetchingVehicle] = useState(false)
   const [vehicleError, setVehicleError] = useState('')
   const [dateError, setDateError] = useState({ taxFrom: '', taxTo: '' })
@@ -90,10 +93,14 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
           type: 'pdf',
           previewUrl: URL.createObjectURL(initialExtractionFile)
         })
-        processExtraction(initialExtractionFile)
+        checkLimit().then(canUse => { if (canUse) processExtraction(initialExtractionFile) })
       } else if (initialExtractionFile.type.startsWith('image/')) {
-        setUploadedTaxFile(initialExtractionFile)
-        setScanningFile(initialExtractionFile)
+        checkLimit().then(canUse => {
+          if (canUse) {
+            setUploadedTaxFile(initialExtractionFile)
+            setScanningFile(initialExtractionFile)
+          }
+        })
       }
     }
   }, [isOpen, initialExtractionFile])
@@ -465,10 +472,14 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
       if (prev?.previewUrl) URL.revokeObjectURL(prev.previewUrl);
       return { name: processedImageFile.name || 'tax-document.jpg', type: 'image', previewUrl: URL.createObjectURL(processedImageFile) };
     });
-    await processExtraction(processedImageFile);
+    const canUse = await checkLimit();
+    if (canUse) await processExtraction(processedImageFile);
   }
 
   const processExtraction = async (fileToProcess) => {
+    const canUse = await checkLimit();
+    if (!canUse) return;
+
     setIsExtractingTax(true);
     const updateToast = toast.info('Analyzing document, please wait...', { autoClose: false, isLoading: true });
 
@@ -510,6 +521,7 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
               return updated;
             });
             
+            invalidateAiLimitCache();
             toast.dismiss(updateToast);
             toast.success('Tax Details Extracted Successfully!', { position: 'top-right', autoClose: 3000 });
 
@@ -518,6 +530,12 @@ const AddTaxModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', p
             toast.error('Failed to extract data correctly.', { position: 'top-right', autoClose: 3000 });
           }
         } catch (err) {
+            if (err.response?.status === 403) {
+              toast.dismiss(updateToast);
+              invalidateAiLimitCache();
+              await checkLimit();
+              return;
+            }
             console.error(err);
             toast.dismiss(updateToast);
             toast.error('Server error during OCR processing.', { position: 'top-right', autoClose: 3000 });

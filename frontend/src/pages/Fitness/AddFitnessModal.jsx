@@ -4,10 +4,13 @@ import { toast } from 'react-toastify';
 import { validateVehicleNumberRealtime } from '../../utils/vehicleNoCheck';
 import { handleSmartDateInput, normalizeAIExtractedDate } from '../../utils/dateFormatter';
 import DocumentScannerPreview from '../../components/DocumentScannerPreview';
+import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit';
+import AiLimitModal from '../../components/AiLimitModal';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', prefilledMobileNumber = '' }) => {
+const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '', prefilledOwnerName = '', prefilledMobileNumber = '', initialExtractionFile = null }) => {
+  const { checkLimit, limitModalOpen, closeLimitModal, used: aiUsed, limit: aiLimit } = useAiLimit();
   const [formData, setFormData] = useState({
     vehicleNumber: prefilledVehicleNumber,
     ownerName: prefilledOwnerName,
@@ -28,6 +31,7 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
   const [uploadedFitnessDocument, setUploadedFitnessDocument] = useState(null);
   const [uploadedFitnessFile, setUploadedFitnessFile] = useState(null);
   const isOcrUpdate = useRef(false);
+  const processedInitialFile = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -58,8 +62,29 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
         return null;
       });
       setUploadedFitnessFile(null);
+      processedInitialFile.current = false;
     }
   }, [isOpen, prefilledVehicleNumber, prefilledOwnerName, prefilledMobileNumber]);
+
+  // Handle initial file extraction with limit check
+  useEffect(() => {
+    if (isOpen && initialExtractionFile && !processedInitialFile.current) {
+      processedInitialFile.current = true;
+      if (initialExtractionFile.type === 'application/pdf') {
+        setUploadedFitnessFile(initialExtractionFile);
+        checkLimit().then(canUse => {
+          if (canUse) processExtraction(initialExtractionFile);
+        });
+      } else if (initialExtractionFile.type.startsWith('image/')) {
+        checkLimit().then(canUse => {
+          if (canUse) {
+            setUploadedFitnessFile(initialExtractionFile);
+            setScanningFile(initialExtractionFile);
+          }
+        });
+      }
+    }
+  }, [isOpen, initialExtractionFile]);
 
   // Set prefilled values when modal opens
   useEffect(() => {
@@ -403,10 +428,14 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
   const handleScannerConfirm = async (processedImageFile) => {
     setScanningFile(null);
     setUploadedFitnessFile(processedImageFile);
-    await processExtraction(processedImageFile);
+    const canUse = await checkLimit();
+    if (canUse) await processExtraction(processedImageFile);
   }
 
   const processExtraction = async (fileToProcess) => {
+    const canUse = await checkLimit();
+    if (!canUse) return;
+
     setIsExtractingFitness(true);
     const updateToast = toast.info('Analyzing document, please wait...', { autoClose: false, isLoading: true });
 
@@ -462,6 +491,7 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
               };
             });
 
+            invalidateAiLimitCache();
             toast.dismiss(updateToast);
             toast.success('Fitness Details Extracted Successfully!', { position: 'top-right', autoClose: 3000 });
 
@@ -470,6 +500,12 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
             toast.error('Failed to extract data correctly.', { position: 'top-right', autoClose: 3000 });
           }
         } catch (err) {
+            if (err.response?.status === 403) {
+              toast.dismiss(updateToast);
+              invalidateAiLimitCache();
+              await checkLimit();
+              return;
+            }
             console.error(err);
             toast.dismiss(updateToast);
             toast.error('Server error during OCR processing.', { position: 'top-right', autoClose: 3000 });
@@ -557,267 +593,269 @@ const AddFitnessModal = ({ isOpen, onClose, onSubmit, prefilledVehicleNumber = '
   if (!isOpen) return null;
 
   return (
-    <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
-      <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col'>
-        {/* Header */}
-        <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-2 md:p-3 text-white flex-shrink-0'>
-          <div className='flex justify-between items-center'>
-            <div>
-              <h2 className='text-lg md:text-2xl font-bold'>
-                Add New Fitness
-              </h2>
-              <p className='text-blue-100 text-xs md:text-sm mt-1'>
-                Add new fitness record
-              </p>
-            </div>
-            <div className='flex items-center gap-3'>
-              <div className='relative overflow-hidden'>
-                <button type='button' className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 max-w-full'>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Upload Document
-                </button>
-                <input type='file' accept='image/*, application/pdf' onChange={handleManualDocumentUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+    <>
+      <AiLimitModal isOpen={limitModalOpen} onClose={closeLimitModal} used={aiUsed} limit={aiLimit} />
+      <div className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-2 md:p-4'>
+        <div className='bg-white rounded-xl md:rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col'>
+          {/* Header */}
+          <div className='bg-gradient-to-r from-blue-600 to-indigo-600 p-2 md:p-3 text-white flex-shrink-0'>
+            <div className='flex justify-between items-center'>
+              <div>
+                <h2 className='text-lg md:text-2xl font-bold'>
+                  Add New Fitness
+                </h2>
+                <p className='text-blue-100 text-xs md:text-sm mt-1'>
+                  Add new fitness record
+                </p>
               </div>
-              <button
-                onClick={onClose}
-                className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'
-              >
-                <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-                </svg>
-              </button>
+              <div className='flex items-center gap-3'>
+                <div className='relative overflow-hidden'>
+                  <button type='button' className='relative px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 max-w-full'>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload Document
+                  </button>
+                  <input type='file' accept='image/*, application/pdf' onChange={handleManualDocumentUpload} className='absolute inset-0 w-full h-full opacity-0 cursor-pointer' />
+                </div>
+                <button
+                  onClick={onClose}
+                  className='text-white hover:bg-white/20 rounded-lg p-1.5 md:p-2 transition cursor-pointer'
+                >
+                  <svg className='w-5 h-5 md:w-6 md:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className='flex flex-col flex-1 overflow-hidden'>
-          <div className='flex-1 overflow-y-auto p-3 md:p-6'>
-
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className='flex flex-col flex-1 overflow-hidden'>
+            <div className='flex-1 overflow-y-auto p-3 md:p-6'>
 
 
-          {/* Section 1: Vehicle Details */}
-          <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
-            <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-              <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
-              Vehicle Details
-            </h3>
 
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
-              {/* Vehicle Number */}
-              <div>
-                <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                  Vehicle Number <span className='text-red-500'>*</span>
-                </label>
-                <div className='relative'>
+            {/* Section 1: Vehicle Details */}
+            <div className='bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                <span className='bg-indigo-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>1</span>
+                Vehicle Details
+              </h3>
+
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
+                {/* Vehicle Number */}
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
+                    Vehicle Number <span className='text-red-500'>*</span>
+                  </label>
+                  <div className='relative'>
+                    <input
+                      type='text'
+                      name='vehicleNumber'
+                      value={formData.vehicleNumber}
+                      onChange={handleChange}
+                      onKeyDown={handleInputKeyDown}
+                      placeholder='e.g., CG04AA1234'
+                      maxLength='10'
+                      tabIndex="1"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent font-mono bg-white ${
+                        formData.vehicleNumber && !vehicleValidation.isValid
+                          ? 'border-red-500 focus:ring-red-500'
+                          : formData.vehicleNumber && vehicleValidation.isValid
+                          ? 'border-green-500 focus:ring-green-500'
+                          : 'border-gray-300 focus:ring-indigo-500'
+                      }`}
+                      required
+                      autoFocus
+                    />
+                    {fetchingVehicle && (
+                      <div className='absolute right-3 top-2.5'>
+                        <svg className='animate-spin h-5 w-5 text-indigo-500' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
+                        </svg>
+                      </div>
+                    )}
+                    {!fetchingVehicle && vehicleValidation.isValid && formData.vehicleNumber && !showVehicleDropdown && (
+                      <div className='absolute right-3 top-2.5'>
+                        <svg className='h-5 w-5 text-green-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* Dropdown for multiple vehicle matches */}
+                    {showVehicleDropdown && vehicleMatches.length > 0 && (
+                      <div className='absolute z-10 w-full mt-1 bg-white border border-indigo-200 rounded-lg shadow-lg max-h-60 overflow-y-auto'>
+                        {vehicleMatches.map((vehicle, index) => (
+                          <div
+                            key={vehicle._id}
+                            ref={(el) => (dropdownItemRefs.current[index] = el)}
+                            onClick={() => handleVehicleSelect(vehicle)}
+                            className={`p-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition ${
+                              index === selectedDropdownIndex
+                                ? 'bg-indigo-100 border-l-4 border-l-indigo-600'
+                                : 'hover:bg-indigo-50'
+                            }`}
+                          >
+                            <p className={`font-mono font-bold text-sm ${
+                              index === selectedDropdownIndex ? 'text-indigo-800' : 'text-indigo-700'
+                            }`}>{vehicle.registrationNumber}</p>
+                            <p className='text-xs text-gray-700 mt-1'>{vehicle.ownerName}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {vehicleValidation.message && !fetchingVehicle && (
+                    <p className={`text-xs mt-1 ${vehicleValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
+                      {vehicleValidation.message}
+                    </p>
+                  )}
+                  {vehicleError && (
+                    <p className='text-xs text-amber-600 mt-1'>{vehicleError}</p>
+                  )}
+                </div>
+
+                 {/* Owner Name */}
+                 <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
+                    Owner Name
+                  </label>
                   <input
                     type='text'
-                    name='vehicleNumber'
-                    value={formData.vehicleNumber}
+                    name='ownerName'
+                    value={formData.ownerName}
                     onChange={handleChange}
                     onKeyDown={handleInputKeyDown}
-                    placeholder='e.g., CG04AA1234'
-                    maxLength='10'
-                    tabIndex="1"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:border-transparent font-mono bg-white ${
-                      formData.vehicleNumber && !vehicleValidation.isValid
-                        ? 'border-red-500 focus:ring-red-500'
-                        : formData.vehicleNumber && vehicleValidation.isValid
-                        ? 'border-green-500 focus:ring-green-500'
-                        : 'border-gray-300 focus:ring-indigo-500'
-                    }`}
-                    required
-                    autoFocus
+                    placeholder='Owner Name'
+                    tabIndex="2"
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'
                   />
-                  {fetchingVehicle && (
-                    <div className='absolute right-3 top-2.5'>
-                      <svg className='animate-spin h-5 w-5 text-indigo-500' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Validity Period */}
+            <div className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-emerald-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                <span className='bg-emerald-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
+                Validity Period
+              </h3>
+
+              <div className='grid grid-cols-2 gap-3 md:gap-4'>
+                {/* Valid From */}
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
+                    Valid From <span className='text-red-500'>*</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='validFrom'
+                    value={formData.validFrom}
+                    onChange={handleChange}
+                    onBlur={handleDateBlur}
+                    onKeyDown={handleInputKeyDown}
+                    placeholder='DD-MM-YYYY'
+                    tabIndex="3"
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
+                    required
+                  />
+                </div>
+
+                {/* Valid To (Auto-calculated) */}
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
+                    Valid To <span className='text-xs text-emerald-600'>(Auto-calculated)</span>
+                  </label>
+                  <input
+                    type='text'
+                    name='validTo'
+                    value={formData.validTo}
+                    onChange={handleChange}
+                    onBlur={handleDateBlur}
+                    onKeyDown={handleInputKeyDown}
+                    placeholder='DD-MM-YYYY'
+                    tabIndex="4"
+                    className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-emerald-50 text-gray-700'
+                  />
+                </div>
+              </div>
+            </div>
+
+            {uploadedFitnessDocument && (
+              <div className='bg-gradient-to-r from-slate-50 to-indigo-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+                <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                  Uploaded Fitness Document
+                </h3>
+                <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>
+                  <div className='min-w-0'>
+                    <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedFitnessDocument.name}</p>
+                    <p className='text-xs text-slate-500'>{uploadedFitnessDocument.type === 'pdf' ? 'PDF preview' : 'Image preview'}</p>
+                  </div>
+                </div>
+                {uploadedFitnessDocument.type === 'pdf' ? (
+                  <iframe src={uploadedFitnessDocument.previewUrl} title='Uploaded Fitness PDF' className='w-full h-80 rounded-xl border border-slate-200 bg-white' />
+                ) : (
+                  <div className='rounded-xl border border-slate-200 bg-white p-2'>
+                    <img src={uploadedFitnessDocument.previewUrl} alt='Uploaded Fitness document' className='w-full max-h-80 object-contain rounded-lg' />
+                  </div>
+                )}
+              </div>
+            )}
+
+            </div>
+
+            <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
+
+
+              <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
+                <button
+                  type='button'
+                  onClick={onClose}
+                  className='flex-1 md:flex-none px-4 md:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-semibold transition cursor-pointer'
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type='submit'
+                  disabled={isSubmitting}
+                  className='flex-1 md:flex-none px-6 md:px-8 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
                         <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
                         <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
                       </svg>
-                    </div>
-                  )}
-                  {!fetchingVehicle && vehicleValidation.isValid && formData.vehicleNumber && !showVehicleDropdown && (
-                    <div className='absolute right-3 top-2.5'>
-                      <svg className='h-5 w-5 text-green-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      Adding...
+                    </>
+                  ) : (
+                    <>
+                      <svg className='w-4 h-4 md:w-5 md:h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                       </svg>
-                    </div>
+                      Add Fitness
+                    </>
                   )}
-
-                  {/* Dropdown for multiple vehicle matches */}
-                  {showVehicleDropdown && vehicleMatches.length > 0 && (
-                    <div className='absolute z-10 w-full mt-1 bg-white border border-indigo-200 rounded-lg shadow-lg max-h-60 overflow-y-auto'>
-                      {vehicleMatches.map((vehicle, index) => (
-                        <div
-                          key={vehicle._id}
-                          ref={(el) => (dropdownItemRefs.current[index] = el)}
-                          onClick={() => handleVehicleSelect(vehicle)}
-                          className={`p-3 cursor-pointer border-b border-gray-100 last:border-b-0 transition ${
-                            index === selectedDropdownIndex
-                              ? 'bg-indigo-100 border-l-4 border-l-indigo-600'
-                              : 'hover:bg-indigo-50'
-                          }`}
-                        >
-                          <p className={`font-mono font-bold text-sm ${
-                            index === selectedDropdownIndex ? 'text-indigo-800' : 'text-indigo-700'
-                          }`}>{vehicle.registrationNumber}</p>
-                          <p className='text-xs text-gray-700 mt-1'>{vehicle.ownerName}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {vehicleValidation.message && !fetchingVehicle && (
-                  <p className={`text-xs mt-1 ${vehicleValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
-                    {vehicleValidation.message}
-                  </p>
-                )}
-                {vehicleError && (
-                  <p className='text-xs text-amber-600 mt-1'>{vehicleError}</p>
-                )}
-              </div>
-
-               {/* Owner Name */}
-               <div>
-                <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                  Owner Name
-                </label>
-                <input
-                  type='text'
-                  name='ownerName'
-                  value={formData.ownerName}
-                  onChange={handleChange}
-                  onKeyDown={handleInputKeyDown}
-                  placeholder='Owner Name'
-                  tabIndex="2"
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'
-                />
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* Section 2: Validity Period */}
-          <div className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-emerald-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
-            <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-              <span className='bg-emerald-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-              Validity Period
-            </h3>
-
-            <div className='grid grid-cols-2 gap-3 md:gap-4'>
-              {/* Valid From */}
-              <div>
-                <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                  Valid From <span className='text-red-500'>*</span>
-                </label>
-                <input
-                  type='text'
-                  name='validFrom'
-                  value={formData.validFrom}
-                  onChange={handleChange}
-                  onBlur={handleDateBlur}
-                  onKeyDown={handleInputKeyDown}
-                  placeholder='DD-MM-YYYY'
-                  tabIndex="3"
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
-                  required
-                />
-              </div>
-
-              {/* Valid To (Auto-calculated) */}
-              <div>
-                <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                  Valid To <span className='text-xs text-emerald-600'>(Auto-calculated)</span>
-                </label>
-                <input
-                  type='text'
-                  name='validTo'
-                  value={formData.validTo}
-                  onChange={handleChange}
-                  onBlur={handleDateBlur}
-                  onKeyDown={handleInputKeyDown}
-                  placeholder='DD-MM-YYYY'
-                  tabIndex="4"
-                  className='w-full px-3 py-2 border border-gray-300 rounded-lg bg-emerald-50 text-gray-700'
-                />
-              </div>
-            </div>
-          </div>
-
-          {uploadedFitnessDocument && (
-            <div className='bg-gradient-to-r from-slate-50 to-indigo-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
-              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
-                Uploaded Fitness Document
-              </h3>
-              <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>
-                <div className='min-w-0'>
-                  <p className='text-sm font-semibold text-slate-800 truncate'>{uploadedFitnessDocument.name}</p>
-                  <p className='text-xs text-slate-500'>{uploadedFitnessDocument.type === 'pdf' ? 'PDF preview' : 'Image preview'}</p>
-                </div>
-              </div>
-              {uploadedFitnessDocument.type === 'pdf' ? (
-                <iframe src={uploadedFitnessDocument.previewUrl} title='Uploaded Fitness PDF' className='w-full h-80 rounded-xl border border-slate-200 bg-white' />
-              ) : (
-                <div className='rounded-xl border border-slate-200 bg-white p-2'>
-                  <img src={uploadedFitnessDocument.previewUrl} alt='Uploaded Fitness document' className='w-full max-h-80 object-contain rounded-lg' />
-                </div>
-              )}
-            </div>
-          )}
-
-          </div>
-
-          <div className='border-t border-gray-200 p-3 md:p-4 bg-gray-50 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0'>
-
-
-            <div className='flex gap-2 md:gap-3 w-full md:w-auto'>
-              <button
-                type='button'
-                onClick={onClose}
-                className='flex-1 md:flex-none px-4 md:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-semibold transition cursor-pointer'
-              >
-                Cancel
-              </button>
-
-              <button
-                type='submit'
-                disabled={isSubmitting}
-                className='flex-1 md:flex-none px-6 md:px-8 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg font-semibold transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
-                      <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
-                    </svg>
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <svg className='w-4 h-4 md:w-5 md:h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
-                    </svg>
-                    Add Fitness
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
+        {scanningFile && (
+          <DocumentScannerPreview
+            file={scanningFile}
+            onCancel={() => setScanningFile(null)}
+            onConfirm={handleScannerConfirm}
+          />
+        )}
       </div>
-      {scanningFile && (
-        <DocumentScannerPreview
-          file={scanningFile}
-          onCancel={() => setScanningFile(null)}
-          onConfirm={handleScannerConfirm}
-        />
-      )}
-    </div>
+    </>
   );
 };
 
 export default AddFitnessModal;
-

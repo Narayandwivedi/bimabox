@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
@@ -26,7 +26,12 @@ const Renewals = () => {
   const [financialYear, setFinancialYear] = useState('')
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [confirmModal, setConfirmModal] = useState(null)
-  const [uploadModalData, setUploadModalData] = useState(null)
+  const [renewalUploadPrefill, setRenewalUploadPrefill] = useState(null)
+  const [showUploadOptions, setShowUploadOptions] = useState(false)
+  const [showAddInsuranceModal, setShowAddInsuranceModal] = useState(false)
+  const [initialExtractionFile, setInitialExtractionFile] = useState(null)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const fileInputRef = useRef(null)
 
   const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
 
@@ -81,10 +86,11 @@ const Renewals = () => {
       )
       if (status === 'renewed' && docType === 'Insurance') {
         const renewedPolicy = policies.find((p) => p._id === id)
-        setUploadModalData({
+        setRenewalUploadPrefill({
           vehicleNumber: renewedPolicy?.vehicleNumber || '',
           policyHolderName: renewedPolicy?.[docConfig.holderField] || '',
         })
+        setShowUploadOptions(true)
       }
     } catch (err) {
       console.error('Error updating renewal status:', err)
@@ -623,16 +629,109 @@ const Renewals = () => {
           </div>
         </div>
       )}
-      {uploadModalData && (
+      {showUploadOptions && (
+        <div
+          className='fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4'
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true) }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false) }}
+          onDrop={(e) => {
+            e.preventDefault(); e.stopPropagation(); setIsDragOver(false)
+            const file = e.dataTransfer.files?.[0]
+            if (file) {
+              setShowUploadOptions(false)
+              setInitialExtractionFile(file)
+              setShowAddInsuranceModal(true)
+            }
+          }}
+        >
+          <div className='bg-white rounded-2xl shadow-2xl max-w-md w-full p-6'>
+            <div className='flex justify-between items-center mb-6'>
+              <h2 className='text-xl font-bold text-slate-900'>Upload Insurance</h2>
+              <button onClick={() => { setShowUploadOptions(false); setRenewalUploadPrefill(null) }} className='text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer'>
+                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                </svg>
+              </button>
+            </div>
+            <div className='space-y-4'>
+              <button
+                type='button'
+                onClick={() => fileInputRef.current?.click()}
+                className='w-full flex items-center gap-4 p-4 rounded-xl border-2 border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 transition-all group text-left'
+              >
+                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg group-hover:scale-110 transition-transform'>
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-base font-black text-slate-900'>AI Upload</p>
+                  <p className='text-xs text-slate-500 font-medium mt-0.5'>Upload document &amp; auto-fill details</p>
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*,application/pdf'
+                className='hidden'
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    setShowUploadOptions(false)
+                    setInitialExtractionFile(file)
+                    setShowAddInsuranceModal(true)
+                  }
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type='button'
+                onClick={() => {
+                  setShowUploadOptions(false)
+                  setInitialExtractionFile(null)
+                  setShowAddInsuranceModal(true)
+                }}
+                className='w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50 transition-all group text-left'
+              >
+                <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 text-white shadow-lg group-hover:scale-110 transition-transform'>
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                  </svg>
+                </div>
+                <div>
+                  <p className='text-base font-black text-slate-900'>Manual Upload</p>
+                  <p className='text-xs text-slate-500 font-medium mt-0.5'>Fill insurance details manually</p>
+                </div>
+              </button>
+              <div className={`hidden md:flex flex-col items-center gap-2 border-2 border-dashed rounded-xl p-5 text-center transition-colors ${isDragOver ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-transparent'}`}>
+                <svg className='w-8 h-8 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
+                </svg>
+                <p className='text-sm font-semibold text-slate-600'>Drag &amp; drop your insurance document here</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddInsuranceModal && (
         <AddInsuranceModal
-          isOpen={!!uploadModalData}
-          onClose={() => setUploadModalData(null)}
+          isOpen={showAddInsuranceModal}
+          onClose={() => {
+            setShowAddInsuranceModal(false)
+            setInitialExtractionFile(null)
+            setRenewalUploadPrefill(null)
+          }}
           onSubmit={() => {
-            setUploadModalData(null)
+            setShowAddInsuranceModal(false)
+            setInitialExtractionFile(null)
+            setRenewalUploadPrefill(null)
             fetchRenewals(financialYear, docType)
           }}
-          prefilledVehicleNumber={uploadModalData.vehicleNumber}
-          prefilledOwnerName={uploadModalData.policyHolderName}
+          initialExtractionFile={initialExtractionFile}
+          prefilledVehicleNumber={renewalUploadPrefill?.vehicleNumber || ''}
+          prefilledOwnerName={renewalUploadPrefill?.policyHolderName || ''}
         />
       )}
     </div>

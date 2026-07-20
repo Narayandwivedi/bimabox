@@ -27,6 +27,7 @@ const sanitizeUser = (user) => ({
   lastActivity: user.lastActivity || null,
   address: user.address || '',
   businessName: user.businessName || '',
+  modeOfBusiness: user.modeOfBusiness || [],
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 })
@@ -341,7 +342,7 @@ const updateName = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, mobile, address, businessName } = req.body
+    const { name, mobile, address, businessName, modeOfBusiness } = req.body
     const updateData = {}
 
     if (name !== undefined) {
@@ -374,6 +375,15 @@ const updateProfile = async (req, res) => {
 
     if (businessName !== undefined) {
       updateData.businessName = String(businessName).trim()
+    }
+
+    if (modeOfBusiness !== undefined) {
+      if (!Array.isArray(modeOfBusiness)) {
+        return res.status(400).json({ success: false, message: 'modeOfBusiness must be an array' })
+      }
+      updateData.modeOfBusiness = modeOfBusiness
+        .map((m) => String(m).trim())
+        .filter(Boolean)
     }
 
     const updatedUser = await User.findByIdAndUpdate(

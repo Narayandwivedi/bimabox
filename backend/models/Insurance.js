@@ -73,6 +73,16 @@ const InsuranceSchema = new mongoose.Schema({
     required: true
   },
 
+  // Third Party cover validity (long-term TP policies often differ from OD validity)
+  tpValidFrom: {
+    type: String,
+    trim: true
+  },
+  tpValidTo: {
+    type: String,
+    trim: true
+  },
+
   issueDate: {
     type: String
   },

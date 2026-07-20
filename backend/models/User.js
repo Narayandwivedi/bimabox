@@ -55,7 +55,11 @@ const userSchema = new mongoose.Schema({
   businessName: {
     type: String,
     trim: true
-  }
+  },
+  modeOfBusiness: [{
+    type: String,
+    trim: true
+  }]
 }, {
   timestamps: true
 })

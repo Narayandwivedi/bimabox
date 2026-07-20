@@ -70,6 +70,8 @@ const Setting = () => {
   const [editMobile, setEditMobile] = useState('')
   const [editAddress, setEditAddress] = useState('')
   const [editBusinessName, setEditBusinessName] = useState('')
+  const [editModeOfBusiness, setEditModeOfBusiness] = useState([])
+  const [modeOfBusinessInput, setModeOfBusinessInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [myPlan, setMyPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(true)
@@ -98,7 +100,27 @@ const Setting = () => {
     setEditMobile(user?.mobile || '')
     setEditAddress(user?.address || '')
     setEditBusinessName(user?.businessName || '')
+    setEditModeOfBusiness(user?.modeOfBusiness || [])
+    setModeOfBusinessInput('')
     setShowEditModal(true)
+  }
+
+  const addModeOfBusiness = () => {
+    const value = modeOfBusinessInput.trim()
+    if (!value) return
+    setEditModeOfBusiness((prev) => (prev.includes(value) ? prev : [...prev, value]))
+    setModeOfBusinessInput('')
+  }
+
+  const removeModeOfBusiness = (value) => {
+    setEditModeOfBusiness((prev) => prev.filter((m) => m !== value))
+  }
+
+  const handleModeOfBusinessKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addModeOfBusiness()
+    }
   }
 
   const handleSaveProfile = async () => {
@@ -109,7 +131,8 @@ const Setting = () => {
         name: editName.trim(),
         mobile: editMobile,
         address: editAddress,
-        businessName: editBusinessName
+        businessName: editBusinessName,
+        modeOfBusiness: editModeOfBusiness
       }, { withCredentials: true })
       if (response.data.success) {
         setUser(response.data.data.user)
@@ -215,6 +238,26 @@ const Setting = () => {
                         <div className='min-w-0'>
                           <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Business Name</p>
                           <p className='text-sm font-bold text-slate-800 truncate'>{user.businessName}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {user?.modeOfBusiness?.length > 0 && (
+                      <div className='flex items-start gap-3.5 rounded-2xl bg-slate-50 p-3 border border-slate-100 hover:bg-slate-100/50 transition-colors duration-200'>
+                        <div className='h-9 w-9 rounded-xl bg-sky-50 flex items-center justify-center shrink-0 border border-sky-100'>
+                          <svg className='h-4 w-4 text-sky-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' />
+                          </svg>
+                        </div>
+                        <div className='min-w-0 flex-1'>
+                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Mode of Business</p>
+                          <div className='flex flex-wrap gap-1.5'>
+                            {user.modeOfBusiness.map((mode) => (
+                              <span key={mode} className='inline-flex items-center rounded-lg bg-sky-100 text-sky-700 px-2 py-0.5 text-xs font-bold'>
+                                {mode}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -608,6 +651,35 @@ const Setting = () => {
                   placeholder='Enter agency or business name'
                   className='w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all outline-none text-sm text-slate-800 font-semibold'
                 />
+              </div>
+              <div>
+                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Mode of Business</label>
+                <div className='flex flex-wrap gap-1.5 mb-2'>
+                  {editModeOfBusiness.map((mode) => (
+                    <span key={mode} className='inline-flex items-center gap-1 rounded-lg bg-sky-100 text-sky-700 pl-2 pr-1 py-0.5 text-xs font-bold'>
+                      {mode}
+                      <button
+                        type='button'
+                        onClick={() => removeModeOfBusiness(mode)}
+                        className='text-sky-500 hover:text-sky-800 rounded-full p-0.5 cursor-pointer'
+                      >
+                        <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type='text'
+                  value={modeOfBusinessInput}
+                  onChange={(e) => setModeOfBusinessInput(e.target.value)}
+                  onKeyDown={handleModeOfBusinessKeyDown}
+                  onBlur={addModeOfBusiness}
+                  placeholder='Type a business mode and press Enter (e.g. Insurance, Mutual Fund, NPS, Loan)'
+                  className='w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all outline-none text-sm text-slate-800 font-semibold'
+                />
+                <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each mode</p>
               </div>
               <div>
                 <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Office Address</label>

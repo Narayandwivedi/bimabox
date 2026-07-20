@@ -125,6 +125,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     policyHolderName: prefilledOwnerName,
     validFrom: '',
     validTo: '',
+    tpValidFrom: '',
+    tpValidTo: '',
     issueDate: utilGetTodayDate(),
     odPremium: '',
     tpPremium: '',
@@ -216,6 +218,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: initialData.policyHolderName || '',
         validFrom: initialData.validFrom || '',
         validTo: initialData.validTo || '',
+        tpValidFrom: initialData.tpValidFrom || '',
+        tpValidTo: initialData.tpValidTo || '',
         issueDate: initialData.issueDate || utilGetTodayDate(),
         odPremium: initialData.odPremium != null ? String(initialData.odPremium) : '',
         tpPremium: initialData.tpPremium != null ? String(initialData.tpPremium) : '',
@@ -261,6 +265,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         policyHolderName: prefilledOwnerName,
         validFrom: '',
         validTo: '',
+        tpValidFrom: '',
+        tpValidTo: '',
         issueDate: utilGetTodayDate(),
         odPremium: '',
         tpPremium: '',
@@ -472,7 +478,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }))
       return
     }
-    if (name === 'issueDate' || name === 'validFrom' || name === 'validTo') {
+    if (name === 'issueDate' || name === 'validFrom' || name === 'validTo' || name === 'tpValidFrom' || name === 'tpValidTo') {
       if (name === 'validTo') userEditedValidTo.current = true
       if (value) {
         const [year, month, day] = value.split('-')
@@ -496,7 +502,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       Object.keys(resultData).forEach((key) => {
         const value = resultData[key]
         if (!value || !Object.prototype.hasOwnProperty.call(updated, key)) return
-        if (key === 'validFrom' || key === 'validTo' || key === 'issueDate') {
+        if (key === 'validFrom' || key === 'validTo' || key === 'tpValidFrom' || key === 'tpValidTo' || key === 'issueDate') {
           const normalizedStr = normalizeAIExtractedDate(value)
           const formatted = handleSmartDateInput(normalizedStr, '')
           if (formatted) updated[key] = formatted
@@ -848,6 +854,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       policyHolderName: formData.policyHolderName,
       validFrom: formData.validFrom,
       validTo: formData.validTo,
+      tpValidFrom: formData.tpValidFrom,
+      tpValidTo: formData.tpValidTo,
       odPremium: formData.odPremium !== '' ? Number(formData.odPremium) : 0,
       tpPremium: formData.tpPremium !== '' ? Number(formData.tpPremium) : 0,
       netPremium: formData.netPremium !== '' ? Number(formData.netPremium) : 0,
@@ -1168,6 +1176,15 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Valid To <span className='text-xs text-blue-500'>(Auto-calculated, editable)</span></label>
                   <input type='date' name='validTo' value={formData.validTo ? formData.validTo.split('-').reverse().join('-') : ''} onChange={handleChange} onKeyDown={handleInputKeyDown} tabIndex='6' className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                </div>
+                <div></div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Valid From</label>
+                  <input type='date' name='tpValidFrom' value={formData.tpValidFrom ? formData.tpValidFrom.split('-').reverse().join('-') : ''} onChange={handleChange} onKeyDown={handleInputKeyDown} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
+                </div>
+                <div>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Valid To</label>
+                  <input type='date' name='tpValidTo' value={formData.tpValidTo ? formData.tpValidTo.split('-').reverse().join('-') : ''} onChange={handleChange} onKeyDown={handleInputKeyDown} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
                 </div>
                 <div></div>
                 <div>

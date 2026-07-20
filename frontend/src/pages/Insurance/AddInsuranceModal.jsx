@@ -1166,7 +1166,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             <div className='bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-purple-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>2</span>
-                Validity & Premium
+                Validity
               </h3>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
@@ -1187,8 +1187,17 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   <input type='date' name='tpValidTo' value={formData.tpValidTo ? formData.tpValidTo.split('-').reverse().join('-') : ''} onChange={handleChange} onKeyDown={handleInputKeyDown} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white' />
                 </div>
                 <div></div>
+              </div>
+            </div>
+
+            <div className='bg-gradient-to-r from-emerald-50 to-lime-50 border-2 border-emerald-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
+              <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
+                <span className='bg-emerald-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                Fee
+              </h3>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>OD Premium (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>OD Fee (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1200,12 +1209,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       min='0'
                       step='any'
                       tabIndex='7'
-                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
                     />
                   </div>
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Premium (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Fee (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1217,12 +1226,12 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       min='0'
                       step='any'
                       tabIndex='8'
-                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
                     />
                   </div>
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Net Premium (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Net Fee (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1234,14 +1243,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       min='0'
                       step='any'
                       tabIndex='9'
-                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
                     />
                   </div>
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Gross Premium (₹)
-                    <span className='ml-1 text-xs text-purple-500 font-normal'>Total incl. GST</span>
+                    Gross Fee (₹)
+                    <span className='ml-1 text-xs text-emerald-600 font-normal'>Total incl. GST</span>
                   </label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
@@ -1254,7 +1263,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       min='0'
                       step='any'
                       tabIndex='10'
-                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white'
+                      className='w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white'
                     />
                   </div>
                 </div>
@@ -1263,7 +1272,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
             <div className='bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                <span className='bg-teal-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
+                <span className='bg-teal-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>4</span>
                 Claim Details
               </h3>
               <div className='flex items-center gap-3 mb-4'>
@@ -1411,7 +1420,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             {uploadedInsuranceDocument && (
               <div className='bg-gradient-to-r from-slate-50 to-violet-50 border-2 border-slate-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
                 <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
-                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>4</span>
+                  <span className='bg-slate-700 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>5</span>
                   Uploaded Insurance Document
                 </h3>
                 <div className='mb-3 flex items-center justify-between gap-3 rounded-lg bg-white/80 px-3 py-2 border border-slate-200'>

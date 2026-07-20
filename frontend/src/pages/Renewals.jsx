@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
+import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -25,6 +26,7 @@ const Renewals = () => {
   const [financialYear, setFinancialYear] = useState('')
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [confirmModal, setConfirmModal] = useState(null)
+  const [uploadModalData, setUploadModalData] = useState(null)
 
   const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
 
@@ -77,6 +79,13 @@ const Renewals = () => {
       setPolicies((prev) =>
         prev.map((p) => (p._id === id ? { ...p, renewalStatus: status } : p))
       )
+      if (status === 'renewed' && docType === 'Insurance') {
+        const renewedPolicy = policies.find((p) => p._id === id)
+        setUploadModalData({
+          vehicleNumber: renewedPolicy?.vehicleNumber || '',
+          policyHolderName: renewedPolicy?.[docConfig.holderField] || '',
+        })
+      }
     } catch (err) {
       console.error('Error updating renewal status:', err)
     }
@@ -613,6 +622,18 @@ const Renewals = () => {
             </div>
           </div>
         </div>
+      )}
+      {uploadModalData && (
+        <AddInsuranceModal
+          isOpen={!!uploadModalData}
+          onClose={() => setUploadModalData(null)}
+          onSubmit={() => {
+            setUploadModalData(null)
+            fetchRenewals(financialYear, docType)
+          }}
+          prefilledVehicleNumber={uploadModalData.vehicleNumber}
+          prefilledOwnerName={uploadModalData.policyHolderName}
+        />
       )}
     </div>
   )

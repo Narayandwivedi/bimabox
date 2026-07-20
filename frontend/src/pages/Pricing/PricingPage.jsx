@@ -49,16 +49,20 @@ const UsageBar = ({ label, used, limit }) => {
 const FeatureValue = ({ value }) => {
   if (typeof value === 'boolean') {
     return value ? (
-      <svg className='h-4 w-4 text-emerald-500 mx-auto' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
-      </svg>
+      <span className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100'>
+        <svg className='h-3 w-3 text-emerald-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M5 13l4 4L19 7' />
+        </svg>
+      </span>
     ) : (
-      <svg className='h-4 w-4 text-slate-300 mx-auto' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
-      </svg>
+      <span className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100'>
+        <svg className='h-3 w-3 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
+        </svg>
+      </span>
     )
   }
-  return <span className='text-xs font-bold text-slate-700'>{value}</span>
+  return <span className='text-xs font-bold text-slate-700 whitespace-nowrap'>{value}</span>
 }
 
 const PricingPage = () => {
@@ -143,45 +147,57 @@ const PricingPage = () => {
               return (
                 <div
                   key={plan._id}
-                  className={`relative flex flex-col rounded-[28px] border p-5 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] animate-slideUp ${
+                  className={`relative flex flex-col rounded-[28px] border p-5 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] transition-all duration-300 animate-slideUp hover:-translate-y-1 hover:shadow-[0_32px_70px_-30px_rgba(15,23,42,0.3)] ${
                     isCurrent
                       ? 'border-blue-400 bg-gradient-to-b from-blue-50/60 to-white ring-2 ring-blue-200'
                       : highlight
-                        ? 'border-indigo-200 bg-white'
+                        ? 'border-indigo-300 bg-white ring-1 ring-indigo-100'
                         : 'border-slate-200 bg-white'
                   }`}
                 >
                   {isCurrent && (
-                    <span className='absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md'>
+                    <span className='absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-blue-500/30'>
                       Current Plan
                     </span>
                   )}
                   {!isCurrent && highlight && (
-                    <span className='absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md'>
-                      Popular
+                    <span className='absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-indigo-500/30'>
+                      Most Popular
                     </span>
                   )}
                   <h3 className='text-center text-base font-black uppercase tracking-wide text-slate-900 mt-2'>{plan.name}</h3>
-                  <div className='text-center mt-2 mb-4'>
+                  <div className='text-center mt-2 mb-4 pb-4 border-b border-slate-100'>
                     <span className='text-3xl font-black text-slate-900'>{amount}</span>
                     <span className='block text-[11px] font-bold text-slate-400'>{period}</span>
                   </div>
 
-                  <div className='flex-1 divide-y divide-slate-100 border-t border-slate-100'>
+                  <div className='flex-1 divide-y divide-slate-100'>
                     {FEATURE_ROWS.map((row) => (
-                      <div key={row.key} className='flex items-center justify-between py-2.5'>
-                        <span className='text-[11px] font-semibold text-slate-500 pr-2'>{row.label}</span>
-                        <FeatureValue value={row.render(plan.features || {})} />
+                      <div key={row.key} className='flex items-center justify-between gap-3 py-2.5'>
+                        <span className='text-[11px] font-semibold text-slate-500'>{row.label}</span>
+                        <div className='flex shrink-0 justify-end'>
+                          <FeatureValue value={row.render(plan.features || {})} />
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  {!isCurrent && (
+                  {isCurrent ? (
+                    <div className='mt-5 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-bold text-blue-700'>
+                      <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M5 13l4 4L19 7' />
+                      </svg>
+                      Active Plan
+                    </div>
+                  ) : (
                     <a
                       href='/contact-us'
-                      className='mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold hover:shadow-lg hover:shadow-blue-500/25 transition-all'
+                      className='mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold shadow-md shadow-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
                     >
                       {user ? 'Contact Us to Upgrade' : 'Get Started'}
+                      <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 8l4 4m0 0l-4 4m4-4H3' />
+                      </svg>
                     </a>
                   )}
                 </div>

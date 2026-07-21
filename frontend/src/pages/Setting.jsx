@@ -429,7 +429,7 @@ const Setting = () => {
                 >
                   <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition-transform duration-200'>
                     <svg className='h-6 w-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.239-8 5v1a1 1 0 001 1h14a1 1 0 001-1v-1c0-2.761-3.582-5-8-5z' />
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>
@@ -447,7 +447,8 @@ const Setting = () => {
                 >
                   <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-purple-500/10 group-hover:scale-105 transition-transform duration-200'>
                     <svg className='h-6 w-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 0a4 4 0 100-8' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 7a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 5V4a1 1 0 011-1h6a1 1 0 011 1v1M12 13a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM8.5 17c.5-1.5 1.941-2.5 3.5-2.5s3 1 3.5 2.5' />
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>

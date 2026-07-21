@@ -9,7 +9,8 @@ const PAGE_SIZE = 40
 
 const PRODUCT_TYPES = [
   'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
-  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC'
+  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC',
+  'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND'
 ]
 
 const POLICY_TYPES = [

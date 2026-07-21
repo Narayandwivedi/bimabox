@@ -150,20 +150,20 @@ const Setting = () => {
     <div className='min-h-screen bg-slate-50/50 px-4 pb-32 pt-8 md:px-6 lg:px-8 font-sans'>
       <div className='mx-auto max-w-6xl'>
         {/* Header Banner */}
-        <div className='relative mb-8 overflow-hidden rounded-[32px] bg-gradient-to-r from-slate-900 to-indigo-950 p-6 md:p-8 text-white shadow-[0_20px_50px_-20px_rgba(15,23,42,0.3)]'>
+        <div className='relative mb-8 overflow-hidden rounded-[32px] bg-gradient-to-r from-slate-900 to-indigo-950 p-4 md:p-5 text-white shadow-[0_20px_50px_-20px_rgba(15,23,42,0.3)]'>
           <div className='absolute top-0 right-0 h-40 w-40 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 blur-3xl' />
           <div className='absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 blur-3xl' />
           <div className='relative flex flex-col md:flex-row md:items-center justify-between gap-6'>
-            <div className='flex items-center gap-4'>
-              <div className='h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner border border-white/10'>
-                <svg className='h-6 w-6 text-indigo-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <div className='flex items-center gap-3'>
+              <div className='h-9 w-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner border border-white/10'>
+                <svg className='h-5 w-5 text-indigo-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' />
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
                 </svg>
               </div>
               <div>
-                <h1 className='text-2xl md:text-3xl font-black tracking-tight text-white'>Account Settings</h1>
-                <p className='text-indigo-200 text-xs md:text-sm font-semibold tracking-wide mt-1'>Manage your profile, preferences, and subscriptions</p>
+                <h1 className='text-lg md:text-xl font-black tracking-tight text-white'>Account Settings</h1>
+                <p className='text-indigo-200 text-[11px] md:text-xs font-semibold tracking-wide mt-0.5'>Manage your profile, preferences, and subscriptions</p>
               </div>
             </div>
           </div>
@@ -429,7 +429,7 @@ const Setting = () => {
                 >
                   <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition-transform duration-200'>
                     <svg className='h-6 w-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.239-8 5v1a1 1 0 001 1h14a1 1 0 001-1v-1c0-2.761-3.582-5-8-5z' />
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>
@@ -447,7 +447,8 @@ const Setting = () => {
                 >
                   <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md shadow-purple-500/10 group-hover:scale-105 transition-transform duration-200'>
                     <svg className='h-6 w-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 0a4 4 0 100-8' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M3 7a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M8 5V4a1 1 0 011-1h6a1 1 0 011 1v1M12 13a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM8.5 17c.5-1.5 1.941-2.5 3.5-2.5s3 1 3.5 2.5' />
                     </svg>
                   </div>
                   <div className='min-w-0 flex-1'>
@@ -653,7 +654,7 @@ const Setting = () => {
                 />
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Mode of Business</label>
+                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Services</label>
                 <div className='flex flex-wrap gap-1.5 mb-2'>
                   {editModeOfBusiness.map((mode) => (
                     <span key={mode} className='inline-flex items-center gap-1 rounded-lg bg-sky-100 text-sky-700 pl-2 pr-1 py-0.5 text-xs font-bold'>
@@ -676,10 +677,10 @@ const Setting = () => {
                   onChange={(e) => setModeOfBusinessInput(e.target.value)}
                   onKeyDown={handleModeOfBusinessKeyDown}
                   onBlur={addModeOfBusiness}
-                  placeholder='Type a business mode and press Enter (e.g. Insurance, Mutual Fund, NPS, Loan)'
+                  placeholder='Type a service and press Enter (e.g. Insurance, Mutual Fund, NPS, Loan)'
                   className='w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all outline-none text-sm text-slate-800 font-semibold'
                 />
-                <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each mode</p>
+                <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each service</p>
               </div>
               <div>
                 <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Office Address</label>

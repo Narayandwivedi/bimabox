@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import * as XLSX from 'xlsx'
 import AddFitnessModal from './Fitness/AddFitnessModal'
 import AddPucModal from './Puc/AddPucModal'
 import AddGpsModal from './Gps/AddGpsModal'
@@ -246,6 +247,27 @@ const RTODocuments = () => {
     })
     .sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
 
+  const handleExport = () => {
+    if (!filteredDocuments.length) return
+    const exportData = filteredDocuments.map((doc) => {
+      const record = doc.rawRecord || {}
+      return {
+        'Type': doc.type === 'Tax' ? 'Road Tax' : doc.type,
+        'Vehicle Number': doc.vehicleNumber || '',
+        'Holder Name': record.ownerName || record.policyHolderName || record.name || '',
+        'Mobile': record.mobileNumber || '',
+        'Valid From': doc.validFrom !== 'N/A' ? doc.validFrom : '',
+        'Valid To': doc.validTo !== 'N/A' ? doc.validTo : '',
+        'Status': doc.status,
+        'Remarks': record.remarks || '',
+      }
+    })
+    const ws = XLSX.utils.json_to_sheet(exportData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'RTO Documents')
+    XLSX.writeFile(wb, `rto_documents_${typeFilter}_${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'Active': return 'bg-emerald-100 text-emerald-700'
@@ -288,16 +310,30 @@ const RTODocuments = () => {
                   <h1 className='text-xl md:text-2xl font-black text-slate-900'>RTO Documents</h1>
                   <p className='text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]'>Manage all your vehicle documents</p>
                 </div>
-                <button
-                  type='button'
-                  onClick={() => setShowImportModal(true)}
-                  className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-blue-200 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95'
-                >
-                  <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
-                  </svg>
-                  Add
-                </button>
+                <div className='flex items-center gap-2'>
+                  {filteredDocuments.length > 0 && (
+                    <button
+                      type='button'
+                      onClick={handleExport}
+                      className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
+                    >
+                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                      </svg>
+                      Export Excel
+                    </button>
+                  )}
+                  <button
+                    type='button'
+                    onClick={() => setShowImportModal(true)}
+                    className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-xs font-black text-white uppercase tracking-wider shadow-lg shadow-blue-200 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5 active:scale-95'
+                  >
+                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
+                    </svg>
+                    Add
+                  </button>
+                </div>
               </div>
 
               {/* Stats Summary */}

@@ -17,7 +17,8 @@ initInsuranceCompanyCache(API_URL)
 
 const PRODUCT_TYPE_OPTIONS = [
   'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
-  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC'
+  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC',
+  'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND'
 ]
 
 const resolveStoredDocumentPreview = (documentPath) => {
@@ -98,7 +99,13 @@ const PRODUCT_TYPE_KEYWORD_MAP = [
   { value: 'Travel', keywords: ['travel insurance', 'travel policy'] },
   { value: 'Marine', keywords: ['marine'] },
   { value: 'GPA', keywords: ['group personal accident', 'gpa', 'personal accident'] },
-  { value: 'GMC', keywords: ['group mediclaim', 'gmc'] }
+  { value: 'GMC', keywords: ['group mediclaim', 'gmc'] },
+  { value: 'CAR', keywords: ['car'] },
+  { value: 'IAR', keywords: ['iar', 'industrial all risks', 'industrial all risk'] },
+  { value: 'EAR', keywords: ['ear', 'erection all risks', 'erection all risk'] },
+  { value: 'SCHOOL BUS', keywords: ['school bus'] },
+  { value: 'LIABILITY', keywords: ['liability'] },
+  { value: 'SECURITY BOND', keywords: ['security bond', 'surety bond'] }
 ]
 
 const normalizeProductType = (productType) => {

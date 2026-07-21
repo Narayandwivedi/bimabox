@@ -11,11 +11,17 @@ const Reference = () => {
   const [newName, setNewName] = useState('')
   const [newMobile, setNewMobile] = useState('')
   const [newEmail, setNewEmail] = useState('')
+  const [newReferenceVal, setNewReferenceVal] = useState('')
+  const [newAddress, setNewAddress] = useState('')
+  const [newOtherInfo, setNewOtherInfo] = useState('')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
   const [editName, setEditName] = useState('')
   const [editMobile, setEditMobile] = useState('')
   const [editEmail, setEditEmail] = useState('')
+  const [editReferenceVal, setEditReferenceVal] = useState('')
+  const [editAddress, setEditAddress] = useState('')
+  const [editOtherInfo, setEditOtherInfo] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -36,9 +42,25 @@ const Reference = () => {
 
   const handleAdd = async () => {
     const name = newName.trim()
-    if (!name) return
+    const mobile = newMobile.trim()
+    const email = newEmail.trim()
+    const reference = newReferenceVal.trim()
+    const address = newAddress.trim()
+    const otherInfo = newOtherInfo.trim()
+    
+    if (!name && !mobile && !email && !reference && !address && !otherInfo) {
+      toast.error('Please fill at least one field')
+      return
+    }
     try {
-      const res = await axios.post(`${API_URL}/api/references`, { name, mobile: newMobile, email: newEmail }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/references`, {
+        name,
+        mobile,
+        email,
+        reference,
+        address,
+        otherInfo
+      }, { withCredentials: true })
       if (res.data.success) {
         setReferences(prev => {
           const exists = prev.find(r => r._id === res.data.data._id)
@@ -47,6 +69,9 @@ const Reference = () => {
         setNewName('')
         setNewMobile('')
         setNewEmail('')
+        setNewReferenceVal('')
+        setNewAddress('')
+        setNewOtherInfo('')
         toast.success('Client Name added')
       }
     } catch {
@@ -56,22 +81,46 @@ const Reference = () => {
 
   const openEditModal = (ref) => {
     setEditItem(ref)
-    setEditName(ref.name)
+    setEditName(ref.name || '')
     setEditMobile(ref.mobile || '')
     setEditEmail(ref.email || '')
+    setEditReferenceVal(ref.reference || '')
+    setEditAddress(ref.address || '')
+    setEditOtherInfo(ref.otherInfo || '')
     setShowEditModal(true)
   }
 
   const closeEditModal = () => {
     setShowEditModal(false)
     setEditItem(null)
+    setEditReferenceVal('')
+    setEditAddress('')
+    setEditOtherInfo('')
   }
 
   const handleSaveEdit = async () => {
-    if (!editName.trim() || !editItem) return
+    if (!editItem) return
+    const name = editName.trim()
+    const mobile = editMobile.trim()
+    const email = editEmail.trim()
+    const reference = editReferenceVal.trim()
+    const address = editAddress.trim()
+    const otherInfo = editOtherInfo.trim()
+    
+    if (!name && !mobile && !email && !reference && !address && !otherInfo) {
+      toast.error('Please fill at least one field')
+      return
+    }
     setSaving(true)
     try {
-      const res = await axios.put(`${API_URL}/api/references/${editItem._id}`, { name: editName.trim(), mobile: editMobile, email: editEmail }, { withCredentials: true })
+      const res = await axios.put(`${API_URL}/api/references/${editItem._id}`, {
+        name,
+        mobile,
+        email,
+        reference,
+        address,
+        otherInfo
+      }, { withCredentials: true })
       if (res.data.success) {
         setReferences(prev => prev.map(r => r._id === editItem._id ? res.data.data : r))
         closeEditModal()
@@ -103,14 +152,14 @@ const Reference = () => {
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
               <h1 className='text-xl font-black text-slate-900 mb-6'>Client Name</h1>
 
-              <div className='flex flex-wrap gap-2 mb-6'>
+              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 mb-6'>
                 <input
                   type='text'
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Client Name'
-                  className='flex-1 min-w-[140px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                  placeholder='Client Name (optional)'
+                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
                 />
                 <input
                   type='text'
@@ -119,7 +168,7 @@ const Reference = () => {
                   onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   placeholder='Mobile (optional)'
                   maxLength={10}
-                  className='flex-1 min-w-[140px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
                 />
                 <input
                   type='email'
@@ -127,15 +176,40 @@ const Reference = () => {
                   onChange={(e) => setNewEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   placeholder='Email (optional)'
-                  className='flex-1 min-w-[160px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
                 />
-                <button
-                  onClick={handleAdd}
-                  disabled={!newName.trim()}
-                  className='px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-bold text-sm hover:shadow-lg transition disabled:opacity-50 cursor-pointer'
-                >
-                  Add
-                </button>
+                <input
+                  type='text'
+                  value={newReferenceVal}
+                  onChange={(e) => setNewReferenceVal(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Reference (optional)'
+                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                />
+                <input
+                  type='text'
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Address (optional)'
+                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                />
+                <div className='flex gap-2'>
+                  <input
+                    type='text'
+                    value={newOtherInfo}
+                    onChange={(e) => setNewOtherInfo(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                    placeholder='Other Info (optional)'
+                    className='flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm'
+                  />
+                  <button
+                    onClick={handleAdd}
+                    className='px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl font-bold text-sm hover:shadow-lg transition cursor-pointer'
+                  >
+                    Add
+                  </button>
+                </div>
               </div>
 
               {loading ? (
@@ -152,11 +226,19 @@ const Reference = () => {
                     <div key={ref._id} className='flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-indigo-200 transition'>
                       <div className='min-w-0 flex-1'>
                         <span className='text-sm font-semibold text-slate-700'>{ref.name}</span>
-                        {(ref.mobile || ref.email) && (
-                          <div className='text-xs text-slate-400 mt-0.5'>
-                            {ref.mobile && <span>{ref.mobile.replace(/(\d{5})(\d{5})/, '$1 $2')}</span>}
-                            {ref.mobile && ref.email && <span className='mx-1.5'>|</span>}
-                            {ref.email && <span>{ref.email}</span>}
+                        {(ref.mobile || ref.email || ref.reference || ref.address || ref.otherInfo) && (
+                          <div className='text-xs text-slate-400 mt-0.5 space-y-0.5'>
+                            <div className='flex flex-wrap items-center gap-x-2'>
+                              {ref.mobile && <span>📞 {ref.mobile.replace(/(\d{5})(\d{5})/, '$1 $2')}</span>}
+                              {ref.email && <span>✉️ {ref.email}</span>}
+                              {ref.reference && <span>👤 Ref: {ref.reference}</span>}
+                            </div>
+                            {(ref.address || ref.otherInfo) && (
+                              <div className='flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500'>
+                                {ref.address && <span>📍 {ref.address}</span>}
+                                {ref.otherInfo && <span>ℹ️ {ref.otherInfo}</span>}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -198,14 +280,14 @@ const Reference = () => {
                 </button>
               </div>
             </div>
-            <div className='p-5 space-y-4'>
+            <div className='p-5 space-y-4 max-h-[60vh] overflow-y-auto'>
               <div>
-                <label className='block text-xs font-semibold text-gray-700 mb-1'>Name <span className='text-red-500'>*</span></label>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Name</label>
                 <input
                   type='text'
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder='Client name'
+                  placeholder='Client name (optional)'
                   className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
                 />
               </div>
@@ -215,7 +297,7 @@ const Reference = () => {
                   type='text'
                   value={editMobile}
                   onChange={(e) => setEditMobile(enforceMobileNumberFormat(e.target.value))}
-                  placeholder='Mobile number'
+                  placeholder='Mobile number (optional)'
                   maxLength={10}
                   className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
                 />
@@ -226,7 +308,37 @@ const Reference = () => {
                   type='email'
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  placeholder='Email address'
+                  placeholder='Email address (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Reference</label>
+                <input
+                  type='text'
+                  value={editReferenceVal}
+                  onChange={(e) => setEditReferenceVal(e.target.value)}
+                  placeholder='Reference (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Address</label>
+                <input
+                  type='text'
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  placeholder='Address (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Other Info</label>
+                <input
+                  type='text'
+                  value={editOtherInfo}
+                  onChange={(e) => setEditOtherInfo(e.target.value)}
+                  placeholder='Other Info (optional)'
                   className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-sm'
                 />
               </div>
@@ -236,7 +348,7 @@ const Reference = () => {
               <button
                 type='button'
                 onClick={handleSaveEdit}
-                disabled={saving || !editName.trim()}
+                disabled={saving}
                 className='px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition disabled:opacity-50 cursor-pointer'
               >
                 {saving ? (

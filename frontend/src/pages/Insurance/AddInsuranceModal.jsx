@@ -167,6 +167,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [newReferenceName, setNewReferenceName] = useState('')
   const [newReferenceMobile, setNewReferenceMobile] = useState('')
   const [newReferenceEmail, setNewReferenceEmail] = useState('')
+  const [newReferenceReference, setNewReferenceReference] = useState('')
+  const [newReferenceAddress, setNewReferenceAddress] = useState('')
+  const [newReferenceOtherInfo, setNewReferenceOtherInfo] = useState('')
 
   const [imds, setImds] = useState([])
   const [imdDropdownOpen, setImdDropdownOpen] = useState(false)
@@ -340,18 +343,37 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
   const handleAddReference = async () => {
     const name = newReferenceName.trim()
-    if (!name) return
+    const mobile = newReferenceMobile.trim()
+    const email = newReferenceEmail.trim()
+    const reference = newReferenceReference.trim()
+    const address = newReferenceAddress.trim()
+    const otherInfo = newReferenceOtherInfo.trim()
+    
+    if (!name && !mobile && !email && !reference && !address && !otherInfo) {
+      toast.error('Please fill at least one field')
+      return
+    }
     try {
-      const res = await axios.post(`${API_URL}/api/references`, { name, mobile: newReferenceMobile, email: newReferenceEmail }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/references`, {
+        name,
+        mobile,
+        email,
+        reference,
+        address,
+        otherInfo
+      }, { withCredentials: true })
       if (res.data.success) {
         setReferences(prev => {
-          const exists = prev.find(r => r.name === name)
+          const exists = prev.find(r => r._id === res.data.data._id)
           return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
-        setFormData(prev => ({ ...prev, reference: name }))
+        setFormData(prev => ({ ...prev, reference: res.data.data.name }))
         setNewReferenceName('')
         setNewReferenceMobile('')
         setNewReferenceEmail('')
+        setNewReferenceReference('')
+        setNewReferenceAddress('')
+        setNewReferenceOtherInfo('')
         setShowAddReference(false)
         setReferenceDropdownOpen(false)
       }
@@ -1481,14 +1503,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       )}
 
       {showAddReference && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail('') }}>
-          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail(''); setNewReferenceReference(''); setNewReferenceAddress(''); setNewReferenceOtherInfo('') }}>
+          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4 max-h-[85vh] overflow-y-auto' onClick={e => e.stopPropagation()}>
             <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Client Name</h3>
             <input
               type='text'
               value={newReferenceName}
               onChange={(e) => setNewReferenceName(e.target.value)}
-              placeholder='Client Name *'
+              placeholder='Client Name (optional)'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
@@ -1507,11 +1529,35 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               value={newReferenceEmail}
               onChange={(e) => setNewReferenceEmail(e.target.value)}
               placeholder='Email (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
+            <input
+              type='text'
+              value={newReferenceReference}
+              onChange={(e) => setNewReferenceReference(e.target.value)}
+              placeholder='Reference (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
+            <input
+              type='text'
+              value={newReferenceAddress}
+              onChange={(e) => setNewReferenceAddress(e.target.value)}
+              placeholder='Address (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
+            />
+            <input
+              type='text'
+              value={newReferenceOtherInfo}
+              onChange={(e) => setNewReferenceOtherInfo(e.target.value)}
+              placeholder='Other Info (optional)'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none mb-4'
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddReference() }}
             />
             <div className='flex justify-end gap-2'>
-              <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={() => { setShowAddReference(false); setNewReferenceName(''); setNewReferenceMobile(''); setNewReferenceEmail(''); setNewReferenceReference(''); setNewReferenceAddress(''); setNewReferenceOtherInfo('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
               <button type='button' onClick={handleAddReference} className='px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold cursor-pointer'>Add</button>
             </div>
           </div>

@@ -98,6 +98,15 @@ const Setting = () => {
     loadPlan()
   }, [])
 
+  useEffect(() => {
+    if (showEditModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [showEditModal])
+
   const handleLogout = async () => {
     await logout()
     navigate('/login')
@@ -639,8 +648,8 @@ const Setting = () => {
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className='fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4' onClick={() => setShowEditModal(false)}>
-          <div className='bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto overflow-hidden animate-scaleUp border border-slate-100' onClick={e => e.stopPropagation()}>
-            <div className='bg-gradient-to-r from-slate-900 to-indigo-950 p-5 text-white'>
+          <div className='bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto overflow-hidden animate-scaleUp border border-slate-100 max-h-[90vh] flex flex-col' onClick={e => e.stopPropagation()}>
+            <div className='bg-gradient-to-r from-slate-900 to-indigo-950 p-5 text-white shrink-0'>
               <div className='flex justify-between items-center'>
                 <div>
                   <h2 className='text-lg font-bold'>Edit Profile</h2>
@@ -653,7 +662,7 @@ const Setting = () => {
                 </button>
               </div>
             </div>
-            <div className='p-6 space-y-4'>
+            <div className='p-6 space-y-4 overflow-y-auto flex-1 min-h-0'>
               <div className='flex justify-center'>
                 <div className='relative h-24 w-24'>
                   <div className='h-full w-full rounded-[24px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[3px] shadow-xl'>
@@ -771,7 +780,7 @@ const Setting = () => {
                 />
               </div>
             </div>
-            <div className='border-t border-slate-100 p-4 bg-slate-50/50 flex justify-end gap-3'>
+            <div className='border-t border-slate-100 p-4 bg-slate-50/50 flex justify-end gap-3 shrink-0'>
               <button type='button' onClick={() => setShowEditModal(false)} className='px-4 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 cursor-pointer transition-colors'>Cancel</button>
               <button
                 type='button'

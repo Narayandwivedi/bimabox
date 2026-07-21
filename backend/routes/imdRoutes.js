@@ -23,22 +23,42 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { name, mobile, email } = req.body
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'IMD name is required' })
-    }
-    const existing = await IMD.findOne({ userId: req.user._id, name: name.trim() })
-    if (existing) {
-      if (mobile !== undefined || email !== undefined) {
-        existing.mobile = mobile || ''
-        existing.email = email || ''
-        await existing.save()
-        return res.json({ success: true, data: existing })
+    const { name, mobile, email, agentCode, reference, address, otherInfo } = req.body
+    let finalName = (name && name.trim()) || '';
+    if (!finalName) {
+      if (agentCode && agentCode.trim()) {
+        finalName = `Agent - ${agentCode.trim()}`;
+      } else if (mobile && mobile.trim()) {
+        finalName = `Agent - ${mobile.trim()}`;
+      } else if (email && email.trim()) {
+        finalName = `Agent - ${email.trim()}`;
+      } else {
+        const uniqueSuffix = Date.now().toString().slice(-6);
+        finalName = `Agent #${uniqueSuffix}`;
       }
+    }
+    const existing = await IMD.findOne({ userId: req.user._id, name: finalName.trim() })
+    if (existing) {
+      existing.mobile = mobile || ''
+      existing.email = email || ''
+      existing.agentCode = agentCode || ''
+      existing.reference = reference || ''
+      existing.address = address || ''
+      existing.otherInfo = otherInfo || ''
+      await existing.save()
       return res.json({ success: true, data: existing })
     }
-    const imd = await IMD.create({ userId: req.user._id, name: name.trim(), mobile: mobile || '', email: email || '' })
-    res.status(201).json({ success: true, data: imd })
+    const newImd = await IMD.create({
+      userId: req.user._id,
+      name: finalName.trim(),
+      mobile: mobile || '',
+      email: email || '',
+      agentCode: agentCode || '',
+      reference: reference || '',
+      address: address || '',
+      otherInfo: otherInfo || ''
+    })
+    res.status(201).json({ success: true, data: newImd })
   } catch (error) {
     console.error('Error creating IMD:', error)
     res.status(500).json({ success: false, message: 'Failed to create IMD' })
@@ -60,23 +80,41 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { name, mobile, email } = req.body
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'IMD name is required' })
+    const { name, mobile, email, agentCode, reference, address, otherInfo } = req.body
+    let finalName = (name && name.trim()) || '';
+    if (!finalName) {
+      if (agentCode && agentCode.trim()) {
+        finalName = `Agent - ${agentCode.trim()}`;
+      } else if (mobile && mobile.trim()) {
+        finalName = `Agent - ${mobile.trim()}`;
+      } else if (email && email.trim()) {
+        finalName = `Agent - ${email.trim()}`;
+      } else {
+        const uniqueSuffix = Date.now().toString().slice(-6);
+        finalName = `Agent #${uniqueSuffix}`;
+      }
     }
-    const existing = await IMD.findOne({ userId: req.user._id, name: name.trim() })
+    const existing = await IMD.findOne({ userId: req.user._id, name: finalName.trim() })
     if (existing && existing._id.toString() !== req.params.id) {
       return res.status(409).json({ success: false, message: 'An IMD with this name already exists' })
     }
-    const imd = await IMD.findOneAndUpdate(
+    const updatedImd = await IMD.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { name: name.trim(), mobile: mobile || '', email: email || '' },
+      {
+        name: finalName.trim(),
+        mobile: mobile || '',
+        email: email || '',
+        agentCode: agentCode || '',
+        reference: reference || '',
+        address: address || '',
+        otherInfo: otherInfo || ''
+      },
       { new: true }
     )
-    if (!imd) {
+    if (!updatedImd) {
       return res.status(404).json({ success: false, message: 'IMD not found' })
     }
-    res.json({ success: true, data: imd })
+    res.json({ success: true, data: updatedImd })
   } catch (error) {
     console.error('Error updating IMD:', error)
     res.status(500).json({ success: false, message: 'Failed to update IMD' })

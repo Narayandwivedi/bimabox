@@ -9,7 +9,6 @@ const IMDSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true,
     trim: true
   },
   mobile: {
@@ -20,6 +19,22 @@ const IMDSchema = new mongoose.Schema({
     type: String,
     trim: true,
     lowercase: true
+  },
+  agentCode: {
+    type: String,
+    trim: true
+  },
+  reference: {
+    type: String,
+    trim: true
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  otherInfo: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

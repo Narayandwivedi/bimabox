@@ -178,6 +178,10 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const [newImdName, setNewImdName] = useState('')
   const [newImdMobile, setNewImdMobile] = useState('')
   const [newImdEmail, setNewImdEmail] = useState('')
+  const [newImdAgentCode, setNewImdAgentCode] = useState('')
+  const [newImdReference, setNewImdReference] = useState('')
+  const [newImdAddress, setNewImdAddress] = useState('')
+  const [newImdOtherInfo, setNewImdOtherInfo] = useState('')
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
   // Mirror of insuranceCompanies in a ref so applyOcrResult closure always reads the latest list
   const insuranceCompaniesRef = useRef([])
@@ -388,18 +392,34 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
 
   const handleAddImd = async () => {
     const name = newImdName.trim()
-    if (!name) return
+    const mobile = newImdMobile.trim()
+    const email = newImdEmail.trim()
+    const agentCode = newImdAgentCode.trim()
+    const reference = newImdReference.trim()
+    const address = newImdAddress.trim()
+    const otherInfo = newImdOtherInfo.trim()
+
+    if (!name && !mobile && !email && !agentCode && !reference && !address && !otherInfo) {
+      toast.error('Please fill at least one field')
+      return
+    }
     try {
-      const res = await axios.post(`${API_URL}/api/imd`, { name, mobile: newImdMobile, email: newImdEmail }, { withCredentials: true })
+      const res = await axios.post(`${API_URL}/api/imd`, {
+        name, mobile, email, agentCode, reference, address, otherInfo
+      }, { withCredentials: true })
       if (res.data.success) {
         setImds(prev => {
-          const exists = prev.find(r => r.name === name)
+          const exists = prev.find(r => r._id === res.data.data._id)
           return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
-        setFormData(prev => ({ ...prev, imd: name }))
+        setFormData(prev => ({ ...prev, imd: res.data.data.name }))
         setNewImdName('')
         setNewImdMobile('')
         setNewImdEmail('')
+        setNewImdAgentCode('')
+        setNewImdReference('')
+        setNewImdAddress('')
+        setNewImdOtherInfo('')
         setShowAddImd(false)
         setImdDropdownOpen(false)
       }
@@ -1565,14 +1585,14 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       )}
 
       {showAddImd && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail('') }}>
-          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4' onClick={e => e.stopPropagation()}>
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail(''); setNewImdAgentCode(''); setNewImdReference(''); setNewImdAddress(''); setNewImdOtherInfo('') }}>
+          <div className='bg-white rounded-xl shadow-2xl p-5 w-80 mx-4 max-h-[85vh] overflow-y-auto' onClick={e => e.stopPropagation()}>
             <h3 className='text-base font-bold text-gray-800 mb-3'>Add New Agent name</h3>
             <input
               type='text'
               value={newImdName}
               onChange={(e) => setNewImdName(e.target.value)}
-              placeholder='Agent Name *'
+              placeholder='Agent Name (optional)'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
@@ -1591,11 +1611,43 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
               value={newImdEmail}
               onChange={(e) => setNewImdEmail(e.target.value)}
               placeholder='Email (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <input
+              type='text'
+              value={newImdAgentCode}
+              onChange={(e) => setNewImdAgentCode(e.target.value)}
+              placeholder='Agent Code (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <input
+              type='text'
+              value={newImdReference}
+              onChange={(e) => setNewImdReference(e.target.value)}
+              placeholder='Reference (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <input
+              type='text'
+              value={newImdAddress}
+              onChange={(e) => setNewImdAddress(e.target.value)}
+              placeholder='Address (optional)'
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-2'
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
+            />
+            <input
+              type='text'
+              value={newImdOtherInfo}
+              onChange={(e) => setNewImdOtherInfo(e.target.value)}
+              placeholder='Other Info (optional)'
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none mb-4'
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddImd() }}
             />
             <div className='flex justify-end gap-2'>
-              <button type='button' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
+              <button type='button' onClick={() => { setShowAddImd(false); setNewImdName(''); setNewImdMobile(''); setNewImdEmail(''); setNewImdAgentCode(''); setNewImdReference(''); setNewImdAddress(''); setNewImdOtherInfo('') }} className='px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-semibold cursor-pointer'>Cancel</button>
               <button type='button' onClick={handleAddImd} className='px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold cursor-pointer'>Add</button>
             </div>
           </div>

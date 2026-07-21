@@ -22,6 +22,17 @@ const navIcons = {
       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' />
     </svg>
   ),
+  client: (
+    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14c-4.418 0-8 2.239-8 5v1a1 1 0 001 1h14a1 1 0 001-1v-1c0-2.761-3.582-5-8-5z' />
+    </svg>
+  ),
+  agent: (
+    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 7a2 2 0 012-2h14a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z' />
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 5V4a1 1 0 011-1h6a1 1 0 011 1v1M12 13a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM8.5 17c.5-1.5 1.941-2.5 3.5-2.5s3 1 3.5 2.5' />
+    </svg>
+  ),
   premium: (
     <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
@@ -45,8 +56,8 @@ const mainNavItems = [
   { name: 'Search', path: '/search', icon: navIcons.search },
   { name: 'Renewals', path: '/renewals', icon: navIcons.renewal },
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
-  { name: 'Client Name', path: '/client-name', icon: navIcons.reference },
-  { name: 'Agent Name', path: '/agent-name', icon: navIcons.reference },
+  { name: 'Client Name', path: '/client-name', icon: navIcons.client },
+  { name: 'Agent Name', path: '/agent-name', icon: navIcons.agent },
   { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]
 

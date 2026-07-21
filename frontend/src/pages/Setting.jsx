@@ -7,6 +7,12 @@ import { enforceMobileNumberFormat } from '../utils/contactValidation'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
+const resolvePictureUrl = (picture) => {
+  if (!picture) return ''
+  if (picture.startsWith('data:') || picture.startsWith('http://') || picture.startsWith('https://')) return picture
+  return `${API_URL}${picture}`
+}
+
 const PLAN_STYLES = {
   Free: { badge: 'from-slate-600 to-slate-800', ring: 'shadow-slate-500/10', chip: 'bg-slate-100 text-slate-600 border border-slate-200' },
   Go: { badge: 'from-blue-600 to-cyan-500', ring: 'shadow-blue-500/20', chip: 'bg-blue-50 text-blue-600 border border-blue-100' },
@@ -72,6 +78,8 @@ const Setting = () => {
   const [editBusinessName, setEditBusinessName] = useState('')
   const [editModeOfBusiness, setEditModeOfBusiness] = useState([])
   const [modeOfBusinessInput, setModeOfBusinessInput] = useState('')
+  const [editPicture, setEditPicture] = useState('')
+  const [uploadingPicture, setUploadingPicture] = useState(false)
   const [saving, setSaving] = useState(false)
   const [myPlan, setMyPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(true)
@@ -102,7 +110,40 @@ const Setting = () => {
     setEditBusinessName(user?.businessName || '')
     setEditModeOfBusiness(user?.modeOfBusiness || [])
     setModeOfBusinessInput('')
+    setEditPicture(user?.picture || '')
     setShowEditModal(true)
+  }
+
+  const handlePictureUpload = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB')
+      return
+    }
+    setUploadingPicture(true)
+    try {
+      const formData = new FormData()
+      formData.append('document', file)
+      const res = await axios.post(`${API_URL}/api/upload/document`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true
+      })
+      if (res.data.success) {
+        setEditPicture(res.data.data.path)
+      } else {
+        toast.error('Failed to upload image')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload image')
+    } finally {
+      setUploadingPicture(false)
+    }
   }
 
   const addModeOfBusiness = () => {
@@ -132,7 +173,8 @@ const Setting = () => {
         mobile: editMobile,
         address: editAddress,
         businessName: editBusinessName,
-        modeOfBusiness: editModeOfBusiness
+        modeOfBusiness: editModeOfBusiness,
+        picture: editPicture
       }, { withCredentials: true })
       if (response.data.success) {
         setUser(response.data.data.user)
@@ -185,7 +227,7 @@ const Setting = () => {
                     <div className='h-full w-full rounded-[24px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[3px] shadow-xl'>
                       <div className='h-full w-full rounded-[21px] bg-white flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl shadow-inner'>
                         {user?.picture ? (
-                          <img src={user.picture} alt={user.name} className='h-full w-full object-cover' />
+                          <img src={resolvePictureUrl(user.picture)} alt={user.name} className='h-full w-full object-cover' />
                         ) : (
                           user?.name?.charAt(0) || 'U'
                         )}
@@ -612,6 +654,42 @@ const Setting = () => {
               </div>
             </div>
             <div className='p-6 space-y-4'>
+              <div className='flex justify-center'>
+                <div className='relative h-24 w-24'>
+                  <div className='h-full w-full rounded-[24px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[3px] shadow-xl'>
+                    <div className='h-full w-full rounded-[21px] bg-white flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl shadow-inner'>
+                      {uploadingPicture ? (
+                        <svg className='h-6 w-6 animate-spin text-indigo-500' fill='none' viewBox='0 0 24 24'>
+                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
+                        </svg>
+                      ) : editPicture ? (
+                        <img src={resolvePictureUrl(editPicture)} alt={editName} className='h-full w-full object-cover' />
+                      ) : (
+                        editName?.charAt(0) || 'U'
+                      )}
+                    </div>
+                  </div>
+                  <label
+                    htmlFor='profile-picture-upload'
+                    className='absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg ring-2 ring-white hover:bg-indigo-700 transition-colors cursor-pointer'
+                    title='Change photo'
+                  >
+                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z' />
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 13a3 3 0 11-6 0 3 3 0 016 0z' />
+                    </svg>
+                    <input
+                      id='profile-picture-upload'
+                      type='file'
+                      accept='image/*'
+                      onChange={handlePictureUpload}
+                      disabled={uploadingPicture}
+                      className='hidden'
+                    />
+                  </label>
+                </div>
+              </div>
               <div>
                 <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Full Name <span className='text-rose-500'>*</span></label>
                 <input

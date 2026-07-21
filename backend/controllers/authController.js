@@ -342,7 +342,7 @@ const updateName = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, mobile, address, businessName, modeOfBusiness } = req.body
+    const { name, mobile, address, businessName, modeOfBusiness, picture } = req.body
     const updateData = {}
 
     if (name !== undefined) {
@@ -384,6 +384,10 @@ const updateProfile = async (req, res) => {
       updateData.modeOfBusiness = modeOfBusiness
         .map((m) => String(m).trim())
         .filter(Boolean)
+    }
+
+    if (picture !== undefined) {
+      updateData.picture = String(picture).trim()
     }
 
     const updatedUser = await User.findByIdAndUpdate(

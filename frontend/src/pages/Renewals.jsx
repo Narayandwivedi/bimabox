@@ -154,19 +154,26 @@ const Renewals = () => {
       }
       if (docConfig.subField) row[docType === 'Insurance' ? 'Insurance Company' : docConfig.subField] = r[docConfig.subField] || ''
       if (docType === 'Insurance') {
+        row['Vehicle Class'] = r.vehicleClass || ''
         row['Product'] = r.product || ''
         row['Policy Type'] = r.insuranceClass || ''
       }
       if (docConfig.numberField) row[docConfig.numberLabel] = r[docConfig.numberField] || ''
+      if (docType === 'Insurance') row['Issue Date'] = r.issueDate || ''
       row['Valid From'] = r[docConfig.validFromField] || ''
       row['Valid To'] = r[docConfig.validToField] || ''
       if (docType === 'Insurance') {
+        row['TP Valid From'] = r.tpValidFrom || ''
+        row['TP Valid To'] = r.tpValidTo || ''
         row['OD Premium'] = r.odPremium ?? ''
         row['TP Premium'] = r.tpPremium ?? ''
         row['Net Premium'] = r.netPremium ?? ''
         row['Gross Premium'] = r.premium ?? ''
         row['Client Name'] = r.reference || ''
         row['Agent Name (IMD)'] = r.imd || ''
+        row['Claim Raised'] = r.claimRaised ? 'Yes' : 'No'
+        row['Claim Date'] = r.claimDate || ''
+        row['Claim Remarks'] = r.claimRemarks || ''
       }
       row['Days Left'] = r.daysLeft ?? ''
       row['Renewal Status'] = r.renewalStatus || 'pending'

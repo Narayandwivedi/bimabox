@@ -208,24 +208,40 @@ const Search = () => {
 
   const handleExport = () => {
     if (!filteredRecords.length) return
-    const exportData = filteredRecords.map((r) => ({
-      'Vehicle Number': r.vehicleNumber || 'N/A',
-      'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
-      'Mobile': r.mobileNumber || '',
-      'Insurance Company': recordCompanyName(r),
-      'Product': r.product || '',
-      'Policy Type': r.insuranceClass || '',
-      'Policy Number': r.policyNumber || '',
-      'OD Premium': r.odPremium ?? '',
-      'TP Premium': r.tpPremium ?? '',
-      'Net Premium': r.netPremium ?? '',
-      'Gross Premium': r.premium ?? '',
-      'Valid From': r.validFrom || r.taxFrom || '',
-      'Valid To': r.validTo || r.taxTo || '',
-      'Remarks': r.remarks || '',
-      'Client Name': r.reference || '',
-      'Agent name (IMD)': r.imd || '',
-    }))
+    const exportData = filteredRecords.map((r) => {
+      const row = {
+        'Vehicle Number': r.vehicleNumber || 'N/A',
+        'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
+        'Mobile': r.mobileNumber || '',
+      }
+      if (filterType === 'Insurance') {
+        row['Insurance Company'] = recordCompanyName(r)
+        row['Product'] = r.product || ''
+        row['Vehicle Class'] = r.vehicleClass || ''
+        row['Policy Type'] = r.insuranceClass || ''
+        row['Policy Number'] = r.policyNumber || ''
+        row['Issue Date'] = r.issueDate || ''
+        row['Valid From'] = r.validFrom || ''
+        row['Valid To'] = r.validTo || ''
+        row['TP Valid From'] = r.tpValidFrom || ''
+        row['TP Valid To'] = r.tpValidTo || ''
+        row['OD Premium'] = r.odPremium ?? ''
+        row['TP Premium'] = r.tpPremium ?? ''
+        row['Net Premium'] = r.netPremium ?? ''
+        row['Gross Premium'] = r.premium ?? ''
+        row['Client Name'] = r.reference || ''
+        row['Agent Name (IMD)'] = r.imd || ''
+        row['Claim Raised'] = r.claimRaised ? 'Yes' : 'No'
+        row['Claim Date'] = r.claimDate || ''
+        row['Claim Remarks'] = r.claimRemarks || ''
+        row['Renewal Status'] = r.renewalStatus || 'pending'
+      } else {
+        row['Valid From'] = r.validFrom || r.taxFrom || ''
+        row['Valid To'] = r.validTo || r.taxTo || ''
+      }
+      row['Remarks'] = r.remarks || ''
+      return row
+    })
     const ws = XLSX.utils.json_to_sheet(exportData)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Records')

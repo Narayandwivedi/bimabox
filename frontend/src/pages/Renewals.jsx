@@ -82,7 +82,11 @@ const Renewals = () => {
         { withCredentials: true }
       )
       setPolicies((prev) =>
-        prev.map((p) => (p._id === id ? { ...p, renewalStatus: status } : p))
+        prev.map((p) =>
+          p._id === id
+            ? { ...p, renewalStatus: status, renewalStatusChangedAt: new Date().toISOString() }
+            : p
+        )
       )
       if (status === 'renewed' && docType === 'Insurance') {
         const renewedPolicy = policies.find((p) => p._id === id)
@@ -109,6 +113,15 @@ const Renewals = () => {
     return isExpired || isExpiringSoon
   })
 
+  const sortedPolicies = [...filteredPolicies].sort((a, b) => {
+    if (statusFilter === 'pending') {
+      return (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999)
+    }
+    const dateA = a.renewalStatusChangedAt ? new Date(a.renewalStatusChangedAt) : new Date(0)
+    const dateB = b.renewalStatusChangedAt ? new Date(b.renewalStatusChangedAt) : new Date(0)
+    return dateB - dateA
+  })
+
   // Count badges for tabs
   const expiredPendingCount = policies.filter(
     (p) => (p.renewalStatus || 'pending') === 'pending' && p.daysLeft < 0
@@ -132,8 +145,8 @@ const Renewals = () => {
   ]
 
   const handleExport = () => {
-    if (!filteredPolicies.length) return
-    const exportData = filteredPolicies.map((r) => {
+    if (!sortedPolicies.length) return
+    const exportData = sortedPolicies.map((r) => {
       const row = {
         'Holder Name': r[docConfig.holderField] || '',
         'Vehicle Number': r.vehicleNumber || '',
@@ -246,7 +259,7 @@ const Renewals = () => {
                 </div>
               </div>
 
-              {filteredPolicies.length > 0 && (
+              {sortedPolicies.length > 0 && (
                 <button
                   onClick={handleExport}
                   className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
@@ -292,7 +305,7 @@ const Renewals = () => {
                 <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
                 <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Loading renewals...</p>
               </div>
-            ) : filteredPolicies.length === 0 ? (
+            ) : sortedPolicies.length === 0 ? (
               <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
                 <div className='flex justify-center mb-3'>
                   <svg className='h-10 w-10 text-slate-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -305,7 +318,7 @@ const Renewals = () => {
             ) : (
               <>
                 <div className='space-y-3 lg:hidden'>
-                  {filteredPolicies.map((policy) => {
+                      {sortedPolicies.map((policy) => {
                     const status = policy.renewalStatus || ''
                     const isResolved = status === 'renewed' || status === 'lost'
                     const isExpired = policy.daysLeft < 0
@@ -427,7 +440,7 @@ const Renewals = () => {
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-slate-50'>
-                      {filteredPolicies.map((policy) => {
+                  {sortedPolicies.map((policy) => {
                         const status = policy.renewalStatus || ''
                         const isResolved = status === 'renewed' || status === 'lost'
                         const isExpired = policy.daysLeft < 0

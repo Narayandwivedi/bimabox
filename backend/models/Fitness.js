@@ -43,6 +43,9 @@ const fitnessSchema = new mongoose.Schema({
     enum: ['pending', 'renewed', 'lost', 'opportunity'],
     default: 'pending'
   },
+  renewalStatusChangedAt: {
+    type: Date
+  },
   totalFee: {
     type: Number,
     default: 0

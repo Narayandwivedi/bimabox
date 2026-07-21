@@ -496,7 +496,7 @@ const createRecordController = (config) => {
 
       const record = await Model.findOneAndUpdate(
         { _id: req.params.id, userId: req.user._id },
-        { renewalStatus: status },
+        { renewalStatus: status, renewalStatusChangedAt: new Date() },
         { returnDocument: 'after', runValidators: true }
       ).lean()
 

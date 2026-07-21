@@ -54,7 +54,7 @@ const getRenewalsList = async (req, res) => {
 
     const all = await Insurance.find({ userId: req.user._id })
       .lean()
-      .select('policyHolderName vehicleNumber policyNumber insuranceCompany insuranceCompanyId product insuranceClass validFrom validTo renewalStatus premium odPremium tpPremium netPremium claimRaised claimDate claimRemarks')
+      .select('policyHolderName vehicleNumber policyNumber insuranceCompany insuranceCompanyId product insuranceClass validFrom validTo renewalStatus renewalStatusChangedAt premium odPremium tpPremium netPremium claimRaised claimDate claimRemarks')
 
     const result = all
       .map((r) => ({ ...r, daysLeft: getDaysLeft(r.validTo) }))
@@ -95,7 +95,7 @@ const updateRenewalStatus = async (req, res) => {
 
     const record = await Insurance.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { renewalStatus: status },
+      { renewalStatus: status, renewalStatusChangedAt: new Date() },
       { returnDocument: 'after', runValidators: true }
     ).lean()
 

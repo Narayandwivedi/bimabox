@@ -160,6 +160,9 @@ const InsuranceSchema = new mongoose.Schema({
     enum: ['pending', 'renewed', 'lost', 'opportunity'],
     default: 'pending'
   },
+  renewalStatusChangedAt: {
+    type: Date
+  },
 
   // WhatsApp message tracking
   whatsappMessageCount: {

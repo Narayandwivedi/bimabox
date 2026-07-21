@@ -192,7 +192,7 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd)
+    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear)
   }
 
   const handleClearFilters = () => {
@@ -1036,6 +1036,15 @@ const Search = () => {
                                   })()}
                                 </span>
                               </span>
+                              {filterType === 'Insurance' && record.issueDate && (
+                                <>
+                                  <span className='text-slate-300 hidden min-[320px]:inline'>•</span>
+                                  <span className='whitespace-nowrap'>
+                                    <span className='text-[8px] font-black uppercase tracking-wider text-slate-400 mr-1'>Issued</span>
+                                    <span className='text-slate-700 font-semibold'>{record.issueDate}</span>
+                                  </span>
+                                </>
+                              )}
                             </div>
                             {filterType === 'Insurance' && record.policyNumber && (
                               <span className='hidden sm:inline-block self-start sm:self-auto -mt-1 sm:mt-0 text-[9px] font-extrabold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-150 uppercase tracking-wider truncate sm:overflow-visible sm:whitespace-normal max-w-[130px] sm:max-w-none shadow-sm'>

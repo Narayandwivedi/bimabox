@@ -654,7 +654,7 @@ const Setting = () => {
                 />
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Mode of Business</label>
+                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Services</label>
                 <div className='flex flex-wrap gap-1.5 mb-2'>
                   {editModeOfBusiness.map((mode) => (
                     <span key={mode} className='inline-flex items-center gap-1 rounded-lg bg-sky-100 text-sky-700 pl-2 pr-1 py-0.5 text-xs font-bold'>
@@ -677,10 +677,10 @@ const Setting = () => {
                   onChange={(e) => setModeOfBusinessInput(e.target.value)}
                   onKeyDown={handleModeOfBusinessKeyDown}
                   onBlur={addModeOfBusiness}
-                  placeholder='Type a business mode and press Enter (e.g. Insurance, Mutual Fund, NPS, Loan)'
+                  placeholder='Type a service and press Enter (e.g. Insurance, Mutual Fund, NPS, Loan)'
                   className='w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all outline-none text-sm text-slate-800 font-semibold'
                 />
-                <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each mode</p>
+                <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each service</p>
               </div>
               <div>
                 <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Office Address</label>

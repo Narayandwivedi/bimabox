@@ -191,7 +191,7 @@ const Search = () => {
   }, [showFilterPanel])
 
   const handleLoadMore = () => {
-    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd)
+    fetchRecords(page + 1, true, searchQuery, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear)
   }
 
   const handleClearFilters = () => {

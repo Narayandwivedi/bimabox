@@ -23,22 +23,38 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { name, mobile, email } = req.body
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'Reference name is required' })
-    }
-    const existing = await Reference.findOne({ userId: req.user._id, name: name.trim() })
-    if (existing) {
-      if (mobile !== undefined || email !== undefined) {
-        existing.mobile = mobile || ''
-        existing.email = email || ''
-        await existing.save()
-        return res.json({ success: true, data: existing })
+    const { name, mobile, email, reference, address, otherInfo } = req.body
+    let finalName = (name && name.trim()) || '';
+    if (!finalName) {
+      if (mobile && mobile.trim()) {
+        finalName = `Client - ${mobile.trim()}`;
+      } else if (email && email.trim()) {
+        finalName = `Client - ${email.trim()}`;
+      } else {
+        const uniqueSuffix = Date.now().toString().slice(-6);
+        finalName = `Client #${uniqueSuffix}`;
       }
+    }
+    const existing = await Reference.findOne({ userId: req.user._id, name: finalName.trim() })
+    if (existing) {
+      existing.mobile = mobile || ''
+      existing.email = email || ''
+      existing.reference = reference || ''
+      existing.address = address || ''
+      existing.otherInfo = otherInfo || ''
+      await existing.save()
       return res.json({ success: true, data: existing })
     }
-    const reference = await Reference.create({ userId: req.user._id, name: name.trim(), mobile: mobile || '', email: email || '' })
-    res.status(201).json({ success: true, data: reference })
+    const newRef = await Reference.create({
+      userId: req.user._id,
+      name: finalName.trim(),
+      mobile: mobile || '',
+      email: email || '',
+      reference: reference || '',
+      address: address || '',
+      otherInfo: otherInfo || ''
+    })
+    res.status(201).json({ success: true, data: newRef })
   } catch (error) {
     console.error('Error creating reference:', error)
     res.status(500).json({ success: false, message: 'Failed to create reference' })
@@ -60,23 +76,38 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const { name, mobile, email } = req.body
-    if (!name || !name.trim()) {
-      return res.status(400).json({ success: false, message: 'Reference name is required' })
+    const { name, mobile, email, reference, address, otherInfo } = req.body
+    let finalName = (name && name.trim()) || '';
+    if (!finalName) {
+      if (mobile && mobile.trim()) {
+        finalName = `Client - ${mobile.trim()}`;
+      } else if (email && email.trim()) {
+        finalName = `Client - ${email.trim()}`;
+      } else {
+        const uniqueSuffix = Date.now().toString().slice(-6);
+        finalName = `Client #${uniqueSuffix}`;
+      }
     }
-    const existing = await Reference.findOne({ userId: req.user._id, name: name.trim() })
+    const existing = await Reference.findOne({ userId: req.user._id, name: finalName.trim() })
     if (existing && existing._id.toString() !== req.params.id) {
       return res.status(409).json({ success: false, message: 'A reference with this name already exists' })
     }
-    const reference = await Reference.findOneAndUpdate(
+    const updatedRef = await Reference.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { name: name.trim(), mobile: mobile || '', email: email || '' },
+      {
+        name: finalName.trim(),
+        mobile: mobile || '',
+        email: email || '',
+        reference: reference || '',
+        address: address || '',
+        otherInfo: otherInfo || ''
+      },
       { new: true }
     )
-    if (!reference) {
+    if (!updatedRef) {
       return res.status(404).json({ success: false, message: 'Reference not found' })
     }
-    res.json({ success: true, data: reference })
+    res.json({ success: true, data: updatedRef })
   } catch (error) {
     console.error('Error updating reference:', error)
     res.status(500).json({ success: false, message: 'Failed to update reference' })

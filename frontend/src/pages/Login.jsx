@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
@@ -8,6 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const Login = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setUser, setIsAuthenticated, isAuthenticated, loading: authLoading } = useAuth()
   const [mode, setMode] = useState('login')
   const [formData, setFormData] = useState({
@@ -15,7 +16,8 @@ const Login = () => {
     password: '',
     name: '',
     email: '',
-    mobile: ''
+    mobile: '',
+    referralCode: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -39,6 +41,17 @@ const Login = () => {
   }, [isAuthenticated, authLoading, navigate])
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const refCode = params.get('ref')
+    if (refCode) {
+      const cleaned = refCode.trim().toUpperCase()
+      setFormData((prev) => ({ ...prev, referralCode: cleaned }))
+      localStorage.setItem('pendingReferralCode', cleaned)
+      setMode('signup')
+    }
+  }, [location.search])
+
+  useEffect(() => {
     if (forgotStep === 2 && otpRefs[0].current) {
       otpRefs[0].current.focus()
     }
@@ -48,7 +61,8 @@ const Login = () => {
     if (newMode === mode) return
     setMode(newMode)
     setError('')
-    setFormData({ identifier: '', password: '', name: '', email: '', mobile: '' })
+    setFormData({ identifier: '', password: '', name: '', email: '', mobile: '', referralCode: '' })
+    localStorage.removeItem('pendingReferralCode')
     resetForgotPassword()
   }
 
@@ -63,8 +77,26 @@ const Login = () => {
     setOtpDigits(['','','','','',''])
   }
 
+  const extractReferralCode = (input) => {
+    const trimmed = input.trim()
+    const linkMatch = trimmed.match(/[?&]ref=([A-Za-z0-9]{4,10})(?:&|$)/)
+    if (linkMatch) return linkMatch[1].toUpperCase()
+    const codeMatch = trimmed.match(/^[A-Za-z0-9]{4,10}$/)
+    if (codeMatch) return codeMatch[0].toUpperCase()
+    return ''
+  }
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+    if (name === 'referralCode') {
+      const extracted = extractReferralCode(value)
+      if (extracted) {
+        localStorage.setItem('pendingReferralCode', extracted)
+      } else if (!value.trim()) {
+        localStorage.removeItem('pendingReferralCode')
+      }
+    }
     setError('')
   }
 
@@ -239,7 +271,7 @@ const Login = () => {
     e.preventDefault()
     setError('')
 
-    const { name, email, password } = formData
+    const { name, email, password, referralCode } = formData
     if (!name || !email) {
       setError('Name and email are required')
       return
@@ -247,6 +279,10 @@ const Login = () => {
 
     const effectivePassword = skipPassword ? '' : password
     const payload = { name, email }
+    const extractedRef = extractReferralCode(referralCode)
+    if (extractedRef) {
+      payload.referralCode = extractedRef
+    }
     if (effectivePassword) {
       if (effectivePassword.length < 6) {
         setError('Password must be at least 6 characters')
@@ -276,10 +312,15 @@ const Login = () => {
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true)
     setError('')
+    const pendingRef = localStorage.getItem('pendingReferralCode') || ''
+    localStorage.removeItem('pendingReferralCode')
+    const payload = { credential: credentialResponse.credential }
+    const extractedRef = extractReferralCode(pendingRef)
+    if (extractedRef) {
+      payload.referralCode = extractedRef
+    }
     try {
-      const response = await axios.post(`${BACKEND_URL}/api/auth/google`, {
-        credential: credentialResponse.credential
-      }, { withCredentials: true })
+      const response = await axios.post(`${BACKEND_URL}/api/auth/google`, payload, { withCredentials: true })
 
       if (response.data.success) {
         setUser(response.data.data.user)
@@ -361,6 +402,22 @@ const Login = () => {
                 ) : (
                   <p className='text-slate-500 text-xs'>Create your BimaBox account</p>
                 )}
+
+                {formData.referralCode && (
+                  <div className='mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl'>
+                    <div className='flex items-center gap-2'>
+                      <svg className='w-4 h-4 text-emerald-600 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+                      </svg>
+                      <p className='text-xs font-semibold text-emerald-800'>
+                        You were referred by someone! Sign up to earn them a reward.
+                      </p>
+                    </div>
+                    <p className='text-[11px] text-emerald-600 font-bold mt-1 ml-6'>
+                      Referral code: <span className='tracking-wider'>{formData.referralCode}</span>
+                    </p>
+                  </div>
+                )}
               </>
             ) : (
               <div className='mb-2'>
@@ -427,6 +484,28 @@ const Login = () => {
                     </div>
                   </div>
                 </>
+              )}
+
+              {mode === 'signup' && (
+                <div>
+                  <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1 ml-1'>Referral Code or Link <span className='text-slate-400 font-medium normal-case'>(optional)</span></label>
+                  <div className='relative group'>
+                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-500'>
+                      <svg className='w-5 h-5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+                      </svg>
+                    </div>
+                    <input type='text' name='referralCode' value={formData.referralCode} onChange={handleChange} placeholder='e.g. ABC123 or bimabox.in?ref=ABC123' className='w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm placeholder:text-slate-400 font-medium' disabled={loading} />
+                  </div>
+                  {formData.referralCode.trim() && extractReferralCode(formData.referralCode) && formData.referralCode.trim() !== extractReferralCode(formData.referralCode) && (
+                    <p className='mt-1 text-[11px] text-emerald-600 font-semibold flex items-center gap-1'>
+                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+                      </svg>
+                      Referral code detected: <span className='font-black tracking-wider'>{extractReferralCode(formData.referralCode)}</span>
+                    </p>
+                  )}
+                </div>
               )}
 
               {mode === 'login' && (

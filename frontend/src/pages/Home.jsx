@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import Footer from '../components/Footer'
@@ -68,6 +69,16 @@ const stats = [
 ]
 
 const Home = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('ref')) {
+      navigate(`/login${location.search}`, { replace: true })
+    }
+  }, [location.search, navigate])
+
   return (
     <div className='min-h-screen bg-white'>
       <Navbar />
@@ -122,7 +133,7 @@ const Home = () => {
             Join hundreds of users who trust BimaBox to keep their vehicle documents organized and never miss a renewal.
           </p>
           <Link
-            to='/login'
+            to={`/login${location.search}`}
             className='inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3.5 rounded-2xl font-bold text-base mt-8 hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-95'
           >
             Get Started Free

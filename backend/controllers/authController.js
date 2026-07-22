@@ -1,12 +1,15 @@
 const User = require('../models/User')
 const Admin = require('../models/Admin')
 const Otp = require('../models/Otp')
+const Referral = require('../models/Referral')
+const WalletTransaction = require('../models/WalletTransaction')
 const { recordFailedAttempt } = require('../middleware/adminRateLimiter')
 const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 const { sendOtpEmail } = require('../utils/email')
 const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
+const { generateUniqueReferralCode } = require('../utils/generateReferralCode')
 const {
   signToken,
   buildAuthCookie,
@@ -14,6 +17,8 @@ const {
   buildClearAuthCookie,
   buildClearAdminAuthCookie,
 } = require('../utils/authToken')
+
+const REFERRAL_REWARD = 99
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -28,9 +33,43 @@ const sanitizeUser = (user) => ({
   address: user.address || '',
   businessName: user.businessName || '',
   modeOfBusiness: user.modeOfBusiness || [],
+  referralCode: user.referralCode || '',
+  walletBalance: user.walletBalance || 0,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 })
+
+async function processReferralReward(referrerId, referredUserId) {
+  try {
+    const referrer = await User.findById(referrerId)
+    if (!referrer) return false
+
+    const referral = new Referral({
+      referrer: referrerId,
+      referredUser: referredUserId,
+      rewardAmount: REFERRAL_REWARD,
+      status: 'completed'
+    })
+    await referral.save()
+
+    await User.findByIdAndUpdate(referrerId, { $inc: { walletBalance: REFERRAL_REWARD } })
+
+    const transaction = new WalletTransaction({
+      userId: referrerId,
+      type: 'credit',
+      amount: REFERRAL_REWARD,
+      description: 'Referral reward for new user signup',
+      referenceType: 'Referral',
+      referenceId: referral._id
+    })
+    await transaction.save()
+
+    return true
+  } catch (error) {
+    console.error('Referral reward processing error:', error)
+    return false
+  }
+}
 
 const sanitizeAdmin = (admin) => ({
   _id: admin._id,
@@ -82,12 +121,32 @@ const login = async (req, res) => {
 }
 
 const profile = async (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      user: sanitizeUser(req.user),
-    },
-  })
+  try {
+    let user = req.user
+    if (!user.referralCode) {
+      const referralCode = await generateUniqueReferralCode()
+      user = await User.findByIdAndUpdate(
+        user._id,
+        { referralCode },
+        { new: true }
+      )
+    }
+    res.json({
+      success: true,
+      data: {
+        user: sanitizeUser(user),
+      },
+    })
+  } catch (error) {
+    console.error('Profile error:', error)
+    const user = req.user
+    res.json({
+      success: true,
+      data: {
+        user: sanitizeUser(user),
+      },
+    })
+  }
 }
 
 const adminLogin = async (req, res) => {
@@ -185,6 +244,7 @@ const register = async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase()
     const mobile = String(req.body.mobile || '').trim()
     const password = String(req.body.password || '')
+    const referralCode = String(req.body.referralCode || '').trim().toUpperCase()
 
     if (!name || !email) {
       return res.status(400).json({ success: false, message: 'Name and email are required' })
@@ -199,11 +259,26 @@ const register = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Email already registered' })
     }
 
+    let referredByUser = null
+    if (referralCode) {
+      referredByUser = await User.findOne({ referralCode })
+      if (!referredByUser) {
+        return res.status(400).json({ success: false, message: 'Invalid referral code' })
+      }
+    }
+
+    const uniqueReferralCode = await generateUniqueReferralCode()
+
     const userData = {
       name,
       email,
+      referralCode: uniqueReferralCode,
       isActive: true,
       lastLogin: new Date()
+    }
+
+    if (referredByUser) {
+      userData.referredBy = referredByUser._id
     }
 
     if (password) {
@@ -220,6 +295,10 @@ const register = async (req, res) => {
     await user.save()
     await assignFreePlanIfNone(user._id)
 
+    if (referredByUser) {
+      await processReferralReward(referredByUser._id, user._id)
+    }
+
     const token = signToken({ userId: String(user._id), type: 'user' })
     res.setHeader('Set-Cookie', buildAuthCookie(token))
 
@@ -235,7 +314,7 @@ const register = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const { credential } = req.body
+    const { credential, referralCode: rawReferralCode } = req.body
     if (!credential) {
       return res.status(400).json({ success: false, message: 'Google credential is required' })
     }
@@ -247,6 +326,8 @@ const googleLogin = async (req, res) => {
 
     const payload = ticket.getPayload()
     const { sub: googleId, email, name, picture } = payload
+
+    const referralCode = String(rawReferralCode || '').trim().toUpperCase()
 
     // Find or create user
     let user = await User.findOne({ $or: [{ googleId }, { email }] })
@@ -260,16 +341,34 @@ const googleLogin = async (req, res) => {
       await user.save()
     } else {
       // Create new user
-      user = new User({
+      let referredByUser = null
+      if (referralCode) {
+        referredByUser = await User.findOne({ referralCode })
+      }
+
+      const uniqueReferralCode = await generateUniqueReferralCode()
+
+      const userData = {
         name,
         email,
         googleId,
         picture,
+        referralCode: uniqueReferralCode,
         isActive: true,
         lastLogin: new Date()
-      })
+      }
+
+      if (referredByUser) {
+        userData.referredBy = referredByUser._id
+      }
+
+      user = new User(userData)
       await user.save()
       await assignFreePlanIfNone(user._id)
+
+      if (referredByUser) {
+        await processReferralReward(referredByUser._id, user._id)
+      }
     }
 
     const token = signToken({ userId: String(user._id), type: 'user' })

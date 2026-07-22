@@ -135,9 +135,19 @@ const InsuranceSchema = new mongoose.Schema({
     trim: true
   },
 
+  referenceId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Reference'
+  },
+
   imd: {
     type: String,
     trim: true
+  },
+
+  imdId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'IMD'
   },
 
   // Claim tracking

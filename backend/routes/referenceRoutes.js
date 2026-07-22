@@ -1,5 +1,6 @@
 const express = require('express')
 const Reference = require('../models/Reference')
+const Insurance = require('../models/Insurance')
 const { requireAuth } = require('../middleware/auth')
 
 const router = express.Router()
@@ -92,22 +93,31 @@ router.put('/:id', async (req, res) => {
     if (existing && existing._id.toString() !== req.params.id) {
       return res.status(409).json({ success: false, message: 'A reference with this name already exists' })
     }
-    const updatedRef = await Reference.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      {
-        name: finalName.trim(),
-        mobile: mobile || '',
-        email: email || '',
-        reference: reference || '',
-        address: address || '',
-        otherInfo: otherInfo || ''
-      },
-      { new: true }
-    )
-    if (!updatedRef) {
+    const oldRef = await Reference.findOne({ _id: req.params.id, userId: req.user._id })
+    if (!oldRef) {
       return res.status(404).json({ success: false, message: 'Reference not found' })
     }
-    res.json({ success: true, data: updatedRef })
+
+    const oldName = oldRef.name
+    const newName = finalName.trim()
+
+    oldRef.name = newName
+    oldRef.mobile = mobile || ''
+    oldRef.email = email || ''
+    oldRef.reference = reference || ''
+    oldRef.address = address || ''
+    oldRef.otherInfo = otherInfo || ''
+    await oldRef.save()
+
+    // Cascade name change to all linked Insurance records
+    if (oldName !== newName) {
+      await Insurance.updateMany(
+        { userId: req.user._id, $or: [{ referenceId: oldRef._id }, { reference: oldName }] },
+        { $set: { reference: newName, referenceId: oldRef._id } }
+      )
+    }
+
+    res.json({ success: true, data: oldRef })
   } catch (error) {
     console.error('Error updating reference:', error)
     res.status(500).json({ success: false, message: 'Failed to update reference' })

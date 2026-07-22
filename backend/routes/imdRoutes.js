@@ -1,5 +1,6 @@
 const express = require('express')
 const IMD = require('../models/IMD')
+const Insurance = require('../models/Insurance')
 const { requireAuth } = require('../middleware/auth')
 
 const router = express.Router()
@@ -98,23 +99,32 @@ router.put('/:id', async (req, res) => {
     if (existing && existing._id.toString() !== req.params.id) {
       return res.status(409).json({ success: false, message: 'An IMD with this name already exists' })
     }
-    const updatedImd = await IMD.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      {
-        name: finalName.trim(),
-        mobile: mobile || '',
-        email: email || '',
-        agentCode: agentCode || '',
-        reference: reference || '',
-        address: address || '',
-        otherInfo: otherInfo || ''
-      },
-      { new: true }
-    )
-    if (!updatedImd) {
+    const oldImd = await IMD.findOne({ _id: req.params.id, userId: req.user._id })
+    if (!oldImd) {
       return res.status(404).json({ success: false, message: 'IMD not found' })
     }
-    res.json({ success: true, data: updatedImd })
+
+    const oldName = oldImd.name
+    const newName = finalName.trim()
+
+    oldImd.name = newName
+    oldImd.mobile = mobile || ''
+    oldImd.email = email || ''
+    oldImd.agentCode = agentCode || ''
+    oldImd.reference = reference || ''
+    oldImd.address = address || ''
+    oldImd.otherInfo = otherInfo || ''
+    await oldImd.save()
+
+    // Cascade name change to all linked Insurance records
+    if (oldName !== newName) {
+      await Insurance.updateMany(
+        { userId: req.user._id, $or: [{ imdId: oldImd._id }, { imd: oldName }] },
+        { $set: { imd: newName, imdId: oldImd._id } }
+      )
+    }
+
+    res.json({ success: true, data: oldImd })
   } catch (error) {
     console.error('Error updating IMD:', error)
     res.status(500).json({ success: false, message: 'Failed to update IMD' })

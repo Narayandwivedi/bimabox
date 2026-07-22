@@ -148,7 +148,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     vehicleClass: '',
     remarks: '',
     reference: '',
+    referenceId: '',
     imd: '',
+    imdId: '',
     claimRaised: false,
     claimDate: '',
     claimRemarks: ''
@@ -248,7 +250,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         vehicleClass: initialData.vehicleClass || '',
         remarks: initialData.remarks || '',
         reference: initialData.reference || '',
+        referenceId: initialData.referenceId || '',
         imd: initialData.imd || '',
+        imdId: initialData.imdId || '',
         claimRaised: initialData.claimRaised || false,
         claimDate: initialData.claimDate || '',
         claimRemarks: initialData.claimRemarks || ''
@@ -295,7 +299,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         vehicleClass: '',
         remarks: '',
         reference: '',
+        referenceId: '',
         imd: '',
+        imdId: '',
         claimRaised: false,
         claimDate: '',
         claimRemarks: ''
@@ -339,8 +345,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     }
   }, [isOpen])
 
-  const handleReferenceSelect = (name) => {
-    setFormData(prev => ({ ...prev, reference: name }))
+  const handleReferenceSelect = (ref) => {
+    setFormData(prev => ({ ...prev, reference: ref.name, referenceId: ref._id }))
     setReferenceDropdownOpen(false)
     setReferenceSearch('')
   }
@@ -371,7 +377,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           const exists = prev.find(r => r._id === res.data.data._id)
           return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
-        setFormData(prev => ({ ...prev, reference: res.data.data.name }))
+        setFormData(prev => ({ ...prev, reference: res.data.data.name, referenceId: res.data.data._id }))
         setNewReferenceName('')
         setNewReferenceMobile('')
         setNewReferenceEmail('')
@@ -384,8 +390,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     } catch { }
   }
 
-  const handleImdSelect = (name) => {
-    setFormData(prev => ({ ...prev, imd: name }))
+  const handleImdSelect = (imd) => {
+    setFormData(prev => ({ ...prev, imd: imd.name, imdId: imd._id }))
     setImdDropdownOpen(false)
     setImdSearch('')
   }
@@ -412,7 +418,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           const exists = prev.find(r => r._id === res.data.data._id)
           return exists ? prev.map(r => r._id === res.data.data._id ? res.data.data : r) : [...prev, res.data.data].sort((a, b) => a.name.localeCompare(b.name))
         })
-        setFormData(prev => ({ ...prev, imd: res.data.data.name }))
+        setFormData(prev => ({ ...prev, imd: res.data.data.name, imdId: res.data.data._id }))
         setNewImdName('')
         setNewImdMobile('')
         setNewImdEmail('')
@@ -920,7 +926,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       vehicleClass: formData.vehicleClass,
       remarks: formData.remarks,
       reference: formData.reference,
+      referenceId: formData.referenceId || null,
       imd: formData.imd,
+      imdId: formData.imdId || null,
       claimRaised: formData.claimRaised,
       claimDate: formData.claimDate,
       claimRemarks: formData.claimRemarks
@@ -1084,7 +1092,13 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                         type='text'
                         value={referenceDropdownOpen ? referenceSearch : formData.reference}
                         onFocus={() => { setReferenceSearch(''); setReferenceDropdownOpen(true) }}
-                        onChange={(e) => { setReferenceSearch(e.target.value); setReferenceDropdownOpen(true) }}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setReferenceSearch(val)
+                          setReferenceDropdownOpen(true)
+                          const match = references.find(r => r.name.toLowerCase() === val.trim().toLowerCase())
+                          setFormData(prev => ({ ...prev, reference: val, referenceId: match ? match._id : '' }))
+                        }}
                         onBlur={() => setTimeout(() => setReferenceDropdownOpen(false), 200)}
                         placeholder='Select or type Client Name...'
                         className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white pr-10'
@@ -1092,7 +1106,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       {formData.reference && !referenceDropdownOpen ? (
                         <button
                           type='button'
-                          onClick={() => setFormData(prev => ({ ...prev, reference: '' }))}
+                          onClick={() => setFormData(prev => ({ ...prev, reference: '', referenceId: '' }))}
                           className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer'
                           title='Clear Client Name'
                         >
@@ -1119,7 +1133,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                             <button
                               key={ref._id}
                               type='button'
-                              onMouseDown={() => handleReferenceSelect(ref.name)}
+                              onMouseDown={() => handleReferenceSelect(ref)}
                               className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 transition cursor-pointer ${formData.reference === ref.name ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-700'}`}
                             >
                               {ref.name}
@@ -1153,7 +1167,13 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                         type='text'
                         value={imdDropdownOpen ? imdSearch : formData.imd}
                         onFocus={() => { setImdSearch(''); setImdDropdownOpen(true) }}
-                        onChange={(e) => { setImdSearch(e.target.value); setImdDropdownOpen(true) }}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setImdSearch(val)
+                          setImdDropdownOpen(true)
+                          const match = imds.find(r => r.name.toLowerCase() === val.trim().toLowerCase())
+                          setFormData(prev => ({ ...prev, imd: val, imdId: match ? match._id : '' }))
+                        }}
                         onBlur={() => setTimeout(() => setImdDropdownOpen(false), 200)}
                         placeholder='Select or type Agent name...'
                         className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white pr-10'
@@ -1161,7 +1181,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       {formData.imd && !imdDropdownOpen ? (
                         <button
                           type='button'
-                          onClick={() => setFormData(prev => ({ ...prev, imd: '' }))}
+                          onClick={() => setFormData(prev => ({ ...prev, imd: '', imdId: '' }))}
                           className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer'
                           title='Clear Agent name'
                         >
@@ -1188,7 +1208,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                             <button
                               key={ref._id}
                               type='button'
-                              onMouseDown={() => handleImdSelect(ref.name)}
+                              onMouseDown={() => handleImdSelect(ref)}
                               className={`w-full text-left px-3 py-2 text-sm hover:bg-purple-50 transition cursor-pointer ${formData.imd === ref.name ? 'bg-purple-50 text-purple-700 font-semibold' : 'text-gray-700'}`}
                             >
                               {ref.name}

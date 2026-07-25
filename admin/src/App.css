@@ -128,6 +128,18 @@ a.sidebar-link,
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
+a.sidebar-link svg,
+.sidebar-link svg {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+a.sidebar-link-active svg,
+.sidebar-link-active svg {
+  opacity: 1;
+  color: var(--c-teal-light);
+}
+
 a.sidebar-link:hover,
 .sidebar-link:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -787,9 +799,12 @@ tbody tr:hover {
 }
 
 .sidebar-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: auto;
   width: 100%;
-  justify-content: center;
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(148, 163, 184, 0.22);
   color: #f8fafc;

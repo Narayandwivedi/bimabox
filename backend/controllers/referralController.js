@@ -68,4 +68,19 @@ const getReferrals = async (req, res) => {
   }
 }
 
-module.exports = { getReferralInfo, getReferrals }
+const listAllReferrals = async (_req, res) => {
+  try {
+    const referrals = await Referral.find({})
+      .populate('referrer', 'name mobile')
+      .populate('referredUser', 'name mobile')
+      .sort({ createdAt: -1 })
+      .lean()
+
+    res.json({ success: true, data: referrals })
+  } catch (error) {
+    console.error('Admin referrals list error:', error)
+    res.status(500).json({ success: false, message: 'Failed to get referrals list' })
+  }
+}
+
+module.exports = { getReferralInfo, getReferrals, listAllReferrals }

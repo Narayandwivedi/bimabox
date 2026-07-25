@@ -8,6 +8,8 @@ import UserPlansPage from './pages/UserPlansPage'
 import WhatsAppPage from './pages/WhatsAppPage'
 import SettingsPage from './pages/SettingsPage'
 import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
+import ReferralsPage from './pages/ReferralsPage'
+import { UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, SettingsIcon, LogoutIcon } from './icons'
 
 const initialLoginForm = {
   email: '',
@@ -175,41 +177,55 @@ function AppSecure() {
             to="/users"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <UsersIcon />
             User
           </NavLink>
           <NavLink
             to="/plans"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <PlansIcon />
             Plans
           </NavLink>
           <NavLink
             to="/user-plans"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <UserPlansIcon />
             User Plans
+          </NavLink>
+          <NavLink
+            to="/referrals"
+            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
+          >
+            <ReferralsIcon />
+            Referrals
           </NavLink>
           <NavLink
             to="/whatsapp"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <WhatsAppIcon />
             WhatsApp
           </NavLink>
           <NavLink
             to="/insurance-companies"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <BuildingIcon />
             Insurance Companies
           </NavLink>
           <NavLink
             to="/settings"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
+            <SettingsIcon />
             Settings
           </NavLink>
         </nav>
 
         <button type="button" className="secondary-btn sidebar-logout" onClick={handleLogout}>
+          <LogoutIcon />
           Logout
         </button>
       </aside>
@@ -219,6 +235,7 @@ function AppSecure() {
           <Route path="/users" element={<UsersPage apiFetch={wrappedApiFetch} />} />
           <Route path="/plans" element={<PlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/user-plans" element={<UserPlansPage apiFetch={wrappedApiFetch} />} />
+          <Route path="/referrals" element={<ReferralsPage apiFetch={wrappedApiFetch} />} />
           <Route path="/whatsapp" element={<WhatsAppPage apiFetch={wrappedApiFetch} />} />
           <Route path="/insurance-companies" element={<InsuranceCompaniesPage apiFetch={wrappedApiFetch} />} />
           <Route path="/settings" element={<SettingsPage apiFetch={wrappedApiFetch} onLogout={handleLogout} />} />

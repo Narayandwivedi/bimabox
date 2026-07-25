@@ -268,6 +268,10 @@ const ResultBox = ({
         producerName: user?.name || 'Bimabox Agent',
         producerContact: user?.mobile || 'N/A',
         producerEmail: user?.email || 'N/A',
+        businessName: user?.businessName || '',
+        businessAddress: user?.address || '',
+        businessServices: user?.modeOfBusiness || [],
+        businessPicture: user?.picture || '',
         insuranceCompany,
         insuranceCompanyId: insuranceCompany?._id || null,
         premiums: {

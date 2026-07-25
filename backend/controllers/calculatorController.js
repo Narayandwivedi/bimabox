@@ -13,6 +13,27 @@ function fmt(n, decimals = 2) {
   return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
+// Resolves a stored profile picture value (relative /uploads path or data: URL)
+// into something pdfkit's doc.image() can consume. Returns null if unavailable
+// (e.g. a remote http(s) URL, which we don't fetch here).
+function resolveProfileImage(picture) {
+  if (!picture || typeof picture !== 'string') return null
+  if (picture.startsWith('data:')) {
+    const match = picture.match(/^data:([^;]+);base64,(.+)$/)
+    if (!match) return null
+    try {
+      return Buffer.from(match[2], 'base64')
+    } catch (e) {
+      return null
+    }
+  }
+  if (picture.startsWith('/uploads/')) {
+    const localPath = path.join(__dirname, '..', picture)
+    return fs.existsSync(localPath) ? localPath : null
+  }
+  return null
+}
+
 const generatePdf = async (req, res) => {
   try {
     const data = req.body
@@ -39,11 +60,138 @@ const generatePdf = async (req, res) => {
     const stream = fs.createWriteStream(filePath)
     doc.pipe(stream)
 
+    const logoPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'bimalogo.png')
+
+    // ══════════════════════════════════════════════════════════════════════
+    // PAGE 1 — Business Profile
+    // ══════════════════════════════════════════════════════════════════════
+    {
+      const businessName = data.businessName || producerName
+      const businessAddress = data.businessAddress || ''
+      const businessServices = Array.isArray(data.businessServices) ? data.businessServices.filter(Boolean) : []
+      const pw = doc.page.width - 80
+      let cy = 40
+
+      // Brand strip
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, 40, cy, { height: 24, fit: [24, 24] })
+      }
+      doc.fontSize(13).font('Helvetica-Bold').fillColor('#0f172a').text('Bima', 70, cy + 3, { continued: true })
+      doc.fillColor('#003afd').text('Box', { continued: false })
+      doc.fontSize(7).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 70, cy + 19)
+
+      cy += 48
+      doc.moveTo(40, cy).lineTo(40 + pw, cy).strokeColor('#e2e8f0').lineWidth(1).stroke()
+      cy += 50
+
+      // Profile picture (circular)
+      const picSize = 110
+      const picX = 40 + pw / 2 - picSize / 2
+      const imgSource = resolveProfileImage(data.businessPicture)
+      let imageDrawn = false
+      if (imgSource) {
+        try {
+          doc.save()
+          doc.circle(picX + picSize / 2, cy + picSize / 2, picSize / 2).clip()
+          doc.image(imgSource, picX, cy, { width: picSize, height: picSize })
+          doc.restore()
+          imageDrawn = true
+        } catch (e) {
+          imageDrawn = false
+        }
+      }
+      if (!imageDrawn) {
+        doc.circle(picX + picSize / 2, cy + picSize / 2, picSize / 2).fillColor('#e0e7ff').fill()
+        const initials = (businessName || 'BB').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+        doc.fontSize(34).font('Helvetica-Bold').fillColor('#003afd')
+          .text(initials, picX, cy + picSize / 2 - 17, { width: picSize, align: 'center' })
+      }
+      doc.circle(picX + picSize / 2, cy + picSize / 2, picSize / 2).strokeColor('#003afd').lineWidth(2.5).stroke()
+
+      cy += picSize + 24
+
+      // Business name & agent name
+      doc.fontSize(22).font('Helvetica-Bold').fillColor('#0f172a').text(businessName, 40, cy, { width: pw, align: 'center' })
+      cy += 30
+      if (producerName && producerName !== businessName) {
+        doc.fontSize(10).font('Helvetica').fillColor('#64748b').text(producerName, 40, cy, { width: pw, align: 'center' })
+        cy += 22
+      } else {
+        cy += 6
+      }
+
+      // Services offered
+      if (businessServices.length) {
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#1e3a8a').text('SERVICES WE OFFER', 40, cy, { width: pw, align: 'center' })
+        cy += 20
+
+        const chipH = 22
+        const chipGap = 8
+        const rowGap = 10
+        doc.fontSize(9).font('Helvetica-Bold')
+        const chipWidths = businessServices.map(s => doc.widthOfString(s) + 24)
+
+        // Pack chips into centered rows
+        let i = 0
+        while (i < businessServices.length) {
+          let rowW = 0
+          let j = i
+          while (j < businessServices.length) {
+            const nextW = chipWidths[j] + (j > i ? chipGap : 0)
+            if (rowW + nextW > pw && j > i) break
+            rowW += nextW
+            j++
+          }
+          let rx = 40 + (pw - rowW) / 2
+          for (let k = i; k < j; k++) {
+            const w = chipWidths[k]
+            doc.roundedRect(rx, cy, w, chipH, chipH / 2).fillColor('#eff6ff').fill()
+            doc.roundedRect(rx, cy, w, chipH, chipH / 2).strokeColor('#bfdbfe').lineWidth(1).stroke()
+            doc.fontSize(9).font('Helvetica-Bold').fillColor('#1e40af').text(businessServices[k], rx, cy + 6.5, { width: w, align: 'center' })
+            rx += w + chipGap
+          }
+          cy += chipH + rowGap
+          i = j
+        }
+        cy += 10
+      }
+
+      // Contact details box
+      const contactBoxH = 56
+      doc.rect(40, cy, pw, contactBoxH).fillColor('#f8fafc').fill()
+      doc.rect(40, cy, pw, contactBoxH).strokeColor('#cbd5e1').lineWidth(1).stroke()
+
+      const contactColW = pw / 2
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b').text('CONTACT NUMBER', 40 + 16, cy + 12)
+      doc.fontSize(10.5).font('Helvetica-Bold').fillColor('#0f172a').text(producerContact, 40 + 16, cy + 26, { width: contactColW - 32 })
+
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b').text('EMAIL ADDRESS', 40 + contactColW + 16, cy + 12)
+      doc.fontSize(10.5).font('Helvetica-Bold').fillColor('#0f172a').text(producerEmail, 40 + contactColW + 16, cy + 26, { width: contactColW - 32, ellipsis: true })
+
+      cy += contactBoxH + 16
+
+      // Office address box
+      const addrBoxH = 60
+      doc.rect(40, cy, pw, addrBoxH).fillColor('#f1f5f9').fill()
+      doc.rect(40, cy, pw, addrBoxH).strokeColor('#cbd5e1').lineWidth(1).stroke()
+      doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#64748b').text('OFFICE ADDRESS', 40 + 16, cy + 12)
+      doc.fontSize(9.5).font('Helvetica-Bold').fillColor('#0f172a')
+        .text(businessAddress || 'N/A', 40 + 16, cy + 26, { width: pw - 32, height: addrBoxH - 30, ellipsis: true })
+
+      // Footer
+      doc.fontSize(7).font('Helvetica').fillColor('#94a3b8')
+        .text('Insurance is subject matter of the solicitation.', 40, doc.page.height - 60, { align: 'center', width: pw })
+    }
+
+    doc.addPage()
+
+    // ══════════════════════════════════════════════════════════════════════
+    // PAGE 2 — Quotation
+    // ══════════════════════════════════════════════════════════════════════
     const pageWidth = doc.page.width - 80 // 515 pt printable area width
     let y = 40
 
     // ── Header Block ────────────────────────────────────────────────────────
-    const logoPath = path.join(__dirname, '..', '..', 'frontend', 'public', 'bimalogo.png')
     const headerCenterX = 40 + pageWidth / 2
 
     // Light header with a blue bottom accent line

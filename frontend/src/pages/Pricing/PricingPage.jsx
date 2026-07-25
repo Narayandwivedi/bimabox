@@ -10,18 +10,20 @@ const FEATURE_ROWS = [
   { key: 'clientLimit', label: 'Clients', render: (f) => f.clientLimit === 0 ? 'Unlimited' : `${f.clientLimit}` },
   { key: 'desktopAccess', label: 'Access from Desktop/Laptop', render: (f) => f.desktopAccess },
   { key: 'mobileAppAccess', label: 'Access from Mobile App', render: (f) => f.mobileAppAccess },
+  { key: 'premiumCalculator', label: 'Premium Calculator', render: () => true },
   { key: 'excelDownload', label: 'Excel Download', render: (f) => f.excelDownload },
   { key: 'appNotificationRenewal', label: 'App Notification Renewal Reminder', render: (f) => f.appNotificationRenewal },
   { key: 'whatsappRenewal', label: 'WhatsApp Renewal Reminder', render: (f) => f.whatsappRenewal },
-  { key: 'customizedPolicyDownload', label: 'Customized Policy Download', render: (f) => f.customizedPolicyDownload },
+  { key: 'customizedPolicyDownload', label: 'Personalised Policy Download', render: (f) => f.customizedPolicyDownload },
+  { key: 'personalisedQuotation', label: 'Personalised Quotation', render: (f) => f.personalisedQuotation },
   { key: 'processingSpeed', label: 'Processing Speed', render: (f) => f.processingSpeed },
   { key: 'support', label: 'Support', render: (f) => f.support },
 ]
 
 const formatPrice = (plan) => {
-  if (plan.price === 0) return { amount: '₹0', period: 'Forever' }
+  if (plan.price === 0) return { amount: '₹0', period: 'for 1 Year' }
   const months = Math.round((plan.durationDays || 30) / 30)
-  return { amount: `₹${plan.price}`, period: months > 1 ? `/ ${months} Months` : '/ Month' }
+  return { amount: `₹${plan.price}`, period: months > 1 ? `/ ${months} Months (incl. GST)` : '/ Month (incl. GST)' }
 }
 
 const UsageBar = ({ label, used, limit }) => {

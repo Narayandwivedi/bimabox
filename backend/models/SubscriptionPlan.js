@@ -10,6 +10,7 @@ const featureSchema = new mongoose.Schema({
   appNotificationRenewal: { type: Boolean, default: false },
   whatsappRenewal: { type: Boolean, default: false },
   customizedPolicyDownload: { type: Boolean, default: false },
+  personalisedQuotation: { type: Boolean, default: false },
   processingSpeed: { type: String, enum: ['Standard', 'Fast', 'Accelerated', 'Highest'], default: 'Standard' },
   support: { type: String, enum: ['Standard', 'Priority'], default: 'Standard' },
 }, { _id: false })

@@ -5,11 +5,11 @@ const DEFAULT_PLANS = [
   {
     name: 'Free',
     price: 0,
-    durationDays: 0, // never expires — only the monthly usage limit resets
+    durationDays: 365, // valid for 1 year
     sortOrder: 1,
     features: {
-      aiDocuments: 10,
-      manualDocuments: 10,
+      aiDocuments: 20,
+      manualDocuments: 20,
       desktopAccess: true,
       mobileAppAccess: true,
       excelDownload: false,
@@ -17,6 +17,7 @@ const DEFAULT_PLANS = [
       appNotificationRenewal: true,
       whatsappRenewal: false,
       customizedPolicyDownload: false,
+      personalisedQuotation: false,
       processingSpeed: 'Standard',
       support: 'Standard',
     },
@@ -27,8 +28,8 @@ const DEFAULT_PLANS = [
     durationDays: 90,
     sortOrder: 2,
     features: {
-      aiDocuments: 100,
-      manualDocuments: 0,
+      aiDocuments: 50,
+      manualDocuments: 50,
       desktopAccess: true,
       mobileAppAccess: true,
       excelDownload: true,
@@ -36,6 +37,7 @@ const DEFAULT_PLANS = [
       appNotificationRenewal: true,
       whatsappRenewal: false,
       customizedPolicyDownload: false,
+      personalisedQuotation: false,
       processingSpeed: 'Fast',
       support: 'Standard',
     },
@@ -43,11 +45,11 @@ const DEFAULT_PLANS = [
   {
     name: 'Plus',
     price: 199,
-    durationDays: 30,
+    durationDays: 90,
     sortOrder: 3,
     features: {
-      aiDocuments: 500,
-      manualDocuments: 0,
+      aiDocuments: 200,
+      manualDocuments: 200,
       desktopAccess: true,
       mobileAppAccess: true,
       excelDownload: true,
@@ -55,6 +57,7 @@ const DEFAULT_PLANS = [
       appNotificationRenewal: true,
       whatsappRenewal: true,
       customizedPolicyDownload: true,
+      personalisedQuotation: true,
       processingSpeed: 'Accelerated',
       support: 'Priority',
     },
@@ -62,11 +65,11 @@ const DEFAULT_PLANS = [
   {
     name: 'Pro',
     price: 499,
-    durationDays: 30,
+    durationDays: 90,
     sortOrder: 4,
     features: {
-      aiDocuments: 1000,
-      manualDocuments: 0,
+      aiDocuments: 500,
+      manualDocuments: 500,
       desktopAccess: true,
       mobileAppAccess: true,
       excelDownload: true,
@@ -74,6 +77,7 @@ const DEFAULT_PLANS = [
       appNotificationRenewal: true,
       whatsappRenewal: true,
       customizedPolicyDownload: true,
+      personalisedQuotation: true,
       processingSpeed: 'Highest',
       support: 'Priority',
     },

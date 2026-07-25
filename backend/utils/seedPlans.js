@@ -1,6 +1,7 @@
 const SubscriptionPlan = require('../models/SubscriptionPlan')
 const UserPlan = require('../models/UserPlan')
 const { DEFAULT_PLANS } = require('./defaultPlans')
+const { computeExpiryDate } = require('./planCycle')
 
 // Runs on every server start. Only creates plans that don't exist yet (matched
 // by name) — never overwrites a plan an admin has already edited, so this is
@@ -23,34 +24,36 @@ const seedDefaultPlansIfMissing = async () => {
   }
 }
 
-// One-time data fix: the Free plan used to expire after 30 days like any other
-// plan. It's now meant to never expire (only its monthly usage limit resets).
-// This (1) patches the Free SubscriptionPlan's durationDays to 0 so future
-// assignments never get an expiry, and (2) clears expiryDate on any existing
-// UserPlan record already tied to the Free plan. Idempotent — a no-op once
-// the Free plan is durationDays: 0 and all its UserPlan records are cleared.
-const clearFreePlanExpiries = async () => {
+// One-time data fix: the Free plan used to never expire (durationDays: 0). It's
+// now valid for 1 year (durationDays: 365) — matches DEFAULT_PLANS.Free. This
+// (1) patches the Free SubscriptionPlan's durationDays to 365, and (2) gives
+// any existing Free UserPlan record (previously left with expiryDate: null)
+// a concrete expiry, 1 year from its own startDate. Idempotent — a no-op once
+// the Free plan is durationDays: 365 and no Free UserPlan record has a null
+// expiryDate left over from the old "never expires" behaviour.
+const applyFreePlanOneYearValidity = async () => {
   try {
     const freePlan = await SubscriptionPlan.findOne({ name: 'Free' })
     if (!freePlan) return
 
-    if (freePlan.durationDays !== 0) {
-      freePlan.durationDays = 0
+    if (freePlan.durationDays !== 365) {
+      freePlan.durationDays = 365
       await freePlan.save()
-      console.log('Updated Free plan durationDays to 0 (never expires).')
+      console.log('Updated Free plan durationDays to 365 (1 year validity).')
     }
 
-    const result = await UserPlan.updateMany(
-      { planId: freePlan._id, expiryDate: { $ne: null } },
-      { $set: { expiryDate: null } }
-    )
+    const staleFreePlans = await UserPlan.find({ planId: freePlan._id, expiryDate: null })
+    for (const userPlan of staleFreePlans) {
+      userPlan.expiryDate = computeExpiryDate(freePlan.durationDays, userPlan.startDate || userPlan.createdAt)
+      await userPlan.save()
+    }
 
-    if (result.modifiedCount > 0) {
-      console.log(`Cleared expiry on ${result.modifiedCount} existing Free plan record(s).`)
+    if (staleFreePlans.length > 0) {
+      console.log(`Set 1-year expiry on ${staleFreePlans.length} existing Free plan record(s).`)
     }
   } catch (error) {
-    console.error('Error clearing Free plan expiries:', error)
+    console.error('Error applying Free plan 1-year validity:', error)
   }
 }
 
-module.exports = { seedDefaultPlansIfMissing, clearFreePlanExpiries }
+module.exports = { seedDefaultPlansIfMissing, applyFreePlanOneYearValidity }

@@ -329,9 +329,33 @@ const Setting = () => {
                     )}
                   </div>
 
+                  {/* Wallet Balance */}
+                  <div className='mt-6 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 p-4'>
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center gap-2'>
+                        <div className='h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center'>
+                          <svg className='h-4 w-4 text-amber-700' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                          </svg>
+                        </div>
+                        <span className='text-xs font-bold uppercase tracking-wider text-amber-700'>Wallet Balance</span>
+                      </div>
+                      <span className='text-xl font-black text-amber-800'>₹{user?.walletBalance || 0}</span>
+                    </div>
+                    <Link
+                      to='/refer-and-earn'
+                      className='mt-2 flex items-center justify-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-100/50 hover:bg-amber-100 rounded-xl py-2 transition-colors'
+                    >
+                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+                      </svg>
+                      Refer & Earn – Invite friends, get ₹99 each
+                    </Link>
+                  </div>
+
                   <button
                     onClick={openEditModal}
-                    className='mt-6 w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 text-sm font-bold hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:translate-y-0'
+                    className='mt-4 w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 text-sm font-bold hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:translate-y-0'
                   >
                     <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
@@ -511,6 +535,43 @@ const Setting = () => {
                   </svg>
                 </button>
               </div>
+            </div>
+
+            {/* Refer & Earn */}
+            <div className='rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_15px_40px_-20px_rgba(15,23,42,0.1)]'>
+              <div className='flex items-center gap-3 border-b border-slate-100 pb-5 mb-5'>
+                <div className='h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100'>
+                  <svg className='h-5 w-5 text-emerald-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className='text-sm font-bold text-slate-800 tracking-tight'>Refer & Earn</h3>
+                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5'>Invite friends, earn ₹99 per referral</p>
+                </div>
+              </div>
+              <Link
+                to='/refer-and-earn'
+                className='group flex items-center justify-between rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 p-4 border border-emerald-100 hover:border-emerald-200 transition-all duration-300'
+              >
+                <div className='flex items-center gap-3'>
+                  <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/10 group-hover:scale-105 transition-transform duration-200'>
+                    <svg className='h-6 w-6 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+                    </svg>
+                  </div>
+                  <div className='min-w-0 flex-1'>
+                    <p className='text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors'>Referral Program</p>
+                    <p className='text-[10px] font-semibold text-slate-400 mt-0.5'>Share your code & track earnings</p>
+                  </div>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <span className='text-xs font-black text-emerald-600 bg-white px-3 py-1 rounded-lg border border-emerald-200 shadow-sm'>₹99 each</span>
+                  <svg className='h-4 w-4 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 5l7 7-7 7' />
+                  </svg>
+                </div>
+              </Link>
             </div>
 
             {/* Legal, Support & Info */}

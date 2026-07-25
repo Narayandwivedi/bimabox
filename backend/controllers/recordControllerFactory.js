@@ -200,11 +200,51 @@ const createRecordController = (config) => {
     paidField,
   } = config
 
-  const listRecords = async (req, res, filterType = 'all') => {
+  const Reference = require('../models/Reference')
+const IMD = require('../models/IMD')
+
+const enrichPayloadWithIds = async (payload, userId) => {
+  if (payload.reference && !payload.referenceId) {
+    const escaped = payload.reference.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const match = await Reference.findOne({
+      userId,
+      name: { $regex: new RegExp(`^${escaped}$`, 'i') }
+    }).lean()
+    if (match) {
+      payload.referenceId = match._id
+    }
+  } else if (payload.referenceId && !payload.reference) {
+    const match = await Reference.findOne({ userId, _id: payload.referenceId }).lean()
+    if (match) {
+      payload.reference = match.name
+    }
+  }
+
+  if (payload.imd && !payload.imdId) {
+    const escaped = payload.imd.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const match = await IMD.findOne({
+      userId,
+      name: { $regex: new RegExp(`^${escaped}$`, 'i') }
+    }).lean()
+    if (match) {
+      payload.imdId = match._id
+    }
+  } else if (payload.imdId && !payload.imd) {
+    const match = await IMD.findOne({ userId, _id: payload.imdId }).lean()
+    if (match) {
+      payload.imd = match.name
+    }
+  }
+}
+
+const listRecords = async (req, res, filterType = 'all') => {
     try {
       const page = Math.max(Number(req.query.page) || 1, 1)
       const limit = Math.max(Number(req.query.limit) || 20, 1)
       const matcher = buildSearchMatcher(searchFields, req.query.search || '')
+
+      const targetReference = req.query.referenceId ? await Reference.findOne({ _id: req.query.referenceId, userId: req.user._id }).lean() : null
+      const targetImd = req.query.imdId ? await IMD.findOne({ _id: req.query.imdId, userId: req.user._id }).lean() : null
 
       const rawRecords = await Model.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean()
 
@@ -230,11 +270,15 @@ const createRecordController = (config) => {
           if (req.query.insuranceClass && record.insuranceClass !== req.query.insuranceClass) {
             return false
           }
-          if (req.query.reference && record.reference !== req.query.reference) {
-            return false
+          if (req.query.referenceId) {
+            const matchesId = record.referenceId?.toString() === req.query.referenceId
+            const matchesName = targetReference && record.reference && record.reference.trim().toLowerCase() === targetReference.name.trim().toLowerCase()
+            if (!matchesId && !matchesName) return false
           }
-          if (req.query.imd && record.imd !== req.query.imd) {
-            return false
+          if (req.query.imdId) {
+            const matchesId = record.imdId?.toString() === req.query.imdId
+            const matchesName = targetImd && record.imd && record.imd.trim().toLowerCase() === targetImd.name.trim().toLowerCase()
+            if (!matchesId && !matchesName) return false
           }
           if (req.query.claimStatus === 'raised' && !record.claimRaised) {
             return false
@@ -337,6 +381,7 @@ const createRecordController = (config) => {
   const create = async (req, res) => {
     try {
       const payload = buildPayload(req.body, config, req.user._id, true)
+      await enrichPayloadWithIds(payload, req.user._id)
       if (!payload[config.requiredDateField]) {
         return res.status(400).json({ success: false, message: `${config.requiredDateField} is required` })
       }
@@ -363,6 +408,7 @@ const createRecordController = (config) => {
   const update = async (req, res) => {
     try {
       const payload = buildPayload(req.body, config, req.user._id, false)
+      await enrichPayloadWithIds(payload, req.user._id)
       const vehicleNo = payload.vehicleNumber || ''
       const docName = generateDocumentName(config.label, vehicleNo)
       await processDocumentData(payload, config, docName)

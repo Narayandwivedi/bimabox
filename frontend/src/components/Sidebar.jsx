@@ -49,6 +49,11 @@ const navIcons = {
       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
     </svg>
   ),
+  referral: (
+    <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' />
+    </svg>
+  ),
 }
 
 const mainNavItems = [
@@ -58,6 +63,7 @@ const mainNavItems = [
   { name: 'Premium', path: '/premium-calculator', icon: navIcons.premium },
   { name: 'Client Name', path: '/client-name', icon: navIcons.client },
   { name: 'Agent Name', path: '/agent-name', icon: navIcons.agent },
+  { name: 'Refer & Earn', path: '/refer-and-earn', icon: navIcons.referral },
   { name: 'Settings', path: '/setting', icon: navIcons.settings },
 ]
 

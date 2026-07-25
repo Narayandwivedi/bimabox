@@ -10,7 +10,7 @@ const base = createRecordController({
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'reference', 'imd'],
   stringFields: ['vehicleNumber', 'policyNumber', 'policyHolderName', 'mobileNumber', 'insuranceCompany', 'insuranceClass', 'product', 'vehicleClass', 'validFrom', 'validTo', 'tpValidFrom', 'tpValidTo', 'issueDate', 'insuranceDocument', 'endorsementDocument', 'remarks', 'reference', 'imd', 'renewalStatus', 'claimDate', 'claimRemarks'],
-  objectIdFields: ['insuranceCompanyId'],
+  objectIdFields: ['insuranceCompanyId', 'referenceId', 'imdId'],
   uppercaseFields: ['vehicleNumber', 'policyNumber'],
   numberFields: ['premium', 'odPremium', 'tpPremium', 'netPremium'],
   booleanFields: ['claimRaised'],
@@ -54,7 +54,7 @@ const getRenewalsList = async (req, res) => {
 
     const all = await Insurance.find({ userId: req.user._id })
       .lean()
-      .select('policyHolderName vehicleNumber mobileNumber policyNumber insuranceCompany insuranceCompanyId vehicleClass product insuranceClass validFrom validTo tpValidFrom tpValidTo issueDate renewalStatus renewalStatusChangedAt premium odPremium tpPremium netPremium remarks reference imd claimRaised claimDate claimRemarks')
+      .select('policyHolderName vehicleNumber mobileNumber policyNumber insuranceCompany insuranceCompanyId vehicleClass product insuranceClass validFrom validTo tpValidFrom tpValidTo issueDate renewalStatus renewalStatusChangedAt premium odPremium tpPremium netPremium remarks reference referenceId imd imdId claimRaised claimDate claimRemarks')
 
     const result = all
       .map((r) => ({ ...r, daysLeft: getDaysLeft(r.validTo) }))

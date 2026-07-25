@@ -59,7 +59,22 @@ const userSchema = new mongoose.Schema({
   modeOfBusiness: [{
     type: String,
     trim: true
-  }]
+  }],
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  walletBalance: {
+    type: Number,
+    default: 0,
+    min: 0
+  }
 }, {
   timestamps: true
 })

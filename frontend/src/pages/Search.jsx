@@ -70,7 +70,7 @@ const Search = () => {
   const insuranceFilterCount = filterType === 'Insurance' ? [filterCompany, filterProductType, filterPolicyType, filterReference, filterImd, filterClaimStatus, filterFinancialYear].filter(Boolean).length : 0
   const activeFilterCount = insuranceFilterCount + (filterValidity ? 1 : 0) + (filterDateFrom ? 1 : 0) + (filterDateTo ? 1 : 0)
 
-  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', reference = '', imd = '', claimStatus = '', financialYear = '') => {
+  const fetchRecords = useCallback(async (pageNum, append = false, query = '', type = 'Insurance', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', referenceId = '', imdId = '', claimStatus = '', financialYear = '') => {
     const q = query.trim()
     setSearchQuery(q)
     if (pageNum === 1) setLoading(true)
@@ -83,8 +83,8 @@ const Search = () => {
         if (company) params.insuranceCompanyId = company
         if (productType) params.product = productType
         if (policyType) params.insuranceClass = policyType
-        if (reference) params.reference = reference
-        if (imd) params.imd = imd
+        if (referenceId) params.referenceId = referenceId
+        if (imdId) params.imdId = imdId
         if (claimStatus) params.claimStatus = claimStatus
         if (financialYear) params.financialYear = financialYear
       }
@@ -137,10 +137,18 @@ const Search = () => {
   }, [])
 
   const companyNameById = useCallback((id) => companiesList.find(c => c._id === id)?.name || '', [companiesList])
+  const referenceNameById = useCallback((id) => referencesList.find(r => r._id === id)?.name || '', [referencesList])
+  const imdNameById = useCallback((id) => imdList.find(i => i._id === id)?.name || '', [imdList])
   // Current (live) company name for a record — falls back to the name snapshot stored on the record
   const recordCompanyName = useCallback((record) => (
     (record.insuranceCompanyId && companyNameById(record.insuranceCompanyId)) || record.insuranceCompany || ''
   ), [companyNameById])
+  const recordReferenceName = useCallback((record) => (
+    (record.referenceId && referenceNameById(record.referenceId)) || record.reference || ''
+  ), [referenceNameById])
+  const recordImdName = useCallback((record) => (
+    (record.imdId && imdNameById(record.imdId)) || record.imd || ''
+  ), [imdNameById])
 
   // Initial load
   useEffect(() => {
@@ -169,6 +177,7 @@ const Search = () => {
     setPage(1)
     fetchRecords(1, false, inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear)
   }, [inputValue, filterType, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear, fetchRecords])
+
 
   // Lock body scroll when filter panel is open
   useEffect(() => {
@@ -229,8 +238,8 @@ const Search = () => {
         row['TP Premium'] = r.tpPremium ?? ''
         row['Net Premium'] = r.netPremium ?? ''
         row['Gross Premium'] = r.premium ?? ''
-        row['Client Name'] = r.reference || ''
-        row['Agent Name (IMD)'] = r.imd || ''
+        row['Client Name'] = recordReferenceName(r)
+        row['Agent Name (IMD)'] = recordImdName(r)
         row['Claim Raised'] = r.claimRaised ? 'Yes' : 'No'
         row['Claim Date'] = r.claimDate || ''
         row['Claim Remarks'] = r.claimRemarks || ''
@@ -541,7 +550,7 @@ const Search = () => {
                                     >
                                       <option value=''>All Client Names</option>
                                       {referencesList.map((r) => (
-                                        <option key={r._id} value={r.name}>{r.name}</option>
+                                        <option key={r._id} value={r._id}>{r.name}</option>
                                       ))}
                                     </select>
                                     <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
@@ -552,7 +561,7 @@ const Search = () => {
                                   </div>
                                   {filterReference && (
                                     <div className='mt-1.5 flex items-center justify-between'>
-                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{filterReference}</span>
+                                      <span className='text-[10px] font-bold text-blue-600 truncate max-w-[200px]'>{referenceNameById(filterReference)}</span>
                                       <button onClick={() => setFilterReference('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
                                         <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -575,7 +584,7 @@ const Search = () => {
                                     >
                                       <option value=''>All Agent names</option>
                                       {imdList.map((r) => (
-                                        <option key={r._id} value={r.name}>{r.name}</option>
+                                        <option key={r._id} value={r._id}>{r.name}</option>
                                       ))}
                                     </select>
                                     <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
@@ -586,7 +595,7 @@ const Search = () => {
                                   </div>
                                   {filterImd && (
                                     <div className='mt-1.5 flex items-center justify-between'>
-                                      <span className='text-[10px] font-bold text-purple-600 truncate max-w-[200px]'>{filterImd}</span>
+                                      <span className='text-[10px] font-bold text-purple-600 truncate max-w-[200px]'>{imdNameById(filterImd)}</span>
                                       <button onClick={() => setFilterImd('')} className='text-slate-400 hover:text-rose-500 transition-colors ml-1'>
                                         <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -816,7 +825,7 @@ const Search = () => {
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' />
                       </svg>
-                      {filterReference}
+                      {referenceNameById(filterReference)}
                       <button onClick={() => setFilterReference('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -829,7 +838,7 @@ const Search = () => {
                       <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z' />
                       </svg>
-                      {filterImd}
+                      {imdNameById(filterImd)}
                       <button onClick={() => setFilterImd('')} className='ml-0.5 hover:text-rose-500 transition-colors'>
                         <svg className='w-2.5 h-2.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M6 18L18 6M6 6l12 12' />
@@ -1014,14 +1023,14 @@ const Search = () => {
                                     {record.insuranceClass}
                                   </span>
                                 )}
-                                {filterType === 'Insurance' && record.reference && (
+                                {filterType === 'Insurance' && recordReferenceName(record) && (
                                   <span className='inline-flex items-center rounded-md bg-teal-50 px-2 py-0.5 text-[9px] font-black text-teal-700 ring-1 ring-inset ring-teal-700/10 whitespace-nowrap shadow-sm'>
-                                    {record.reference}
+                                    {recordReferenceName(record)}
                                   </span>
                                 )}
-                                {filterType === 'Insurance' && record.imd && (
+                                {filterType === 'Insurance' && recordImdName(record) && (
                                   <span className='inline-flex items-center rounded-md bg-purple-50 px-2 py-0.5 text-[9px] font-black text-purple-700 ring-1 ring-inset ring-purple-700/10 whitespace-nowrap shadow-sm'>
-                                    {record.imd}
+                                    {recordImdName(record)}
                                   </span>
                                 )}
                               </div>

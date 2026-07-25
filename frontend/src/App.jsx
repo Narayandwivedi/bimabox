@@ -24,6 +24,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
 import PricingPage from './pages/Pricing/PricingPage'
+import ReferralPage from './pages/ReferralPage'
 
 function AppContent() {
   const location = useLocation()
@@ -99,6 +100,7 @@ function AppContent() {
             <Route path='/privacy-policy' element={<PrivacyPolicy />} />
             <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
             <Route path='/contact-us' element={<ContactUs />} />
+            <Route path='/refer-and-earn' element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
           </Routes>
         </div>
       </div>

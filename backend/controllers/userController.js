@@ -1,5 +1,6 @@
 const User = require('../models/User')
 const UserPlan = require('../models/UserPlan')
+const Referral = require('../models/Referral')
 const bcrypt = require('bcryptjs')
 const whatsAppSessionManager = require('../services/whatsAppSessionManager')
 const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
@@ -13,6 +14,8 @@ const sanitizeUser = async (user) => {
     lastLogin: user.lastLogin || null,
     lastActivity: user.lastActivity || null,
     createdAt: user.createdAt,
+    referredByName: user.referredBy?.name || null,
+    referredByMobile: user.referredBy?.mobile || null,
   }
 
   try {
@@ -37,12 +40,18 @@ const sanitizeUser = async (user) => {
     base.planExpiry = null
   }
 
+  try {
+    base.totalReferrals = await Referral.countDocuments({ referrer: user._id, status: 'completed' })
+  } catch (_err) {
+    base.totalReferrals = 0
+  }
+
   return base
 }
 
 const listUsers = async (_req, res) => {
   try {
-    const users = await User.find({}).sort({ createdAt: -1 }).lean()
+    const users = await User.find({}).populate('referredBy', 'name mobile').sort({ createdAt: -1 }).lean()
     const sanitized = await Promise.all(users.map(sanitizeUser))
     res.json({ success: true, data: sanitized })
   } catch (error) {

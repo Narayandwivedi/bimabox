@@ -53,7 +53,7 @@ function UserPlansPage({ apiFetch }) {
                   <td style={{ fontWeight: 600 }}>{up.userId?.name || 'N/A'}</td>
                   <td>{up.userId?.mobile || 'N/A'}</td>
                   <td>
-                    <span className="status-pill" style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>
+                    <span className="status-pill" style={{ background: '#f0fdfa', color: '#0d9488', borderColor: '#99f6e4' }}>
                       {up.planId?.name || 'N/A'}
                     </span>
                   </td>

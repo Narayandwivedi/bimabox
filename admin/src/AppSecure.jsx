@@ -160,10 +160,15 @@ function AppSecure() {
   return (
     <div className="admin-shell">
       <aside className="sidebar">
-        <div>
-          <p className="eyebrow">Admin Panel</p>
-          <p className="section-text">{loginState.admin?.email || ''}</p>
+        <div className="sidebar-brand">
+          <div className="sidebar-brand-mark">BB</div>
+          <div className="sidebar-brand-text">
+            <p className="eyebrow">Bimabox Admin</p>
+            <p className="sidebar-brand-email">{loginState.admin?.email || ''}</p>
+          </div>
         </div>
+
+        <p className="sidebar-section-label">Menu</p>
 
         <nav className="sidebar-nav">
           <NavLink

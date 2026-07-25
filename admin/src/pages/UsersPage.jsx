@@ -9,6 +9,7 @@ function UsersPage({ apiFetch }) {
 
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [planFilter, setPlanFilter] = useState('')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [formData, setFormData] = useState(initialForm)
@@ -229,10 +230,13 @@ function UsersPage({ apiFetch }) {
     setMessage({ type: '', text: '' })
   }
 
+  const planFilterOptions = Array.from(new Set(users.map((user) => user.planName || 'Free')))
+
   const filteredUsers = users.filter((user) => {
     const query = searchTerm.trim().toLowerCase()
-    if (!query) return true
-    return [user.name, user.mobile].some((value) => String(value || '').toLowerCase().includes(query))
+    const matchesSearch = !query || [user.name, user.mobile].some((value) => String(value || '').toLowerCase().includes(query))
+    const matchesPlan = !planFilter || (user.planName || 'Free') === planFilter
+    return matchesSearch && matchesPlan
   })
 
   const formatTimeAgo = (date) => {
@@ -265,6 +269,16 @@ function UsersPage({ apiFetch }) {
                   placeholder="Search user"
                 />
               </div>
+              <select
+                value={planFilter}
+                onChange={(e) => setPlanFilter(e.target.value)}
+                style={{ height: '42px', borderRadius: '14px', border: '1px solid #cbd5e1', background: '#fff', padding: '0 14px', fontSize: '14px', fontWeight: '600', color: '#0f172a' }}
+              >
+                <option value="">All Plans</option>
+                {planFilterOptions.map((planName) => (
+                  <option key={planName} value={planName}>{planName}</option>
+                ))}
+              </select>
               <button type="button" className="secondary-btn" onClick={fetchUsers}>Refresh</button>
               <button type="button" className="primary-btn small-btn" onClick={openAddUserModal}>
                 Add User
@@ -285,6 +299,8 @@ function UsersPage({ apiFetch }) {
                     <th>Mobile</th>
                     <th>Plan</th>
                     <th>Expiry</th>
+                    <th>Referred By</th>
+                    <th>Total Referrals</th>
                     <th>Status</th>
                     <th>Last Login</th>
                     <th>Last Activity</th>
@@ -297,13 +313,17 @@ function UsersPage({ apiFetch }) {
                       <td>{user.name || 'N/A'}</td>
                       <td>{user.mobile || 'N/A'}</td>
                       <td>
-                        <span className="status-pill" style={{ background: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd' }}>
+                        <span className="status-pill" style={{ background: '#f0fdfa', color: '#0d9488', borderColor: '#99f6e4' }}>
                           {user.planName || 'Free'}
                         </span>
                       </td>
                       <td style={{ fontSize: '13px' }}>
                         {user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'No Expiry'}
                       </td>
+                      <td style={{ fontSize: '13px' }}>
+                        {user.referredByName ? `${user.referredByName}${user.referredByMobile ? ` (${user.referredByMobile})` : ''}` : '-'}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>{user.totalReferrals ?? 0}</td>
                       <td>
                         <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}

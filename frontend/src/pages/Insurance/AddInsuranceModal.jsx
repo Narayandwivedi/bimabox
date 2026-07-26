@@ -1266,11 +1266,11 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             <div className='bg-gradient-to-r from-emerald-50 to-lime-50 border-2 border-emerald-200 rounded-xl p-3 md:p-6 mb-4 md:mb-6'>
               <h3 className='text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4 flex items-center gap-2'>
                 <span className='bg-emerald-600 text-white w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm'>3</span>
-                Fee
+                Premium
               </h3>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4'>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>OD Fee (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>OD Premium (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1287,7 +1287,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   </div>
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Fee (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>TP Premium (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1304,7 +1304,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   </div>
                 </div>
                 <div>
-                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Net Fee (₹)</label>
+                  <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Net Premium (₹)</label>
                   <div className='relative'>
                     <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm'>₹</span>
                     <input
@@ -1322,7 +1322,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                 </div>
                 <div>
                   <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>
-                    Gross Fee (₹)
+                    Gross Premium (₹)
                     <span className='ml-1 text-xs text-emerald-600 font-normal'>Total incl. GST</span>
                   </label>
                   <div className='relative'>

@@ -20,6 +20,24 @@ const PremiumCalculator = () => {
   const [step, setStep] = useState(1)
   const [vehicleType, setVehicleType] = useState(null)
   const [result, setResult] = useState(null)
+  const [allConfigs, setAllConfigs] = useState({})
+
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+        const res = await fetch(`${backendUrl}/api/calculator/config`)
+        const data = await res.json()
+        if (data.success && data.configs) {
+          setAllConfigs(data.configs)
+        }
+      } catch (err) {
+        console.error('Failed to fetch backend calculator config:', err)
+      }
+    }
+    fetchConfigs()
+  }, [])
+
 
   const [zone, setZone] = useState('')
   const [vehicleAge, setVehicleAge] = useState('')
@@ -54,6 +72,11 @@ const PremiumCalculator = () => {
   const [paUnnamedPassenger, setPaUnnamedPassenger] = useState('')
   const [loadingDiscount, setLoadingDiscount] = useState('')
   const [depreciation, setDepreciation] = useState('')
+  const [customFieldValues, setCustomFieldValues] = useState({})
+
+  const activeCustomFields = (allConfigs[vehicleType]?.customFields || []).filter(f => f.isActive !== false && f.id !== 'restricted_tppd')
+
+
 
   const isPrivateOr2W = vehicleType === 'private_car' || vehicleType === 'two_wheeler'
   const isOdOnly = policyType === 'od'
@@ -120,12 +143,15 @@ const PremiumCalculator = () => {
     const passengerVal = parseInt(passengers) || 0
     const kwVal = parseFloat(kwPower) || 0
 
+    const vehicleConfig = allConfigs[vehicleType] || null
+    const imt23Rate = vehicleConfig?.extraRates?.imt23Rate ?? 15
+
     const calcFn = CALCULATORS[vehicleType]
     let { tpPremium = 0, odRate = 0, details = {} } = calcFn ? calcFn({
       isElectric, kwVal, ccVal, gvwVal, passengerVal,
       policyType, policyTerm, bundleTpTerm,
       vehicleAge, zone, subtype,
-    }) : {}
+    }, vehicleConfig) : {}
 
     let odPremium = 0
     let imt23Amount = 0
@@ -134,14 +160,87 @@ const PremiumCalculator = () => {
     let odDiscountAmount = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
+    // Process dynamic custom fields added from admin
+    let dynamicOdAmount = 0
+    let dynamicAddonAmount = 0
+    let dynamicTpAmount = 0
+    const dynamicCustomFieldsResult = []
+
+    activeCustomFields.forEach(field => {
+      const userVal = customFieldValues[field.id]
+      let amount = 0
+      const basicOd = depreciatedIdv * (odRate / 100)
+      const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0) + geoExtentAmount
+      const imtBase = basicOd + extras
+
+      if (field.fieldType === 'percent_of_od') {
+        const isSelected = userVal === 'yes' || (userVal !== undefined && userVal !== 'no' && userVal !== '' && userVal !== '0')
+        if (isSelected) {
+          const ratePct = (userVal !== 'yes' && !isNaN(parseFloat(userVal))) ? parseFloat(userVal) : (field.rate || 0)
+          amount = imtBase * (ratePct / 100)
+        }
+      } else if (field.fieldType === 'percent_of_idv') {
+        const isSelected = userVal === 'yes' || (userVal !== undefined && userVal !== '' && userVal !== '0')
+        if (isSelected) {
+          const ratePct = (userVal !== 'yes' && !isNaN(parseFloat(userVal))) ? parseFloat(userVal) : (field.rate || 0)
+          amount = depreciatedIdv * (ratePct / 100)
+        }
+      } else if (field.fieldType === 'fixed_amount') {
+        const isSelected = userVal === 'yes' || (userVal !== undefined && userVal !== '' && userVal !== '0')
+        if (isSelected) {
+          amount = (userVal !== 'yes' && !isNaN(parseFloat(userVal))) ? parseFloat(userVal) : (field.rate || 0)
+        }
+      }
+
+      if (amount > 0 || (userVal === 'yes' || (userVal !== undefined && userVal !== 'no' && userVal !== '' && userVal !== '0'))) {
+        if (amount > 0) {
+          dynamicCustomFieldsResult.push({
+            id: field.id,
+            label: field.label,
+            amount,
+            section: field.section || 'addon',
+          })
+
+          if (field.section === 'od') {
+            dynamicOdAmount += amount
+          } else if (field.section === 'tp') {
+            dynamicTpAmount += amount
+          } else {
+            dynamicAddonAmount += amount
+          }
+        }
+
+        // Check if this custom field also has a TP addition configured
+        if (field.hasTpAddition) {
+          let tpAddVal = 0
+          if (field.tpType === 'percent_of_tp') {
+            tpAddVal = tpPremium * ((field.tpRate || 0) / 100)
+          } else {
+            tpAddVal = Number(field.tpRate) || 0
+          }
+
+          if (tpAddVal > 0) {
+            dynamicTpAmount += tpAddVal
+            dynamicCustomFieldsResult.push({
+              id: `${field.id}_tp`,
+              label: `${field.label} (TP Addition)`,
+              amount: tpAddVal,
+              section: 'tp',
+            })
+          }
+        }
+      }
+    })
+
+
     if (vehicleType === 'private_car' || vehicleType === 'two_wheeler') {
       if (policyType !== 'tp' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
         const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
         const imtBase = basicOd + extras
-        imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
+        imt23Amount = imt23 === 'yes' ? imtBase * (imt23Rate / 100) : 0
         const bundleMul = policyType === 'bundle' ? (parseInt(bundleOdTerm) || 1) : 1
-        odBeforeDiscount = (imtBase + imt23Amount) * bundleMul
+        odBeforeDiscount = (imtBase + imt23Amount + dynamicOdAmount) * bundleMul
         odDiscountAmount = odBeforeDiscount * (odDiscountVal / 100)
         ncbAmount = (odBeforeDiscount - odDiscountAmount) * (ncb / 100)
         odPremium = odBeforeDiscount - odDiscountAmount - ncbAmount
@@ -154,8 +253,8 @@ const PremiumCalculator = () => {
                     + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0)
                     + geoExtentAmount
         const imtBase = basicOd + extras
-        imt23Amount = imt23 === 'yes' ? imtBase * 0.15 : 0
-        odBeforeDiscount = imtBase + imt23Amount
+        imt23Amount = imt23 === 'yes' ? imtBase * (imt23Rate / 100) : 0
+        odBeforeDiscount = imtBase + imt23Amount + dynamicOdAmount
         odDiscountAmount = odBeforeDiscount * (odDiscountVal / 100)
         ncbAmount = (odBeforeDiscount - odDiscountAmount) * (ncb / 100)
         odPremium = odBeforeDiscount - odDiscountAmount - ncbAmount
@@ -175,36 +274,34 @@ const PremiumCalculator = () => {
     let restrictedTPPDDiscount = 0
     if (restrictedTPPD === 'yes') {
       const tpYears = policyType === 'bundle' ? (parseInt(bundleTpTerm) || 1) : 1
-      if (vehicleType === 'gcv') restrictedTPPDDiscount = Math.min(tpPremium, 200 * tpYears)
-      else if (vehicleType === 'gcv_3w') restrictedTPPDDiscount = Math.min(tpPremium, 150 * tpYears)
-      else if (vehicleType === 'private_car') restrictedTPPDDiscount = Math.min(tpPremium, 100 * tpYears)
-      else if (vehicleType === 'two_wheeler') restrictedTPPDDiscount = Math.min(tpPremium, 50 * tpYears)
+      const defaultRestrictedVal = vehicleType === 'gcv' ? 200 : vehicleType === 'gcv_3w' ? 150 : vehicleType === 'private_car' ? 100 : 50
+      const restrictedRate = vehicleConfig?.tpRates?.restrictedTPPDDiscount ?? defaultRestrictedVal
+      restrictedTPPDDiscount = Math.min(tpPremium, restrictedRate * tpYears)
     }
     tpPremium -= restrictedTPPDDiscount
 
     const geoExtentTPAmount = (vehicleType === 'gcv' && geoExtentAmount > 0) ? 100 : 0
 
     const loadingDiscountPercent = parseFloat(loadingDiscount) || 0
-    const netPremiumBeforeLoading = odPremium + tpPremium + geoExtentTPAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
+    const netPremiumBeforeLoading = odPremium + tpPremium + dynamicTpAmount + dynamicAddonAmount + geoExtentTPAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
     const loadingAmount = netPremiumBeforeLoading * (loadingDiscountPercent / 100)
     const netPremium = netPremiumBeforeLoading + loadingAmount
 
     let gst = 0
     let gstTp = 0
     let gstNonTp = 0
-    let gstTpRate = 18
-    let gstNonTpRate = 18
-    const isGCV = vehicleType === 'gcv' || vehicleType === 'gcv_3w'
+    let gstTpRate = vehicleConfig?.gstTpRate ?? (vehicleType === 'gcv' || vehicleType === 'gcv_3w' ? 5 : 18)
+    let gstNonTpRate = vehicleConfig?.gstRate ?? 18
+    const isGCV = vehicleType === 'gcv' || vehicleType === 'gcv_3w' || gstTpRate !== gstNonTpRate
     if (isGCV) {
-      gstTpRate = 5
-      gstNonTpRate = 18
-      gstTp = tpPremium * 0.05
-      gstNonTp = (netPremium - tpPremium) * 0.18
+      gstTp = tpPremium * (gstTpRate / 100)
+      gstNonTp = (netPremium - tpPremium) * (gstNonTpRate / 100)
       gst = gstTp + gstNonTp
     } else {
-      gst = netPremium * 0.18
+      gst = netPremium * (gstNonTpRate / 100)
     }
     const totalPremium = netPremium + gst
+
 
     setResult({
       odPremium, odBeforeDiscount, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
@@ -215,12 +312,14 @@ const PremiumCalculator = () => {
       gst, gstTp, gstNonTp, gstTpRate, gstNonTpRate, totalPremium: Math.round(totalPremium),
       odRate, details, odDiscountVal, odDiscountAmount, ncbAmount,
       addODVal: details?.addOD || 0,
+      dynamicCustomFields: dynamicCustomFieldsResult,
     })
   }
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount, depreciation])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount, depreciation, customFieldValues])
+
 
   const formProps = {
     zone, setZone, vehicleAge, setVehicleAge, idv, setIdv,
@@ -249,6 +348,41 @@ const PremiumCalculator = () => {
       default: return null
     }
   }
+
+  const renderDynamicFieldInput = (field) => {
+    const isImt23 = field.id === 'imt23' || field.label.toLowerCase().includes('imt')
+    const displayLabel = isImt23
+      ? field.label
+      : `${field.label} ${field.fieldType === 'percent_of_od' ? `(${field.rate}% OD)` : field.fieldType === 'percent_of_idv' ? `(${field.rate}% IDV)` : `(₹)`}`
+    const yesOptionText = isImt23 ? 'Yes' : `Yes (${field.rate}% of OD)`
+
+    return (
+      <div key={field.id}>
+        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>
+          {displayLabel}
+        </label>
+        {field.fieldType === 'percent_of_od' ? (
+          <select
+            value={customFieldValues[field.id] || 'no'}
+            onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+          >
+            <option value="no">No</option>
+            <option value="yes">{yesOptionText}</option>
+          </select>
+        ) : (
+          <input
+            type='number'
+            value={customFieldValues[field.id] ?? ''}
+            onChange={e => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+            placeholder={`e.g. ${field.rate || 0}`}
+            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300'
+          />
+        )}
+      </div>
+    )
+  }
+
 
   return (
     <>
@@ -285,12 +419,19 @@ const PremiumCalculator = () => {
 
                 <div className='space-y-6'>
                   <div className='rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-[2px] shadow-lg shadow-indigo-200'>
-                    <div className='rounded-2xl bg-white p-5 sm:p-6'>
-                      <p className='mb-4 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
+                    <div className='rounded-2xl bg-white p-5 sm:p-6 space-y-4'>
+                      <p className='flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400'>
                         <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>
                         Own Damage & Premium Details
                       </p>
                       {renderForm()}
+
+                      {/* OD Section Custom Fields */}
+                      {activeCustomFields.filter(f => f.section === 'od').length > 0 && (
+                        <div className='grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100'>
+                          {activeCustomFields.filter(f => f.section === 'od').map(renderDynamicFieldInput)}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -322,7 +463,11 @@ const PremiumCalculator = () => {
                           <input type='number' value={otherAddon} onChange={e => setOtherAddon(e.target.value)} placeholder='e.g. 500'
                             className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                         </div>
+
+                        {/* Addon Section Custom Fields */}
+                        {activeCustomFields.filter(f => f.section === 'addon' || (!f.section && f.section !== 'tp' && f.section !== 'od')).map(renderDynamicFieldInput)}
                       </div>
+
                     </div>
                   </div>
                   )}
@@ -385,6 +530,9 @@ const PremiumCalculator = () => {
                             className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
                         </div>
                         )}
+
+                        {/* Third Party (TP) Section Custom Fields */}
+                        {activeCustomFields.filter(f => f.section === 'tp').map(renderDynamicFieldInput)}
                       </div>
                       <div className='flex items-center gap-3 pt-2'>
                         <span className='text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>GST (18%) included</span>
@@ -392,6 +540,7 @@ const PremiumCalculator = () => {
                     </div>
                   </div>
                   )}
+
 
                   {result && (
                     <ResultBox

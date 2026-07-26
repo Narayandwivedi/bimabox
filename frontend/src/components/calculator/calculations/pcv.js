@@ -3,13 +3,17 @@ import TARIFF from '../tariffData'
 export function calcPcv({
   subtype, passengerVal,
   vehicleAge, zone,
-}) {
-  const st = TARIFF.pcv.subtypes.find(s => s.id === subtype) || TARIFF.pcv.subtypes[0]
-  const addODEntry = TARIFF.pcv.addOD.find(a => passengerVal <= a.maxPsgr)
+}, config) {
+  const subtypes = config?.subtypes || TARIFF.pcv.subtypes
+  const odRates = config?.odRates || TARIFF.pcv.odRates
+  const addOD = config?.addOD || TARIFF.pcv.addOD
+
+  const st = subtypes.find(s => s.id === subtype) || subtypes[0]
+  const addODEntry = addOD.find(a => passengerVal <= a.maxPsgr)
   const addODVal = addODEntry?.extra || 350
   return {
     tpPremium: st.tpBase + (passengerVal * st.tpPerPsgr),
-    odRate: TARIFF.pcv.odRates[vehicleAge][zone],
+    odRate: odRates[vehicleAge][zone],
     addODVal,
     details: {
       label: st.label,

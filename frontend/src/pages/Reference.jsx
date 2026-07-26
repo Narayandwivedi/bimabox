@@ -139,8 +139,8 @@ const Reference = () => {
       await axios.delete(`${API_URL}/api/references/${id}`, { withCredentials: true })
       setReferences(prev => prev.filter(r => r._id !== id))
       toast.success('Client Name deleted')
-    } catch {
-      toast.error('Failed to delete Client Name')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete Client Name')
     }
   }
 

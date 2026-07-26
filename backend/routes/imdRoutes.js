@@ -68,14 +68,28 @@ router.post('/', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const imd = await IMD.findOneAndDelete({ _id: req.params.id, userId: req.user._id })
+    const imd = await IMD.findOne({ _id: req.params.id, userId: req.user._id })
     if (!imd) {
-      return res.status(404).json({ success: false, message: 'IMD not found' })
+      return res.status(404).json({ success: false, message: 'Agent name not found' })
     }
-    res.json({ success: true, message: 'IMD deleted' })
+
+    const linkedCount = await Insurance.countDocuments({
+      userId: req.user._id,
+      $or: [{ imdId: imd._id }, { imd: imd.name }]
+    })
+
+    if (linkedCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete agent "${imd.name}" because it is currently linked to ${linkedCount} policy record(s). Please edit or delete those policies first.`
+      })
+    }
+
+    await IMD.deleteOne({ _id: imd._id })
+    res.json({ success: true, message: 'Agent name deleted' })
   } catch (error) {
     console.error('Error deleting IMD:', error)
-    res.status(500).json({ success: false, message: 'Failed to delete IMD' })
+    res.status(500).json({ success: false, message: 'Failed to delete agent name' })
   }
 })
 

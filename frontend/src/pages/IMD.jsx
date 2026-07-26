@@ -136,8 +136,8 @@ const IMD = () => {
       await axios.delete(`${API_URL}/api/imd/${id}`, { withCredentials: true })
       setImds(prev => prev.filter(r => r._id !== id))
       toast.success('Agent name deleted')
-    } catch {
-      toast.error('Failed to delete Agent name')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete Agent name')
     }
   }
 

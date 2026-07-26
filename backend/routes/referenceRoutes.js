@@ -64,14 +64,28 @@ router.post('/', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    const reference = await Reference.findOneAndDelete({ _id: req.params.id, userId: req.user._id })
+    const reference = await Reference.findOne({ _id: req.params.id, userId: req.user._id })
     if (!reference) {
-      return res.status(404).json({ success: false, message: 'Reference not found' })
+      return res.status(404).json({ success: false, message: 'Client name not found' })
     }
-    res.json({ success: true, message: 'Reference deleted' })
+
+    const linkedCount = await Insurance.countDocuments({
+      userId: req.user._id,
+      $or: [{ referenceId: reference._id }, { reference: reference.name }]
+    })
+
+    if (linkedCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete client "${reference.name}" because it is currently linked to ${linkedCount} policy record(s). Please edit or delete those policies first.`
+      })
+    }
+
+    await Reference.deleteOne({ _id: reference._id })
+    res.json({ success: true, message: 'Client name deleted' })
   } catch (error) {
     console.error('Error deleting reference:', error)
-    res.status(500).json({ success: false, message: 'Failed to delete reference' })
+    res.status(500).json({ success: false, message: 'Failed to delete client name' })
   }
 })
 

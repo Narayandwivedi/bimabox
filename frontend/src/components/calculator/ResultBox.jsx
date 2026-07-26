@@ -3,6 +3,7 @@ import axios from 'axios'
 import { fmt, fmtD } from './helpers'
 import PdfPreviewModal from './PdfPreviewModal'
 import { useAuth } from '../../context/AuthContext'
+import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../../utils/insuranceCompanyCache'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -30,9 +31,9 @@ const ResultBox = ({
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
-      .then(res => { if (res.data?.success) setInsuranceCompanies(res.data.data) })
-      .catch(() => {})
+    getInsuranceCompanies(API_URL).then(data => setInsuranceCompanies(data || []))
+    const unsub = subscribeInsuranceCompanies(data => setInsuranceCompanies(data || []))
+    return () => unsub()
   }, [])
 
   if (!result) return null

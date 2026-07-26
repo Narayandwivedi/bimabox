@@ -11,12 +11,30 @@ function InsuranceCompaniesPage({ apiFetch }) {
   const [message, setMessage] = useState({ type: '', text: '' })
   const [saving, setSaving] = useState(false)
 
+  const notifyCompaniesUpdated = (data) => {
+    try {
+      localStorage.setItem('bimabox_insurance_companies', JSON.stringify({
+        date: new Date().toISOString().split('T')[0],
+        timestamp: Date.now(),
+        data: data
+      }))
+      window.dispatchEvent(new CustomEvent('insurance_companies_updated', { detail: data }))
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('bimabox_insurance_companies_channel')
+        bc.postMessage({ type: 'insurance_companies_updated', data: data })
+        bc.close()
+      }
+    } catch {}
+  }
+
   const fetchCompanies = async () => {
     try {
       setLoading(true)
       setMessage({ type: '', text: '' })
       const result = await apiFetch('/api/insurance-companies')
-      setCompanies(result.data || [])
+      const list = result.data || []
+      setCompanies(list)
+      notifyCompaniesUpdated(list)
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to fetch companies' })
     } finally {

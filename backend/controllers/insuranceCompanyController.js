@@ -1,7 +1,9 @@
 const InsuranceCompany = require('../models/InsuranceCompany')
+const Insurance = require('../models/Insurance')
 
 const getAll = async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
     const companies = await InsuranceCompany.find().sort({ name: 1 }).lean()
     res.json({ success: true, data: companies })
   } catch (error) {
@@ -33,14 +35,36 @@ const update = async (req, res) => {
     if (!name || !name.trim()) {
       return res.status(400).json({ success: false, message: 'Company name is required' })
     }
+
+    // Fetch the current doc first so we have the old name for cascading
+    const existing = await InsuranceCompany.findById(req.params.id).lean()
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Insurance company not found' })
+    }
+
+    const oldName = existing.name
+    const newName = name.trim()
+
     const company = await InsuranceCompany.findByIdAndUpdate(
       req.params.id,
-      { name: name.trim() },
+      { name: newName },
       { returnDocument: 'after', runValidators: true }
     ).lean()
+
     if (!company) {
       return res.status(404).json({ success: false, message: 'Insurance company not found' })
     }
+
+    // Cascade name change to ALL Insurance records that reference this company
+    // (either by ID or by old name string snapshot)
+    if (oldName !== newName) {
+      await Insurance.updateMany(
+        { $or: [{ insuranceCompanyId: company._id }, { insuranceCompany: oldName }] },
+        { $set: { insuranceCompany: newName, insuranceCompanyId: company._id } }
+      )
+      console.log(`[InsuranceCompany] Cascaded name "${oldName}" → "${newName}" across all Insurance records`)
+    }
+
     res.json({ success: true, data: company })
   } catch (error) {
     if (error.code === 11000) {

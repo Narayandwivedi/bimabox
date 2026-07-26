@@ -5,7 +5,7 @@ import { getTodayDate as utilGetTodayDate, handleSmartDateInput, normalizeAIExtr
 import { pdfToImages } from '../../utils/pdfToImages'
 import { enforceMobileNumberFormat } from '../../utils/contactValidation'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
-import { getInsuranceCompanies, initInsuranceCompanyCache } from '../../utils/insuranceCompanyCache'
+import { getInsuranceCompanies, initInsuranceCompanyCache, subscribeInsuranceCompanies } from '../../utils/insuranceCompanyCache'
 import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit'
 import AiLimitModal from '../../components/AiLimitModal'
 
@@ -500,27 +500,31 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   useEffect(() => {
     if (!isOpen) return
     setLoadingCompanies(true)
-    getInsuranceCompanies(API_URL)
-      .then(loaded => {
-        setInsuranceCompanies(loaded)
-        insuranceCompaniesRef.current = loaded
-        // Re-attempt matching if OCR ran before companies were loaded
-        if (pendingOcrCompanyName.current) {
-          const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
-          if (matched) {
-            setFormData(prev => ({ ...prev, insuranceCompany: matched.name, insuranceCompanyId: matched._id }))
-          }
-          pendingOcrCompanyName.current = null
+
+    const updateCompanies = (loaded) => {
+      setInsuranceCompanies(loaded)
+      insuranceCompaniesRef.current = loaded
+      if (pendingOcrCompanyName.current) {
+        const matched = normalizeInsuranceCompany(pendingOcrCompanyName.current, loaded)
+        if (matched) {
+          setFormData(prev => ({ ...prev, insuranceCompany: matched.name, insuranceCompanyId: matched._id }))
         }
-        // Legacy records only stored the company name — link them to a company id now that the list is loaded
-        setFormData(prev => {
-          if (prev.insuranceCompanyId || !prev.insuranceCompany) return prev
-          const legacyMatch = findCompanyByExactName(prev.insuranceCompany, loaded)
-          return legacyMatch ? { ...prev, insuranceCompanyId: legacyMatch._id } : prev
-        })
+        pendingOcrCompanyName.current = null
+      }
+      setFormData(prev => {
+        if (prev.insuranceCompanyId || !prev.insuranceCompany) return prev
+        const legacyMatch = findCompanyByExactName(prev.insuranceCompany, loaded)
+        return legacyMatch ? { ...prev, insuranceCompanyId: legacyMatch._id } : prev
       })
+    }
+
+    getInsuranceCompanies(API_URL, true)
+      .then(updateCompanies)
       .catch(() => {})
       .finally(() => setLoadingCompanies(false))
+
+    const unsubscribe = subscribeInsuranceCompanies(updateCompanies)
+    return () => unsubscribe()
   }, [isOpen])
 
   const handleChange = (e) => {

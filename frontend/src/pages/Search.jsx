@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import * as XLSX from 'xlsx'
+import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../utils/insuranceCompanyCache'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -129,11 +129,9 @@ const Search = () => {
         if (res.data.success) setImdList(res.data.data)
       })
       .catch(() => {})
-    axios.get(`${API_URL}/api/insurance-companies`, { withCredentials: true })
-      .then((res) => {
-        if (res.data.success) setCompaniesList(res.data.data)
-      })
-      .catch(() => {})
+    getInsuranceCompanies(API_URL).then((data) => setCompaniesList(data || []))
+    const unsub = subscribeInsuranceCompanies((data) => setCompaniesList(data || []))
+    return () => unsub()
   }, [])
 
   const companyNameById = useCallback((id) => companiesList.find(c => c._id === id)?.name || '', [companiesList])

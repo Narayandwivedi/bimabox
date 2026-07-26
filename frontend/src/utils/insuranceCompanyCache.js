@@ -1,18 +1,16 @@
 /**
- * Insurance Company Cache
+ * Insurance Company Cache & Synchronization Utility
  *
- * Caches the insurance companies list in localStorage so the modal can
- * display and match against the list instantly (without waiting for a
- * network round-trip), and refreshes the cache at most once per day.
+ * Provides optimistic instant UI loads via localStorage caching combined with
+ * Stale-While-Revalidate background fetching and cross-tab event broadcasting.
  *
  * Cache key: bimabox_insurance_companies
- * Cache shape: { date: "YYYY-MM-DD", data: [...companies] }
- *
- * The midnight refresh is scheduled automatically when this module is first
- * imported, so any page that loads this module will keep the cache fresh.
+ * Cache shape: { date: "YYYY-MM-DD", timestamp: 123456789, data: [...companies] }
  */
 
 const CACHE_KEY = 'bimabox_insurance_companies'
+const EVENT_NAME = 'insurance_companies_updated'
+const CHANNEL_NAME = 'bimabox_insurance_companies_channel'
 
 /** Returns today's date string in YYYY-MM-DD format (local time). */
 const todayStr = () => {
@@ -34,86 +32,176 @@ const readCache = () => {
   }
 }
 
-/** Write a fresh cache entry to localStorage. */
+/** Notify open windows and subscribers that insurance companies changed. */
+const broadcastUpdate = (companies) => {
+  if (typeof window === 'undefined') return
+
+  // 1. Dispatch custom DOM event in current tab
+  try {
+    window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: companies }))
+  } catch {
+    // ignore
+  }
+
+  // 2. Broadcast across tabs via BroadcastChannel if available
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const bc = new BroadcastChannel(CHANNEL_NAME)
+      bc.postMessage({ type: EVENT_NAME, data: companies })
+      bc.close()
+    } catch {
+      // ignore
+    }
+  }
+}
+
+/** Write a fresh cache entry to localStorage and broadcast event. */
 const writeCache = (companies) => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ date: todayStr(), data: companies }))
+    const currentCached = readCache()
+    const isDifferent = JSON.stringify(currentCached?.data) !== JSON.stringify(companies)
+
+    localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ date: todayStr(), timestamp: Date.now(), data: companies })
+    )
+
+    if (isDifferent) {
+      broadcastUpdate(companies)
+    }
   } catch {
     // localStorage may be full or disabled — silently ignore
   }
 }
 
-/** Force-fetch companies from the backend and update the cache. */
+/** Force-fetch companies from the backend, update cache, and broadcast update. */
 export const refreshInsuranceCompaniesCache = async (apiUrl) => {
-  const res = await fetch(`${apiUrl}/api/insurance-companies`, { credentials: 'include' })
-  const json = await res.json()
-  if (json?.success && Array.isArray(json.data)) {
-    writeCache(json.data)
-    return json.data
+  if (!apiUrl) return getInsuranceCompaniesSync()
+  try {
+    const res = await fetch(`${apiUrl}/api/insurance-companies`, {
+      credentials: 'include',
+    })
+    const json = await res.json()
+    if (json?.success && Array.isArray(json.data)) {
+      writeCache(json.data)
+      return json.data
+    }
+  } catch (err) {
+    console.warn('[InsuranceCompanyCache] Fetch failed:', err.message)
   }
-  return []
+  return getInsuranceCompaniesSync()
 }
 
 /**
  * Returns the insurance companies list.
  *
- * - If a fresh cache exists (fetched today), returns it synchronously via
- *   the resolved Promise (no network request).
- * - Otherwise fetches from the backend, updates the cache, and returns the list.
+ * Uses Stale-While-Revalidate:
+ * - If cached data exists, returns it immediately for fast UI rendering,
+ *   while revalidating in the background to fetch any updates.
+ * - If no cache exists or forceFetch is true, awaits fresh data from the server.
  *
- * @param {string} apiUrl  Backend base URL (e.g. "http://localhost:5000")
+ * @param {string} apiUrl Backend base URL
+ * @param {boolean} forceFetch Force immediate network fetch
  * @returns {Promise<Array>}
  */
-export const getInsuranceCompanies = async (apiUrl) => {
+export const getInsuranceCompanies = async (apiUrl, forceFetch = false) => {
   const cached = readCache()
-  if (cached && cached.date === todayStr() && Array.isArray(cached.data) && cached.data.length > 0) {
+  if (cached && Array.isArray(cached.data) && cached.data.length > 0 && !forceFetch) {
+    // Trigger background revalidation asynchronously
+    refreshInsuranceCompaniesCache(apiUrl).catch(() => {})
     return cached.data
   }
   return refreshInsuranceCompaniesCache(apiUrl)
 }
 
 /**
- * Returns the cached list synchronously (may be empty [] if not yet fetched).
- * Useful for optimistic reads before the async fetch completes.
+ * Returns the cached list synchronously (returns [] if empty or uninitialized).
  */
 export const getInsuranceCompaniesSync = () => {
   const cached = readCache()
-  if (cached && cached.date === todayStr() && Array.isArray(cached.data)) {
+  if (cached && Array.isArray(cached.data)) {
     return cached.data
   }
   return []
 }
 
 /**
- * Schedule a midnight cache refresh.
- * Called once when this module is first imported.
- * Each refresh schedules the next one, keeping the cache perpetually fresh.
+ * Invalidate local cache explicitly.
  */
-const scheduleMidnightRefresh = (apiUrl) => {
+export const invalidateInsuranceCompanyCache = () => {
+  try {
+    localStorage.removeItem(CACHE_KEY)
+    broadcastUpdate([])
+  } catch {}
+}
+
+/**
+ * Subscribe to real-time updates when the insurance company list is updated.
+ *
+ * @param {Function} callback Called with fresh companies list when updated
+ * @returns {Function} Unsubscribe function
+ */
+export const subscribeInsuranceCompanies = (callback) => {
+  if (typeof window === 'undefined') return () => {}
+
+  const handleCustomEvent = (e) => {
+    if (e.detail && Array.isArray(e.detail)) {
+      callback(e.detail)
+    } else {
+      callback(getInsuranceCompaniesSync())
+    }
+  }
+
+  const handleStorageEvent = (e) => {
+    if (e.key === CACHE_KEY) {
+      callback(getInsuranceCompaniesSync())
+    }
+  }
+
+  window.addEventListener(EVENT_NAME, handleCustomEvent)
+  window.addEventListener('storage', handleStorageEvent)
+
+  let bc
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      bc = new BroadcastChannel(CHANNEL_NAME)
+      bc.onmessage = (e) => {
+        if (e.data?.type === EVENT_NAME && Array.isArray(e.data?.data)) {
+          callback(e.data.data)
+        } else {
+          callback(getInsuranceCompaniesSync())
+        }
+      }
+    } catch {}
+  }
+
+  return () => {
+    window.removeEventListener(EVENT_NAME, handleCustomEvent)
+    window.removeEventListener('storage', handleStorageEvent)
+    if (bc) {
+      try { bc.close() } catch {}
+    }
+  }
+}
+
+/**
+ * Schedule a periodic cache refresh.
+ * Keeps cache up to date automatically.
+ */
+const schedulePeriodicRefresh = (apiUrl) => {
   const now = new Date()
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1, 0) // 00:01 next day
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 1, 0)
   const msUntilMidnight = midnight.getTime() - now.getTime()
 
   setTimeout(async () => {
     if (!apiUrl) return
     try {
       await refreshInsuranceCompaniesCache(apiUrl)
-      console.log('[InsuranceCompanyCache] Midnight refresh completed.')
-    } catch (err) {
-      console.warn('[InsuranceCompanyCache] Midnight refresh failed:', err.message)
-    }
-    // Schedule the next midnight refresh
-    scheduleMidnightRefresh(apiUrl)
+    } catch {}
+    schedulePeriodicRefresh(apiUrl)
   }, msUntilMidnight)
 }
 
-/**
- * Bootstrap the midnight scheduler.
- * Call this once from your app entry point (or let the modal call it on first load).
- * Passing apiUrl here so the scheduler knows where to fetch from.
- *
- * @param {string} apiUrl
- */
 export const initInsuranceCompanyCache = (apiUrl) => {
-  scheduleMidnightRefresh(apiUrl)
+  schedulePeriodicRefresh(apiUrl)
 }

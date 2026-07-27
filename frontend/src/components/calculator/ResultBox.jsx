@@ -288,7 +288,7 @@ const ResultBox = ({
         businessAddress: user?.address || '',
         businessServices: user?.modeOfBusiness || [],
         businessPicture: user?.picture || '',
-        insuranceCompany,
+        insuranceCompany: insuranceCompany?.name || '',
         insuranceCompanyId: insuranceCompany?._id || null,
         premiums: {
           odRate: result.odRate,

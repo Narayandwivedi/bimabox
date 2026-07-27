@@ -120,6 +120,7 @@ const normalizeProductType = (productType, availableProductTypes = []) => {
 const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEditMode = false, prefilledVehicleNumber = '', prefilledOwnerName = '', initialExtractionFile = null }) => {
   const isManualMode = isEditMode || !initialExtractionFile
   const isOcrUpdate = useRef(false)
+  const [usedAiExtraction, setUsedAiExtraction] = useState(false)
   const { checkLimit, limitModalOpen, closeLimitModal, used: aiUsed, limit: aiLimit } = useAiLimit()
   const processedInitialFile = useRef(false)
   const userEditedValidTo = useRef(false)
@@ -326,6 +327,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       })
       processedInitialFile.current = false
       userEditedValidTo.current = false
+      setUsedAiExtraction(false)
     }
   }, [initialData, isOpen, prefilledVehicleNumber, prefilledOwnerName])
 
@@ -651,6 +653,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
             const resultData = response.data.data
             isOcrUpdate.current = true
             applyOcrResult(resultData)
+            setUsedAiExtraction(true)
             setTimeout(() => { isOcrUpdate.current = false }, 200)
             setUploadedInsuranceDocument(prev => {
               if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
@@ -693,6 +696,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                   const resultData = visionResponse.data.data
                   isOcrUpdate.current = true
                   applyOcrResult(resultData)
+                  setUsedAiExtraction(true)
                   setTimeout(() => { isOcrUpdate.current = false }, 500)
                   setUploadedInsuranceDocument(prev => {
                     if (prev?.revokeOnCleanup && prev.previewUrl) URL.revokeObjectURL(prev.previewUrl)
@@ -964,7 +968,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       imdId: formData.imdId || null,
       claimRaised: formData.claimRaised,
       claimDate: formData.claimDate,
-      claimRemarks: formData.claimRemarks
+      claimRemarks: formData.claimRemarks,
+      viaAI: usedAiExtraction
     }
 
     try {

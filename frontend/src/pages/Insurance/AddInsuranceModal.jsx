@@ -6,6 +6,7 @@ import { pdfToImages } from '../../utils/pdfToImages'
 import { enforceMobileNumberFormat } from '../../utils/contactValidation'
 import DocumentScannerPreview from '../../components/DocumentScannerPreview'
 import { getInsuranceCompanies, initInsuranceCompanyCache, subscribeInsuranceCompanies } from '../../utils/insuranceCompanyCache'
+import { getProductTypes, initProductTypeCache, subscribeProductTypes } from '../../utils/productTypeCache'
 import { useAiLimit, invalidateAiLimitCache } from '../../utils/useAiLimit'
 import AiLimitModal from '../../components/AiLimitModal'
 
@@ -13,13 +14,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 // Bootstrap the midnight cache-refresh scheduler once when this module loads
 initInsuranceCompanyCache(API_URL)
-
-
-const PRODUCT_TYPE_OPTIONS = [
-  'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
-  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC',
-  'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND'
-]
+initProductTypeCache(API_URL)
 
 const resolveStoredDocumentPreview = (documentPath) => {
   if (!documentPath) return null
@@ -108,11 +103,14 @@ const PRODUCT_TYPE_KEYWORD_MAP = [
   { value: 'SECURITY BOND', keywords: ['security bond', 'surety bond'] }
 ]
 
-const normalizeProductType = (productType) => {
+const normalizeProductType = (productType, availableProductTypes = []) => {
   if (!productType) return ''
   const cleaned = productType.trim().toLowerCase()
-  const directMatch = PRODUCT_TYPE_OPTIONS.find(p => p.toLowerCase() === cleaned)
-  if (directMatch) return directMatch
+  const directMatch = availableProductTypes.find(p => {
+    const name = typeof p === 'string' ? p : p.name
+    return name && name.toLowerCase() === cleaned
+  })
+  if (directMatch) return typeof directMatch === 'string' ? directMatch : directMatch.name
   for (const entry of PRODUCT_TYPE_KEYWORD_MAP) {
     if (entry.keywords.some(k => cleaned.includes(k))) return entry.value
   }
@@ -145,6 +143,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     insuranceCompanyId: '',
     insuranceClass: '',
     product: '',
+    productTypeId: '',
     vehicleClass: '',
     remarks: '',
     reference: '',
@@ -189,6 +188,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
   const insuranceCompaniesRef = useRef([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
   const pendingOcrCompanyName = useRef(null) // stores raw OCR company name if companies weren't loaded yet
+
+  const [productTypes, setProductTypes] = useState([])
+  const productTypesRef = useRef([])
 
   const createNewEndorsement = (file = null, existingUrl = '', name = '') => {
     const isPdf = file 
@@ -247,6 +249,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
         insuranceCompanyId: initialData.insuranceCompanyId || '',
         insuranceClass: initialData.insuranceClass || '',
         product: initialData.product || '',
+        productTypeId: initialData.productTypeId || '',
         vehicleClass: initialData.vehicleClass || '',
         remarks: initialData.remarks || '',
         reference: initialData.reference || '',
@@ -527,6 +530,21 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     return () => unsubscribe()
   }, [isOpen])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const updateProductTypes = (loaded) => {
+      setProductTypes(loaded)
+      productTypesRef.current = loaded
+    }
+
+    getProductTypes(API_URL, true)
+      .then(updateProductTypes)
+      .catch(() => {})
+
+    const unsubscribe = subscribeProductTypes(updateProductTypes)
+    return () => unsubscribe()
+  }, [isOpen])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     if (name === 'vehicleNumber') {
@@ -535,6 +553,15 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
     }
     if (name === 'policyNumber') {
       setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }))
+      return
+    }
+    if (name === 'product') {
+      const match = productTypesRef.current.find(p => (typeof p === 'string' ? p : p.name) === value)
+      setFormData(prev => ({
+        ...prev,
+        product: value,
+        productTypeId: (typeof match === 'object' && match?._id) ? match._id : ''
+      }))
       return
     }
     if (name === 'issueDate' || name === 'validFrom' || name === 'validTo' || name === 'tpValidFrom' || name === 'tpValidTo') {
@@ -592,8 +619,9 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
           return
         }
         if (key === 'product') {
-          const normalized = normalizeProductType(value)
+          const normalized = normalizeProductType(value, productTypesRef.current)
           if (normalized) updated[key] = normalized
+          else updated[key] = value
           return
         }
         if (key === 'premium' || key === 'odPremium' || key === 'tpPremium' || key === 'netPremium') {
@@ -927,6 +955,7 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
       insuranceCompanyId: formData.insuranceCompanyId || null,
       insuranceClass: formData.insuranceClass,
       product: formData.product,
+      productTypeId: formData.productTypeId || null,
       vehicleClass: formData.vehicleClass,
       remarks: formData.remarks,
       reference: formData.reference,
@@ -1060,9 +1089,13 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                     <label className='block text-xs md:text-sm font-semibold text-gray-700 mb-1'>Product Type</label>
                     <select name='product' value={formData.product} onChange={handleChange} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white'>
                       <option value="">Select Product Type</option>
-                      {PRODUCT_TYPE_OPTIONS.map(product => (
-                        <option key={product} value={product}>{product}</option>
-                      ))}
+                      {formData.product && !productTypes.some(p => (typeof p === 'string' ? p : p.name) === formData.product) && (
+                        <option value={formData.product}>{formData.product}</option>
+                      )}
+                      {productTypes.map(p => {
+                        const name = typeof p === 'string' ? p : p.name
+                        return <option key={p._id || name} value={name}>{name}</option>
+                      })}
                     </select>
                   </div>
 

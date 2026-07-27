@@ -79,6 +79,7 @@ app.use('/api/upload', uploadRoutes)
 app.use('/api/whatsapp', whatsAppRoutes)
 app.use('/api/calculator', require('./routes/calculatorRoutes'))
 app.use('/api/insurance-companies', require('./routes/insuranceCompanyRoutes'))
+app.use('/api/product-types', require('./routes/productTypeRoutes'))
 app.use('/api/subscription-plans', require('./routes/subscriptionPlanRoutes'))
 app.use('/api/user-plans', require('./routes/userPlanRoutes'))
 app.use('/api/referral', require('./routes/referralRoutes'))
@@ -91,6 +92,7 @@ mongoose
 
     await seedDefaultPlansIfMissing()
     await applyFreePlanOneYearValidity()
+    await require('./controllers/productTypeController').seedDefaultProductTypes()
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)

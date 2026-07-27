@@ -8,9 +8,10 @@ import UserPlansPage from './pages/UserPlansPage'
 import WhatsAppPage from './pages/WhatsAppPage'
 import SettingsPage from './pages/SettingsPage'
 import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
+import ProductTypesPage from './pages/ProductTypesPage'
 import ReferralsPage from './pages/ReferralsPage'
 import CalculatorConfigPage from './pages/CalculatorConfigPage'
-import { UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
+import { UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
 
 
 const initialLoginForm = {
@@ -218,6 +219,13 @@ function AppSecure() {
             Insurance Companies
           </NavLink>
           <NavLink
+            to="/product-types"
+            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
+          >
+            <ProductTypesIcon />
+            Product Types
+          </NavLink>
+          <NavLink
             to="/calculator-config"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
@@ -247,6 +255,7 @@ function AppSecure() {
           <Route path="/referrals" element={<ReferralsPage apiFetch={wrappedApiFetch} />} />
           <Route path="/whatsapp" element={<WhatsAppPage apiFetch={wrappedApiFetch} />} />
           <Route path="/insurance-companies" element={<InsuranceCompaniesPage apiFetch={wrappedApiFetch} />} />
+          <Route path="/product-types" element={<ProductTypesPage apiFetch={wrappedApiFetch} />} />
           <Route path="/calculator-config" element={<CalculatorConfigPage apiFetch={wrappedApiFetch} />} />
           <Route path="/settings" element={<SettingsPage apiFetch={wrappedApiFetch} onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/users" replace />} />

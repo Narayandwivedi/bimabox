@@ -84,6 +84,7 @@ app.use('/api/subscription-plans', require('./routes/subscriptionPlanRoutes'))
 app.use('/api/user-plans', require('./routes/userPlanRoutes'))
 app.use('/api/referral', require('./routes/referralRoutes'))
 app.use('/api/wallet', require('./routes/walletRoutes'))
+app.use('/api/admin-dashboard', require('./routes/adminDashboardRoutes'))
 
 mongoose
   .connect(MONGODB_URI)

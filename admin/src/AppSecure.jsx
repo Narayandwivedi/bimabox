@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import { apiFetch, AuthError } from './utils/api'
+import DashboardPage from './pages/DashboardPage'
 import UsersPage from './pages/UsersPage'
 import PlansPage from './pages/PlansPage'
 import UserPlansPage from './pages/UserPlansPage'
@@ -11,7 +12,7 @@ import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
 import ProductTypesPage from './pages/ProductTypesPage'
 import ReferralsPage from './pages/ReferralsPage'
 import CalculatorConfigPage from './pages/CalculatorConfigPage'
-import { UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
+import { DashboardIcon, UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
 
 
 const initialLoginForm = {
@@ -95,7 +96,7 @@ function AppSecure() {
         await checkAdminAuth()
       }
       setLoginForm(initialLoginForm)
-      navigate('/users')
+      navigate('/dashboard')
     } catch (error) {
       alert(error.message || 'Login failed')
       setLoginState((prev) => ({ ...prev, submitting: false, error: error.message || 'Login failed' }))
@@ -177,6 +178,13 @@ function AppSecure() {
 
         <nav className="sidebar-nav">
           <NavLink
+            to="/dashboard"
+            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
+          >
+            <DashboardIcon />
+            Dashboard
+          </NavLink>
+          <NavLink
             to="/users"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
@@ -249,6 +257,7 @@ function AppSecure() {
 
       <div className="content-area">
         <Routes>
+          <Route path="/dashboard" element={<DashboardPage apiFetch={wrappedApiFetch} />} />
           <Route path="/users" element={<UsersPage apiFetch={wrappedApiFetch} />} />
           <Route path="/plans" element={<PlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/user-plans" element={<UserPlansPage apiFetch={wrappedApiFetch} />} />
@@ -258,7 +267,7 @@ function AppSecure() {
           <Route path="/product-types" element={<ProductTypesPage apiFetch={wrappedApiFetch} />} />
           <Route path="/calculator-config" element={<CalculatorConfigPage apiFetch={wrappedApiFetch} />} />
           <Route path="/settings" element={<SettingsPage apiFetch={wrappedApiFetch} onLogout={handleLogout} />} />
-          <Route path="*" element={<Navigate to="/users" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
 
       </div>

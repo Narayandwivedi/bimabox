@@ -104,7 +104,7 @@ fitnessSchema.index({ validTo: 1 })
 // Index 3: createdAt (for default sorting - newest first)
 fitnessSchema.index({ createdAt: -1 })
 
-const Fitness = mongoose.model('Fitness', fitnessSchema)
+const Fitness = mongoose.models.Fitness || mongoose.model('Fitness', fitnessSchema)
 
 module.exports = Fitness
 

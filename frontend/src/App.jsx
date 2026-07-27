@@ -17,6 +17,7 @@ import Search from './pages/Search'
 import BottomNavigation from './components/BottomNavigation'
 import PremiumCalculator from './pages/PremiumCalculator'
 import KycPage from './pages/Kyc/KycPage'
+import KycDetail from './pages/Kyc/KycDetail'
 import Renewals from './pages/Renewals'
 import Reference from './pages/Reference'
 import IMD from './pages/IMD'
@@ -91,6 +92,7 @@ function AppContent() {
             <Route path='/rto-documents/:type/:id' element={<ProtectedRoute><RTODocumentDetail /></ProtectedRoute>} />
             <Route path='/premium-calculator' element={<ProtectedRoute><PremiumCalculator /></ProtectedRoute>} />
             <Route path='/kyc' element={<ProtectedRoute><KycPage /></ProtectedRoute>} />
+            <Route path='/kyc/:id' element={<ProtectedRoute><KycDetail /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
             <Route path='/pricing' element={<PricingPage />} />
             <Route path='/references' element={<Navigate to='/client-name' replace />} />

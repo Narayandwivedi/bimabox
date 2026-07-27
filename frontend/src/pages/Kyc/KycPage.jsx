@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
@@ -18,6 +19,8 @@ const emptyDoc = () => ({
 })
 
 const KycPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -25,8 +28,6 @@ const KycPage = () => {
   const [editingRecord, setEditingRecord] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [previewTitle, setPreviewTitle] = useState('')
-  const [showViewModal, setShowViewModal] = useState(false)
-  const [viewRecord, setViewRecord] = useState(null)
 
   const [form, setForm] = useState({
     name: '',
@@ -37,6 +38,14 @@ const KycPage = () => {
   useEffect(() => {
     fetchRecords()
   }, [search])
+
+  useEffect(() => {
+    const editId = location.state?.editId
+    if (!editId || records.length === 0) return
+    const record = records.find(r => r._id === editId)
+    if (record) openEditModal(record)
+    navigate(location.pathname, { replace: true, state: {} })
+  }, [location.state, records])
 
   const fetchRecords = async () => {
     try {
@@ -147,16 +156,6 @@ const KycPage = () => {
     }
   }
 
-  const openViewModal = (record) => {
-    setViewRecord(record)
-    setShowViewModal(true)
-  }
-
-  const closeViewModal = () => {
-    setShowViewModal(false)
-    setViewRecord(null)
-  }
-
   const openPreview = (url, title) => {
     setPreviewUrl(url)
     setPreviewTitle(title)
@@ -247,7 +246,7 @@ const KycPage = () => {
                             <p className='text-[11px] text-slate-400 mt-0.5'>{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
                           </div>
                           <div className='flex gap-1 flex-shrink-0 ml-2'>
-                            <button onClick={() => openViewModal(record)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
+                            <button onClick={() => navigate(`/kyc/${record._id}`)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
                               <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
@@ -279,7 +278,7 @@ const KycPage = () => {
                             <p className='text-[11px] text-slate-400 mt-0.5'>{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
                           </div>
                           <div className='flex gap-1 flex-shrink-0 ml-2'>
-                            <button onClick={() => openViewModal(record)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
+                            <button onClick={() => navigate(`/kyc/${record._id}`)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
                               <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
@@ -306,76 +305,6 @@ const KycPage = () => {
           </div>
         </section>
       </main>
-
-      {showViewModal && viewRecord && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4' onClick={closeViewModal}>
-          <div className='bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto max-h-[85vh] overflow-hidden flex flex-col' onClick={e => e.stopPropagation()}>
-            <div className='bg-gradient-to-r from-indigo-600 to-blue-600 p-4 text-white flex-shrink-0'>
-              <div className='flex justify-between items-center'>
-                <div>
-                  <h2 className='text-lg font-bold'>{viewRecord.name || 'KYC Details'}</h2>
-                  <p className='text-indigo-100 text-xs mt-0.5'>{viewRecord.remarks || 'Client KYC details'}</p>
-                </div>
-                <button onClick={closeViewModal} className='text-white hover:bg-white/20 rounded-lg p-1.5 transition cursor-pointer'>
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className='p-5 space-y-3 overflow-y-auto'>
-              {getRecordDocs(viewRecord).length === 0 ? (
-                <p className='text-sm text-slate-400 text-center py-6'>No documents added.</p>
-              ) : (
-                getRecordDocs(viewRecord).map((d, i) => (
-                  <div key={i} className='rounded-xl border border-slate-200 p-3'>
-                    <div className='flex items-center justify-between mb-1.5'>
-                      <span className='text-sm font-bold text-slate-700'>
-                        {d.documentType}{d.documentType === 'Other' && d.otherDocumentType ? ` (${d.otherDocumentType})` : ''}
-                      </span>
-                      {d.documentNumber && <span className='text-xs font-mono text-slate-500'>{d.documentNumber}</span>}
-                    </div>
-                    <div className='flex gap-3'>
-                      {d.documentFrontImg ? (
-                        <button onClick={() => openPreview(d.documentFrontImg.startsWith('http') ? d.documentFrontImg : `${API_URL}${d.documentFrontImg}`, `${d.documentType} Front`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                          Front
-                          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                          </svg>
-                        </button>
-                      ) : (
-                        <span className='text-xs text-slate-300'>No front image</span>
-                      )}
-                      {d.documentBackImg ? (
-                        <button onClick={() => openPreview(d.documentBackImg.startsWith('http') ? d.documentBackImg : `${API_URL}${d.documentBackImg}`, `${d.documentType} Back`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                          Back
-                          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                          </svg>
-                        </button>
-                      ) : (
-                        <span className='text-xs text-slate-300'>No back image</span>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className='border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3 flex-shrink-0'>
-              <button type='button' onClick={closeViewModal} className='px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 cursor-pointer'>Close</button>
-              <button
-                type='button'
-                onClick={() => { closeViewModal(); openEditModal(viewRecord) }}
-                className='px-6 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition cursor-pointer'
-              >
-                Edit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showModal && (
         <div className='fixed inset-0 bg-black/60 z-[60] flex items-start md:items-center justify-center p-3 pt-16 md:p-4'>

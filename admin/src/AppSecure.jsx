@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import { apiFetch, AuthError } from './utils/api'
 import DashboardPage from './pages/DashboardPage'
+import PolicySearchPage from './pages/PolicySearchPage'
 import UsersPage from './pages/UsersPage'
 import PlansPage from './pages/PlansPage'
 import UserPlansPage from './pages/UserPlansPage'
@@ -12,7 +13,7 @@ import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
 import ProductTypesPage from './pages/ProductTypesPage'
 import ReferralsPage from './pages/ReferralsPage'
 import CalculatorConfigPage from './pages/CalculatorConfigPage'
-import { DashboardIcon, UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
+import { DashboardIcon, PolicySearchIcon, UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
 
 
 const initialLoginForm = {
@@ -192,6 +193,13 @@ function AppSecure() {
             User
           </NavLink>
           <NavLink
+            to="/policy-search"
+            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
+          >
+            <PolicySearchIcon />
+            Policy Search
+          </NavLink>
+          <NavLink
             to="/plans"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
@@ -259,6 +267,7 @@ function AppSecure() {
         <Routes>
           <Route path="/dashboard" element={<DashboardPage apiFetch={wrappedApiFetch} />} />
           <Route path="/users" element={<UsersPage apiFetch={wrappedApiFetch} />} />
+          <Route path="/policy-search" element={<PolicySearchPage apiFetch={wrappedApiFetch} />} />
           <Route path="/plans" element={<PlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/user-plans" element={<UserPlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/referrals" element={<ReferralsPage apiFetch={wrappedApiFetch} />} />

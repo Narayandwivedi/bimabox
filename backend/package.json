@@ -7,6 +7,7 @@
     "start": "node index.js",
     "dev": "node index.js",
     "create-admin": "node scripts/createAdmin.js",
+    "seed:product-types": "node scripts/seedProductTypes.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

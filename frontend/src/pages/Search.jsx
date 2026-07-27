@@ -2,16 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../utils/insuranceCompanyCache'
+import { getProductTypes, subscribeProductTypes } from '../utils/productTypeCache'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const PAGE_SIZE = 40
-
-const PRODUCT_TYPES = [
-  'GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W',
-  'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC',
-  'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND'
-]
 
 const POLICY_TYPES = [
   'Comprehensive', 'Third Party'
@@ -64,6 +59,7 @@ const Search = () => {
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [imdList, setImdList] = useState([])
   const [companiesList, setCompaniesList] = useState([])
+  const [productTypesList, setProductTypesList] = useState([])
   const filterPanelRef = useRef(null)
   const debounceRef = useRef(null)
 
@@ -81,7 +77,13 @@ const Search = () => {
       const params = { search: q, limit: PAGE_SIZE, page: pageNum }
       if (type === 'Insurance') {
         if (company) params.insuranceCompanyId = company
-        if (productType) params.product = productType
+        if (productType) {
+          params.product = productType
+          const matchedP = productTypesList.find(p => (typeof p === 'string' ? p : p.name) === productType)
+          if (matchedP && typeof matchedP === 'object' && matchedP._id) {
+            params.productTypeId = matchedP._id
+          }
+        }
         if (policyType) params.insuranceClass = policyType
         if (referenceId) params.referenceId = referenceId
         if (imdId) params.imdId = imdId
@@ -130,8 +132,15 @@ const Search = () => {
       })
       .catch(() => {})
     getInsuranceCompanies(API_URL).then((data) => setCompaniesList(data || []))
-    const unsub = subscribeInsuranceCompanies((data) => setCompaniesList(data || []))
-    return () => unsub()
+    const unsubCompanies = subscribeInsuranceCompanies((data) => setCompaniesList(data || []))
+
+    getProductTypes(API_URL).then((data) => setProductTypesList(data || []))
+    const unsubProductTypes = subscribeProductTypes((data) => setProductTypesList(data || []))
+
+    return () => {
+      unsubCompanies()
+      unsubProductTypes()
+    }
   }, [])
 
   const companyNameById = useCallback((id) => companiesList.find(c => c._id === id)?.name || '', [companiesList])
@@ -478,10 +487,11 @@ const Search = () => {
                                       onChange={(e) => setFilterProductType(e.target.value)}
                                       className='w-full appearance-none rounded-xl border-2 border-slate-200 bg-white py-2 lg:py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
                                     >
-                                      <option value=''>All Product Types</option>
-                                      {PRODUCT_TYPES.map(p => (
-                                        <option key={p} value={p}>{p}</option>
-                                      ))}
+                                       <option value=''>All Product Types</option>
+                                       {productTypesList.map(p => {
+                                         const name = typeof p === 'string' ? p : p.name
+                                         return <option key={p._id || name} value={name}>{name}</option>
+                                       })}
                                     </select>
                                     <div className='pointer-events-none absolute inset-y-0 right-2.5 flex items-center'>
                                       <svg className='w-3.5 h-3.5 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

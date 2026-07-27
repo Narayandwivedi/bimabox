@@ -39,8 +39,7 @@ const InsuranceSchema = new mongoose.Schema({
 
   vehicleClass: {
     type: String,
-    trim: true,
-    enum: ['GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W', 'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC', 'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND', '']
+    trim: true
   },
 
   insuranceClass: {
@@ -51,8 +50,13 @@ const InsuranceSchema = new mongoose.Schema({
 
   product: {
     type: String,
-    trim: true,
-    enum: ['GCV', 'GCV-3W', 'Pvt. Car', 'Taxi', 'Two Wheeler', 'Mis-D', 'PCV', 'PCV-3W', 'Health', 'Life', 'Fire', 'Burglary', 'WC', 'CPM', 'Travel', 'Marine', 'GPA', 'GMC', 'CAR', 'IAR', 'EAR', 'SCHOOL BUS', 'LIABILITY', 'SECURITY BOND', '']
+    trim: true
+  },
+
+  productTypeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProductType',
+    index: true
   },
 
   // Vehicle Information

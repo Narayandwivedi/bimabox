@@ -201,41 +201,57 @@ const createRecordController = (config) => {
   } = config
 
   const Reference = require('../models/Reference')
-const IMD = require('../models/IMD')
+  const IMD = require('../models/IMD')
+  const ProductType = require('../models/ProductType')
 
-const enrichPayloadWithIds = async (payload, userId) => {
-  if (payload.reference && !payload.referenceId) {
-    const escaped = payload.reference.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const match = await Reference.findOne({
-      userId,
-      name: { $regex: new RegExp(`^${escaped}$`, 'i') }
-    }).lean()
-    if (match) {
-      payload.referenceId = match._id
+  const enrichPayloadWithIds = async (payload, userId) => {
+    if (payload.reference && !payload.referenceId) {
+      const escaped = payload.reference.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const match = await Reference.findOne({
+        userId,
+        name: { $regex: new RegExp(`^${escaped}$`, 'i') }
+      }).lean()
+      if (match) {
+        payload.referenceId = match._id
+      }
+    } else if (payload.referenceId && !payload.reference) {
+      const match = await Reference.findOne({ userId, _id: payload.referenceId }).lean()
+      if (match) {
+        payload.reference = match.name
+      }
     }
-  } else if (payload.referenceId && !payload.reference) {
-    const match = await Reference.findOne({ userId, _id: payload.referenceId }).lean()
-    if (match) {
-      payload.reference = match.name
+
+    if (payload.imd && !payload.imdId) {
+      const escaped = payload.imd.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const match = await IMD.findOne({
+        userId,
+        name: { $regex: new RegExp(`^${escaped}$`, 'i') }
+      }).lean()
+      if (match) {
+        payload.imdId = match._id
+      }
+    } else if (payload.imdId && !payload.imd) {
+      const match = await IMD.findOne({ userId, _id: payload.imdId }).lean()
+      if (match) {
+        payload.imd = match.name
+      }
+    }
+
+    if (payload.product && !payload.productTypeId) {
+      const escaped = payload.product.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const match = await ProductType.findOne({
+        name: { $regex: new RegExp(`^${escaped}$`, 'i') }
+      }).lean()
+      if (match) {
+        payload.productTypeId = match._id
+      }
+    } else if (payload.productTypeId && !payload.product) {
+      const match = await ProductType.findById(payload.productTypeId).lean()
+      if (match) {
+        payload.product = match.name
+      }
     }
   }
-
-  if (payload.imd && !payload.imdId) {
-    const escaped = payload.imd.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const match = await IMD.findOne({
-      userId,
-      name: { $regex: new RegExp(`^${escaped}$`, 'i') }
-    }).lean()
-    if (match) {
-      payload.imdId = match._id
-    }
-  } else if (payload.imdId && !payload.imd) {
-    const match = await IMD.findOne({ userId, _id: payload.imdId }).lean()
-    if (match) {
-      payload.imd = match.name
-    }
-  }
-}
 
 const listRecords = async (req, res, filterType = 'all') => {
     try {
@@ -245,6 +261,11 @@ const listRecords = async (req, res, filterType = 'all') => {
 
       const targetReference = req.query.referenceId ? await Reference.findOne({ _id: req.query.referenceId, userId: req.user._id }).lean() : null
       const targetImd = req.query.imdId ? await IMD.findOne({ _id: req.query.imdId, userId: req.user._id }).lean() : null
+      const targetProductType = req.query.productTypeId
+        ? await ProductType.findById(req.query.productTypeId).lean()
+        : (req.query.product
+            ? await ProductType.findOne({ name: { $regex: new RegExp(`^${req.query.product.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }).lean()
+            : null)
 
       const rawRecords = await Model.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean()
 
@@ -264,8 +285,14 @@ const listRecords = async (req, res, filterType = 'all') => {
           if (req.query.insuranceCompanyId && String(record.insuranceCompanyId || '') !== req.query.insuranceCompanyId) {
             return false
           }
-          if (req.query.product && record.product !== req.query.product) {
-            return false
+          if (req.query.productTypeId || req.query.product) {
+            const queryId = req.query.productTypeId || (targetProductType ? targetProductType._id.toString() : null)
+            const queryName = req.query.product || (targetProductType ? targetProductType.name : null)
+
+            const matchesId = queryId && record.productTypeId?.toString() === queryId
+            const matchesName = queryName && record.product && record.product.trim().toLowerCase() === queryName.trim().toLowerCase()
+
+            if (!matchesId && !matchesName) return false
           }
           if (req.query.insuranceClass && record.insuranceClass !== req.query.insuranceClass) {
             return false

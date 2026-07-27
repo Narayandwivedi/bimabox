@@ -683,6 +683,41 @@ tbody tr:hover {
   padding: 8px 12px;
 }
 
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+}
+
+.view-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.view-toggle-btn:hover {
+  background: #f1f5f9;
+}
+
+.view-toggle-btn-active {
+  background: #0f172a;
+  color: #fff;
+}
+
+.view-toggle-btn-active:hover {
+  background: #0f172a;
+}
+
 .toggle-row {
   display: flex;
   align-items: center;

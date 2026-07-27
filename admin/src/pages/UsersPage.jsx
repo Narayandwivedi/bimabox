@@ -10,6 +10,7 @@ function UsersPage({ apiFetch }) {
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [planFilter, setPlanFilter] = useState('')
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('usersPageViewMode') || 'table')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [formData, setFormData] = useState(initialForm)
@@ -22,6 +23,7 @@ function UsersPage({ apiFetch }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
   const [accessingUserId, setAccessingUserId] = useState(null)
+  const [togglingUserId, setTogglingUserId] = useState(null)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [historyPlans, setHistoryPlans] = useState([])
   const [historyUserName, setHistoryUserName] = useState('')
@@ -172,6 +174,33 @@ function UsersPage({ apiFetch }) {
     }
   }
 
+  const handleToggleActive = async (user) => {
+    const nextActive = !(user.isActive !== false)
+    const confirmMsg = nextActive
+      ? `Reactivate ${user.name || 'this user'}?`
+      : `Deactivate ${user.name || 'this user'}? They will no longer be able to log in.`
+    if (!window.confirm(confirmMsg)) return
+
+    try {
+      setTogglingUserId(user._id)
+      await apiFetch(`/api/users/${user._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: user.name,
+          mobile: user.mobile,
+          isActive: nextActive,
+        }),
+      })
+      setUsers((prev) => prev.map((u) => (u._id === user._id ? { ...u, isActive: nextActive } : u)))
+    } catch (error) {
+      console.error('Error toggling user active state:', error)
+      alert(error.message || 'Failed to update user status')
+    } finally {
+      setTogglingUserId(null)
+    }
+  }
+
   const handleAccessUser = async (user) => {
     try {
       setAccessingUserId(user._id)
@@ -230,6 +259,11 @@ function UsersPage({ apiFetch }) {
     setMessage({ type: '', text: '' })
   }
 
+  const changeViewMode = (mode) => {
+    setViewMode(mode)
+    localStorage.setItem('usersPageViewMode', mode)
+  }
+
   const planFilterOptions = Array.from(new Set(users.map((user) => user.planName || 'Free')))
 
   const filteredUsers = users.filter((user) => {
@@ -279,6 +313,24 @@ function UsersPage({ apiFetch }) {
                   <option key={planName} value={planName}>{planName}</option>
                 ))}
               </select>
+              <div className="view-toggle" role="group" aria-label="View mode">
+                <button
+                  type="button"
+                  className={`view-toggle-btn ${viewMode === 'table' ? 'view-toggle-btn-active' : ''}`}
+                  onClick={() => changeViewMode('table')}
+                  title="Table view"
+                >
+                  ☰ Table
+                </button>
+                <button
+                  type="button"
+                  className={`view-toggle-btn ${viewMode === 'card' ? 'view-toggle-btn-active' : ''}`}
+                  onClick={() => changeViewMode('card')}
+                  title="Card view"
+                >
+                  ▦ Card
+                </button>
+              </div>
               <button type="button" className="secondary-btn" onClick={fetchUsers}>Refresh</button>
               <button type="button" className="primary-btn small-btn" onClick={openAddUserModal}>
                 Add User
@@ -290,6 +342,88 @@ function UsersPage({ apiFetch }) {
             <div className="empty-state">Loading users...</div>
           ) : filteredUsers.length === 0 ? (
             <div className="empty-state">No users found.</div>
+          ) : viewMode === 'table' ? (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Plan / Expiry</th>
+                    <th>Referred By / Total Referrals</th>
+                    <th>Last Login / Activity</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr key={user._id}>
+                      <td>
+                        <div style={{ fontWeight: 700 }}>{user.name || 'N/A'}</div>
+                        {user.email ? <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{user.email}</div> : null}
+                        <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{user.mobile || 'N/A'}</div>
+                      </td>
+                      <td>
+                        <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
+                          {user.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '13px' }}>
+                        <div>
+                          <span className="status-pill" style={{ background: '#f0fdfa', color: '#0d9488', borderColor: '#99f6e4' }}>
+                            {user.planName || 'Free'}
+                          </span>
+                        </div>
+                        <div style={{ marginTop: '4px' }}>{user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'No Expiry'}</div>
+                      </td>
+                      <td style={{ fontSize: '13px' }}>
+                        <div>{user.referredByName ? `${user.referredByName}${user.referredByMobile ? ` (${user.referredByMobile})` : ''}` : '-'}</div>
+                        <div>Total Referrals: {user.totalReferrals ?? 0}</div>
+                      </td>
+                      <td style={{ fontSize: '13px' }}>
+                        <div>Login: {formatTimeAgo(user.lastLogin)}</div>
+                        <div>Activity: {formatTimeAgo(user.lastActivity)}</div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="secondary-btn table-btn"
+                              style={{ borderColor: '#6ee7b7', color: '#065f46' }}
+                              onClick={() => handleAccessUser(user)}
+                              disabled={accessingUserId === user._id}
+                            >
+                              {accessingUserId === user._id ? 'Redirecting...' : 'Access'}
+                            </button>
+                            <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
+                              Edit
+                            </button>
+                            <button type="button" className="secondary-btn table-btn" onClick={() => openPlanHistory(user)}>
+                              History
+                            </button>
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <button type="button" className="secondary-btn table-btn" style={{ borderColor: '#fca5a5', color: '#b91c1c' }} onClick={() => openResetPasswordModal(user)}>
+                              Reset Password
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary-btn table-btn"
+                              style={user.isActive !== false ? { borderColor: '#fca5a5', color: '#b91c1c' } : { borderColor: '#6ee7b7', color: '#065f46' }}
+                              onClick={() => handleToggleActive(user)}
+                              disabled={togglingUserId === user._id}
+                            >
+                              {togglingUserId === user._id ? 'Updating...' : user.isActive !== false ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="user-cards-grid">
               {filteredUsers.map((user) => (
@@ -297,6 +431,7 @@ function UsersPage({ apiFetch }) {
                   <div className="user-card-header">
                     <div>
                       <p className="user-card-name">{user.name || 'N/A'}</p>
+                      {user.email ? <p style={{ fontSize: '12px', fontWeight: 500, color: '#64748b', margin: '2px 0 0' }}>{user.email}</p> : null}
                       <p className="user-card-mobile">{user.mobile || 'N/A'}</p>
                     </div>
                     <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
@@ -306,54 +441,56 @@ function UsersPage({ apiFetch }) {
 
                   <div className="user-card-body">
                     <div className="user-card-field">
-                      <span>Plan</span>
+                      <span>Plan / Expiry</span>
                       <strong>
                         <span className="status-pill" style={{ background: '#f0fdfa', color: '#0d9488', borderColor: '#99f6e4' }}>
                           {user.planName || 'Free'}
                         </span>
+                        {' '}({user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'No Expiry'})
                       </strong>
                     </div>
                     <div className="user-card-field">
-                      <span>Expiry</span>
-                      <strong>{user.planExpiry ? new Date(user.planExpiry).toLocaleDateString() : 'No Expiry'}</strong>
+                      <span>Referred By / Total Referrals</span>
+                      <strong>{user.referredByName ? `${user.referredByName}${user.referredByMobile ? ` (${user.referredByMobile})` : ''}` : '-'} / {user.totalReferrals ?? 0}</strong>
                     </div>
                     <div className="user-card-field">
-                      <span>Referred By</span>
-                      <strong>{user.referredByName ? `${user.referredByName}${user.referredByMobile ? ` (${user.referredByMobile})` : ''}` : '-'}</strong>
-                    </div>
-                    <div className="user-card-field">
-                      <span>Total Referrals</span>
-                      <strong>{user.totalReferrals ?? 0}</strong>
-                    </div>
-                    <div className="user-card-field">
-                      <span>Last Login</span>
-                      <strong>{formatTimeAgo(user.lastLogin)}</strong>
-                    </div>
-                    <div className="user-card-field">
-                      <span>Last Activity</span>
-                      <strong>{formatTimeAgo(user.lastActivity)}</strong>
+                      <span>Last Login / Activity</span>
+                      <strong>{formatTimeAgo(user.lastLogin)} / {formatTimeAgo(user.lastActivity)}</strong>
                     </div>
                   </div>
 
-                  <div className="user-card-actions">
-                    <button
-                      type="button"
-                      className="secondary-btn table-btn"
-                      style={{ borderColor: '#6ee7b7', color: '#065f46' }}
-                      onClick={() => handleAccessUser(user)}
-                      disabled={accessingUserId === user._id}
-                    >
-                      {accessingUserId === user._id ? 'Redirecting...' : 'Access'}
-                    </button>
-                    <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
-                      Edit
-                    </button>
-                    <button type="button" className="secondary-btn table-btn" onClick={() => openPlanHistory(user)}>
-                      History
-                    </button>
-                    <button type="button" className="secondary-btn table-btn" style={{ borderColor: '#fca5a5', color: '#b91c1c' }} onClick={() => openResetPasswordModal(user)}>
-                      Reset Password
-                    </button>
+                  <div className="user-card-actions" style={{ flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                      <button
+                        type="button"
+                        className="secondary-btn table-btn"
+                        style={{ borderColor: '#6ee7b7', color: '#065f46' }}
+                        onClick={() => handleAccessUser(user)}
+                        disabled={accessingUserId === user._id}
+                      >
+                        {accessingUserId === user._id ? 'Redirecting...' : 'Access'}
+                      </button>
+                      <button type="button" className="secondary-btn table-btn" onClick={() => openEditUserModal(user)}>
+                        Edit
+                      </button>
+                      <button type="button" className="secondary-btn table-btn" onClick={() => openPlanHistory(user)}>
+                        History
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                      <button type="button" className="secondary-btn table-btn" style={{ borderColor: '#fca5a5', color: '#b91c1c' }} onClick={() => openResetPasswordModal(user)}>
+                        Reset Password
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-btn table-btn"
+                        style={user.isActive !== false ? { borderColor: '#fca5a5', color: '#b91c1c' } : { borderColor: '#6ee7b7', color: '#065f46' }}
+                        onClick={() => handleToggleActive(user)}
+                        disabled={togglingUserId === user._id}
+                      >
+                        {togglingUserId === user._id ? 'Updating...' : user.isActive !== false ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

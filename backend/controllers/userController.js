@@ -10,6 +10,7 @@ const sanitizeUser = async (user) => {
     _id: user._id,
     name: user.name || '',
     mobile: user.mobile || '',
+    email: user.email || '',
     isActive: user.isActive !== false,
     lastLogin: user.lastLogin || null,
     lastActivity: user.lastActivity || null,

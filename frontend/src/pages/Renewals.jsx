@@ -25,6 +25,7 @@ const Renewals = () => {
   const [statusFilter, setStatusFilter] = useState('pending')
   const [financialYear, setFinancialYear] = useState('')
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
+  const [tabCounts, setTabCounts] = useState({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
   const [confirmModal, setConfirmModal] = useState(null)
   const [renewalUploadPrefill, setRenewalUploadPrefill] = useState(null)
   const [showUploadOptions, setShowUploadOptions] = useState(false)
@@ -37,26 +38,27 @@ const Renewals = () => {
 
   useEffect(() => {
     setFinancialYear('')
-    fetchRenewals('', docType)
+    fetchRenewals('', docType, statusFilter)
   }, [docType])
 
   useEffect(() => {
-    fetchRenewals(financialYear, docType)
-  }, [financialYear])
+    fetchRenewals(financialYear, docType, statusFilter)
+  }, [financialYear, statusFilter])
 
-  const fetchRenewals = async (fy = '', type = docType) => {
+  const fetchRenewals = async (fy = '', type = docType, status = statusFilter) => {
     try {
       setLoading(true)
       const endpoint = (DOCUMENT_TYPES.find((d) => d.value === type) || DOCUMENT_TYPES[0]).endpoint
-      const params = {}
+      const params = { status }
       if (fy) params.financialYear = fy
-      // Dedicated endpoint — only fetches records relevant for renewals
+      // Dedicated endpoint — only fetches records for the active tab's status, no pagination
       const response = await axios.get(`${API_URL}${endpoint}/renewals`, {
         withCredentials: true,
         params,
       })
       if (response.data?.success) {
         setPolicies(response.data.data)
+        if (response.data.counts) setTabCounts(response.data.counts)
         if (response.data.financialYears) setAvailableFinancialYears(response.data.financialYears)
       }
     } catch (err) {
@@ -81,13 +83,9 @@ const Renewals = () => {
         { status },
         { withCredentials: true }
       )
-      setPolicies((prev) =>
-        prev.map((p) =>
-          p._id === id
-            ? { ...p, renewalStatus: status, renewalStatusChangedAt: new Date().toISOString() }
-            : p
-        )
-      )
+      // Record no longer belongs to the active tab's status — drop it and refresh counts
+      setPolicies((prev) => prev.filter((p) => p._id !== id))
+      fetchRenewals(financialYear, docType, statusFilter)
       if (status === 'renewed' && docType === 'Insurance') {
         const renewedPolicy = policies.find((p) => p._id === id)
         setRenewalUploadPrefill({
@@ -101,13 +99,10 @@ const Renewals = () => {
     }
   }
 
+  // Backend already scopes `policies` to the active tab's status; only the
+  // pending tab needs a further client-side narrowing by expiry window.
   const filteredPolicies = policies.filter((p) => {
-    const s = p.renewalStatus || 'pending'
-    if (statusFilter === 'renewed') return s === 'renewed'
-    if (statusFilter === 'opportunity') return s === 'opportunity'
-    if (statusFilter === 'lost') return s === 'lost'
-    // Pending tab: show expired (within 60 days past) OR expiring within expiryFilter days
-    if (s !== 'pending') return false
+    if (statusFilter !== 'pending') return true
     const isExpired = p.daysLeft < 0
     const isExpiringSoon = p.daysLeft >= 0 && p.daysLeft <= expiryFilter
     return isExpired || isExpiringSoon
@@ -122,26 +117,16 @@ const Renewals = () => {
     return dateB - dateA
   })
 
-  // Count badges for tabs
+  // Count badges for tabs come from the server (counts across all statuses, not just the active tab)
   const expiredPendingCount = policies.filter(
     (p) => (p.renewalStatus || 'pending') === 'pending' && p.daysLeft < 0
   ).length
 
-  const pendingCount = policies.filter((p) => {
-    const s = p.renewalStatus || 'pending'
-    if (s !== 'pending') return false
-    return (p.daysLeft < 0) || (p.daysLeft >= 0 && p.daysLeft <= expiryFilter)
-  }).length
-
-  const renewedCount = policies.filter((p) => p.renewalStatus === 'renewed').length
-  const opportunityCount = policies.filter((p) => p.renewalStatus === 'opportunity').length
-  const lostCount = policies.filter((p) => p.renewalStatus === 'lost').length
-
   const statusTabs = [
-    { key: 'pending', label: 'Pending', count: pendingCount },
-    { key: 'renewed', label: 'Renewed', count: renewedCount },
-    { key: 'opportunity', label: 'Opportunity', count: opportunityCount },
-    { key: 'lost', label: 'Lost', count: lostCount },
+    { key: 'pending', label: 'Pending', count: tabCounts.pending },
+    { key: 'renewed', label: 'Renewed', count: tabCounts.renewed },
+    { key: 'opportunity', label: 'Opportunity', count: tabCounts.opportunity },
+    { key: 'lost', label: 'Lost', count: tabCounts.lost },
   ]
 
   const handleExport = () => {

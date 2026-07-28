@@ -233,14 +233,12 @@ const Setting = () => {
                 <div className='px-6 pb-6 pt-0 text-center relative'>
                   {/* Overlapping Avatar */}
                   <div className='relative h-24 w-24 mx-auto -mt-12 mb-4'>
-                    <div className='h-full w-full rounded-[24px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[3px] shadow-xl'>
-                      <div className='h-full w-full rounded-[21px] bg-white flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl shadow-inner'>
-                        {user?.picture ? (
-                          <img src={resolvePictureUrl(user.picture)} alt={user.name} className='h-full w-full object-cover' />
-                        ) : (
-                          user?.name?.charAt(0) || 'U'
-                        )}
-                      </div>
+                    <div className='h-full w-full rounded-full flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl bg-slate-100'>
+                      {user?.picture ? (
+                        <img src={resolvePictureUrl(user.picture)} alt={user.name} className='h-full w-full object-cover' />
+                      ) : (
+                        user?.name?.charAt(0) || 'U'
+                      )}
                     </div>
                     <span className='absolute bottom-1 right-1 flex h-4 w-4'>
                       <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75'></span>
@@ -726,19 +724,17 @@ const Setting = () => {
             <div className='p-6 space-y-4 overflow-y-auto flex-1 min-h-0'>
               <div className='flex justify-center'>
                 <div className='relative h-24 w-24'>
-                  <div className='h-full w-full rounded-[24px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[3px] shadow-xl'>
-                    <div className='h-full w-full rounded-[21px] bg-white flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl shadow-inner'>
-                      {uploadingPicture ? (
-                        <svg className='h-6 w-6 animate-spin text-indigo-500' fill='none' viewBox='0 0 24 24'>
-                          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
-                          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
-                        </svg>
-                      ) : editPicture ? (
-                        <img src={resolvePictureUrl(editPicture)} alt={editName} className='h-full w-full object-cover' />
-                      ) : (
-                        editName?.charAt(0) || 'U'
-                      )}
-                    </div>
+                  <div className='h-full w-full rounded-full flex items-center justify-center overflow-hidden font-black text-slate-800 text-3xl bg-slate-100'>
+                    {uploadingPicture ? (
+                      <svg className='h-6 w-6 animate-spin text-indigo-500' fill='none' viewBox='0 0 24 24'>
+                        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                        <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z' />
+                      </svg>
+                    ) : editPicture ? (
+                      <img src={resolvePictureUrl(editPicture)} alt={editName} className='h-full w-full object-cover' />
+                    ) : (
+                      editName?.charAt(0) || 'U'
+                    )}
                   </div>
                   <label
                     htmlFor='profile-picture-upload'

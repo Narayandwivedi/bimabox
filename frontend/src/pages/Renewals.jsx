@@ -6,18 +6,11 @@ import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
-// Generate Indian financial years: from (currentFY - 4) to (currentFY + 1)
-const generateIndianFYOptions = () => {
+// Helper: current Indian financial year (Apr–Mar)
+const getCurrentIndianFY = () => {
   const now = new Date()
-  const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-  const years = []
-  for (let y = currentFY + 1; y >= currentFY - 4; y--) {
-    years.push(y)
-  }
-  return years
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
 }
-
-const ALL_FY_OPTIONS = generateIndianFYOptions()
 
 // Document type -> API base + field mapping so the same Renewals view can drive any type.
 const DOCUMENT_TYPES = [
@@ -48,11 +41,7 @@ const Renewals = () => {
 
   const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
 
-  // Merge backend-provided FY years with locally-generated ones so we always have options
-  const mergedFYOptions = [
-    ...new Set([...availableFinancialYears, ...ALL_FY_OPTIONS])
-  ].sort((a, b) => b - a)
-
+  // fetchRenewals: pass explicit fy/type/status to avoid stale closure issues
   const fetchRenewals = useCallback(async (fy, type, status) => {
     try {
       setLoading(true)
@@ -75,21 +64,38 @@ const Renewals = () => {
     }
   }, [])
 
-  // When document type changes: reset state and set default FY immediately
+  // When document type changes:
+  // 1. Reset all state
+  // 2. Fetch with no FY filter to discover which FYs have real documents
+  // 3. Once backend returns financialYears, auto-select the best one
+  const fyInitialisedForType = useRef(null)
+
   useEffect(() => {
+    fyInitialisedForType.current = null
     setAvailableFinancialYears([])
     setPolicies([])
     setTabCounts({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
-    const now = new Date()
-    const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-    setFinancialYear(String(currentFY))
-  }, [docType])
+    setFinancialYear('') // '' = All FY during discovery fetch
+    fetchRenewals('', docType, statusFilter)
+  }, [docType]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch data whenever FY or status filter changes
-  // Note: docType changes are handled by the reset effect above which updates financialYear,
-  // which in turn triggers this effect.
+  // Once we have the list of available FY years from backend, pick the best default:
+  // prefer the current Indian FY; if not present, pick the latest available year.
   useEffect(() => {
-    if (!financialYear) return // wait until FY is set by the reset effect
+    if (fyInitialisedForType.current === docType) return // already set a default
+    if (!availableFinancialYears.length) return
+    fyInitialisedForType.current = docType
+    const currentFY = getCurrentIndianFY()
+    const best = availableFinancialYears.includes(currentFY)
+      ? currentFY
+      : availableFinancialYears[0] // array is sorted desc, so [0] is the latest
+    setFinancialYear(String(best))
+  }, [availableFinancialYears, docType])
+
+  // Fetch whenever FY selection or status tab changes
+  useEffect(() => {
+    // Skip the empty-FY discovery fetch (handled by docType effect above)
+    if (financialYear === '') return
     fetchRenewals(financialYear, docType, statusFilter)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [financialYear, statusFilter])
@@ -231,15 +237,16 @@ const Renewals = () => {
                 </div>
               </div>
 
-              {/* Financial Year filter */}
+              {/* Financial Year filter - only shows FYs with actual documents */}
               <div className='relative'>
                 <select
                   value={financialYear}
                   onChange={(e) => setFinancialYear(e.target.value)}
-                  className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-1.5 pl-3 pr-7 text-[10px] font-bold text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
+                  disabled={availableFinancialYears.length === 0}
+                  className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-1.5 pl-3 pr-7 text-[10px] font-bold text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-wait'
                 >
                   <option value=''>All FY</option>
-                  {mergedFYOptions.map((y) => (
+                  {availableFinancialYears.map((y) => (
                     <option key={y} value={String(y)}>FY {y}-{String(y + 1).slice(2)}</option>
                   ))}
                 </select>

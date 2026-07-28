@@ -7,6 +7,7 @@ module.exports = createRecordController({
   Model: Gps,
   expiryField: 'validTo',
   requiredDateField: 'validFrom',
+  fyDateField: 'validFrom',
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'ownerName', 'mobileNumber'],
   stringFields: ['vehicleNumber', 'ownerName', 'mobileNumber', 'validFrom', 'validTo', 'gpsDocument'],

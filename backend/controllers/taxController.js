@@ -7,6 +7,7 @@ module.exports = createRecordController({
   Model: Tax,
   expiryField: 'taxTo',
   requiredDateField: 'taxFrom',
+  fyDateField: 'taxFrom',
   expiringDays: 15,
   searchFields: ['vehicleNumber', 'ownerName', 'mobileNumber'],
   stringFields: ['vehicleNumber', 'ownerName', 'mobileNumber', 'taxFrom', 'taxTo', 'taxDocument'],

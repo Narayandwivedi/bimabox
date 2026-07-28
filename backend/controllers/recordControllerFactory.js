@@ -198,6 +198,9 @@ const createRecordController = (config) => {
     searchFields,
     balanceField,
     paidField,
+    // fyDateField: the date field used for Indian FY bucketing in the renewals view.
+    // Insurance uses 'issueDate'; other types use their start date (validFrom, taxFrom, etc.)
+    fyDateField,
   } = config
 
   const Reference = require('../models/Reference')
@@ -532,7 +535,6 @@ const listRecords = async (req, res, filterType = 'all') => {
       // Helper: parse DD/MM/YYYY or DD-MM-YYYY into a Date object
       const parseFYDate = (dateValue) => {
         if (!dateValue) return null
-        // Split on either slash or dash
         const parts = dateValue.trim().split(/[\/\-]/)
         if (parts.length !== 3) return null
         const day = parseInt(parts[0], 10)
@@ -542,29 +544,23 @@ const listRecords = async (req, res, filterType = 'all') => {
         return new Date(year, month - 1, day)
       }
 
-      // Use the record's expiry field (validTo / taxTo / etc.) for FY bucketing.
-      // For Insurance we also try issueDate as secondary so that "issued in FY X
-      // but expiring in FY X+1" records still appear under the right year.
+      // FY bucketing uses the document's start/issue date (fyDateField), NOT the expiry date.
+      // This means "FY 2024-25" shows all documents issued/started in Apr 2024 – Mar 2025,
+      // regardless of when they expire. Expired docs from FY 2023-24 will NOT appear in FY 2024-25.
+      const getFYYear = (r) => {
+        const dateValue = fyDateField ? r[fyDateField] : null
+        if (!dateValue) return null
+        const d = parseFYDate(dateValue)
+        if (!d) return null
+        // Indian FY: Apr-Mar. If month >= April (index 3), FY starts this year.
+        return d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1
+      }
+
       const matchesFinancialYear = (r) => {
         if (!req.query.financialYear) return true
         const year = parseInt(req.query.financialYear, 10)
         if (isNaN(year)) return true
-        const fyStart = new Date(year, 3, 1)   // 1 Apr
-        const fyEnd   = new Date(year + 1, 2, 31, 23, 59, 59, 999) // 31 Mar
-
-        // Primary: use the expiry date field of this document type
-        const expiryDate = parseFYDate(r[expiryField])
-        if (expiryDate) {
-          return expiryDate >= fyStart && expiryDate <= fyEnd
-        }
-
-        // Fallback: try issueDate (Insurance-only field)
-        const issueDate = parseFYDate(r.issueDate)
-        if (issueDate) {
-          return issueDate >= fyStart && issueDate <= fyEnd
-        }
-
-        return false
+        return getFYYear(r) === year
       }
 
       // Stats are scoped to the same financial year as the list, so tab badges
@@ -583,9 +579,10 @@ const listRecords = async (req, res, filterType = 'all') => {
         .filter((r) => (r.renewalStatus || 'pending') === statusFilter)
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
 
-      // Build available FY list from the expiry field; fall back to issueDate for Insurance
-      const fyField = all.some((r) => r[expiryField]) ? expiryField : 'issueDate'
-      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, fyField) })
+      // Return only the FY years that have actual documents (based on fyDateField).
+      // If fyDateField is not set, fall back to expiryField.
+      const fyListField = fyDateField || expiryField
+      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, fyListField) })
     } catch (error) {
       console.error(`Error fetching ${config.name} renewals list:`, error)
       res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })

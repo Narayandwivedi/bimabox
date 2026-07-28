@@ -7,6 +7,7 @@ module.exports = createRecordController({
   Model: Permit,
   expiryField: 'validTo',
   requiredDateField: 'validFrom',
+  fyDateField: 'validFrom',
   expiringDays: 30,
   searchFields: ['vehicleNumber', 'name'],
   stringFields: ['vehicleNumber', 'name', 'validFrom', 'validTo', 'permitDocument'],

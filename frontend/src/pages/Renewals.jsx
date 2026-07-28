@@ -1,10 +1,23 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
 import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+
+// Generate Indian financial years: from (currentFY - 4) to (currentFY + 1)
+const generateIndianFYOptions = () => {
+  const now = new Date()
+  const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+  const years = []
+  for (let y = currentFY + 1; y >= currentFY - 4; y--) {
+    years.push(y)
+  }
+  return years
+}
+
+const ALL_FY_OPTIONS = generateIndianFYOptions()
 
 // Document type -> API base + field mapping so the same Renewals view can drive any type.
 const DOCUMENT_TYPES = [
@@ -34,38 +47,18 @@ const Renewals = () => {
   const fileInputRef = useRef(null)
 
   const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
-  const appliedDefaultFYRef = useRef(null)
 
-  useEffect(() => {
-    appliedDefaultFYRef.current = null
-    setFinancialYear('')
-    fetchRenewals('', docType, statusFilter)
-  }, [docType])
+  // Merge backend-provided FY years with locally-generated ones so we always have options
+  const mergedFYOptions = [
+    ...new Set([...availableFinancialYears, ...ALL_FY_OPTIONS])
+  ].sort((a, b) => b - a)
 
-  useEffect(() => {
-    fetchRenewals(financialYear, docType, statusFilter)
-  }, [financialYear, statusFilter])
-
-  // Default the FY filter to the current financial year (or the latest FY with data)
-  // once the list of available years is known — but only once per doc type, so it
-  // doesn't stomp on a user's later choice of "All FY".
-  useEffect(() => {
-    if (appliedDefaultFYRef.current === docType) return
-    if (!availableFinancialYears.length) return
-    const now = new Date()
-    const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-    const defaultFY = availableFinancialYears.includes(currentFY) ? currentFY : availableFinancialYears[0]
-    appliedDefaultFYRef.current = docType
-    setFinancialYear(String(defaultFY))
-  }, [availableFinancialYears, docType])
-
-  const fetchRenewals = async (fy = '', type = docType, status = statusFilter) => {
+  const fetchRenewals = useCallback(async (fy, type, status) => {
     try {
       setLoading(true)
       const endpoint = (DOCUMENT_TYPES.find((d) => d.value === type) || DOCUMENT_TYPES[0]).endpoint
       const params = { status }
       if (fy) params.financialYear = fy
-      // Dedicated endpoint — only fetches records for the active tab's status, no pagination
       const response = await axios.get(`${API_URL}${endpoint}/renewals`, {
         withCredentials: true,
         params,
@@ -80,7 +73,26 @@ const Renewals = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  // When document type changes: reset state and set default FY immediately
+  useEffect(() => {
+    setAvailableFinancialYears([])
+    setPolicies([])
+    setTabCounts({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
+    const now = new Date()
+    const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+    setFinancialYear(String(currentFY))
+  }, [docType])
+
+  // Fetch data whenever FY or status filter changes
+  // Note: docType changes are handled by the reset effect above which updates financialYear,
+  // which in turn triggers this effect.
+  useEffect(() => {
+    if (!financialYear) return // wait until FY is set by the reset effect
+    fetchRenewals(financialYear, docType, statusFilter)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [financialYear, statusFilter])
 
   const handleStatusChange = (id, status) => {
     const labels = { renewed: 'Renewed', lost: 'Lost', opportunity: 'Opportunity', pending: 'Reset to Pending' }
@@ -227,7 +239,7 @@ const Renewals = () => {
                   className='appearance-none rounded-xl border-2 border-slate-200 bg-white py-1.5 pl-3 pr-7 text-[10px] font-bold text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10 transition-all cursor-pointer'
                 >
                   <option value=''>All FY</option>
-                  {availableFinancialYears.map((y) => (
+                  {mergedFYOptions.map((y) => (
                     <option key={y} value={String(y)}>FY {y}-{String(y + 1).slice(2)}</option>
                   ))}
                 </select>

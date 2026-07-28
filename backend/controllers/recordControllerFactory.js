@@ -529,17 +529,42 @@ const listRecords = async (req, res, filterType = 'all') => {
       const all = await Model.find({ userId: req.user._id }).lean()
       const withDaysLeft = all.map((r) => ({ ...r, daysLeft: getDaysToExpiry(r, expiryField) }))
 
+      // Helper: parse DD/MM/YYYY or DD-MM-YYYY into a Date object
+      const parseFYDate = (dateValue) => {
+        if (!dateValue) return null
+        // Split on either slash or dash
+        const parts = dateValue.trim().split(/[\/\-]/)
+        if (parts.length !== 3) return null
+        const day = parseInt(parts[0], 10)
+        const month = parseInt(parts[1], 10)
+        const year = parseInt(parts[2], 10)
+        if (isNaN(day) || isNaN(month) || isNaN(year) || year < 1900) return null
+        return new Date(year, month - 1, day)
+      }
+
+      // Use the record's expiry field (validTo / taxTo / etc.) for FY bucketing.
+      // For Insurance we also try issueDate as secondary so that "issued in FY X
+      // but expiring in FY X+1" records still appear under the right year.
       const matchesFinancialYear = (r) => {
         if (!req.query.financialYear) return true
         const year = parseInt(req.query.financialYear, 10)
-        const dateValue = r.issueDate
-        if (!dateValue) return false
-        const parts = dateValue.split('-')
-        if (parts.length !== 3) return false
-        const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]))
-        const fyStart = new Date(year, 3, 1)
-        const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
-        return d >= fyStart && d <= fyEnd
+        if (isNaN(year)) return true
+        const fyStart = new Date(year, 3, 1)   // 1 Apr
+        const fyEnd   = new Date(year + 1, 2, 31, 23, 59, 59, 999) // 31 Mar
+
+        // Primary: use the expiry date field of this document type
+        const expiryDate = parseFYDate(r[expiryField])
+        if (expiryDate) {
+          return expiryDate >= fyStart && expiryDate <= fyEnd
+        }
+
+        // Fallback: try issueDate (Insurance-only field)
+        const issueDate = parseFYDate(r.issueDate)
+        if (issueDate) {
+          return issueDate >= fyStart && issueDate <= fyEnd
+        }
+
+        return false
       }
 
       // Stats are scoped to the same financial year as the list, so tab badges
@@ -558,7 +583,9 @@ const listRecords = async (req, res, filterType = 'all') => {
         .filter((r) => (r.renewalStatus || 'pending') === statusFilter)
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
 
-      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, 'issueDate') })
+      // Build available FY list from the expiry field; fall back to issueDate for Insurance
+      const fyField = all.some((r) => r[expiryField]) ? expiryField : 'issueDate'
+      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, fyField) })
     } catch (error) {
       console.error(`Error fetching ${config.name} renewals list:`, error)
       res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })

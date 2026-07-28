@@ -35,8 +35,10 @@ const Renewals = () => {
   const fileInputRef = useRef(null)
 
   const docConfig = DOCUMENT_TYPES.find((d) => d.value === docType) || DOCUMENT_TYPES[0]
+  const appliedDefaultFYRef = useRef(null)
 
   useEffect(() => {
+    appliedDefaultFYRef.current = null
     setFinancialYear('')
     fetchRenewals('', docType, statusFilter)
   }, [docType])
@@ -44,6 +46,19 @@ const Renewals = () => {
   useEffect(() => {
     fetchRenewals(financialYear, docType, statusFilter)
   }, [financialYear, statusFilter])
+
+  // Default the FY filter to the current financial year (or the latest FY with data)
+  // once the list of available years is known — but only once per doc type, so it
+  // doesn't stomp on a user's later choice of "All FY".
+  useEffect(() => {
+    if (appliedDefaultFYRef.current === docType) return
+    if (!availableFinancialYears.length) return
+    const now = new Date()
+    const currentFY = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+    const defaultFY = availableFinancialYears.includes(currentFY) ? currentFY : availableFinancialYears[0]
+    appliedDefaultFYRef.current = docType
+    setFinancialYear(String(defaultFY))
+  }, [availableFinancialYears, docType])
 
   const fetchRenewals = async (fy = '', type = docType, status = statusFilter) => {
     try {

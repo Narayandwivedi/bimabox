@@ -524,7 +524,6 @@ const listRecords = async (req, res, filterType = 'all') => {
 
   const getRenewalsList = async (req, res) => {
     try {
-      const MAX_EXPIRED_DAYS = 60   // how far past expiry to still show
       const MAX_UPCOMING_DAYS = 90  // widest upcoming filter shown in UI
 
       const all = await Model.find({ userId: req.user._id }).lean()
@@ -535,9 +534,9 @@ const listRecords = async (req, res, filterType = 'all') => {
           const status = r.renewalStatus || 'pending'
           // Always include renewed / lost / opportunity so their tabs are populated
           if (status === 'renewed' || status === 'lost' || status === 'opportunity') return true
-          // Pending: only if daysLeft is calculable and within range
+          // Pending: include all overdue (expired) records, plus upcoming within range
           if (r.daysLeft === null) return false
-          return r.daysLeft >= -MAX_EXPIRED_DAYS && r.daysLeft <= MAX_UPCOMING_DAYS
+          return r.daysLeft <= MAX_UPCOMING_DAYS
         })
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
         .filter((r) => {

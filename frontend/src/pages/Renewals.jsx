@@ -21,7 +21,6 @@ const Renewals = () => {
   const [docType, setDocType] = useState('Insurance')
   const [policies, setPolicies] = useState([])
   const [loading, setLoading] = useState(true)
-  const [expiryFilter, setExpiryFilter] = useState(60)
   const [statusFilter, setStatusFilter] = useState('pending')
   const [financialYear, setFinancialYear] = useState('')
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
@@ -114,16 +113,8 @@ const Renewals = () => {
     }
   }
 
-  // Backend already scopes `policies` to the active tab's status; only the
-  // pending tab needs a further client-side narrowing by expiry window.
-  const filteredPolicies = policies.filter((p) => {
-    if (statusFilter !== 'pending') return true
-    const isExpired = p.daysLeft < 0
-    const isExpiringSoon = p.daysLeft >= 0 && p.daysLeft <= expiryFilter
-    return isExpired || isExpiringSoon
-  })
-
-  const sortedPolicies = [...filteredPolicies].sort((a, b) => {
+  // Backend already scopes `policies` to the active tab's status and financial year.
+  const sortedPolicies = [...policies].sort((a, b) => {
     if (statusFilter === 'pending') {
       return (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999)
     }
@@ -209,25 +200,6 @@ const Renewals = () => {
                   )}
                 </div>
               </div>
-
-              {/* Day-range filter — only for Pending tab */}
-              {statusFilter === 'pending' && (
-                <div className='flex items-center gap-1 rounded-xl bg-slate-100 p-1'>
-                  {[15, 30, 60, 90].map((days) => (
-                    <button
-                      key={days}
-                      onClick={() => setExpiryFilter(days)}
-                      className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
-                        expiryFilter === days
-                          ? 'bg-white text-blue-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}
-                    >
-                      {days}<span className='lowercase'>d</span>
-                    </button>
-                  ))}
-                </div>
-              )}
 
               {/* Document Type filter */}
               <div className='relative'>

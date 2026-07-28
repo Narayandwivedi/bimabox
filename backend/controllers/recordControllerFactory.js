@@ -563,13 +563,28 @@ const listRecords = async (req, res, filterType = 'all') => {
         return getFYYear(r) === year
       }
 
-      // Stats are scoped to the same financial year as the list, so tab badges
-      // always match what's actually shown (counts across statuses, not the active tab).
+      // For the 'pending' renewal tab, only show records within the renewal window:
+      // - daysLeft <= expiringDays  →  expiring soon (e.g. ≤60 days for insurance)
+      // - daysLeft < 0              →  already expired (always show, no matter how old)
+      // Records with 277d left etc. are NOT actionable yet and should not appear.
+      // Renewed / opportunity / lost tabs show all records regardless of days left.
+      const isRenewable = (r) => {
+        if ((r.renewalStatus || 'pending') !== 'pending') return true // non-pending always pass
+        const dl = r.daysLeft
+        if (dl === null || dl === undefined) return false
+        return dl <= expiringDays // covers both expired (dl<0) and expiring soon (dl<=60)
+      }
+
+      // Tab counts: pending count only includes actionable (renewable) records.
       const inFY = withDaysLeft.filter(matchesFinancialYear)
       const counts = inFY.reduce(
         (acc, r) => {
           const status = r.renewalStatus || 'pending'
-          if (acc[status] !== undefined) acc[status] += 1
+          if (acc[status] !== undefined) {
+            // For pending, only count records that are within the renewal window
+            if (status === 'pending' && !isRenewable(r)) return acc
+            acc[status] += 1
+          }
           return acc
         },
         { pending: 0, renewed: 0, lost: 0, opportunity: 0 }
@@ -577,6 +592,7 @@ const listRecords = async (req, res, filterType = 'all') => {
 
       const result = inFY
         .filter((r) => (r.renewalStatus || 'pending') === statusFilter)
+        .filter(isRenewable) // applies renewable window filter to pending; no-op for others
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
 
       // Return only the FY years that have actual documents (based on fyDateField).

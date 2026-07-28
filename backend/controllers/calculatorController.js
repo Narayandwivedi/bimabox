@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit')
 const path = require('path')
 const fs = require('fs')
+const axios = require('axios')
 
 const QUOTATIONS_DIR = path.join(__dirname, '..', 'uploads', 'quotations')
 
@@ -11,6 +12,27 @@ if (!fs.existsSync(QUOTATIONS_DIR)) {
 function fmt(n, decimals = 2) {
   if (n == null || isNaN(n)) return 'Rs. 0.00'
   return 'Rs. ' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+}
+
+async function resolveImageBuffer(picture) {
+  if (!picture || typeof picture !== 'string') return null
+  try {
+    if (picture.startsWith('data:')) {
+      const base64 = picture.split(',')[1] || ''
+      return Buffer.from(base64, 'base64')
+    }
+    if (picture.startsWith('http://') || picture.startsWith('https://')) {
+      const response = await axios.get(picture, { responseType: 'arraybuffer', timeout: 8000 })
+      return Buffer.from(response.data)
+    }
+    if (picture.startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '..', 'uploads', picture.replace('/uploads/', ''))
+      if (fs.existsSync(filePath)) return fs.readFileSync(filePath)
+    }
+  } catch (error) {
+    console.error('Error resolving business picture:', error.message)
+  }
+  return null
 }
 
 
@@ -25,6 +47,7 @@ const generatePdf = async (req, res) => {
     const producerEmail = data.producerEmail || 'N/A'
     const insuranceCompany = data.insuranceCompany || 'BIMABOX'
     const insuranceCompanyId = data.insuranceCompanyId || null
+    const businessPictureBuffer = await resolveImageBuffer(data.businessPicture)
 
     // Compute policy dates
     const startDate = new Date()
@@ -68,6 +91,16 @@ const generatePdf = async (req, res) => {
 
     // Tagline
     doc.fontSize(7).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 80, y + 34)
+
+    // Business/Profile logo — centered above the insurance company name, shown as-is
+    if (businessPictureBuffer) {
+      const boxSize = 34
+      try {
+        doc.image(businessPictureBuffer, headerCenterX - boxSize / 2, y + 4, { fit: [boxSize, boxSize], align: 'center', valign: 'center' })
+      } catch (error) {
+        console.error('Error drawing business picture:', error.message)
+      }
+    }
 
     // Insurance Company Name — centered across the full header width
     doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f172a').text(insuranceCompany, 40, y + 50, { align: 'center', width: pageWidth })

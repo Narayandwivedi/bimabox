@@ -94,4 +94,12 @@ const incrementUsage = (docType = 'manual') => {
   }
 }
 
-module.exports = { planEnforcer, incrementUsage }
+// Wraps a manual-document middleware (planEnforcer('manual') or incrementUsage('manual'))
+// so it's skipped when the record was already created from AI-extracted data —
+// that usage was already counted against the 'ai' quota at OCR time.
+const skipIfViaAI = (middleware) => (req, res, next) => {
+  if (req.body?.viaAI) return next()
+  return middleware(req, res, next)
+}
+
+module.exports = { planEnforcer, incrementUsage, skipIfViaAI }

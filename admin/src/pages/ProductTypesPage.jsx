@@ -3,6 +3,7 @@ import '../App.css'
 
 function ProductTypesPage({ apiFetch }) {
   const [productTypes, setProductTypes] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
@@ -100,6 +101,10 @@ function ProductTypesPage({ apiFetch }) {
     }
   }
 
+  const filteredProductTypes = productTypes.filter((p) =>
+    (p.name || '').toLowerCase().includes(searchTerm.trim().toLowerCase())
+  )
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
@@ -112,6 +117,14 @@ function ProductTypesPage({ apiFetch }) {
         <div className="panel-header panel-header-row">
           <h2>Product Types</h2>
           <div className="toolbar">
+            <div className="search-box">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search product type"
+              />
+            </div>
             <button type="button" className="secondary-btn" onClick={fetchProductTypes}>Refresh</button>
             <button type="button" className="primary-btn small-btn" onClick={openAdd}>
               Add Product Type
@@ -129,6 +142,8 @@ function ProductTypesPage({ apiFetch }) {
           <div className="empty-state">Loading product types...</div>
         ) : productTypes.length === 0 ? (
           <div className="empty-state">No product types found. Add one to get started.</div>
+        ) : filteredProductTypes.length === 0 ? (
+          <div className="empty-state">No product types match "{searchTerm}".</div>
         ) : (
           <div className="table-wrap">
             <table>
@@ -141,7 +156,7 @@ function ProductTypesPage({ apiFetch }) {
                 </tr>
               </thead>
               <tbody>
-                {productTypes.map((p, i) => (
+                {filteredProductTypes.map((p, i) => (
                   <tr key={p._id}>
                     <td>{i + 1}</td>
                     <td style={{ fontWeight: 800 }}>{p.name}</td>

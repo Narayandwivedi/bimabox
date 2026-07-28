@@ -524,26 +524,42 @@ const listRecords = async (req, res, filterType = 'all') => {
 
   const getRenewalsList = async (req, res) => {
     try {
-      const MAX_EXPIRED_DAYS = 60   // how far past expiry to still show
       const MAX_UPCOMING_DAYS = 90  // widest upcoming filter shown in UI
+      const statusFilter = req.query.status || 'pending'
 
       const all = await Model.find({ userId: req.user._id }).lean()
+      const withDaysLeft = all.map((r) => ({ ...r, daysLeft: getDaysToExpiry(r, expiryField) }))
 
-      const result = all
-        .map((r) => ({ ...r, daysLeft: getDaysToExpiry(r, expiryField) }))
+      const isRelevantPending = (r) => {
+        if (r.daysLeft === null) return false
+        return r.daysLeft <= MAX_UPCOMING_DAYS
+      }
+
+      const counts = withDaysLeft.reduce(
+        (acc, r) => {
+          const status = r.renewalStatus || 'pending'
+          if (status === 'pending') {
+            if (isRelevantPending(r)) acc.pending += 1
+          } else if (acc[status] !== undefined) {
+            acc[status] += 1
+          }
+          return acc
+        },
+        { pending: 0, renewed: 0, lost: 0, opportunity: 0 }
+      )
+
+      const result = withDaysLeft
         .filter((r) => {
           const status = r.renewalStatus || 'pending'
-          // Always include renewed / lost / opportunity so their tabs are populated
-          if (status === 'renewed' || status === 'lost' || status === 'opportunity') return true
-          // Pending: only if daysLeft is calculable and within range
-          if (r.daysLeft === null) return false
-          return r.daysLeft >= -MAX_EXPIRED_DAYS && r.daysLeft <= MAX_UPCOMING_DAYS
+          if (status !== statusFilter) return false
+          if (status !== 'pending') return true
+          return isRelevantPending(r)
         })
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
         .filter((r) => {
           if (!req.query.financialYear) return true
           const year = parseInt(req.query.financialYear, 10)
-          const dateValue = r[config.requiredDateField]
+          const dateValue = r.issueDate
           if (!dateValue) return false
           const parts = dateValue.split('-')
           if (parts.length !== 3) return false
@@ -553,7 +569,7 @@ const listRecords = async (req, res, filterType = 'all') => {
           return d >= fyStart && d <= fyEnd
         })
 
-      res.json({ success: true, data: result, financialYears: getFinancialYearsByField(all, config.requiredDateField) })
+      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, 'issueDate') })
     } catch (error) {
       console.error(`Error fetching ${config.name} renewals list:`, error)
       res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })

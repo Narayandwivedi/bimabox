@@ -251,8 +251,18 @@ const Setting = () => {
                     <p className='text-[10px] font-black uppercase tracking-wider'>Active Member</p>
                   </div>
 
+                  <button
+                    onClick={openEditModal}
+                    className='mt-4 w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 text-sm font-bold hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:translate-y-0'
+                  >
+                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
+                    </svg>
+                    Edit Profile
+                  </button>
+
                   {/* Profile Details List */}
-                  <div className='mt-8 text-left space-y-3.5'>
+                  <div className='mt-5 text-left space-y-2.5'>
                     <div className='flex items-center gap-3.5 rounded-2xl bg-slate-50 p-3 border border-slate-100 hover:bg-slate-100/50 transition-colors duration-200'>
                       <div className='h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100'>
                         <svg className='h-4 w-4 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -328,7 +338,7 @@ const Setting = () => {
                   </div>
 
                   {/* Wallet Balance */}
-                  <div className='mt-6 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 p-4'>
+                  <div className='mt-4 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 p-4'>
                     <div className='flex items-center justify-between'>
                       <div className='flex items-center gap-2'>
                         <div className='h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center'>
@@ -350,16 +360,6 @@ const Setting = () => {
                       Refer & Earn – Invite friends, get ₹99 each
                     </Link>
                   </div>
-
-                  <button
-                    onClick={openEditModal}
-                    className='mt-4 w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 text-sm font-bold hover:shadow-[0_8px_25px_-4px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer active:translate-y-0'
-                  >
-                    <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z' />
-                    </svg>
-                    Edit Profile
-                  </button>
                 </div>
               </div>
             </div>

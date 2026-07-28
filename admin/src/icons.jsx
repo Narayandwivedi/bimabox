@@ -10,6 +10,24 @@ const baseProps = {
   'aria-hidden': true,
 }
 
+export const DashboardIcon = () => (
+  <svg {...baseProps}>
+    <rect width="7" height="9" x="3" y="3" rx="1" />
+    <rect width="7" height="5" x="14" y="3" rx="1" />
+    <rect width="7" height="9" x="14" y="12" rx="1" />
+    <rect width="7" height="5" x="3" y="16" rx="1" />
+  </svg>
+)
+
+export const PolicySearchIcon = () => (
+  <svg {...baseProps}>
+    <circle cx="11" cy="11" r="7" />
+    <line x1="21" x2="16.65" y1="21" y2="16.65" />
+    <path d="M8 11h6" />
+    <path d="M11 8v6" />
+  </svg>
+)
+
 export const UsersIcon = () => (
   <svg {...baseProps}>
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />

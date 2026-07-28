@@ -17,6 +17,10 @@ const IMD = () => {
   const [newOtherInfo, setNewOtherInfo] = useState('')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editItem, setEditItem] = useState(null)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [viewItem, setViewItem] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
   const [editName, setEditName] = useState('')
   const [editMobile, setEditMobile] = useState('')
   const [editEmail, setEditEmail] = useState('')
@@ -71,11 +75,33 @@ const IMD = () => {
         setNewReference('')
         setNewAddress('')
         setNewOtherInfo('')
+        setShowAddModal(false)
         toast.success('Agent name added')
       }
     } catch {
       toast.error('Failed to add Agent name')
     }
+  }
+
+  const closeAddModal = () => {
+    setShowAddModal(false)
+    setNewName('')
+    setNewMobile('')
+    setNewEmail('')
+    setNewAgentCode('')
+    setNewReference('')
+    setNewAddress('')
+    setNewOtherInfo('')
+  }
+
+  const openViewModal = (ref) => {
+    setViewItem(ref)
+    setShowViewModal(true)
+  }
+
+  const closeViewModal = () => {
+    setShowViewModal(false)
+    setViewItem(null)
   }
 
   const openEditModal = (ref) => {
@@ -141,6 +167,10 @@ const IMD = () => {
     }
   }
 
+  const filteredImds = imds.filter((ref) =>
+    (ref.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase())
+  )
+
   return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top,_#f0f9ff,_#f8fafc_45%,_#ffffff_100%)]'>
       <main className='px-2 pt-3 pb-32 lg:px-8 lg:pt-4'>
@@ -149,72 +179,41 @@ const IMD = () => {
             <div className='rounded-[32px] border border-slate-200 bg-white p-4 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] md:p-5 lg:p-6'>
               <h1 className='text-xl font-black text-slate-900 mb-6'>Agent Name</h1>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-3 mb-6'>
-                <input
-                  type='text'
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Agent Name (optional)'
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <input
-                  type='text'
-                  value={newMobile}
-                  onChange={(e) => setNewMobile(enforceMobileNumberFormat(e.target.value))}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Mobile (optional)'
-                  maxLength={10}
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <input
-                  type='email'
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Email (optional)'
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <input
-                  type='text'
-                  value={newAgentCode}
-                  onChange={(e) => setNewAgentCode(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Agent Code (optional)'
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <input
-                  type='text'
-                  value={newReference}
-                  onChange={(e) => setNewReference(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Reference (optional)'
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <input
-                  type='text'
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  placeholder='Address (optional)'
-                  className='px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
-                />
-                <div className='flex gap-2'>
+              <div className='flex gap-2 mb-4'>
+                <div className='relative flex-1'>
+                  <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+                    <svg className='w-4 h-4 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z' />
+                    </svg>
+                  </div>
                   <input
                     type='text'
-                    value={newOtherInfo}
-                    onChange={(e) => setNewOtherInfo(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    placeholder='Other Info (optional)'
-                    className='flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder='Search agent by name...'
+                    className='w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm'
                   />
-                  <button
-                    onClick={handleAdd}
-                    className='px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-sm hover:shadow-lg transition cursor-pointer'
-                  >
-                    Add
-                  </button>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className='absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-rose-500 transition-colors'
+                      title='Clear search'
+                    >
+                      <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M6 18L18 6M6 6l12 12' />
+                      </svg>
+                    </button>
+                  )}
                 </div>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className='flex items-center gap-1.5 px-4 md:px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-sm hover:shadow-lg transition cursor-pointer flex-shrink-0'
+                >
+                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M12 4v16m8-8H4' />
+                  </svg>
+                  <span className='hidden sm:inline'>Add</span>
+                </button>
               </div>
 
               {loading ? (
@@ -225,30 +224,24 @@ const IMD = () => {
                 <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
                   <p className='text-sm font-bold text-slate-500'>No Agent names yet.</p>
                 </div>
+              ) : filteredImds.length === 0 ? (
+                <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
+                  <p className='text-sm font-bold text-slate-500'>No agents match "{searchQuery}".</p>
+                </div>
               ) : (
                 <div className='space-y-2'>
-                  {imds.map((ref) => (
+                  {filteredImds.map((ref) => (
                     <div key={ref._id} className='flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-indigo-200 transition'>
                       <div className='min-w-0 flex-1'>
-                        <span className='text-sm font-semibold text-slate-700'>{ref.name}</span>
-                        {(ref.mobile || ref.email || ref.agentCode || ref.reference || ref.address || ref.otherInfo) && (
-                          <div className='text-xs text-slate-400 mt-0.5 space-y-0.5'>
-                            <div className='flex flex-wrap items-center gap-x-2'>
-                              {ref.agentCode && <span>🪪 Code: {ref.agentCode}</span>}
-                              {ref.mobile && <span>📞 {ref.mobile.replace(/(\d{5})(\d{5})/, '$1 $2')}</span>}
-                              {ref.email && <span>✉️ {ref.email}</span>}
-                              {ref.reference && <span>👤 Ref: {ref.reference}</span>}
-                            </div>
-                            {(ref.address || ref.otherInfo) && (
-                              <div className='flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500'>
-                                {ref.address && <span>📍 {ref.address}</span>}
-                                {ref.otherInfo && <span>ℹ️ {ref.otherInfo}</span>}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <span className='text-sm font-semibold text-slate-700'>{ref.name || 'Unnamed'}</span>
                       </div>
                       <div className='flex gap-1 flex-shrink-0 ml-2'>
+                        <button onClick={() => openViewModal(ref)} className='p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition cursor-pointer' title='View details'>
+                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                          </svg>
+                        </button>
                         <button onClick={() => openEditModal(ref)} className='p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer' title='Edit'>
                           <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
@@ -268,6 +261,178 @@ const IMD = () => {
           </div>
         </section>
       </main>
+
+      {/* Add Agent Modal */}
+      {showAddModal && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4' onClick={closeAddModal}>
+          <div className='bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden' onClick={e => e.stopPropagation()}>
+            <div className='bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white'>
+              <div className='flex justify-between items-center'>
+                <div>
+                  <h2 className='text-lg font-bold'>Add Agent Name</h2>
+                  <p className='text-purple-100 text-xs mt-0.5'>Add a new agent</p>
+                </div>
+                <button onClick={closeAddModal} className='text-white hover:bg-white/20 rounded-lg p-1.5 transition cursor-pointer'>
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className='p-5 space-y-4 max-h-[60vh] overflow-y-auto'>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Name</label>
+                <input
+                  type='text'
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Agent name (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Mobile</label>
+                <input
+                  type='text'
+                  value={newMobile}
+                  onChange={(e) => setNewMobile(enforceMobileNumberFormat(e.target.value))}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Mobile number (optional)'
+                  maxLength={10}
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Email</label>
+                <input
+                  type='email'
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Email address (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Agent Code</label>
+                <input
+                  type='text'
+                  value={newAgentCode}
+                  onChange={(e) => setNewAgentCode(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Agent code (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Reference</label>
+                <input
+                  type='text'
+                  value={newReference}
+                  onChange={(e) => setNewReference(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Reference (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Address</label>
+                <input
+                  type='text'
+                  value={newAddress}
+                  onChange={(e) => setNewAddress(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Address (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-700 mb-1'>Other Info</label>
+                <input
+                  type='text'
+                  value={newOtherInfo}
+                  onChange={(e) => setNewOtherInfo(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder='Other Info (optional)'
+                  className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm'
+                />
+              </div>
+            </div>
+            <div className='border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3'>
+              <button type='button' onClick={closeAddModal} className='px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 cursor-pointer'>Cancel</button>
+              <button
+                type='button'
+                onClick={handleAdd}
+                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition cursor-pointer'
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Agent Details Modal */}
+      {showViewModal && viewItem && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4' onClick={closeViewModal}>
+          <div className='bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto overflow-hidden' onClick={e => e.stopPropagation()}>
+            <div className='bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white'>
+              <div className='flex justify-between items-center'>
+                <div>
+                  <h2 className='text-lg font-bold'>{viewItem.name || 'Agent Details'}</h2>
+                  <p className='text-purple-100 text-xs mt-0.5'>Agent details</p>
+                </div>
+                <button onClick={closeViewModal} className='text-white hover:bg-white/20 rounded-lg p-1.5 transition cursor-pointer'>
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className='p-5 space-y-3 max-h-[60vh] overflow-y-auto'>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Name</label>
+                <p className='text-sm text-slate-700'>{viewItem.name || '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Mobile</label>
+                <p className='text-sm text-slate-700'>{viewItem.mobile ? viewItem.mobile.replace(/(\d{5})(\d{5})/, '$1 $2') : '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Email</label>
+                <p className='text-sm text-slate-700'>{viewItem.email || '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Agent Code</label>
+                <p className='text-sm text-slate-700'>{viewItem.agentCode || '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Reference</label>
+                <p className='text-sm text-slate-700'>{viewItem.reference || '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Address</label>
+                <p className='text-sm text-slate-700'>{viewItem.address || '—'}</p>
+              </div>
+              <div>
+                <label className='block text-xs font-semibold text-gray-500 mb-0.5'>Other Info</label>
+                <p className='text-sm text-slate-700'>{viewItem.otherInfo || '—'}</p>
+              </div>
+            </div>
+            <div className='border-t border-gray-200 p-4 bg-gray-50 flex justify-end gap-3'>
+              <button type='button' onClick={closeViewModal} className='px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-800 cursor-pointer'>Close</button>
+              <button
+                type='button'
+                onClick={() => { closeViewModal(); openEditModal(viewItem) }}
+                className='px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition cursor-pointer'
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Agent Name Modal */}
       {showEditModal && (

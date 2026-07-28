@@ -88,7 +88,7 @@ gpsSchema.index({ validTo: 1 })
 // Index 3: createdAt (for default sorting - newest first)
 gpsSchema.index({ createdAt: -1 })
 
-const Gps = mongoose.model('Gps', gpsSchema)
+const Gps = mongoose.models.Gps || mongoose.model('Gps', gpsSchema)
 
 module.exports = Gps
 

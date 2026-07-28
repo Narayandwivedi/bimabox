@@ -70,6 +70,6 @@ permitSchema.index({ vehicleNumber: 1 })
 permitSchema.index({ validTo: 1 })
 permitSchema.index({ createdAt: -1 })
 
-const Permit = mongoose.model('Permit', permitSchema)
+const Permit = mongoose.models.Permit || mongoose.model('Permit', permitSchema)
 
 module.exports = Permit

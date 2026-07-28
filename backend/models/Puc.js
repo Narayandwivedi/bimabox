@@ -90,7 +90,7 @@ pucSchema.index({ validTo: 1 })
 // Index 3: createdAt (for default sorting - newest first)
 pucSchema.index({ createdAt: -1 })
 
-const Puc = mongoose.model('Puc', pucSchema)
+const Puc = mongoose.models.Puc || mongoose.model('Puc', pucSchema)
 
 module.exports = Puc
 

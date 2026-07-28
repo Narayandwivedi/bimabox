@@ -200,7 +200,7 @@ const InsuranceSchema = new mongoose.Schema({
 
 
 
-const Insurance = mongoose.model('Insurance', InsuranceSchema)
+const Insurance = mongoose.models.Insurance || mongoose.model('Insurance', InsuranceSchema)
 
 module.exports = Insurance
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import axios from 'axios'
 
@@ -18,6 +19,8 @@ const emptyDoc = () => ({
 })
 
 const KycPage = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -35,6 +38,14 @@ const KycPage = () => {
   useEffect(() => {
     fetchRecords()
   }, [search])
+
+  useEffect(() => {
+    const editId = location.state?.editId
+    if (!editId || records.length === 0) return
+    const record = records.find(r => r._id === editId)
+    if (record) openEditModal(record)
+    navigate(location.pathname, { replace: true, state: {} })
+  }, [location.state, records])
 
   const fetchRecords = async () => {
     try {
@@ -225,59 +236,33 @@ const KycPage = () => {
                 </div>
               ) : (
                 <>
-                  <div className='space-y-3 lg:hidden'>
+                  <div className='space-y-2 lg:hidden'>
                     {records.map((record) => {
                       const docs = getRecordDocs(record)
                       return (
-                        <div key={record._id} className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm'>
-                          <div className='flex items-start justify-between mb-2'>
-                            <div>
-                              <p className='text-sm font-bold text-slate-800'>{record.name}</p>
-                            </div>
-                            <div className='flex gap-1'>
-                              <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 transition cursor-pointer' title='Edit'>
-                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
-                                </svg>
-                              </button>
-                              <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer' title='Delete'>
-                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
-                                </svg>
-                              </button>
-                            </div>
+                        <div key={record._id} className='flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm hover:border-indigo-200 transition'>
+                          <div className='min-w-0 flex-1'>
+                            <p className='text-sm font-bold text-slate-800 truncate'>{record.name}</p>
+                            <p className='text-[11px] text-slate-400 mt-0.5'>{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
                           </div>
-                          {docs.length > 0 && (
-                            <div className='mt-2 space-y-2'>
-                              {docs.map((d, i) => (
-                                <div key={i} className='flex items-center justify-between bg-indigo-50/50 rounded-lg px-3 py-2 border border-indigo-100'>
-                                  <span className='text-[11px] font-semibold text-indigo-600'>
-                                    {d.documentType}{d.documentType === 'Other' && d.otherDocumentType ? ` (${d.otherDocumentType})` : ''}
-                                  </span>
-                                  <div className='flex gap-3'>
-                                    {d.documentFrontImg && (
-                                      <button onClick={() => openPreview(d.documentFrontImg.startsWith('http') ? d.documentFrontImg : `${API_URL}${d.documentFrontImg}`, `${d.documentType} Front`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                                        Front
-                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                                        </svg>
-                                      </button>
-                                    )}
-                                    {d.documentBackImg && (
-                                      <button onClick={() => openPreview(d.documentBackImg.startsWith('http') ? d.documentBackImg : `${API_URL}${d.documentBackImg}`, `${d.documentType} Back`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                                        Back
-                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                                        </svg>
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          <div className='flex gap-1 flex-shrink-0 ml-2'>
+                            <button onClick={() => navigate(`/kyc/${record._id}`)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                              </svg>
+                            </button>
+                            <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer' title='Edit'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                              </svg>
+                            </button>
+                            <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer' title='Delete'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       )
                     })}
@@ -287,55 +272,29 @@ const KycPage = () => {
                     {records.map((record) => {
                       const docs = getRecordDocs(record)
                       return (
-                        <div key={record._id} className='rounded-xl border border-slate-200 bg-white p-4 shadow-sm'>
-                          <div className='flex items-start justify-between mb-2'>
-                            <div>
-                              <p className='text-sm font-bold text-slate-800'>{record.name}</p>
-                            </div>
-                            <div className='flex gap-1'>
-                              <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 transition cursor-pointer' title='Edit'>
-                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
-                                </svg>
-                              </button>
-                              <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer' title='Delete'>
-                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
-                                </svg>
-                              </button>
-                            </div>
+                        <div key={record._id} className='flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-indigo-200 transition'>
+                          <div className='min-w-0 flex-1'>
+                            <p className='text-sm font-bold text-slate-800 truncate'>{record.name}</p>
+                            <p className='text-[11px] text-slate-400 mt-0.5'>{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
                           </div>
-                          {docs.length > 0 && (
-                            <div className='mt-2 space-y-2'>
-                              {docs.map((d, i) => (
-                                <div key={i} className='flex items-center justify-between bg-indigo-50/50 rounded-lg px-3 py-2 border border-indigo-100'>
-                                  <span className='text-xs font-semibold text-indigo-600'>
-                                    {d.documentType}{d.documentType === 'Other' && d.otherDocumentType ? ` (${d.otherDocumentType})` : ''}
-                                  </span>
-                                  <div className='flex gap-3'>
-                                    {d.documentFrontImg && (
-                                      <button onClick={() => openPreview(d.documentFrontImg.startsWith('http') ? d.documentFrontImg : `${API_URL}${d.documentFrontImg}`, `${d.documentType} Front`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                                        Front
-                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                                        </svg>
-                                      </button>
-                                    )}
-                                    {d.documentBackImg && (
-                                      <button onClick={() => openPreview(d.documentBackImg.startsWith('http') ? d.documentBackImg : `${API_URL}${d.documentBackImg}`, `${d.documentType} Back`)} className='flex items-center gap-1 text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition cursor-pointer'>
-                                        Back
-                                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
-                                        </svg>
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          <div className='flex gap-1 flex-shrink-0 ml-2'>
+                            <button onClick={() => navigate(`/kyc/${record._id}`)} className='p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer' title='View details'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                              </svg>
+                            </button>
+                            <button onClick={() => openEditModal(record)} className='p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer' title='Edit'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                              </svg>
+                            </button>
+                            <button onClick={() => handleDelete(record._id)} className='p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer' title='Delete'>
+                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       )
                     })}

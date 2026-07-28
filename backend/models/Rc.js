@@ -59,6 +59,6 @@ const rcSchema = new mongoose.Schema({
 rcSchema.index({ vehicleNumber: 1 })
 rcSchema.index({ createdAt: -1 })
 
-const Rc = mongoose.model('Rc', rcSchema)
+const Rc = mongoose.models.Rc || mongoose.model('Rc', rcSchema)
 
 module.exports = Rc

@@ -94,7 +94,7 @@ taxSchema.index({ taxTo: 1 })
 // Index 3: createdAt (for default sorting - newest first)
 taxSchema.index({ createdAt: -1 })
 
-const Tax = mongoose.model('Tax', taxSchema)
+const Tax = mongoose.models.Tax || mongoose.model('Tax', taxSchema)
 
 module.exports = Tax
 

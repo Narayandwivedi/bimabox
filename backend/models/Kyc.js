@@ -34,5 +34,5 @@ kycSchema.index({ name: 1 })
 kycSchema.index({ documentType: 1 })
 kycSchema.index({ createdAt: -1 })
 
-const Kyc = mongoose.model('Kyc', kycSchema)
+const Kyc = mongoose.models.Kyc || mongoose.model('Kyc', kycSchema)
 module.exports = Kyc

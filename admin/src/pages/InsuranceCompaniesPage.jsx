@@ -3,6 +3,7 @@ import '../App.css'
 
 function InsuranceCompaniesPage({ apiFetch }) {
   const [companies, setCompanies] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
@@ -100,6 +101,10 @@ function InsuranceCompaniesPage({ apiFetch }) {
     }
   }
 
+  const filteredCompanies = companies.filter((c) =>
+    (c.name || '').toLowerCase().includes(searchTerm.trim().toLowerCase())
+  )
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
@@ -112,6 +117,14 @@ function InsuranceCompaniesPage({ apiFetch }) {
         <div className="panel-header panel-header-row">
           <h2>Insurance Companies</h2>
           <div className="toolbar">
+            <div className="search-box">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search company"
+              />
+            </div>
             <button type="button" className="secondary-btn" onClick={fetchCompanies}>Refresh</button>
             <button type="button" className="primary-btn small-btn" onClick={openAdd}>
               Add Company
@@ -129,6 +142,8 @@ function InsuranceCompaniesPage({ apiFetch }) {
           <div className="empty-state">Loading companies...</div>
         ) : companies.length === 0 ? (
           <div className="empty-state">No insurance companies found. Add one to get started.</div>
+        ) : filteredCompanies.length === 0 ? (
+          <div className="empty-state">No companies match "{searchTerm}".</div>
         ) : (
           <div className="table-wrap">
             <table>
@@ -141,7 +156,7 @@ function InsuranceCompaniesPage({ apiFetch }) {
                 </tr>
               </thead>
               <tbody>
-                {companies.map((c, i) => (
+                {filteredCompanies.map((c, i) => (
                   <tr key={c._id}>
                     <td>{i + 1}</td>
                     <td style={{ fontWeight: 800 }}>{c.name}</td>

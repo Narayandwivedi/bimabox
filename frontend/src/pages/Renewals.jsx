@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
@@ -6,11 +6,6 @@ import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
-// Helper: current Indian financial year (Apr–Mar)
-const getCurrentIndianFY = () => {
-  const now = new Date()
-  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
-}
 
 // Document type -> API base + field mapping so the same Renewals view can drive any type.
 const DOCUMENT_TYPES = [
@@ -64,38 +59,17 @@ const Renewals = () => {
     }
   }, [])
 
-  // When document type changes:
-  // 1. Reset all state
-  // 2. Fetch with no FY filter to discover which FYs have real documents
-  // 3. Once backend returns financialYears, auto-select the best one
-  const fyInitialisedForType = useRef(null)
-
+  // When document type changes: reset state and fetch with All FY (default)
   useEffect(() => {
-    fyInitialisedForType.current = null
     setAvailableFinancialYears([])
     setPolicies([])
     setTabCounts({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
-    setFinancialYear('') // '' = All FY during discovery fetch
+    setFinancialYear('') // Always default to All FY
     fetchRenewals('', docType, statusFilter)
   }, [docType]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Once we have the list of available FY years from backend, pick the best default:
-  // prefer the current Indian FY; if not present, pick the latest available year.
+  // Fetch whenever FY selection or status tab changes (user explicitly chose a FY)
   useEffect(() => {
-    if (fyInitialisedForType.current === docType) return // already set a default
-    if (!availableFinancialYears.length) return
-    fyInitialisedForType.current = docType
-    const currentFY = getCurrentIndianFY()
-    const best = availableFinancialYears.includes(currentFY)
-      ? currentFY
-      : availableFinancialYears[0] // array is sorted desc, so [0] is the latest
-    setFinancialYear(String(best))
-  }, [availableFinancialYears, docType])
-
-  // Fetch whenever FY selection or status tab changes
-  useEffect(() => {
-    // Skip the empty-FY discovery fetch (handled by docType effect above)
-    if (financialYear === '') return
     fetchRenewals(financialYear, docType, statusFilter)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [financialYear, statusFilter])

@@ -542,7 +542,7 @@ const listRecords = async (req, res, filterType = 'all') => {
         .filter((r) => {
           if (!req.query.financialYear) return true
           const year = parseInt(req.query.financialYear, 10)
-          const dateValue = r[config.requiredDateField]
+          const dateValue = r.issueDate
           if (!dateValue) return false
           const parts = dateValue.split('-')
           if (parts.length !== 3) return false
@@ -552,7 +552,7 @@ const listRecords = async (req, res, filterType = 'all') => {
           return d >= fyStart && d <= fyEnd
         })
 
-      res.json({ success: true, data: result, financialYears: getFinancialYearsByField(all, config.requiredDateField) })
+      res.json({ success: true, data: result, financialYears: getFinancialYearsByField(all, 'issueDate') })
     } catch (error) {
       console.error(`Error fetching ${config.name} renewals list:`, error)
       res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })

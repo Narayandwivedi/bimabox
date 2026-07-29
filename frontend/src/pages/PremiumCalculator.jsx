@@ -280,7 +280,7 @@ const PremiumCalculator = () => {
     }
     tpPremium -= restrictedTPPDDiscount
 
-    const geoExtentTPAmount = (vehicleType === 'gcv' && geoExtentAmount > 0) ? 100 : 0
+    const geoExtentTPAmount = ((vehicleType === 'gcv' || vehicleType === 'pcv') && geoExtentAmount > 0) ? 100 : 0
 
     const loadingDiscountPercent = parseFloat(loadingDiscount) || 0
     const netPremiumBeforeLoading = odPremium + tpPremium + dynamicTpAmount + dynamicAddonAmount + geoExtentTPAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount

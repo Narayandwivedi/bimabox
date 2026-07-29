@@ -14,6 +14,7 @@ const PCVForm = ({
   depreciation, setDepreciation,
   coverageType, setCoverageType,
   passengers, setPassengers,
+  geoExtent, setGeoExtent,
   currentYear,
 }) => (
   <div className='space-y-4'>
@@ -52,6 +53,17 @@ const PCVForm = ({
         <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 36' min={0}
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
         <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
+      </div>
+      <div>
+        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
+        <select
+          value={geoExtent}
+          onChange={e => setGeoExtent(e.target.value)}
+          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+        >
+          <option value="0">₹0 – Not Applicable</option>
+          <option value="400">₹400 – Extend Coverage</option>
+        </select>
       </div>
     </div>
     <IDVSection

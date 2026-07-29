@@ -195,7 +195,7 @@ const generatePdf = async (req, res) => {
       if (premiums.imt23 > 0) {
         odRows.push(['IMT 23 Loading', fmt(premiums.imt23)])
       }
-      if (premiums.geoExtent > 0 && categoryUpper === 'GCV') {
+      if (premiums.geoExtent > 0 && (categoryUpper === 'GCV' || categoryUpper === 'PCV')) {
         odRows.push(['Geographical Extent', fmt(premiums.geoExtent)])
       }
       if (premiums.gcvExtraUnits > 0) {

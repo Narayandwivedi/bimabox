@@ -80,7 +80,7 @@ const ResultBox = ({
       ${result.llEmployeeAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>LL to Employee (other than Paid Driver)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.llEmployeeAmount)}</td></tr>` : ''}
       ${result.paOdAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Owner Driver</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paOdAmount)}</td></tr>` : ''}
       ${result.paUnnamedAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Unnamed Passenger</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paUnnamedAmount)}</td></tr>` : ''}
-      ${result.geoExtentTPAmount > 0 && vehicleType === 'gcv' ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent (TP)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentTPAmount)}</td></tr>` : ''}
+      ${result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv') ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent (TP)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentTPAmount)}</td></tr>` : ''}
       ${(result.dynamicCustomFields || []).filter(f => f.section === 'tp').map(f => `<tr><td style='padding:4px 8px;color:#64748b'>${f.label}</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(f.amount)}</td></tr>`).join('')}
     ` : ''
 
@@ -231,7 +231,7 @@ const ResultBox = ({
       if (result.paOdAmount > 0) tableRows.push({ desc: 'Personal Accident to Owner Driver', rate: '-', amount: result.paOdAmount })
       if (result.llEmployeeAmount > 0) tableRows.push({ desc: 'Legal Liability to Employee (other than Paid Driver)', rate: '-', amount: result.llEmployeeAmount })
       if (result.paUnnamedAmount > 0) tableRows.push({ desc: 'PA to Unnamed Passenger', rate: '-', amount: result.paUnnamedAmount })
-      if (result.geoExtentTPAmount > 0 && vehicleType === 'gcv') tableRows.push({ desc: 'Geographical Extent (TP)', rate: '-', amount: result.geoExtentTPAmount })
+      if (result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv')) tableRows.push({ desc: 'Geographical Extent (TP)', rate: '-', amount: result.geoExtentTPAmount })
       (result.dynamicCustomFields || []).filter(f => f.section === 'tp').forEach(f => {
         tableRows.push({ desc: f.label, rate: '-', amount: f.amount })
       })
@@ -403,7 +403,7 @@ const ResultBox = ({
               ...(result.paOdAmount > 0 ? [['PA to Owner Driver', `₹${fmtD(result.paOdAmount)}`]] : []),
               ...(result.llEmployeeAmount > 0 ? [['LL to Employee (other than Paid Driver)', `₹${fmtD(result.llEmployeeAmount)}`]] : []),
               ...(result.paUnnamedAmount > 0 ? [['PA to Unnamed Passenger', `₹${fmtD(result.paUnnamedAmount)}`]] : []),
-              ...(result.geoExtentTPAmount > 0 && vehicleType === 'gcv' ? [['Geographical Extent (TP)', `₹${fmtD(result.geoExtentTPAmount)}`]] : []),
+              ...(result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv') ? [['Geographical Extent (TP)', `₹${fmtD(result.geoExtentTPAmount)}`]] : []),
               ...(result.dynamicCustomFields || []).filter(f => f.section === 'tp').map(f => [f.label, `₹${fmtD(f.amount)}`]),
             ].map(([label, value], i) => (
               <div key={i} className='flex items-center justify-between'>

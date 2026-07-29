@@ -75,9 +75,9 @@ const TARIFF = {
   },
   pcv_3w: {
     subtypes: [
-      { id: 'c1b', label: '3W PCV ≤6 Psgr (C1 B)', tpBase: 2539, tpPerPsgr: 1214 },
+      { id: 'c1b', label: '3W PCV ≤6 Psgr', tpBase: 2539, tpPerPsgr: 1214 },
       { id: 'erickshaw_c1b', label: '3W e-Rick PCV ≤6 Psgr', tpBase: 1648, tpPerPsgr: 789 },
-      { id: 'c3a', label: '3WH PCV >6 & <17 Psgr (C3 A)', tpBase: 6763, tpPerPsgr: 1349 },
+      { id: 'c3a', label: '3WH PCV >6 & <17 Psgr', tpBase: 6763, tpPerPsgr: 1349 },
       { id: 'erickshaw_c3a', label: '3W e-Rick PCV >6 & <17 Psgr', tpBase: 5749, tpPerPsgr: 1147 },
     ],
     odRates: {

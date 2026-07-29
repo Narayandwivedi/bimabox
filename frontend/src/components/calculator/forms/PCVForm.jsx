@@ -15,65 +15,83 @@ const PCVForm = ({
   coverageType, setCoverageType,
   passengers, setPassengers,
   geoExtent, setGeoExtent,
+  cngKit, setCngKit,
   currentYear,
-}) => (
-  <div className='space-y-4'>
-    <div className='rounded-xl bg-green-50 border border-green-200 p-3'>
-      <p className='text-[9px] font-bold text-green-800'>BUS & MAXI ≥4W & {'>'}6 Psgr (C2) — TP = Base + (Psgr × Seat Rate)</p>
-    </div>
-    <div>
-      <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Bus Sub-Type</label>
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-        {[['school_bus', 'e_school_bus'], ['other_bus', 'e_other_bus']].map(pair =>
-          pair.map(id => {
-            const st = TARIFF.pcv.subtypes.find(s => s.id === id)
-            return (
-              <button key={st.id} onClick={() => setSubtype(st.id)}
-                className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                <div>
-                  <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
-                  <p className='text-[8px] text-slate-500'>Base ₹{fmt(st.tpBase)} + ₹{fmt(st.tpPerPsgr)}/psgr</p>
-                </div>
-                {st.isElectric && <span className='text-[8px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold'>EV</span>}
-              </button>
-            )
-          })
+}) => {
+  const isElectricSubtype = subtype === 'e_school_bus' || subtype === 'e_other_bus'
+
+  return (
+    <div className='space-y-4'>
+      <div className='rounded-xl bg-green-50 border border-green-200 p-3'>
+        <p className='text-[9px] font-bold text-green-800'>BUS & MAXI ≥4W & {'>'}6 Psgr (C2) — TP = Base + (Psgr × Seat Rate)</p>
+      </div>
+      <div>
+        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Bus Sub-Type</label>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+          {[['school_bus', 'e_school_bus'], ['other_bus', 'e_other_bus']].map(pair =>
+            pair.map(id => {
+              const st = TARIFF.pcv.subtypes.find(s => s.id === id)
+              return (
+                <button key={st.id} onClick={() => setSubtype(st.id)}
+                  className={`rounded-xl border-2 px-4 py-2.5 text-left transition-all flex justify-between items-center ${subtype === st.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                  <div>
+                    <span className='text-[11px] sm:text-xs font-black text-slate-800'>{st.label}</span>
+                    <p className='text-[8px] text-slate-500'>Base ₹{fmt(st.tpBase)} + ₹{fmt(st.tpPerPsgr)}/psgr</p>
+                  </div>
+                  {st.isElectric && <span className='text-[8px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold'>EV</span>}
+                </button>
+              )
+            })
+          )}
+        </div>
+      </div>
+      <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+        <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
+        <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
+        <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
+      </div>
+      <div className={`grid grid-cols-1 ${!isElectricSubtype ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers (Seating Capacity)</label>
+          <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 36' min={0}
+            className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
+          <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
+        </div>
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
+          <select
+            value={geoExtent}
+            onChange={e => setGeoExtent(e.target.value)}
+            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+          >
+            <option value="0">₹0 – Not Applicable</option>
+            <option value="400">₹400 – Extend Coverage</option>
+          </select>
+        </div>
+        {!isElectricSubtype && (
+          <div>
+            <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>CNG/LPG Kit</label>
+            <select
+              value={cngKit}
+              onChange={e => setCngKit(e.target.value)}
+              className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes (+₹60 TP, +5% OD)</option>
+            </select>
+          </div>
         )}
       </div>
+      <IDVSection
+        idv={idv} setIdv={setIdv}
+        depreciation={depreciation} setDepreciation={setDepreciation}
+        ncb={ncb} setNcb={setNcb}
+        odDiscount={odDiscount} setOdDiscount={setOdDiscount}
+        loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
+      />
     </div>
-    <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
-    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
-      <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
-      <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
-      <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
-    </div>
-    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-      <div>
-        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers (Seating Capacity)</label>
-        <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 36' min={0}
-          className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
-        <p className='mt-1 text-[8px] text-slate-400'>Add OD: ≤18 / 19–36 / 37–60 / {'>'}60 Psgr</p>
-      </div>
-      <div>
-        <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Geographical Ext (₹)</label>
-        <select
-          value={geoExtent}
-          onChange={e => setGeoExtent(e.target.value)}
-          className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
-        >
-          <option value="0">₹0 – Not Applicable</option>
-          <option value="400">₹400 – Extend Coverage</option>
-        </select>
-      </div>
-    </div>
-    <IDVSection
-      idv={idv} setIdv={setIdv}
-      depreciation={depreciation} setDepreciation={setDepreciation}
-      ncb={ncb} setNcb={setNcb}
-      odDiscount={odDiscount} setOdDiscount={setOdDiscount}
-      loadingDiscount={loadingDiscount} setLoadingDiscount={setLoadingDiscount}
-    />
-  </div>
-)
+  )
+}
 
 export default PCVForm

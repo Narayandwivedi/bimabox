@@ -53,7 +53,7 @@ const ResultBox = ({
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
     const vehicleSpec = isElectric ? `${kwPower || 0} KW (Electric)` : `${cc || 0} CC`
 
-    const netPremium = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
+    const netPremium = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + (result.cngKitTpAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
     const exactTotal = netPremium + result.gst
 
     const tpL = isBundle ? (vehicleType === 'two_wheeler' ? '5Yr TP' : '3Yr TP') : '1Yr TP'
@@ -64,6 +64,7 @@ const ResultBox = ({
       ${vehicleType === 'pcv' && result.addODVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Add. OD (Passenger Capacity)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.addODVal)}</td></tr>` : ''}
       ${vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Extra Weight > 12000 Premium</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.details.gcvExtraPremium)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
+      ${result.cngKitOdAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>CNG/LPG Kit</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.cngKitOdAmount)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 Loading (15% of sum)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
       ${(result.dynamicCustomFields || []).filter(f => f.section === 'od').map(f => `<tr><td style='padding:4px 8px;color:#64748b'>${f.label}</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(f.amount)}</td></tr>`).join('')}
       <tr style='background:#fef3c7'><td style='padding:6px 8px;font-weight:800;color:#92400e'>Final OD before discounts</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#92400e'>₹${fmtD(result.odBeforeDiscount)}</td></tr>
@@ -81,6 +82,7 @@ const ResultBox = ({
       ${result.paOdAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Owner Driver</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paOdAmount)}</td></tr>` : ''}
       ${result.paUnnamedAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>PA to Unnamed Passenger</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.paUnnamedAmount)}</td></tr>` : ''}
       ${result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv') ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent (TP)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentTPAmount)}</td></tr>` : ''}
+      ${result.cngKitTpAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>CNG/LPG Kit (TP)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.cngKitTpAmount)}</td></tr>` : ''}
       ${(result.dynamicCustomFields || []).filter(f => f.section === 'tp').map(f => `<tr><td style='padding:4px 8px;color:#64748b'>${f.label}</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(f.amount)}</td></tr>`).join('')}
     ` : ''
 
@@ -213,6 +215,7 @@ const ResultBox = ({
       if (vehicleType === 'pcv' && result.addODVal > 0) tableRows.push({ desc: 'Add. OD (Passenger Capacity)', rate: '-', amount: result.addODVal })
       if (vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0) tableRows.push({ desc: 'Extra Weight > 12000 Premium', rate: '-', amount: result.details.gcvExtraPremium })
       if (result.geoExtentAmount > 0) tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
+      if (result.cngKitOdAmount > 0) tableRows.push({ desc: 'CNG/LPG Kit', rate: '5%', amount: result.cngKitOdAmount })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of sum)', rate: '15%', amount: result.imt23Amount })
       (result.dynamicCustomFields || []).filter(f => f.section === 'od').forEach(f => {
         tableRows.push({ desc: f.label, rate: '-', amount: f.amount })
@@ -232,6 +235,7 @@ const ResultBox = ({
       if (result.llEmployeeAmount > 0) tableRows.push({ desc: 'Legal Liability to Employee (other than Paid Driver)', rate: '-', amount: result.llEmployeeAmount })
       if (result.paUnnamedAmount > 0) tableRows.push({ desc: 'PA to Unnamed Passenger', rate: '-', amount: result.paUnnamedAmount })
       if (result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv')) tableRows.push({ desc: 'Geographical Extent (TP)', rate: '-', amount: result.geoExtentTPAmount })
+      if (result.cngKitTpAmount > 0) tableRows.push({ desc: 'CNG/LPG Kit (TP)', rate: '-', amount: result.cngKitTpAmount })
       (result.dynamicCustomFields || []).filter(f => f.section === 'tp').forEach(f => {
         tableRows.push({ desc: f.label, rate: '-', amount: f.amount })
       })
@@ -247,7 +251,7 @@ const ResultBox = ({
 
 
 
-    const netPremiumVal = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
+    const netPremiumVal = result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + (result.cngKitTpAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0)
 
     tableRows.push({ desc: 'Premium Before Taxes', rate: '-', amount: netPremiumVal, type: 'total' })
 
@@ -304,6 +308,8 @@ const ResultBox = ({
           rsa: result.rsaAmount,
           otherAddon: result.otherAddonAmount,
           geoExtent: result.geoExtentAmount,
+          cngKitOdAmount: result.cngKitOdAmount,
+          cngKitTpAmount: result.cngKitTpAmount,
           imt23: result.imt23Amount,
           zeroDep: result.zeroDepAmount,
           tyreCover: result.tyreCoverAmount,
@@ -368,6 +374,7 @@ const ResultBox = ({
                 [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),
               ...(result.geoExtentAmount > 0 ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
+              ...(result.cngKitOdAmount > 0 ? [['CNG/LPG Kit', `₹${fmtD(result.cngKitOdAmount)}`]] : []),
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of sum)', `₹${fmtD(result.imt23Amount)}`]] : []),
               ...(result.dynamicCustomFields || []).filter(f => f.section === 'od').map(f => [f.label, `₹${fmtD(f.amount)}`]),
               ['Final OD before discounts', `₹${fmtD(result.odBeforeDiscount)}`, 'font-black text-amber-700 bg-amber-50 rounded-lg px-3 py-2 -mx-1.5 text-sm'],
@@ -404,6 +411,7 @@ const ResultBox = ({
               ...(result.llEmployeeAmount > 0 ? [['LL to Employee (other than Paid Driver)', `₹${fmtD(result.llEmployeeAmount)}`]] : []),
               ...(result.paUnnamedAmount > 0 ? [['PA to Unnamed Passenger', `₹${fmtD(result.paUnnamedAmount)}`]] : []),
               ...(result.geoExtentTPAmount > 0 && (vehicleType === 'gcv' || vehicleType === 'pcv') ? [['Geographical Extent (TP)', `₹${fmtD(result.geoExtentTPAmount)}`]] : []),
+              ...(result.cngKitTpAmount > 0 ? [['CNG/LPG Kit (TP)', `₹${fmtD(result.cngKitTpAmount)}`]] : []),
               ...(result.dynamicCustomFields || []).filter(f => f.section === 'tp').map(f => [f.label, `₹${fmtD(f.amount)}`]),
             ].map(([label, value], i) => (
               <div key={i} className='flex items-center justify-between'>
@@ -413,7 +421,7 @@ const ResultBox = ({
             ))}
             <div className='flex items-center justify-between rounded-lg bg-rose-100/80 px-3 py-2 -mx-2 border-t border-rose-200/70 mt-1.5'>
               <p className='text-[10px] sm:text-[11px] font-black text-rose-900'>Total TP & Liability Premium</p>
-              <p className='text-sm sm:text-base font-black text-rose-700'>₹{fmtD(result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.paUnnamedAmount + (result.dynamicCustomFields || []).filter(f => f.section === 'tp').reduce((sum, f) => sum + f.amount, 0))}</p>
+              <p className='text-sm sm:text-base font-black text-rose-700'>₹{fmtD(result.tpPremium + (result.geoExtentTPAmount || 0) + (result.cngKitTpAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.paUnnamedAmount + (result.dynamicCustomFields || []).filter(f => f.section === 'tp').reduce((sum, f) => sum + f.amount, 0))}</p>
             </div>
           </div>
         )}
@@ -447,7 +455,7 @@ const ResultBox = ({
         <div className='rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2'>
           <div className='flex items-center justify-between text-xs'>
             <p className='font-bold text-slate-500'>Total before GST</p>
-            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
+            <p className='font-black text-slate-800'>₹{fmtD(result.odPremium + result.tpPremium + (result.geoExtentTPAmount || 0) + (result.cngKitTpAmount || 0) + result.llPdAmount + result.paOdAmount + result.llEmployeeAmount + result.rsaAmount + result.otherAddonAmount + result.paUnnamedAmount + result.zeroDepAmount + result.tyreCoverAmount + (result.loadingAmount || 0))}</p>
           </div>
           {result.gstTpRate === 5 ? (
             <>

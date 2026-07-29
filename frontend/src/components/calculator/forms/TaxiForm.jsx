@@ -15,6 +15,7 @@ const TaxiForm = ({
   depreciation, setDepreciation,
   coverageType, setCoverageType,
   passengers, setPassengers,
+  cngKit, setCngKit,
   currentYear,
 }) => (
   <div className='space-y-4'>
@@ -44,7 +45,7 @@ const TaxiForm = ({
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
       <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+    <div className={`grid grid-cols-1 ${!isElectric ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
       {!isElectric ? (
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Engine CC</label>
@@ -65,6 +66,19 @@ const TaxiForm = ({
         <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 4' min={0} max={6}
           className='w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300' />
       </div>
+      {!isElectric && (
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>CNG/LPG Kit</label>
+          <select
+            value={cngKit}
+            onChange={e => setCngKit(e.target.value)}
+            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+          >
+            <option value="no">No</option>
+            <option value="yes">Yes (+₹60 TP, +5% OD)</option>
+          </select>
+        </div>
+      )}
     </div>
     <IDVSection
       idv={idv} setIdv={setIdv}

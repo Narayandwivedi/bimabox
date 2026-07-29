@@ -198,6 +198,9 @@ const generatePdf = async (req, res) => {
       if (premiums.geoExtent > 0 && (categoryUpper === 'GCV' || categoryUpper === 'PCV')) {
         odRows.push(['Geographical Extent', fmt(premiums.geoExtent)])
       }
+      if (premiums.cngKitOdAmount > 0) {
+        odRows.push(['CNG/LPG Kit', fmt(premiums.cngKitOdAmount)])
+      }
       if (premiums.gcvExtraUnits > 0) {
         odRows.push([`Extra Weight > 12000 Premium`, fmt(premiums.gcvExtraPremium)])
       }
@@ -224,8 +227,9 @@ const generatePdf = async (req, res) => {
       if (premiums.llPd > 0) tpRows.push(['LL to Paid Driver', fmt(premiums.llPd)])
       if (premiums.llEmployee > 0) tpRows.push(['LL to Employee', fmt(premiums.llEmployee)])
       if (premiums.paUnnamed > 0) tpRows.push(['PA to Unnamed Passenger', fmt(premiums.paUnnamed)])
+      if (premiums.cngKitTpAmount > 0) tpRows.push(['CNG/LPG Kit (TP)', fmt(premiums.cngKitTpAmount)])
     }
-    const finalTP = (premiums.tp || 0) + (premiums.llPd || 0) + (premiums.paOd || 0) + (premiums.llEmployee || 0) + (premiums.paUnnamed || 0)
+    const finalTP = (premiums.tp || 0) + (premiums.llPd || 0) + (premiums.paOd || 0) + (premiums.llEmployee || 0) + (premiums.paUnnamed || 0) + (premiums.cngKitTpAmount || 0)
 
     const drawBreakupColumn = (x, startY, title, rows, minRows = 5) => {
       let cy = startY

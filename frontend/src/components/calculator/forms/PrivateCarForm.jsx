@@ -15,6 +15,7 @@ const PrivateCarForm = ({
   depreciation, setDepreciation,
   policyType, setPolicyType,
   bundleOdTerm, setBundleOdTerm, bundleTpTerm, setBundleTpTerm,
+  cngKit, setCngKit,
   vehicleType,
   currentYear,
 }) => (
@@ -39,7 +40,7 @@ const PrivateCarForm = ({
       </div>
     </div>
     <PolicyTypeSelector policyType={policyType} setPolicyType={setPolicyType} vehicleType={vehicleType} bundleOdTerm={bundleOdTerm} setBundleOdTerm={setBundleOdTerm} bundleTpTerm={bundleTpTerm} setBundleTpTerm={setBundleTpTerm} />
-    <div className='grid grid-cols-1 sm:grid-cols-4 gap-3'>
+    <div className={`grid grid-cols-1 ${!isElectric ? 'sm:grid-cols-5' : 'sm:grid-cols-4'} gap-3`}>
       <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B']} />
       <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
       <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
@@ -65,7 +66,20 @@ const PrivateCarForm = ({
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>Motor Power (KW)</label>
           <input type='number' value={kwPower} onChange={e => setKwPower(e.target.value)} placeholder='e.g. 45'
             className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-300 transition-all' />
-          <p className='mt-1 text-[8px] text-slate-400'>Brackets: &lt;30 / 30–65 / {'>'}65 KW</p>
+          <p className='mt-1 text-[8px] text-slate-400'>&lt;30 / 30–65 / {'>'}65 KW</p>
+        </div>
+      )}
+      {!isElectric && (
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>CNG/LPG Kit</label>
+          <select
+            value={cngKit}
+            onChange={e => setCngKit(e.target.value)}
+            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+          >
+            <option value="no">No</option>
+            <option value="yes">Yes (+₹60 TP, +5% OD)</option>
+          </select>
         </div>
       )}
     </div>

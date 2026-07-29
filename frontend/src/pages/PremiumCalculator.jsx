@@ -64,6 +64,7 @@ const PremiumCalculator = () => {
   const [llToEmployee, setLlToEmployee] = useState('')
   const [rsa, setRsa] = useState('')
   const [geoExtent, setGeoExtent] = useState('0')
+  const [cngKit, setCngKit] = useState('no')
   const [imt23, setImt23] = useState('no')
   const [restrictedTPPD, setRestrictedTPPD] = useState('no')
   const [zeroDep, setZeroDep] = useState('')
@@ -107,6 +108,7 @@ const PremiumCalculator = () => {
     setLlToEmployee('')
     setRsa('')
     setGeoExtent('0')
+    setCngKit('no')
     setImt23('no')
     setZeroDep('0')
     setOtherAddon('')
@@ -160,6 +162,11 @@ const PremiumCalculator = () => {
     let odDiscountAmount = 0
     const odDiscountVal = parseFloat(odDiscount) || 0
     const geoExtentAmount = parseFloat(geoExtent) || 0
+
+    const isElectricSubtype = subtype === 'e_school_bus' || subtype === 'e_other_bus'
+    let cngKitOdAmount = 0
+    let cngKitTpAmount = 0
+
     // Process dynamic custom fields added from admin
     let dynamicOdAmount = 0
     let dynamicAddonAmount = 0
@@ -236,7 +243,8 @@ const PremiumCalculator = () => {
     if (vehicleType === 'private_car' || vehicleType === 'two_wheeler') {
       if (policyType !== 'tp' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
-        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount
+        cngKitOdAmount = (vehicleType === 'private_car' && !isElectric && cngKit === 'yes') ? basicOd * 0.05 : 0
+        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0) + geoExtentAmount + cngKitOdAmount
         const imtBase = basicOd + extras
         imt23Amount = imt23 === 'yes' ? imtBase * (imt23Rate / 100) : 0
         const bundleMul = policyType === 'bundle' ? (parseInt(bundleOdTerm) || 1) : 1
@@ -249,9 +257,11 @@ const PremiumCalculator = () => {
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
+        cngKitOdAmount = ((vehicleType === 'pcv' && !isElectricSubtype) || (vehicleType === 'taxi' && !isElectric)) && cngKit === 'yes' ? basicOd * 0.05 : 0
         const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0)
                     + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0)
                     + geoExtentAmount
+                    + cngKitOdAmount
         const imtBase = basicOd + extras
         imt23Amount = imt23 === 'yes' ? imtBase * (imt23Rate / 100) : 0
         odBeforeDiscount = imtBase + imt23Amount + dynamicOdAmount
@@ -262,6 +272,8 @@ const PremiumCalculator = () => {
       if (coverageType === 'tp') odPremium = 0
     }
 
+    const isCngVehicle = (vehicleType === 'pcv' && !isElectricSubtype) || (vehicleType === 'private_car' && !isElectric) || (vehicleType === 'taxi' && !isElectric)
+    cngKitTpAmount = (isCngVehicle && cngKit === 'yes' && coverageType !== 'od' && policyType !== 'od') ? 60 : 0
 
     const llPdAmount = parseFloat(llPaidDriver) || 0
     const paOdAmount = parseFloat(paOwnerDriver) || 0
@@ -283,7 +295,7 @@ const PremiumCalculator = () => {
     const geoExtentTPAmount = ((vehicleType === 'gcv' || vehicleType === 'pcv') && geoExtentAmount > 0) ? 100 : 0
 
     const loadingDiscountPercent = parseFloat(loadingDiscount) || 0
-    const netPremiumBeforeLoading = odPremium + tpPremium + dynamicTpAmount + dynamicAddonAmount + geoExtentTPAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
+    const netPremiumBeforeLoading = odPremium + tpPremium + dynamicTpAmount + dynamicAddonAmount + geoExtentTPAmount + cngKitTpAmount + llPdAmount + paOdAmount + llEmployeeAmount + rsaAmount + otherAddonAmount + paUnnamedAmount + zeroDepAmount + tyreCoverAmount
     const loadingAmount = netPremiumBeforeLoading * (loadingDiscountPercent / 100)
     const netPremium = netPremiumBeforeLoading + loadingAmount
 
@@ -306,6 +318,7 @@ const PremiumCalculator = () => {
     setResult({
       odPremium, odBeforeDiscount, tpPremium, llPdAmount, paOdAmount, llEmployeeAmount,
       rsaAmount, otherAddonAmount, paUnnamedAmount, geoExtentAmount, geoExtentTPAmount,
+      cngKitOdAmount, cngKitTpAmount, cngKit,
       imt23Amount, zeroDepAmount, tyreCoverAmount, restrictedTPPDDiscount,
       loadingAmount, loadingDiscount: loadingDiscountPercent,
       depreciation: depreciationPercent, depreciatedIdv,
@@ -318,7 +331,7 @@ const PremiumCalculator = () => {
 
   useEffect(() => {
     if (vehicleType) calculatePremium()
-  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount, depreciation, customFieldValues])
+  }, [vehicleType, zone, vehicleAge, idv, ncb, odDiscount, coverageType, policyType, bundleOdTerm, bundleTpTerm, cc, kwPower, isElectric, gvw, passengers, subtype, policyTerm, llPaidDriver, paOwnerDriver, llToEmployee, geoExtent, cngKit, imt23, restrictedTPPD, zeroDep, tyreCover, rsa, otherAddon, paUnnamedPassenger, loadingDiscount, depreciation, customFieldValues])
 
 
   const formProps = {
@@ -329,7 +342,7 @@ const PremiumCalculator = () => {
     gvw, setGvw, passengers, setPassengers,
     subtype, setSubtype,
     manufacturingYear, setManufacturingYear,
-    geoExtent, setGeoExtent, imt23, setImt23,
+    geoExtent, setGeoExtent, cngKit, setCngKit, imt23, setImt23,
     loadingDiscount, setLoadingDiscount,
     depreciation, setDepreciation,
     vehicleType, currentYear,

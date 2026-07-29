@@ -257,7 +257,13 @@ const PremiumCalculator = () => {
     } else {
       if (coverageType === 'comprehensive' && idvVal > 0) {
         const basicOd = depreciatedIdv * (odRate / 100)
-        cngKitOdAmount = ((vehicleType === 'pcv' && !isElectricSubtype) || (vehicleType === 'taxi' && !isElectric)) && cngKit === 'yes' ? basicOd * 0.05 : 0
+        const isPcv3wElectric = (subtype || '').startsWith('erickshaw_')
+        const isCngCommVehicle = (vehicleType === 'pcv' && !isElectricSubtype) ||
+                                (vehicleType === 'taxi' && !isElectric) ||
+                                (vehicleType === 'gcv' && !isElectric) ||
+                                (vehicleType === 'gcv_3w' && !isElectric) ||
+                                (vehicleType === 'pcv_3w' && !isPcv3wElectric)
+        cngKitOdAmount = isCngCommVehicle && cngKit === 'yes' ? basicOd * 0.05 : 0
         const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0)
                     + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0)
                     + geoExtentAmount
@@ -272,7 +278,13 @@ const PremiumCalculator = () => {
       if (coverageType === 'tp') odPremium = 0
     }
 
-    const isCngVehicle = (vehicleType === 'pcv' && !isElectricSubtype) || (vehicleType === 'private_car' && !isElectric) || (vehicleType === 'taxi' && !isElectric)
+    const isPcv3wElectric = (subtype || '').startsWith('erickshaw_')
+    const isCngVehicle = (vehicleType === 'pcv' && !isElectricSubtype) ||
+                         (vehicleType === 'private_car' && !isElectric) ||
+                         (vehicleType === 'taxi' && !isElectric) ||
+                         (vehicleType === 'gcv' && !isElectric) ||
+                         (vehicleType === 'gcv_3w' && !isElectric) ||
+                         (vehicleType === 'pcv_3w' && !isPcv3wElectric)
     cngKitTpAmount = (isCngVehicle && cngKit === 'yes' && coverageType !== 'od' && policyType !== 'od') ? 60 : 0
 
     const llPdAmount = parseFloat(llPaidDriver) || 0

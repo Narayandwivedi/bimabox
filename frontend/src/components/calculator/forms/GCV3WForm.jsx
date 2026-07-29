@@ -17,6 +17,7 @@ const GCV3WForm = ({
   loadingDiscount, setLoadingDiscount,
   depreciation, setDepreciation,
   coverageType, setCoverageType,
+  cngKit, setCngKit,
   imt23, setImt23,
   currentYear,
 }) => {
@@ -50,10 +51,23 @@ const GCV3WForm = ({
         </div>
       </div>
       <CoverageSelector coverageType={coverageType} setCoverageType={setCoverageType} />
-      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
+      <div className={`grid grid-cols-1 ${!isElectric ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
         <ZoneSelector zone={zone} setZone={setZone} zones={['A', 'B', 'C']} />
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
+        {!isElectric && (
+          <div>
+            <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>CNG/LPG Kit</label>
+            <select
+              value={cngKit}
+              onChange={e => setCngKit(e.target.value)}
+              className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes (+₹60 TP, +5% OD)</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <IDVSection

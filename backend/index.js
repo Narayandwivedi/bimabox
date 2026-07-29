@@ -87,8 +87,19 @@ app.use('/api/wallet', require('./routes/walletRoutes'))
 app.use('/api/admin-dashboard', require('./routes/adminDashboardRoutes'))
 app.use('/api/admin-policies', require('./routes/adminPolicyRoutes'))
 
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err)
+  res.status(500).json({ success: false, message: err.message || 'Internal server error' })
+})
+
 mongoose
-  .connect(MONGODB_URI)
+  .connect(MONGODB_URI, {
+    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 30000,
+    waitQueueTimeoutMS: 10000,
+    connectTimeoutMS: 30000,
+    heartbeatFrequencyMS: 10000,
+  })
   .then(async () => {
     console.log('MongoDB connected')
 
@@ -96,9 +107,12 @@ mongoose
     await applyFreePlanOneYearValidity()
     await require('./controllers/productTypeController').seedDefaultProductTypes()
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })
+
+    server.keepAliveTimeout = 65000
+    server.headersTimeout = 70000
 
     whatsAppSessionManager.restoreSessions().catch((error) => {
       console.error('Failed to restore WhatsApp sessions:', error)

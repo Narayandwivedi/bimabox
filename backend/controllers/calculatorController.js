@@ -72,8 +72,6 @@ const generatePdf = async (req, res) => {
     let y = 40
 
     // ── Header Block ────────────────────────────────────────────────────────
-    const headerCenterX = 40 + pageWidth / 2
-
     // Light header with a blue bottom accent line
     doc.rect(40, y, pageWidth, 70).fillColor('#ffffff').fill()
     doc.rect(40, y, pageWidth, 70).strokeColor('#e2e8f0').lineWidth(1).stroke()
@@ -91,16 +89,6 @@ const generatePdf = async (req, res) => {
 
     // Tagline
     doc.fontSize(7).font('Helvetica').fillColor('#64748b').text('All your policies. One smart place.', 80, y + 34)
-
-    // Business/Profile logo — centered above the insurance company name, shown as-is
-    if (businessPictureBuffer) {
-      const boxSize = 34
-      try {
-        doc.image(businessPictureBuffer, headerCenterX - boxSize / 2, y + 4, { fit: [boxSize, boxSize], align: 'center', valign: 'center' })
-      } catch (error) {
-        console.error('Error drawing business picture:', error.message)
-      }
-    }
 
     // Insurance Company Name — centered across the full header width
     doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f172a').text(insuranceCompany, 40, y + 50, { align: 'center', width: pageWidth })
@@ -330,13 +318,26 @@ const generatePdf = async (req, res) => {
     y += 55
 
     // ── Producer Info Box ─────────────────────────────────────────────────
-    doc.rect(40, y, pageWidth, 42).fillColor('#f1f5f9').fill()
-    doc.rect(40, y, pageWidth, 42).strokeColor('#cbd5e1').stroke()
+    const producerBoxH = businessPictureBuffer ? 50 : 42
+    doc.rect(40, y, pageWidth, producerBoxH).fillColor('#f1f5f9').fill()
+    doc.rect(40, y, pageWidth, producerBoxH).strokeColor('#cbd5e1').stroke()
 
     const drawProducerCol = (colIdx, label, val) => {
       const cx = 40 + colIdx * (pageWidth / 3)
-      doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569').text(label, cx + 8, y + 8)
-      doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8, y + 22, { width: (pageWidth / 3) - 16, ellipsis: true })
+      const colWidth = (pageWidth / 3) - 16
+      if (colIdx === 0 && businessPictureBuffer) {
+        const logoSize = 28
+        try {
+          doc.image(businessPictureBuffer, cx + 8, y + (producerBoxH - logoSize) / 2, { fit: [logoSize, logoSize], align: 'center', valign: 'center' })
+        } catch (error) {
+          console.error('Error drawing business picture:', error.message)
+        }
+        doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569').text(label, cx + 8 + logoSize + 6, y + 10)
+        doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8 + logoSize + 6, y + 23, { width: colWidth - logoSize - 6, ellipsis: true })
+      } else {
+        doc.fontSize(8).font('Helvetica-Bold').fillColor('#475569').text(label, cx + 8, y + 10)
+        doc.fontSize(8.5).font('Helvetica-Bold').fillColor('#0f172a').text(val, cx + 8, y + 23, { width: colWidth, ellipsis: true })
+      }
     }
 
     drawProducerCol(0, 'Producer Name', producerName)
@@ -344,7 +345,7 @@ const generatePdf = async (req, res) => {
     drawProducerCol(2, 'Producer Email', producerEmail)
 
     // Footer signature
-    doc.fontSize(7).font('Helvetica').fillColor('#94a3b8').text('Insurance is subject matter of the solicitation.', 40, y + 50, { align: 'center', width: pageWidth })
+    doc.fontSize(7).font('Helvetica').fillColor('#94a3b8').text('Insurance is subject matter of the solicitation.', 40, y + producerBoxH + 8, { align: 'center', width: pageWidth })
 
     // ── Finalize ───────────────────────────────────────────────────────────
     doc.end()

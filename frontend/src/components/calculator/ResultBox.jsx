@@ -60,12 +60,12 @@ const ResultBox = ({
     const tpBefore = result.tpPremium + result.restrictedTPPDDiscount
     const odItems = showOD ? `
       <tr><td style='padding:4px 8px;color:#64748b'>Final IDV (after depreciation)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(effectiveIdv)}</td></tr>
-      <tr><td style='padding:4px 8px;color:#64748b'>Basic OD Premium (@ ${result.odRate}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
-      ${vehicleType === 'pcv' && result.addODVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Add. OD (Passenger Capacity)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.addODVal)}</td></tr>` : ''}
+      <tr><td style='padding:4px 8px;color:#64748b'>${vehicleType === 'pcv' ? 'Vehicle Basic OD' : `Basic OD Premium (@ ${result.odRate}%)`}</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(odBase)}</td></tr>
       ${vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Extra Weight > 12000 Premium</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.details.gcvExtraPremium)}</td></tr>` : ''}
       ${result.geoExtentAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Geographical Extent</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.geoExtentAmount)}</td></tr>` : ''}
       ${result.cngKitOdAmount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>CNG/LPG Kit</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.cngKitOdAmount)}</td></tr>` : ''}
       ${result.imt23Amount > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>IMT 23 Loading (15% of sum)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.imt23Amount)}</td></tr>` : ''}
+      ${vehicleType === 'pcv' && result.addODVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>Add. OD (Passenger Capacity)</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(result.addODVal)}</td></tr>` : ''}
       ${(result.dynamicCustomFields || []).filter(f => f.section === 'od').map(f => `<tr><td style='padding:4px 8px;color:#64748b'>${f.label}</td><td style='text-align:right;padding:4px 8px;font-weight:700'>₹${fmtD(f.amount)}</td></tr>`).join('')}
       <tr style='background:#fef3c7'><td style='padding:6px 8px;font-weight:800;color:#92400e'>Final OD before discounts</td><td style='text-align:right;padding:6px 8px;font-weight:800;color:#92400e'>₹${fmtD(result.odBeforeDiscount)}</td></tr>
       ${result.odDiscountVal > 0 ? `<tr><td style='padding:4px 8px;color:#64748b'>OD Discount (${result.odDiscountVal}%)</td><td style='text-align:right;padding:4px 8px;font-weight:700;color:#dc2626'>- ₹${fmtD(result.odDiscountAmount)}</td></tr>` : ''}
@@ -211,12 +211,12 @@ const ResultBox = ({
     const tableRows = []
 
     if (showOD) {
-      tableRows.push({ desc: 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
-      if (vehicleType === 'pcv' && result.addODVal > 0) tableRows.push({ desc: 'Add. OD (Passenger Capacity)', rate: '-', amount: result.addODVal })
+      tableRows.push({ desc: vehicleType === 'pcv' ? 'Vehicle Basic OD' : 'Basic Own Damage (OD) Premium', rate: `${result.odRate}%`, amount: odBaseVal })
       if (vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0) tableRows.push({ desc: 'Extra Weight > 12000 Premium', rate: '-', amount: result.details.gcvExtraPremium })
       if (result.geoExtentAmount > 0) tableRows.push({ desc: 'Geographical Extent', rate: '-', amount: result.geoExtentAmount })
       if (result.cngKitOdAmount > 0) tableRows.push({ desc: 'CNG/LPG Kit', rate: '5%', amount: result.cngKitOdAmount })
       if (result.imt23Amount > 0) tableRows.push({ desc: 'IMT 23 Loading (15% of sum)', rate: '15%', amount: result.imt23Amount })
+      if (vehicleType === 'pcv' && result.addODVal > 0) tableRows.push({ desc: 'Add. OD (Passenger Capacity)', rate: '-', amount: result.addODVal })
       (result.dynamicCustomFields || []).filter(f => f.section === 'od').forEach(f => {
         tableRows.push({ desc: f.label, rate: '-', amount: f.amount })
       })
@@ -366,16 +366,16 @@ const ResultBox = ({
             </div>
             {[
               ['Final IDV (after depreciation)', `₹${fmtD(effectiveIdv)}`],
-              ['Basic OD Premium', `₹${fmtD(odBase)}`],
-              ...(vehicleType === 'pcv' && result.addODVal > 0 ? [
-                [`Add. OD (Passenger Capacity)`, `₹${fmtD(result.addODVal)}`],
-              ] : []),
+              [vehicleType === 'pcv' ? 'Vehicle Basic OD' : 'Basic OD Premium', `₹${fmtD(odBase)}`],
               ...(vehicleType === 'gcv' && result.details?.gcvExtraUnits > 0 ? [
                 [`Extra Weight > 12000 Premium`, `₹${fmtD(result.details.gcvExtraPremium)}`],
               ] : []),
               ...(result.geoExtentAmount > 0 ? [['Geographical Extent', `₹${fmtD(result.geoExtentAmount)}`]] : []),
               ...(result.cngKitOdAmount > 0 ? [['CNG/LPG Kit', `₹${fmtD(result.cngKitOdAmount)}`]] : []),
               ...(result.imt23Amount > 0 ? [['IMT 23 Loading (15% of sum)', `₹${fmtD(result.imt23Amount)}`]] : []),
+              ...(vehicleType === 'pcv' && result.addODVal > 0 ? [
+                [`Add. OD (Passenger Capacity)`, `₹${fmtD(result.addODVal)}`],
+              ] : []),
               ...(result.dynamicCustomFields || []).filter(f => f.section === 'od').map(f => [f.label, `₹${fmtD(f.amount)}`]),
               ['Final OD before discounts', `₹${fmtD(result.odBeforeDiscount)}`, 'font-black text-amber-700 bg-amber-50 rounded-lg px-3 py-2 -mx-1.5 text-sm'],
               ...((result.odDiscountVal || 0) > 0 ? [[`OD Discount (${result.odDiscountVal}%)`, `- ₹${fmtD(result.odDiscountAmount)}`]] : []),

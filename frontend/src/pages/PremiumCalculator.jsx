@@ -263,14 +263,18 @@ const PremiumCalculator = () => {
                                 (vehicleType === 'gcv' && !isElectric) ||
                                 (vehicleType === 'gcv_3w' && !isElectric) ||
                                 (vehicleType === 'pcv_3w' && !isPcv3wElectric)
-        cngKitOdAmount = isCngCommVehicle && cngKit === 'yes' ? basicOd * 0.05 : 0
-        const extras = (vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0)
-                    + (vehicleType === 'pcv' ? (details?.addOD || 0) : 0)
-                    + geoExtentAmount
-                    + cngKitOdAmount
-        const imtBase = basicOd + extras
+        const pcvAddOd = vehicleType === 'pcv' ? (details?.addOD || 0) : 0
+        const pcvBasicTotal = vehicleType === 'pcv' ? (basicOd + pcvAddOd) : basicOd
+        cngKitOdAmount = isCngCommVehicle && cngKit === 'yes' ? pcvBasicTotal * 0.05 : 0
+        const gcvExtra = vehicleType === 'gcv' ? (details?.gcvExtraPremium || 0) : 0
+        // IMT23 base for PCV (Bus): Vehicle Basic OD + Geo Ext + CNG Kit (excludes Add. OD per tariff)
+        // IMT23 base for all others: basicOd + all extras
+        const imtBase = vehicleType === 'pcv'
+          ? basicOd + geoExtentAmount + cngKitOdAmount
+          : basicOd + gcvExtra + geoExtentAmount + cngKitOdAmount
         imt23Amount = imt23 === 'yes' ? imtBase * (imt23Rate / 100) : 0
-        odBeforeDiscount = imtBase + imt23Amount + dynamicOdAmount
+        // Full OD total includes Add. OD (passenger capacity) for PCV on top of imtBase
+        odBeforeDiscount = imtBase + imt23Amount + pcvAddOd + dynamicOdAmount
         odDiscountAmount = odBeforeDiscount * (odDiscountVal / 100)
         ncbAmount = (odBeforeDiscount - odDiscountAmount) * (ncb / 100)
         odPremium = odBeforeDiscount - odDiscountAmount - ncbAmount

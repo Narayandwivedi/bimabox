@@ -183,7 +183,7 @@ const generatePdf = async (req, res) => {
     const odRows = []
     if (premiums.odBase > 0) {
       odRows.push(['Vehicle Basic Rate', `${premiums.odRate}%`])
-      odRows.push(['Basic OD Premium', fmt(premiums.odBase)])
+      odRows.push([categoryUpper === 'PCV' ? 'Vehicle Basic OD' : 'Basic OD Premium', fmt(premiums.odBase)])
       const odDiscAmt = premiums.odDiscountAmount || 0
       if (odDiscAmt > 0) {
         odRows.push(['Discount on OD Premium', `-${fmt(odDiscAmt)}`])

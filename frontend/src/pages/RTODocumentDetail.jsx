@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { useAuth } from '../context/AuthContext'
+import { prependCoverPage } from '../utils/generateCoverPage'
 import EditFitnessModal from './Fitness/EditFitnessModal'
 import EditPucModal from './Puc/EditPucModal'
 import EditGpsModal from './Gps/EditGpsModal'
@@ -178,6 +180,7 @@ const RcImageBlock = ({ url, label, apiUrl }) => {
 const RTODocumentDetail = () => {
   const { type, id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [record, setRecord] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -187,7 +190,8 @@ const RTODocumentDetail = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const config = TYPE_CONFIG[type]
+  const resolvedTypeKey = Object.keys(TYPE_CONFIG).find(k => k.toLowerCase() === (type || '').toLowerCase()) || type
+  const config = TYPE_CONFIG[resolvedTypeKey]
 
   const fetchRecord = async () => {
     if (!config) return
@@ -289,11 +293,38 @@ const RTODocumentDetail = () => {
 
   const [endorsementImgsLoaded, setEndorsementImgsLoaded] = useState({})
 
-  const handleDownload = async () => {
+  const handleDownload = async (forcePersonalized = null) => {
     if (!fullDocUrl) return
+    const personalizedEnabled = forcePersonalized !== null ? forcePersonalized : (localStorage.getItem('personalizedPdf') !== 'false')
+    const isInsurance = (type || '').toLowerCase() === 'insurance'
     try {
       const response = await fetch(fullDocUrl)
       const blob = await response.blob()
+
+      if (personalizedEnabled && isInsurance) {
+        // Generate personalized cover page and prepend (works for both PDF and Image documents!)
+        const origBytes = new Uint8Array(await blob.arrayBuffer())
+        try {
+          const mergedBytes = await prependCoverPage(origBytes, user, record)
+          const mergedBlob = new Blob([mergedBytes], { type: 'application/pdf' })
+          const blobUrl = URL.createObjectURL(mergedBlob)
+          const link = document.createElement('a')
+          link.href = blobUrl
+          const baseName = displayFilename ? displayFilename.replace(/\.[^/.]+$/, "") : 'insurance_policy'
+          link.download = `Personalized_${baseName}.pdf`
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(blobUrl)
+          toast.success('Personalized PDF downloaded!')
+          return
+        } catch (coverErr) {
+          console.error('Cover page generation failed, downloading original:', coverErr)
+          toast.error('Cover page generation failed – downloading original file')
+        }
+      }
+
+      // Default download (no cover page)
       const blobUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
@@ -302,8 +333,8 @@ const RTODocumentDetail = () => {
       link.click()
       document.body.removeChild(link)
       URL.revokeObjectURL(blobUrl)
-    } catch {
-      // fallback: open in new tab
+    } catch (err) {
+      console.error('Download error:', err)
       window.open(fullDocUrl, '_blank')
     }
   }
@@ -473,16 +504,38 @@ const RTODocumentDetail = () => {
                       <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       Attached Document
                     </h3>
-                    <button
-                      onClick={handleDownload}
-                      className='flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm cursor-pointer'
-                      title='Download document'
-                    >
-                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-                      </svg>
-                      Download
-                    </button>
+                    {(type || '').toLowerCase() === 'insurance' ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleDownload(true)}
+                          className='flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer'
+                          title='Download PDF with personalized cover page'
+                        >
+                          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                          </svg>
+                          Personalized PDF
+                        </button>
+                        <button
+                          onClick={() => handleDownload(false)}
+                          className='flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm cursor-pointer'
+                          title='Download original document without cover page'
+                        >
+                          Original PDF
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleDownload()}
+                        className='flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm cursor-pointer'
+                        title='Download document'
+                      >
+                        <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                        </svg>
+                        Download
+                      </button>
+                    )}
                   </div>
                   {/* Filename Display */}
                   {displayFilename && (

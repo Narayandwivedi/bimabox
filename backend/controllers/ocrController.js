@@ -416,6 +416,54 @@ const extractValidIndianVehicleNumber = (rawText) => {
   return null
 }
 
+/**
+ * Extract the policy issue date directly from raw PDF text.
+ * Searches for labels like "Invoice Date", "Issue Date", "Policy Issue Date",
+ * "Date of Issue", "Policy Date", "signed at ... on" etc.
+ * Converts DD/MM/YYYY or YYYY-MM-DD or D-Mon-YYYY to DD-MM-YYYY.
+ * Returns null if not found.
+ */
+const extractIssueDateFromRawText = (rawText) => {
+  if (!rawText) return null
+
+  // Normalize date: converts D/M/YYYY or DD/MM/YYYY -> DD-MM-YYYY
+  //                 or YYYY-MM-DD -> DD-MM-YYYY
+  //                 or D-Mon-YYYY -> DD-MM-YYYY
+  const MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 }
+  const normalize = (d, m, y) => {
+    let dd = String(d).padStart(2, '0')
+    let mm
+    if (/^\d+$/.test(String(m))) {
+      mm = String(m).padStart(2, '0')
+    } else {
+      const mo = MONTHS[String(m).slice(0, 3).toLowerCase()]
+      mm = mo ? String(mo).padStart(2, '0') : null
+    }
+    if (!mm) return null
+    const yyyy = String(y)
+    if (yyyy.length !== 4) return null
+    return `${dd}-${mm}-${yyyy}`
+  }
+
+  // Labels to search for (in priority order)
+  const LABEL_PATTERNS = [
+    /(?:Invoice|GST\s+Invoice)\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Policy\s+Issue|Issue|Date\s+of\s+(?:Issue|Issuance))\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Policy\s*Date|Issue\s*Date)\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /signed\s+at\s+\S+\s+on\s+(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+  ]
+
+  for (const pattern of LABEL_PATTERNS) {
+    const m = rawText.match(pattern)
+    if (m) {
+      const result = normalize(m[1], m[2], m[3])
+      if (result) return result
+    }
+  }
+
+  return null
+}
+
 const HIGH_VALUE_KEYWORDS = [
   'registration no', 'vehicle no', 'engine number', 'chassis', 'make', 'model',
   'policy no', 'policy number', 'valid from', 'valid till', 'period of insurance',
@@ -561,6 +609,77 @@ const extractNationalInsurancePremiums = (rawText) => {
     premium,
   }
   console.log('[NIC] Extracted premiums:', result)
+  return result
+}
+
+/**
+ * Royal Sundaram PDFs are multi-page and pdf-parse's segment scoring often
+ * selects marketing/info pages over the actual premium breakdown page.
+ * This helper reads premiums directly from the raw text so they are never lost.
+ *
+ * Format in raw text (interleaved columns, read by pdf-parse):
+ *   TOTAL OWN DAMAGE PREMIUM (A)\n11530
+ *   NET PREMIUM (A + B)19477
+ *   TOTAL LIABILITY PREMIUM (B)\n7947
+ *   TOTAL PREMIUM PAYABLE\n22982.86   OR   Gross Premium22982.86
+ */
+const extractRoyalSundaramPremiums = (rawText) => {
+  if (!rawText) return null
+  if (!/Royal\s+Sundaram/i.test(rawText)) return null
+
+  const parseAmt = (str) => {
+    if (str == null) return null
+    const n = parseFloat(String(str).replace(/,/g, '').trim())
+    return isNaN(n) ? null : n
+  }
+
+  // Extract last number on line or first number on next line
+  const extractAfterLabel = (pattern, text) => {
+    const m = text.match(pattern)
+    if (!m) return null
+    // Try numbers on same line
+    const sameLineNums = m[0].match(/([\d,]+\.?\d*)/g)
+    if (sameLineNums && sameLineNums.length > 0) {
+      const n = parseAmt(sameLineNums[sameLineNums.length - 1])
+      if (n != null && n > 0) return n
+    }
+    return null
+  }
+
+  // TOTAL OWN DAMAGE PREMIUM (A) — value on next line
+  let odPremium = null
+  const odMatch = rawText.match(/TOTAL\s+OWN\s+DAMAGE\s+PREMIUM\s*\(?A\)?[^\n]*\n([^\n]+)/i)
+  if (odMatch) odPremium = parseAmt(odMatch[1].match(/([\d,]+\.?\d*)/)?.[0])
+
+  // TOTAL LIABILITY PREMIUM (B) — value on next line
+  let tpPremium = null
+  const tpMatch = rawText.match(/TOTAL\s+LIABILITY\s+PREMIUM\s*\(?B\)?[^\n]*\n([^\n]+)/i)
+  if (tpMatch) tpPremium = parseAmt(tpMatch[1].match(/([\d,]+\.?\d*)/)?.[0])
+
+  // NET PREMIUM (A + B) — value on same line concatenated
+  let netPremium = null
+  const netMatch = rawText.match(/NET\s+PREMIUM\s*\(?A\s*\+\s*B\)?([^\n]+)/i)
+  if (netMatch) {
+    const nums = netMatch[1].match(/([\d,]+\.?\d*)/g)
+    if (nums) netPremium = parseAmt(nums[nums.length - 1])
+  }
+
+  // Gross Premium / TOTAL PREMIUM PAYABLE — value on same line or next line
+  let premium = null
+  const grossMatch = rawText.match(/(?:Gross\s+Premium|TOTAL\s+PREMIUM\s+PAYABLE)([^\n]*)(?:\n([^\n]*))?/i)
+  if (grossMatch) {
+    const sameLine = grossMatch[1].match(/([\d,]+\.\d{2})/g)
+    if (sameLine) premium = parseAmt(sameLine[sameLine.length - 1])
+    else if (grossMatch[2]) {
+      const nextLine = grossMatch[2].match(/([\d,]+\.\d{2})/g)
+      if (nextLine) premium = parseAmt(nextLine[0])
+    }
+  }
+
+  if (odPremium == null && tpPremium == null && netPremium == null) return null
+
+  const result = { odPremium, tpPremium, netPremium, premium }
+  console.log('[RoyalSundaram] Extracted premiums:', result)
   return result
 }
 
@@ -1138,6 +1257,29 @@ const insuranceOcr = async (req, res) => {
           extractedData.tpValidFrom = extractedData.tpValidFrom || extractedData.validFrom
           extractedData.tpValidTo = extractedData.tpValidTo || extractedData.validTo
         }
+      }
+
+      // 12. Fix premiums for Royal Sundaram policies.
+      //     Royal Sundaram PDFs are multi-page; the segment scorer often
+      //     selects marketing/info pages and the AI never sees the premium
+      //     breakdown. We extract OD/TP/Net/Gross directly from raw text.
+      const rsPremiums = extractRoyalSundaramPremiums(req._rawPdfText)
+      if (rsPremiums) {
+        if (rsPremiums.odPremium != null) extractedData.odPremium = String(rsPremiums.odPremium)
+        if (rsPremiums.tpPremium != null) extractedData.tpPremium = String(rsPremiums.tpPremium)
+        if (rsPremiums.netPremium != null) extractedData.netPremium = String(rsPremiums.netPremium)
+        if (rsPremiums.premium != null) extractedData.premium = String(rsPremiums.premium)
+      }
+
+      // 13. Fix issueDate — AI sometimes hallucinates today's date or picks
+      //     the wrong date (e.g. policy start instead of issue date).
+      //     We read "Invoice Date", "Issue Date", "Policy Issue Date" etc.
+      //     directly from the raw PDF text and override only when the raw
+      //     text clearly provides a value.
+      const rawIssueDate = extractIssueDateFromRawText(req._rawPdfText)
+      if (rawIssueDate && rawIssueDate !== extractedData.issueDate) {
+        console.log('[IssueDate] Overriding issueDate:', extractedData.issueDate, '->', rawIssueDate)
+        extractedData.issueDate = rawIssueDate
       }
     }
     return extractedData

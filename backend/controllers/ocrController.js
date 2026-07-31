@@ -330,6 +330,14 @@ const extractIffcoTokioPremiums = (rawText) => {
  * Engine No or Chassis No concatenation), this helper scans the raw PDF text
  * for a valid Indian registration number and returns it.
  */
+const INDIAN_REG_NO_PATTERN = /\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})\b/g
+
+const isValidIndianVehicleNumber = (val) => {
+  if (!val) return false
+  const stripped = val.replace(/[\s-]/g, '').toUpperCase()
+  return /^[A-Z]{2}\d{2}[A-Z]{1,3}\d{4}$/.test(stripped) // 9 or 10 chars
+}
+
 /**
  * Check if the document or extracted candidate indicates a NEW / Unregistered vehicle.
  * E.g. "Registration No. NEW", "NEW VEHICLE", "UNREGISTERED", "APPLIED FOR", "TO BE REGISTERED"
@@ -419,6 +427,39 @@ const HIGH_VALUE_KEYWORDS = [
   'mfg. year', 'manufacture year', 'date of registration', 'body type'
 ]
 
+/**
+ * Try to extract text from a PDF buffer using pdf-parse.
+ * If pdf-parse fails (e.g. damaged xref/catalog), fall back to pdftotext
+ * (Xpdf/Poppler command-line tool which handles damaged PDFs).
+ * Returns { text, numpages } or throws if both fail.
+ */
+const parsePdfWithFallback = async (buffer) => {
+  try {
+    return await pdfParse(buffer)
+  } catch (primaryErr) {
+    console.warn('[PDF] pdf-parse failed (' + (primaryErr.message || primaryErr) + '), trying pdftotext fallback...')
+    const { execFile } = require('child_process')
+    const fs = require('fs')
+    const os = require('os')
+    const path = require('path')
+    const tmpIn = path.join(os.tmpdir(), 'ocr_tmp_' + Date.now() + '.pdf')
+    const tmpOut = path.join(os.tmpdir(), 'ocr_tmp_' + Date.now() + '.txt')
+    try {
+      fs.writeFileSync(tmpIn, buffer)
+      await new Promise((resolve, reject) => {
+        execFile('pdftotext', ['-layout', tmpIn, tmpOut], (err) => {
+          if (err) reject(err); else resolve();
+        })
+      })
+      const text = fs.readFileSync(tmpOut, 'utf8')
+      return { text, numpages: (text.match(/\f/g) || []).length + 1 }
+    } finally {
+      try { fs.unlinkSync(tmpIn) } catch (_) {}
+      try { fs.unlinkSync(tmpOut) } catch (_) {}
+    }
+  }
+}
+
 const extractRelevantPdfText = (fullText) => {
   let cleaned = fullText.replace(/[\u0900-\u097F]+/g, '').trim()
 
@@ -463,6 +504,66 @@ const extractRelevantPdfText = (fullText) => {
   return result.slice(0, 7000)
 }
 
+/**
+ * National Insurance Company (NIC) PDFs use a two-column premium table
+ * that pdf-parse cannot handle. This helper extracts:
+ *   tpPremium:   TP Total (Rounded Off)
+ *   odPremium:   OD Total (Rounded Off)  — empty for TP-only policies
+ *   netPremium:  TOTAL PREMIUM (before GST)
+ *   premium:     NET PAYABLE (after GST)
+ *   insuranceClass: 'Third Party' | 'Comprehensive' | 'Standalone OD'
+ * from the raw text.
+ */
+const extractNationalInsurancePremiums = (rawText) => {
+  if (!rawText) return null
+  if (!/National\s+Insurance/i.test(rawText)) return null
+
+  // Helper: extract last monetary amount on a matched line
+  const extractLastAmtOnLine = (pattern, text) => {
+    const m = text.match(pattern)
+    if (!m) return null
+    const nums = m[0].match(/([\d,]+\.\d{2})/g)
+    if (!nums) return null
+    const n = parseFloat(nums[nums.length - 1].replace(/,/g, ''))
+    return isNaN(n) ? null : n
+  }
+
+  // Determine policy class from document text
+  const isLiabilityOnly = /Liability\s+Only|Third\s+Party\s+Only/i.test(rawText)
+  const isStandaloneOd = /Standalone\s+OD|Own\s+Damage\s+Only/i.test(rawText)
+
+  // Extract TP Total (Rounded Off) — last number on that line
+  const tpTotal = extractLastAmtOnLine(/TP\s+Total\s*\(?Rounded\s*Off\)?[^\n]*/i, rawText)
+
+  // Extract OD Total (Rounded Off) — last number on that line
+  const odTotal = extractLastAmtOnLine(/OD\s+Total\s*\(?Rounded\s*Off\)?[^\n]*/i, rawText)
+
+  // Extract TOTAL PREMIUM (net before GST) — last number on that line
+  const netPremium = extractLastAmtOnLine(/TOTAL\s+PREMIUM[^\n]*/i, rawText)
+
+  // Extract NET PAYABLE (gross after GST) — last number on that line
+  const premium = extractLastAmtOnLine(/NET\s+PAYABLE[^\n]*/i, rawText)
+
+  // For Liability Only: OD is empty, tpPremium = netPremium (TOTAL PREMIUM)
+  // For Comprehensive: both OD and TP are present
+
+  if (tpTotal == null && netPremium == null && odTotal == null) return null
+
+  let insuranceClass = 'Comprehensive'
+  if (isLiabilityOnly) insuranceClass = 'Third Party'
+  else if (isStandaloneOd) insuranceClass = 'Standalone OD'
+
+  const result = {
+    insuranceClass,
+    odPremium: odTotal,
+    tpPremium: isLiabilityOnly ? netPremium : tpTotal,
+    netPremium,
+    premium,
+  }
+  console.log('[NIC] Extracted premiums:', result)
+  return result
+}
+
 // Groq free-tier keys have a daily token/request limit. We keep a small pool
 // of keys and rotate to the next one whenever the current key gets rate
 // limited (HTTP 429 / rate_limit_exceeded), so OCR keeps working across the
@@ -476,17 +577,28 @@ const isRateLimitError = (err) => {
   return status === 429 || code === 'rate_limit_exceeded'
 }
 
+const isNetworkOrRateLimitError = (err) => {
+  const errCode = err.code
+  return isRateLimitError(err) || errCode === 'ECONNRESET' || errCode === 'ETIMEDOUT' || errCode === 'ECONNREFUSED' || errCode === 'ENOTFOUND' || errCode === 'EAI_AGAIN'
+}
+
 const withGroqKeyRotation = async (requestFn) => {
   let lastErr
-  for (let attempt = 0; attempt < GROQ_API_KEYS.length; attempt++) {
+  const maxAttempts = Math.max(GROQ_API_KEYS.length * 2, 4)
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const key = GROQ_API_KEYS[activeGroqKeyIndex]
     try {
       return await requestFn(key)
     } catch (err) {
       lastErr = err
-      if (isRateLimitError(err) && GROQ_API_KEYS.length > 1) {
-        console.warn(`Groq API key #${activeGroqKeyIndex + 1} hit its rate limit, switching to next key...`)
-        activeGroqKeyIndex = (activeGroqKeyIndex + 1) % GROQ_API_KEYS.length
+      if (isNetworkOrRateLimitError(err)) {
+        if (isRateLimitError(err) && GROQ_API_KEYS.length > 1) {
+          console.warn(`Groq API key #${activeGroqKeyIndex + 1} hit its rate limit, switching to next key...`)
+          activeGroqKeyIndex = (activeGroqKeyIndex + 1) % GROQ_API_KEYS.length
+        } else {
+          console.warn(`Groq API request encountered temporary network error (${err.code || err.message}), retrying (attempt ${attempt + 1}/${maxAttempts})...`)
+          await new Promise(r => setTimeout(r, 1000))
+        }
         continue
       }
       throw err
@@ -608,7 +720,7 @@ const processOcrRequest = async (req, res, promptText, jsonTemplate, postProcess
       isPdf = true
       const base64Data = imageBase64.replace(/^data:application\/pdf;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
-      const pdfData = await pdfParse(buffer)
+      const pdfData = await parsePdfWithFallback(buffer)
       const extractedText = extractRelevantPdfText(pdfData.text)
 
       if (extractedText.trim().length < 100) {
@@ -827,8 +939,7 @@ const insuranceOcr = async (req, res) => {
     try {
       const base64Data = req.body.imageBase64.replace(/^data:application\/pdf;base64,/, '')
       const buffer = Buffer.from(base64Data, 'base64')
-      const pdfParse = require('pdf-parse')
-      const pdfData = await pdfParse(buffer)
+      const pdfData = await parsePdfWithFallback(buffer)
       req._rawPdfText = pdfData.text
     } catch (_) { /* ignore, will fall back to AI result */ }
   }
@@ -1008,6 +1119,24 @@ const insuranceOcr = async (req, res) => {
           if (!extractedData.insuranceClass || extractedData.insuranceClass === 'Comprehensive') {
             extractedData.insuranceClass = 'Standalone OD'
           }
+        }
+      }
+
+      // 11. Fix premiums and class for National Insurance Company (NIC) policies.
+      //     NIC PDFs often have a two-column premium table that pdf-parse
+      //     scrambles. We extract directly from the raw text.
+      const nicPremiums = extractNationalInsurancePremiums(req._rawPdfText)
+      if (nicPremiums) {
+        extractedData.insuranceClass = nicPremiums.insuranceClass
+        if (nicPremiums.odPremium != null) extractedData.odPremium = String(nicPremiums.odPremium)
+        else extractedData.odPremium = ''
+        if (nicPremiums.tpPremium != null) extractedData.tpPremium = String(nicPremiums.tpPremium)
+        if (nicPremiums.netPremium != null) extractedData.netPremium = String(nicPremiums.netPremium)
+        if (nicPremiums.premium != null) extractedData.premium = String(nicPremiums.premium)
+        // For Third Party only policies, clear OD dates
+        if (nicPremiums.insuranceClass === 'Third Party') {
+          extractedData.tpValidFrom = extractedData.tpValidFrom || extractedData.validFrom
+          extractedData.tpValidTo = extractedData.tpValidTo || extractedData.validTo
         }
       }
     }

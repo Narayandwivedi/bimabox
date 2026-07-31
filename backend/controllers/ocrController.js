@@ -355,6 +355,24 @@ const isNewVehicleRegistration = (rawText, val) => {
     if (match) {
       return true
     }
+
+    // Shriram / similar insurers: "REGISTRATION MARK & PLACE" column header,
+    // value = "NEW & RAIPUR" (new unregistered vehicle).
+    // pdf-parse concatenates the columns into one line like:
+    //   "NEW & RAIPURJK15EG5309259 & ME4JK156LPG308992"
+    // Detect: a line that starts with NEW & <CITY> (letters only, no digits) or
+    // a table row where the registration column value is "NEW" (standalone word
+    // before & or whitespace).
+    const newPlaceMatch = rawText.match(/(?:^|\n)\s*NEW\s*&\s*[A-Z]{2,}/im)
+    if (newPlaceMatch) {
+      return true
+    }
+
+    // Also catch "Registration Mark & Place ... NEW" style label-value on separate lines
+    const regMarkPlaceMatch = rawText.match(/REGISTRATION\s*MARK\s*(?:&|AND)?\s*PLACE[\s\S]{0,200}?\bNEW\b/i)
+    if (regMarkPlaceMatch) {
+      return true
+    }
   }
 
   return false

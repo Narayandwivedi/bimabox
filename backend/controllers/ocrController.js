@@ -202,6 +202,65 @@ const extractDigitPolicyDates = (rawText) => {
 }
 
 /**
+ * HDFC ERGO policy schedules (especially Standalone OD / Two Wheeler OD Only)
+ * display a breakdown table like:
+ *   Own Damage Premium(a)(`)  Liability Premium(b)(`)
+ *   Basic Own Damage: 577
+ *   Total Premium (a+b) 935
+ *   Integrated Tax 18% 168
+ *   ...
+ *   Net Own Damage Premium (a) 935
+ *   Total Premium 1103
+ *
+ * For Standalone OD policies, Liability Premium (b) is blank/empty, but the AI
+ * often mistakes "Integrated Tax 18% 168" as tpPremium! Also "Total Premium (a+b) 935"
+ * is the netPremium (before 18% GST).
+ *
+ * This helper extracts the clean figures from HDFC ERGO policy text.
+ */
+const extractHdfcErgoPremiums = (rawText) => {
+  if (!rawText) return null
+
+  const isHdfc = /HDFC\s*ERGO/i.test(rawText)
+  if (!isHdfc) return null
+
+  const isStandaloneOd = /Standalone\s*OD/i.test(rawText) || /Own\s*Damage\s*Only/i.test(rawText)
+
+  // 1. Net Own Damage Premium (a)
+  const netOdMatch = rawText.match(/Net\s*Own\s*Damage\s*Premium\s*\(a\)[^\d]*(\d+(?:\.\d{1,2})?)/i)
+  const odPremium = netOdMatch ? Number(netOdMatch[1]) : null
+
+  // 2. Total Premium (a+b) -> Net Premium
+  const totalNetMatch = rawText.match(/Total\s*Premium\s*\(a\+b\)[^\d]*(\d+(?:\.\d{1,2})?)/i)
+  const netPremium = totalNetMatch ? Number(totalNetMatch[1]) : (odPremium ?? null)
+
+  // 3. Gross Premium: "Total Premium\n1103"
+  let grossPremium = null
+  const grossMatch = rawText.match(/Net\s*Own\s*Damage\s*Premium[\s\S]{0,100}?Total\s*Premium[^\d]*(\d+(?:\.\d{1,2})?)/i)
+    || rawText.match(/Total\s*Premium\s*\(a\+b\)[\s\S]{0,150}?Total\s*Premium[^\d]*(\d+(?:\.\d{1,2})?)/i)
+  if (grossMatch) {
+    grossPremium = Number(grossMatch[1])
+  }
+
+  // 4. TP Premium
+  let tpPremium = ''
+  if (!isStandaloneOd) {
+    const liabMatch = rawText.match(/(?:Net|Total)\s*Liability\s*Premium\s*\(b\)[^\d]*(\d+(?:\.\d{1,2})?)/i)
+    if (liabMatch) {
+      tpPremium = Number(liabMatch[1])
+    }
+  }
+
+  return {
+    odPremium,
+    tpPremium,
+    netPremium,
+    premium: grossPremium,
+    isStandaloneOd
+  }
+}
+
+/**
  * Indian vehicle registration numbers follow the pattern:
  *   <2-letter state code><2-digit district><1-3 letter series><4-digit number>
  * Total length after stripping hyphens/spaces: 9 or 10 characters.
@@ -672,8 +731,8 @@ const insuranceOcr = async (req, res) => {
 - tpValidFrom / tpValidTo: the Third Party / Act Liability cover period. Many long-term two-wheeler/private-car policies have a separate, longer TP validity period than the OD period (e.g. OD valid for 1 year but TP valid for 5 years) — look for a distinct "Third Party" or "Liability" or "Act" section with its own "Period of Insurance" / "From" / "To" dates. If the document has only one policy period (no separate TP period), leave tpValidFrom/tpValidTo as empty strings. DD-MM-YYYY format.
 - issueDate: the date the policy document was issued. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
 - odPremium: numeric value of the "Total OD Premium" (own damage), the FINAL own-damage figure AFTER NCB discount is applied. IMPORTANT: many policies (e.g. Digit, ICICI Lombard) show a table with an intermediate "Own Damage Premium" subtotal (before NCB discount) plus a separate "NCB (xx%)" deduction line, and then a "Total OD Premium" line which is the final figure (Own Damage Premium minus NCB) — you MUST use the "Total OD Premium" value, NOT the intermediate "Own Damage Premium" subtotal. Do NOT use the Final/Gross Premium value here even if it appears near this section. Empty string if the policy has no OD component (Third Party only policy).
-- tpPremium: numeric value of the "Total Act Premium" / "Total Liability Premium" / "Total TP Premium" — the final total of the Liability/Act premium section (Basic Third-Party Liability + Legal Liability add-ons + PA cover add-ons, if any). If the document has no separate add-ons, this equals "Basic Third-Party Liability". Do NOT use the Final/Gross Premium value here.
-- netPremium: numeric value labeled exactly "Net Premium" — this is odPremium + tpPremium (before GST/taxes). It is a DISTINCT, smaller number than the Final/Gross Premium — do not confuse the two.
+- tpPremium: numeric value of the "Total Act Premium" / "Total Liability Premium" / "Total TP Premium" — the final total of the Liability/Act premium section (Basic Third-Party Liability + Legal Liability add-ons + PA cover add-ons, if any). If the document has no separate add-ons, this equals "Basic Third-Party Liability". Do NOT use the Final/Gross Premium value here. CRITICAL: If the document is a "Standalone OD" / "Own Damage Only" policy, or if Liability Premium is 0 or blank, leave tpPremium as empty string "". NEVER put GST/Tax (such as 18% tax = 168) as tpPremium!
+- netPremium: numeric value labeled exactly "Net Premium" or "Total Premium (a+b)" — this is odPremium + tpPremium (before GST/taxes). It is a DISTINCT, smaller number than the Final/Gross Premium — do not confuse the two.
 - premium: numeric value of the Gross Premium — labeled "Final Premium" or "Gross Premium", the LARGEST of the four premium figures, equal to Net Premium + GST/CGST+SGST/IGST (roughly netPremium × 1.18). Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. If only one premium figure exists on the document (no OD/TP/Net split), put that value here as premium and leave odPremium/tpPremium/netPremium empty.
 - SELF-CHECK before answering: odPremium + tpPremium should be close to netPremium (within a few rupees, allowing for small add-ons), and netPremium should be meaningfully smaller than premium (premium ≈ netPremium × 1.18 for 18% GST). If your extracted values don't satisfy this, re-examine the document for the correct "Total OD Premium" / "Total Act Premium" / "Net Premium" / "Final Premium" labels rather than reusing the same number for multiple fields.
 - insuranceCompany: full insurer name as it appears (e.g. "HDFC ERGO", "National Insurance Company Limited")
@@ -792,6 +851,44 @@ const insuranceOcr = async (req, res) => {
         if (digitDates.tpValidTo && digitDates.tpValidTo !== extractedData.tpValidTo) {
           console.log('[GoDigit] Overriding tpValidTo:', extractedData.tpValidTo, '->', digitDates.tpValidTo)
           extractedData.tpValidTo = digitDates.tpValidTo
+        }
+      }
+
+      // 7. Fix premiums for HDFC ERGO policies (especially Standalone OD)
+      const hdfcPremiums = extractHdfcErgoPremiums(req._rawPdfText)
+      if (hdfcPremiums) {
+        if (hdfcPremiums.isStandaloneOd) {
+          extractedData.tpPremium = ''
+          extractedData.tpValidFrom = ''
+          extractedData.tpValidTo = ''
+          if (!extractedData.insuranceClass || extractedData.insuranceClass === 'Comprehensive') {
+            extractedData.insuranceClass = 'Standalone OD'
+          }
+        }
+        if (hdfcPremiums.odPremium != null) extractedData.odPremium = hdfcPremiums.odPremium
+        if (hdfcPremiums.tpPremium !== null && hdfcPremiums.tpPremium !== undefined) extractedData.tpPremium = hdfcPremiums.tpPremium
+        if (hdfcPremiums.netPremium != null) extractedData.netPremium = hdfcPremiums.netPremium
+        if (hdfcPremiums.premium != null) extractedData.premium = hdfcPremiums.premium
+      }
+
+      // 8. General tax misclassification guard:
+      // If tpPremium is present, and premium (gross) and (netPremium or odPremium) exist:
+      // Tax = premium - netPremium. If tpPremium matches Tax (e.g. tpPremium == 168 and premium - netPremium == 168),
+      // or if odPremium == netPremium and odPremium + tpPremium == premium (gross),
+      // then tpPremium is actually the GST/Tax figure! Clear tpPremium = '' and set netPremium = odPremium.
+      if (extractedData.tpPremium && extractedData.premium && (extractedData.netPremium || extractedData.odPremium)) {
+        const gross = Number(extractedData.premium)
+        const tp = Number(extractedData.tpPremium)
+        const od = extractedData.odPremium ? Number(extractedData.odPremium) : null
+        const net = extractedData.netPremium ? Number(extractedData.netPremium) : od
+
+        if (gross && tp && net && gross > net) {
+          const tax = Math.round(gross - net)
+          if (Math.abs(tp - tax) <= 2 || (od != null && Math.abs(od - net) <= 2 && Math.abs(od + tp - gross) <= 2)) {
+            console.log('[TaxGuard] tpPremium', tp, 'matches Tax (gross - net =', tax, '). Clearing misclassified tpPremium.')
+            extractedData.tpPremium = ''
+            if (od != null) extractedData.netPremium = od
+          }
         }
       }
     }

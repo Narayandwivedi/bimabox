@@ -183,18 +183,18 @@ const extractDigitPolicyDates = (rawText) => {
   const result = {}
   if (dates.length >= 4) {
     result.validFrom = dates[0]   // OD From
-    result.validTo   = dates[2]   // OD To
+    result.validTo = dates[2]   // OD To
     result.tpValidFrom = dates[1] // TP From
-    result.tpValidTo   = dates[3] // TP To
+    result.tpValidTo = dates[3] // TP To
   } else if (dates.length === 3) {
     // OD-From, OD-To, TP-To (TP-From same as OD-From)
-    result.validFrom   = dates[0]
-    result.validTo     = dates[1]
+    result.validFrom = dates[0]
+    result.validTo = dates[1]
     result.tpValidFrom = dates[0]
-    result.tpValidTo   = dates[2]
+    result.tpValidTo = dates[2]
   } else {
     result.validFrom = dates[0]
-    result.validTo   = dates[1]
+    result.validTo = dates[1]
   }
 
   console.log('[GoDigit] Extracted policy dates from Period-of-Policy block:', result)
@@ -282,8 +282,8 @@ const extractIffcoTokioPremiums = (rawText) => {
   const isIffco = /IFFCO\s*[-–]?\s*TOKIO/i.test(rawText)
   if (!isIffco) return null
 
-  const isStandaloneOd = /Stand\s*Alone\s*OD/i.test(rawText) 
-    || /Standalone\s*OD/i.test(rawText) 
+  const isStandaloneOd = /Stand\s*Alone\s*OD/i.test(rawText)
+    || /Standalone\s*OD/i.test(rawText)
     || /Own\s*Damage\s*Only/i.test(rawText)
     || /TP\s*Insurer\s*Name\s*:/i.test(rawText)
 
@@ -351,20 +351,21 @@ const isNewVehicleRegistration = (rawText, val) => {
   }
 
   if (rawText) {
-    const match = rawText.match(/(?:Registration\s*(?:Mark\s*&?\s*)?No\.?|Reg(?:istration)?\s*No\.?|Vehicle\s*No\.?)\s*[:\-]?\s*(NEW|UNREGISTERED|APPLIED\s*FOR|NOT\s*REGISTERED|TO\s*BE\s*REGISTERED|T\.?B\.?R\.?|N\/?A|PROVISIONAL)/i)
+    const match = rawText.match(/(?:Registration\s*(?:Mark\s*(?:&|AND)?\s*Place|Mark|Number|No\.?)|Reg(?:istration)?\s*(?:Number|No\.?)|Vehicle\s*(?:Number|No\.?))\s*[:\-]?\s*(NEW|UNREGISTERED|APPLIED\s*FOR|NOT\s*REGISTERED|TO\s*BE\s*REGISTERED|T\.?B\.?R\.?|N\/?A|PROVISIONAL)/i)
     if (match) {
       return true
     }
 
-    // Shriram / similar insurers: "REGISTRATION MARK & PLACE" column header,
-    // value = "NEW & RAIPUR" (new unregistered vehicle).
-    // pdf-parse concatenates the columns into one line like:
-    //   "NEW & RAIPURJK15EG5309259 & ME4JK156LPG308992"
-    // Detect: a line that starts with NEW & <CITY> (letters only, no digits) or
-    // a table row where the registration column value is "NEW" (standalone word
-    // before & or whitespace).
+    // Shriram / Universal Sompo / similar insurers:
+    // pdf-parse concatenates table columns into single lines without spaces like:
+    //   "NEW & RAIPURJK15EG5309259..." or "REGISTRATION NUMBERNEWPERIOD OF INSURANCE"
     const newPlaceMatch = rawText.match(/(?:^|\n)\s*NEW\s*&\s*[A-Z]{2,}/im)
     if (newPlaceMatch) {
+      return true
+    }
+
+    const regNumNewConcatMatch = rawText.match(/REGISTRATION\s*(?:NUMBER|MARK|NO)?\s*[:\-]?\s*NEW/i)
+    if (regNumNewConcatMatch) {
       return true
     }
 
@@ -437,7 +438,7 @@ const extractValidIndianVehicleNumber = (rawText) => {
 /**
  * Extract the policy issue date directly from raw PDF text.
  * Searches for labels like "Invoice Date", "Issue Date", "Policy Issue Date",
- * "Date of Issue", "Policy Date", "signed at ... on" etc.
+ * "Date of Issue", "Receipt Date", "Collection Date", "Policy Date", "signed at ... on" etc.
  * Converts DD/MM/YYYY or YYYY-MM-DD or D-Mon-YYYY to DD-MM-YYYY.
  * Returns null if not found.
  */
@@ -447,7 +448,7 @@ const extractIssueDateFromRawText = (rawText) => {
   // Normalize date: converts D/M/YYYY or DD/MM/YYYY -> DD-MM-YYYY
   //                 or YYYY-MM-DD -> DD-MM-YYYY
   //                 or D-Mon-YYYY -> DD-MM-YYYY
-  const MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 }
+  const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 }
   const normalize = (d, m, y) => {
     let dd = String(d).padStart(2, '0')
     let mm
@@ -466,16 +467,24 @@ const extractIssueDateFromRawText = (rawText) => {
   // Labels to search for (in priority order)
   const LABEL_PATTERNS = [
     /(?:Invoice|GST\s+Invoice)\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
-    /(?:Policy\s+Issue|Issue|Date\s+of\s+(?:Issue|Issuance))\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
-    /(?:Policy\s*Date|Issue\s*Date)\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Receipt|Reciept|Collection|Payment)\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Receipt|Reciept|Collection|Payment)\s*[\s\S]{0,30}?Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Policy\s+Issue|Issue|Date\s+of\s+(?:Issue|Issuance|Collection|Receipt))\s*Date\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /(?:Policy\s*Date|Issue\s*Date|Proposal\s*Date)\s*[:\-]?\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
     /signed\s+at\s+\S+\s+on\s+(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/i,
+    /Vehicle\s+purchased\s+on\s+(?:dated\s*)?[:\-]?\s*(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/i,
   ]
 
   for (const pattern of LABEL_PATTERNS) {
     const m = rawText.match(pattern)
     if (m) {
-      const result = normalize(m[1], m[2], m[3])
-      if (result) return result
+      if (m[3] && m[3].length === 4) {
+        const result = normalize(m[1], m[2], m[3])
+        if (result) return result
+      } else if (m[1] && m[1].length === 4) {
+        const result = normalize(m[3], m[2], m[1])
+        if (result) return result
+      }
     }
   }
 
@@ -520,8 +529,8 @@ const parsePdfWithFallback = async (buffer) => {
       const text = fs.readFileSync(tmpOut, 'utf8')
       return { text, numpages: (text.match(/\f/g) || []).length + 1 }
     } finally {
-      try { fs.unlinkSync(tmpIn) } catch (_) {}
-      try { fs.unlinkSync(tmpOut) } catch (_) {}
+      try { fs.unlinkSync(tmpIn) } catch (_) { }
+      try { fs.unlinkSync(tmpOut) } catch (_) { }
     }
   }
 }
@@ -913,7 +922,7 @@ ${jsonTemplate}`
 
     if (extractedData.insuranceCompany) {
       const companies = await InsuranceCompany.find().select('name').lean();
-      
+
       const cleanStr = (str) => {
         return (str || '')
           .trim()
@@ -944,7 +953,7 @@ ${jsonTemplate}`
           const cCleaned = cleanStr(c.name);
           const cWords = cCleaned.split(/\s+/).filter(w => w.length > 2);
           const filteredCWords = cWords.filter(w => !stopwords.has(w));
-          
+
           if (filteredCWords.length === 0) continue;
 
           const overlap = filteredCWords.filter(w => filteredOcrWords.has(w)).length;
@@ -1053,12 +1062,12 @@ const gpsOcr = async (req, res) => {
 
 const insuranceOcr = async (req, res) => {
   const prompt = `Extract fields from this vehicle insurance policy document.
-- vehicleNumber: the vehicle registration number — EXACTLY 9 or 10 characters after removing hyphens/spaces (format: 2 state letters + 2 district digits + 1-3 series letters + 4 digits, e.g. CG04NS0396, MH12AB1234). Remove hyphens/spaces. Do NOT return engine numbers, chassis numbers, or any value longer than 10 characters. CRITICAL: If the document says "NEW" / "UNREGISTERED" / "APPLIED FOR" / "NOT REGISTERED" / "TO BE REGISTERED" or if the vehicle is new and has no registration mark yet, leave vehicleNumber as empty string "". Do NOT pick up engine numbers or chassis numbers as vehicleNumber!
+- vehicleNumber: the vehicle registration number — EXACTLY 9 or 10 characters after removing hyphens/spaces (format: 2 state letters + 2 district digits + 1-3 series letters + 4 digits, e.g. MH12AB1234, DL01CA9999). Remove hyphens/spaces. Do NOT return engine numbers, chassis numbers, or any value longer than 10 characters. CRITICAL: If the document says "NEW" / "UNREGISTERED" / "APPLIED FOR" / "NOT REGISTERED" / "TO BE REGISTERED" or if the vehicle is new and has no registration mark yet, leave vehicleNumber as empty string "". Do NOT pick up engine numbers or chassis numbers as vehicleNumber!
 - policyNumber: the OFFICIAL policy number issued by the insurer. IMPORTANT: Some documents (e.g. IFFCO Tokio) show TWO "Policy #" values on the same line — the first is an internal transaction/invoice reference (often starts with "1-" or looks like "1-XXXXXXXX"), and the SECOND is the actual policy number. Always use the LAST/SECOND "Policy #" value as the policyNumber. The "Tax Invoice No" field is NOT the policy number.
 - policyHolderName: primary insured person/company name
 - validFrom / validTo: the main policy period (Own Damage section if present, otherwise overall policy period). DD-MM-YYYY format.
 - tpValidFrom / tpValidTo: the Third Party / Act Liability cover period. Many long-term two-wheeler/private-car policies have a separate, longer TP validity period than the OD period (e.g. OD valid for 1 year but TP valid for 5 years) — look for a distinct "Third Party" or "Liability" or "Act" section with its own "Period of Insurance" / "From" / "To" dates. If the document has only one policy period (no separate TP period), leave tpValidFrom/tpValidTo as empty strings. DD-MM-YYYY format.
-- issueDate: the date the policy document was issued. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
+- issueDate: the date the policy document was issued or receipt date. Look for "Policy Issue Date", "Date of Issue", "Invoice Date", "Receipt Date", "Reciept Date", "Collection Date", "Proposal Date", "Policy Date", "Issue Date". Format: DD-MM-YYYY.
 - odPremium: numeric value of the "Total OD Premium" (own damage), the FINAL own-damage figure AFTER NCB discount is applied. IMPORTANT: many policies (e.g. Digit, ICICI Lombard) show a table with an intermediate "Own Damage Premium" subtotal (before NCB discount) plus a separate "NCB (xx%)" deduction line, and then a "Total OD Premium" line which is the final figure (Own Damage Premium minus NCB) — you MUST use the "Total OD Premium" value, NOT the intermediate "Own Damage Premium" subtotal. Do NOT use the Final/Gross Premium value here even if it appears near this section. Empty string if the policy has no OD component (Third Party only policy).
 - tpPremium: numeric value of the "Total Act Premium" / "Total Liability Premium" / "Total TP Premium" — the final total of the Liability/Act premium section (Basic Third-Party Liability + Legal Liability add-ons + PA cover add-ons, if any). If the document has no separate add-ons, this equals "Basic Third-Party Liability". Do NOT use the Final/Gross Premium value here. CRITICAL: If the document is a "Standalone OD" / "Own Damage Only" policy, or if Liability Premium is 0 or blank, leave tpPremium as empty string "". NEVER put GST/Tax (such as 18% tax = 168) as tpPremium!
 - netPremium: numeric value labeled exactly "Net Premium" or "Total Premium (a+b)" — this is odPremium + tpPremium (before GST/taxes). It is a DISTINCT, smaller number than the Final/Gross Premium — do not confuse the two.

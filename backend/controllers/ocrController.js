@@ -41,6 +41,44 @@ const extractIffcoTokioPolicyNumber = (rawText) => {
  * This table is unambiguous, so use it to correct netPremium/premium (gross)
  * when present, overriding whatever the AI guessed.
  */
+/**
+ * Bajaj Allianz PDFs render the premium breakdown as a two-column table
+ * (OWN DAMAGE | LIABILITY) that pdf-parse flattens into a single stream.
+ * The AI therefore ends up reading values like "Net Premium 714.00" and
+ * incorrectly assigns 714 to both netPremium AND premium, missing the
+ * unambiguous line "Final Premium Rs.843.00" that appears right below.
+ *
+ * This helper finds that "Final Premium Rs." label and returns the correct
+ * gross premium value so we can override whatever the AI guessed.
+ *
+ * It also extracts the Net Premium (before GST) from the same block so we
+ * can verify: Final Premium ≈ Net Premium × 1.18.
+ */
+const extractBajajFinalPremium = (rawText) => {
+  if (!rawText) return null
+
+  // Match: "Final Premium Rs.843.00" or "Final Premium Rs. 843" or "Final Premium Rs843.00"
+  const finalMatch = rawText.match(/Final\s*Premium\s*Rs\.?\s*([\d,]+(?:\.\d{1,2})?)/i)
+  if (!finalMatch) return null
+
+  const finalPremium = Number(finalMatch[1].replace(/,/g, ''))
+  if (!finalPremium || isNaN(finalPremium)) return null
+
+  // Also extract Net Premium from the same block for cross-validation
+  // Bajaj prints: "Net Premium714.00" or "Net Premium 714.00"
+  const netMatch = rawText.match(/Net\s*Premium\s*([\d,]+(?:\.\d{1,2})?)/i)
+  const netPremium = netMatch ? Number(netMatch[1].replace(/,/g, '')) : null
+
+  // Sanity check: Final Premium must be > Net Premium (GST pushes it up ~18%)
+  if (netPremium != null && finalPremium <= netPremium) {
+    console.log('[Bajaj] Final Premium not > Net Premium — skipping override:', finalPremium, 'vs', netPremium)
+    return null
+  }
+
+  console.log('[Bajaj] Extracted Final Premium:', finalPremium, '| Net Premium:', netPremium)
+  return { finalPremium, netPremium }
+}
+
 const extractNetGrossPremiumFromEndorsementTable = (rawText) => {
   if (!rawText) return null
   const match = rawText.match(/Net\s*Premium\s*Igst\s*Cgst\s*Sgst\s*Utgst\s*Cess\s*Gross\s*Premium[\s\S]{0,60}?\d{4}-\d{2}-\d{2}((?:\d+\.\d{2}){7})/i)
@@ -606,6 +644,38 @@ const insuranceOcr = async (req, res) => {
         console.log('[Premium] Overriding odPremium/tpPremium from Go Digit summary row:', digitOdTp)
         extractedData.odPremium = digitOdTp.odPremium
         extractedData.tpPremium = digitOdTp.tpPremium
+      }
+
+      // 5. Fix Gross Premium for Bajaj Allianz policies.
+      //    Bajaj's two-column layout (OD|Liability) causes pdf-parse to
+      //    interleave the columns, making the AI pick up the Net Premium
+      //    value as the Gross Premium. We override "premium" with the
+      //    unambiguous "Final Premium Rs.XXX" line extracted directly.
+      //    Only apply this when the ENDORSEMENT table correction hasn't
+      //    already fixed it (to avoid double-overriding).
+      if (!endorsementPremiums) {
+        const bajajPremiums = extractBajajFinalPremium(req._rawPdfText)
+        if (bajajPremiums) {
+          const currentPremium = extractedData.premium ? Number(extractedData.premium) : null
+          // Only override if the AI got the gross premium wrong (same as net, or clearly off)
+          const aiGotWrongGross = currentPremium == null ||
+            currentPremium === bajajPremiums.netPremium ||
+            (bajajPremiums.netPremium != null && Math.abs(currentPremium - bajajPremiums.netPremium) < 2)
+          if (aiGotWrongGross) {
+            console.log('[Bajaj] Overriding premium:', currentPremium, '->', bajajPremiums.finalPremium)
+            extractedData.premium = bajajPremiums.finalPremium
+          }
+          // Also correct netPremium if the AI left it blank or set it to the gross value
+          if (bajajPremiums.netPremium != null) {
+            const currentNet = extractedData.netPremium ? Number(extractedData.netPremium) : null
+            const netIsWrong = currentNet == null ||
+              Math.abs(currentNet - bajajPremiums.finalPremium) < 2 // AI set net = gross
+            if (netIsWrong) {
+              console.log('[Bajaj] Overriding netPremium:', currentNet, '->', bajajPremiums.netPremium)
+              extractedData.netPremium = bajajPremiums.netPremium
+            }
+          }
+        }
       }
     }
     return extractedData

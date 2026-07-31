@@ -330,16 +330,36 @@ const extractIffcoTokioPremiums = (rawText) => {
  * Engine No or Chassis No concatenation), this helper scans the raw PDF text
  * for a valid Indian registration number and returns it.
  */
-const INDIAN_REG_NO_PATTERN = /\b([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})\b/g
+/**
+ * Check if the document or extracted candidate indicates a NEW / Unregistered vehicle.
+ * E.g. "Registration No. NEW", "NEW VEHICLE", "UNREGISTERED", "APPLIED FOR", "TO BE REGISTERED"
+ */
+const isNewVehicleRegistration = (rawText, val) => {
+  if (val) {
+    const clean = val.trim().toUpperCase().replace(/[\s.-]/g, '')
+    if (clean.startsWith('NEW') || clean.includes('UNREGISTERED') || clean.includes('APPLIEDFOR') || clean.includes('NOTREGISTERED') || clean.includes('TOBEREGISTERED') || clean === 'TBR' || clean === 'NA' || clean === 'PROVISIONAL') {
+      return true
+    }
+  }
 
-const isValidIndianVehicleNumber = (val) => {
-  if (!val) return false
-  const stripped = val.replace(/[\s-]/g, '').toUpperCase()
-  return /^[A-Z]{2}\d{2}[A-Z]{1,3}\d{4}$/.test(stripped) // 9 or 10 chars
+  if (rawText) {
+    const match = rawText.match(/(?:Registration\s*(?:Mark\s*&?\s*)?No\.?|Reg(?:istration)?\s*No\.?|Vehicle\s*No\.?)\s*[:\-]?\s*(NEW|UNREGISTERED|APPLIED\s*FOR|NOT\s*REGISTERED|TO\s*BE\s*REGISTERED|T\.?B\.?R\.?|N\/?A|PROVISIONAL)/i)
+    if (match) {
+      return true
+    }
+  }
+
+  return false
 }
 
 const extractValidIndianVehicleNumber = (rawText) => {
   if (!rawText) return null
+
+  // If document indicates a NEW / Unregistered vehicle, return empty string
+  if (isNewVehicleRegistration(rawText, null)) {
+    console.log('[VehicleNo] Document indicates New/Unregistered vehicle. Returning empty vehicleNumber.')
+    return ''
+  }
 
   // 1. Try labeled matches: look for lines containing Registration keywords
   const labeledPattern = /(?:Registration\s*(?:Mark\s*&?\s*)?No\.?|Reg(?:istration)?\s*No\.?|Vehicle\s*No\.?)\s*[:\-]?\s*([A-Z]{2}[\s-]?\d{2}[\s-]?[A-Z]{1,3}[\s-]?\d{4})/gi
@@ -784,7 +804,7 @@ const gpsOcr = async (req, res) => {
 
 const insuranceOcr = async (req, res) => {
   const prompt = `Extract fields from this vehicle insurance policy document.
-- vehicleNumber: the vehicle registration number — EXACTLY 9 or 10 characters after removing hyphens/spaces (format: 2 state letters + 2 district digits + 1-3 series letters + 4 digits, e.g. CG04NS0396, MH12AB1234). Remove hyphens/spaces. Do NOT return engine numbers, chassis numbers, or any value longer than 10 characters.
+- vehicleNumber: the vehicle registration number — EXACTLY 9 or 10 characters after removing hyphens/spaces (format: 2 state letters + 2 district digits + 1-3 series letters + 4 digits, e.g. CG04NS0396, MH12AB1234). Remove hyphens/spaces. Do NOT return engine numbers, chassis numbers, or any value longer than 10 characters. CRITICAL: If the document says "NEW" / "UNREGISTERED" / "APPLIED FOR" / "NOT REGISTERED" / "TO BE REGISTERED" or if the vehicle is new and has no registration mark yet, leave vehicleNumber as empty string "". Do NOT pick up engine numbers or chassis numbers as vehicleNumber!
 - policyNumber: the OFFICIAL policy number issued by the insurer. IMPORTANT: Some documents (e.g. IFFCO Tokio) show TWO "Policy #" values on the same line — the first is an internal transaction/invoice reference (often starts with "1-" or looks like "1-XXXXXXXX"), and the SECOND is the actual policy number. Always use the LAST/SECOND "Policy #" value as the policyNumber. The "Tax Invoice No" field is NOT the policy number.
 - policyHolderName: primary insured person/company name
 - validFrom / validTo: the main policy period (Own Damage section if present, otherwise overall policy period). DD-MM-YYYY format.
@@ -822,12 +842,16 @@ const insuranceOcr = async (req, res) => {
       }
 
       // 2. Fix vehicle number — Indian reg nos are 9-10 chars.
-      //    If the AI returned something clearly wrong (too long or invalid pattern),
+      //    If document indicates a NEW / Unregistered vehicle, set to "".
+      //    Otherwise if the AI returned something clearly wrong (too long or invalid pattern),
       //    scan the raw PDF text for the correct registration number.
       const currentVehicle = (extractedData.vehicleNumber || '').replace(/[\s-]/g, '')
-      if (!isValidIndianVehicleNumber(currentVehicle)) {
+      if (isNewVehicleRegistration(req._rawPdfText, currentVehicle)) {
+        console.log('[VehicleNo] New/Unregistered vehicle detected. Setting vehicleNumber to empty string.')
+        extractedData.vehicleNumber = ''
+      } else if (!isValidIndianVehicleNumber(currentVehicle)) {
         const correctedVehicleNo = extractValidIndianVehicleNumber(req._rawPdfText)
-        if (correctedVehicleNo) {
+        if (correctedVehicleNo !== null && correctedVehicleNo !== undefined) {
           console.log('[VehicleNo] Overriding', currentVehicle, '->', correctedVehicleNo)
           extractedData.vehicleNumber = correctedVehicleNo
         }

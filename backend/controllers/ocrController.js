@@ -261,6 +261,66 @@ const extractHdfcErgoPremiums = (rawText) => {
 }
 
 /**
+ * IFFCO Tokio PDFs (especially Standalone OD policies) print a Premium Bifurcation table
+ * where numbers are concatenated in raw text:
+ *   "Premium Bifurcation (Rs.) Section 1 (Rs.) Section 2 (Rs.) Premium/Taxable Value(Rs.) Total GST Net Premium Rs.(for 1 years)"
+ *   "622.00174.00796.00143.28939.28"
+ *
+ * Here:
+ * - Section 1 (OD Net): 622.00
+ * - Section 2 (Addons): 174.00
+ * - Premium/Taxable Value (Total Net OD): 796.00
+ * - Total GST: 143.28
+ * - Net Premium Rs. (Gross): 939.28
+ *
+ * For Standalone OD policies, Third Party details belong to a different insurer
+ * (e.g. Shriram General Ins) and are for reference only.
+ */
+const extractIffcoTokioPremiums = (rawText) => {
+  if (!rawText) return null
+
+  const isIffco = /IFFCO\s*[-–]?\s*TOKIO/i.test(rawText)
+  if (!isIffco) return null
+
+  const isStandaloneOd = /Stand\s*Alone\s*OD/i.test(rawText) 
+    || /Standalone\s*OD/i.test(rawText) 
+    || /Own\s*Damage\s*Only/i.test(rawText)
+    || /TP\s*Insurer\s*Name\s*:/i.test(rawText)
+
+  const bifMatch = rawText.match(/Premium\s*Bifurcation[\s\S]{0,150}?((?:\d+\.\d{2}){5})/i)
+    || rawText.match(/Section\s*1\s*\(Rs\.\)[\s\S]{0,150}?((?:\d+\.\d{2}){5})/i)
+
+  let sec1 = null, sec2 = null, taxableValue = null, totalGst = null, grossVal = null
+  if (bifMatch) {
+    const nums = bifMatch[1].match(/\d+\.\d{2}/g)
+    if (nums && nums.length === 5) {
+      sec1 = Number(nums[0])
+      sec2 = Number(nums[1])
+      taxableValue = Number(nums[2])
+      totalGst = Number(nums[3])
+      grossVal = Number(nums[4])
+    }
+  }
+
+  const netPremium = taxableValue ?? (sec1 != null ? sec1 + (sec2 || 0) : null)
+  const odPremium = isStandaloneOd ? netPremium : (sec1 ?? netPremium)
+  const tpPremium = isStandaloneOd ? '' : null
+
+  return {
+    isStandaloneOd,
+    sec1,
+    sec2,
+    taxableValue,
+    totalGst,
+    grossVal,
+    odPremium,
+    netPremium,
+    premium: grossVal,
+    tpPremium
+  }
+}
+
+/**
  * Indian vehicle registration numbers follow the pattern:
  *   <2-letter state code><2-digit district><1-3 letter series><4-digit number>
  * Total length after stripping hyphens/spaces: 9 or 10 characters.
@@ -736,7 +796,7 @@ const insuranceOcr = async (req, res) => {
 - premium: numeric value of the Gross Premium — labeled "Final Premium" or "Gross Premium", the LARGEST of the four premium figures, equal to Net Premium + GST/CGST+SGST/IGST (roughly netPremium × 1.18). Return the exact decimal value including paise/cents if present (e.g., 1182.71). Do not omit the decimal or round. If only one premium figure exists on the document (no OD/TP/Net split), put that value here as premium and leave odPremium/tpPremium/netPremium empty.
 - SELF-CHECK before answering: odPremium + tpPremium should be close to netPremium (within a few rupees, allowing for small add-ons), and netPremium should be meaningfully smaller than premium (premium ≈ netPremium × 1.18 for 18% GST). If your extracted values don't satisfy this, re-examine the document for the correct "Total OD Premium" / "Total Act Premium" / "Net Premium" / "Final Premium" labels rather than reusing the same number for multiple fields.
 - insuranceCompany: full insurer name as it appears (e.g. "HDFC ERGO", "National Insurance Company Limited")
-- insuranceClass: "Comprehensive" or "Third Party" (if not found, infer from policy type)
+- insuranceClass: "Comprehensive" or "Third Party" or "Standalone OD" or "Bundle" (if not found, infer from policy type)
 - product: type of insured vehicle/policy. Look for phrases like "Private Car", "Motor Cycle", "Two Wheeler", "Fire", "Marine", "Health" etc. in the document, and map to EXACTLY one of these values (return the value on the left, verbatim): "Pvt. Car" (private car / motor car), "Two Wheeler" (motorcycle/scooter/bike/two-wheeler), "GCV" (goods carrying vehicle/truck/commercial goods vehicle), "GCV-3W" (3-wheeler goods vehicle), "PCV" (passenger carrying vehicle/bus), "PCV-3W" (3-wheeler passenger/auto rickshaw), "Taxi", "Mis-D", "Health", "Life", "Fire", "Burglary", "WC" (workmen's compensation), "CPM", "Travel", "Marine", "GPA" (group personal accident), "GMC" (group mediclaim), "CAR", "IAR", "EAR", "SCHOOL BUS", "LIABILITY", "SECURITY BOND". If none match, return empty string.
 - Use empty string "" for any absent field`;
   const template = `{"vehicleNumber":"","policyNumber":"","policyHolderName":"","validFrom":"","validTo":"","tpValidFrom":"","tpValidTo":"","issueDate":"","odPremium":"","tpPremium":"","netPremium":"","premium":"","insuranceCompany":"","insuranceClass":"","product":""}`;
@@ -888,6 +948,41 @@ const insuranceOcr = async (req, res) => {
             console.log('[TaxGuard] tpPremium', tp, 'matches Tax (gross - net =', tax, '). Clearing misclassified tpPremium.')
             extractedData.tpPremium = ''
             if (od != null) extractedData.netPremium = od
+          }
+        }
+      }
+
+      // 9. Fix premiums and reference TP dates for IFFCO Tokio
+      const iffcoPremiums = extractIffcoTokioPremiums(req._rawPdfText)
+      if (iffcoPremiums) {
+        if (iffcoPremiums.isStandaloneOd) {
+          extractedData.tpPremium = ''
+          extractedData.tpValidFrom = ''
+          extractedData.tpValidTo = ''
+          extractedData.insuranceClass = 'Standalone OD'
+        }
+        if (iffcoPremiums.odPremium != null) extractedData.odPremium = iffcoPremiums.odPremium
+        if (iffcoPremiums.netPremium != null) extractedData.netPremium = iffcoPremiums.netPremium
+        if (iffcoPremiums.premium != null) extractedData.premium = iffcoPremiums.premium
+      }
+
+      // 10. General Guard for External Reference TP policies across ALL insurers:
+      // If TP Insurer Name is present and refers to a DIFFERENT insurer than current insurer,
+      // clear tpValidFrom, tpValidTo, and tpPremium!
+      const tpInsurerMatch = req._rawPdfText.match(/TP\s*Insurer\s*Name\s*:\s*([^\n]+)/i)
+        || req._rawPdfText.match(/Third\s*Party\s*Insurer\s*:\s*([^\n]+)/i)
+      if (tpInsurerMatch) {
+        const tpInsurer = tpInsurerMatch[1].trim().toLowerCase()
+        const currentComp = (extractedData.insuranceCompany || '').toLowerCase()
+        const cleanTp = tpInsurer.replace(/[^a-z0-9]/g, '')
+        const cleanCur = currentComp.replace(/[^a-z0-9]/g, '')
+        if (cleanTp && cleanCur && !cleanTp.includes(cleanCur) && !cleanCur.includes(cleanTp)) {
+          console.log('[ExternalTPGuard] Reference TP policy from external insurer (' + tpInsurerMatch[1].trim() + '). Clearing TP dates & TP premium.')
+          extractedData.tpValidFrom = ''
+          extractedData.tpValidTo = ''
+          extractedData.tpPremium = ''
+          if (!extractedData.insuranceClass || extractedData.insuranceClass === 'Comprehensive') {
+            extractedData.insuranceClass = 'Standalone OD'
           }
         }
       }

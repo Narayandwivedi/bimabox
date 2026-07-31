@@ -1110,6 +1110,8 @@ const AddInsuranceModal = ({ isOpen, onClose, onSubmit, initialData = null, isEd
                       <option value="">Select Policy Type</option>
                       <option value="Comprehensive">Comprehensive</option>
                       <option value="Third Party">Third Party</option>
+                      <option value="Standalone OD">Standalone OD</option>
+                      <option value="Bundle">Bundle</option>
                     </select>
                   </div>
                 </div>

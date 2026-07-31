@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 const PAGE_SIZE = 40
 
 const POLICY_TYPES = [
-  'Comprehensive', 'Third Party'
+  'Comprehensive', 'Third Party', 'Standalone OD', 'Bundle'
 ]
 
 const DOCUMENT_TYPES = [

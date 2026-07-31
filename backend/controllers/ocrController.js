@@ -115,6 +115,93 @@ const extractDigitOdTpPremium = (rawText, knownNetPremium) => {
 }
 
 /**
+ * Go Digit PDFs print policy dates in a two-column table:
+ *   Col 1: Own Damage Cover period  |  Col 2: Third Party Liability Cover period
+ * pdf-parse flattens this into a sequence of 4 consecutive date strings:
+ *   [OD From, TP From, OD To, TP To]
+ * right after the "Period of Policy" header line.
+ *
+ * Problem: the same page also has a line like "D262115781 / 11042026" where
+ * "11042026" is the policy issue date concatenated with the policy number.
+ * The AI reads that as "11-04-2026" and uses it as validFrom instead of the
+ * correct "12-Apr-2026" from the table.
+ *
+ * This helper extracts the 4 dates from the table in the correct column
+ * order and returns them for use as an override in the post-processor.
+ *
+ * Format of dates in Go Digit PDFs: "12-Apr-2026", "11-Apr-2027" etc.
+ * We normalise to DD-MM-YYYY for the stored fields.
+ */
+const MONTH_MAP = {
+  jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+}
+
+const normaliseDateDDMMYYYY = (dateStr) => {
+  if (!dateStr) return null
+  // Already DD-MM-YYYY or DD/MM/YYYY
+  if (/^\d{2}[-/]\d{2}[-/]\d{4}$/.test(dateStr)) {
+    return dateStr.replace(/\//g, '-')
+  }
+  // DD-Mon-YYYY e.g. "12-Apr-2026"
+  const m = dateStr.match(/^(\d{1,2})[-\s]([A-Za-z]{3})[-\s](\d{4})$/)
+  if (m) {
+    const mm = MONTH_MAP[m[2].toLowerCase()]
+    if (!mm) return null
+    return `${m[1].padStart(2, '0')}-${mm}-${m[3]}`
+  }
+  return null
+}
+
+const extractDigitPolicyDates = (rawText) => {
+  if (!rawText) return null
+
+  // Look for the block: "Period of Policy Own Damage Cover..." followed by
+  // 4 date values in the format "DD-Mon-YYYY" within the next ~300 chars.
+  // The column order is always: OD-From, TP-From, OD-To, TP-To
+  const blockMatch = rawText.match(
+    /Period\s+of\s+Policy[^\n]*(?:Own\s+Damage|OD)[^\n]*((?:\n[^\n]*)*)/i
+  )
+  if (!blockMatch) return null
+
+  // Collect all DD-Mon-YYYY (or DD-MM-YYYY) dates from the block
+  const block = blockMatch[0]
+  const datePattern = /\b(\d{1,2}-(?:[A-Za-z]{3}|\d{2})-\d{4})\b/g
+  const dates = []
+  let m
+  while ((m = datePattern.exec(block)) !== null) {
+    const normalised = normaliseDateDDMMYYYY(m[1])
+    if (normalised) dates.push(normalised)
+    if (dates.length === 4) break
+  }
+
+  // We need at least 2 dates (From, To for OD) to be useful
+  if (dates.length < 2) return null
+
+  // Column order: [OD-From, TP-From, OD-To, TP-To]
+  // If only 2 dates found it's a TP-only policy: [TP-From, TP-To]
+  const result = {}
+  if (dates.length >= 4) {
+    result.validFrom = dates[0]   // OD From
+    result.validTo   = dates[2]   // OD To
+    result.tpValidFrom = dates[1] // TP From
+    result.tpValidTo   = dates[3] // TP To
+  } else if (dates.length === 3) {
+    // OD-From, OD-To, TP-To (TP-From same as OD-From)
+    result.validFrom   = dates[0]
+    result.validTo     = dates[1]
+    result.tpValidFrom = dates[0]
+    result.tpValidTo   = dates[2]
+  } else {
+    result.validFrom = dates[0]
+    result.validTo   = dates[1]
+  }
+
+  console.log('[GoDigit] Extracted policy dates from Period-of-Policy block:', result)
+  return result
+}
+
+/**
  * Indian vehicle registration numbers follow the pattern:
  *   <2-letter state code><2-digit district><1-3 letter series><4-digit number>
  * Total length after stripping hyphens/spaces: 9 or 10 characters.
@@ -675,6 +762,36 @@ const insuranceOcr = async (req, res) => {
               extractedData.netPremium = bajajPremiums.netPremium
             }
           }
+        }
+      }
+
+      // 6. Fix policy dates for Go Digit PDFs.
+      //    Go Digit flattens a two-column date table (OD | TP) into 4
+      //    consecutive date strings: [OD-From, TP-From, OD-To, TP-To].
+      //    The page also contains a line like "D262115781 / 11042026"
+      //    (policy number + issue date concatenated) which the AI mistakes
+      //    for the validFrom date ("11-04-2026") instead of the correct
+      //    "12-04-2026" that comes from the Period-of-Policy table.
+      //    We extract dates directly from the Period-of-Policy block and
+      //    override only when the AI's value differs from the table value.
+      const digitDates = extractDigitPolicyDates(req._rawPdfText)
+      if (digitDates) {
+        // Override validFrom if it differs from what the table says
+        if (digitDates.validFrom && digitDates.validFrom !== extractedData.validFrom) {
+          console.log('[GoDigit] Overriding validFrom:', extractedData.validFrom, '->', digitDates.validFrom)
+          extractedData.validFrom = digitDates.validFrom
+        }
+        if (digitDates.validTo && digitDates.validTo !== extractedData.validTo) {
+          console.log('[GoDigit] Overriding validTo:', extractedData.validTo, '->', digitDates.validTo)
+          extractedData.validTo = digitDates.validTo
+        }
+        if (digitDates.tpValidFrom && digitDates.tpValidFrom !== extractedData.tpValidFrom) {
+          console.log('[GoDigit] Overriding tpValidFrom:', extractedData.tpValidFrom, '->', digitDates.tpValidFrom)
+          extractedData.tpValidFrom = digitDates.tpValidFrom
+        }
+        if (digitDates.tpValidTo && digitDates.tpValidTo !== extractedData.tpValidTo) {
+          console.log('[GoDigit] Overriding tpValidTo:', extractedData.tpValidTo, '->', digitDates.tpValidTo)
+          extractedData.tpValidTo = digitDates.tpValidTo
         }
       }
     }

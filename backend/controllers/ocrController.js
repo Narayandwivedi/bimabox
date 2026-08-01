@@ -1098,6 +1098,22 @@ const insuranceOcr = async (req, res) => {
         extractedData.policyNumber = correctedPolicyNo
       }
 
+      // 1b. Fix Go Digit policy number — Go Digit PDFs print the real policy number
+      //     (D-prefix + 9 digits) concatenated with the issue date as:
+      //       "D282367063 / 28072026"
+      //     pdf-parse includes this line verbatim, but the AI often grabs the
+      //     Invoice Number (IA-prefix, e.g. IA278149378) instead of the real policy number.
+      //     We scan the raw text for the "D[digits] / [8-digit date]" pattern and override.
+      if (/go.?digit/i.test(req._rawPdfText) || /\bD\d{9}\s*\/\s*\d{8}\b/.test(req._rawPdfText)) {
+        const digitPolicyMatch = req._rawPdfText.match(/\b(D\d{7,12}\s*\/\s*\d{6,8})\b/)
+        if (digitPolicyMatch) {
+          const realPolicyNo = digitPolicyMatch[1].trim()
+          if (realPolicyNo !== extractedData.policyNumber) {
+            console.log('[GoDigit] Overriding policyNumber:', extractedData.policyNumber, '->', realPolicyNo)
+            extractedData.policyNumber = realPolicyNo
+          }
+        }
+      }
       // 2. Fix vehicle number — Indian reg nos are 9-10 chars.
       //    If document indicates a NEW / Unregistered vehicle, set to "".
       //    Otherwise if the AI returned something clearly wrong (too long or invalid pattern),

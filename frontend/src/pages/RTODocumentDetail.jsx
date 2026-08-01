@@ -295,7 +295,7 @@ const RTODocumentDetail = () => {
 
   const handleDownload = async (forcePersonalized = null) => {
     if (!fullDocUrl) return
-    const personalizedEnabled = forcePersonalized !== null ? forcePersonalized : (localStorage.getItem('personalizedPdf') !== 'false')
+    const personalizedEnabled = forcePersonalized === true
     const isInsurance = (type || '').toLowerCase() === 'insurance'
     try {
       const response = await fetch(fullDocUrl)

@@ -44,8 +44,10 @@ const fmt = (v) => (v ? clean(v) : 'N/A')
 
 /**
  * Generates a personalized PDF cover page and prepends it to existingPdfBytes.
+ * Matches the reference image exact design, layout, dark theme background, and typography.
+ * 
  * @param {Uint8Array} existingPdfBytes  - the original policy document bytes
- * @param {object} user                  - AuthContext user (name, email, mobile, businessName, picture)
+ * @param {object} user                  - AuthContext user (name, email, mobile, businessName, picture, modeOfBusiness)
  * @param {object} record                - the insurance record from the API
  * @returns {Uint8Array}                 - merged PDF bytes
  */
@@ -54,30 +56,35 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   const W = 595.28
   const H = 841.89
 
-  // ── Create the cover PDF ─────────────────────────────────────────────────
+  // ── Create cover PDF document ────────────────────────────────────────────
   const coverDoc = await PDFDocument.create()
   const page = coverDoc.addPage([W, H])
 
   const fontRegular = await coverDoc.embedFont(StandardFonts.Helvetica)
   const fontBold    = await coverDoc.embedFont(StandardFonts.HelveticaBold)
 
-  // ── Colors ───────────────────────────────────────────────────────────────
-  const teal      = rgb(0.047, 0.573, 0.573)   // #0c9292
-  const tealLight = rgb(0.898, 0.976, 0.976)   // #e5f9f9
-  const dark      = rgb(0.118, 0.169, 0.239)   // #1e2b3d
-  const grey      = rgb(0.38, 0.44, 0.54)      // #616f89
-  const black     = rgb(0, 0, 0)
-  const white     = rgb(1, 1, 1)
-  const lineGrey  = rgb(0.85, 0.87, 0.89)
+  // ── Colors (exact match to reference design image) ───────────────────────
+  const darkBg    = rgb(0.149, 0.149, 0.149)   // #262626 Dark gray page background
+  const darkRow   = rgb(0.149, 0.149, 0.149)   // #262626 Dark row background
+  const lightTeal = rgb(0.898, 0.969, 0.965)   // #E5F7F5 Light teal/cyan row & box bg
+  const teal      = rgb(0.0, 0.659, 0.588)     // #00A896 Bright teal accent
+  const white     = rgb(1, 1, 1)               // #FFFFFF
+  const textDark  = rgb(0.067, 0.094, 0.153)   // #111827 Dark text for light rows
+  const textLight = rgb(0.949, 0.953, 0.961)   // #F3F4F6 Light text for dark rows
+  const textMuted = rgb(0.82, 0.835, 0.855)    // #D1D5DB Muted text
+  const lineGrey  = rgb(0.35, 0.37, 0.40)      // #595E66 Horizontal divider line
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-  const draw = (text, x, y, { font = fontRegular, size = 10, color = black } = {}) => {
-    const txt = clampText(text, font, size, W - x - 30)
+  // ── Draw full page dark background ───────────────────────────────────────
+  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: darkBg })
+
+  // ── Helper Draw Functions ────────────────────────────────────────────────
+  const draw = (text, x, y, { font = fontRegular, size = 10, color = textLight } = {}) => {
+    const txt = clampText(text, font, size, W - x - 24)
     if (!txt) return
     page.drawText(txt, { x, y, size, font, color })
   }
 
-  const drawRight = (text, rightX, y, { font = fontRegular, size = 10, color = black } = {}) => {
+  const drawRight = (text, rightX, y, { font = fontRegular, size = 10, color = textLight } = {}) => {
     const txt = clean(text)
     if (!txt) return
     const w = font.widthOfTextAtSize(txt, size)
@@ -85,180 +92,227 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   }
 
   const hLine = (y, opts = {}) => page.drawLine({
-    start: { x: opts.x1 ?? 30, y },
-    end:   { x: opts.x2 ?? (W - 30), y },
-    thickness: opts.thickness ?? 0.5,
+    start: { x: opts.x1 ?? 24, y },
+    end:   { x: opts.x2 ?? (W - 24), y },
+    thickness: opts.thickness ?? 0.6,
     color: opts.color ?? lineGrey,
   })
 
-  // ── Top header bar ───────────────────────────────────────────────────────
-  page.drawRectangle({ x: 0, y: H - 80, width: W, height: 80, color: white })
+  // ── TOP HEADER SECTION ───────────────────────────────────────────────────
+  const marginX = 24
+  const logoSize = 46
+  const logoX = marginX
+  const logoY = H - 64
 
-  // Logo circle (left side)
-  const logoSize = 54
-  const logoX = 30
-  const logoY = H - 70
-  page.drawCircle({ x: logoX + logoSize / 2, y: logoY + logoSize / 2, size: logoSize / 2, color: teal })
-
-  // Try to embed logo image if picture exists
+  // Draw Logo (or fallback initial box)
+  let logoLoaded = false
   if (user?.picture) {
     try {
       const imgBytes = await fetchImageBytes(user.picture)
       if (imgBytes) {
         let img
         try { img = await coverDoc.embedJpg(imgBytes) } catch { img = await coverDoc.embedPng(imgBytes) }
-        page.drawImage(img, { x: logoX, y: logoY, width: logoSize, height: logoSize, opacity: 1 })
-      } else throw new Error('no bytes')
+        page.drawImage(img, { x: logoX, y: logoY, width: logoSize, height: logoSize })
+        logoLoaded = true
+      }
     } catch {
-      // fallback: initial letter
-      const initial = clean(user?.businessName || user?.name || 'A').charAt(0).toUpperCase() || 'A'
-      page.drawText(initial, {
-        x: logoX + logoSize / 2 - fontBold.widthOfTextAtSize(initial, 22) / 2,
-        y: logoY + logoSize / 2 - 8,
-        size: 22, font: fontBold, color: white,
-      })
+      logoLoaded = false
     }
-  } else {
+  }
+
+  if (!logoLoaded) {
+    // White logo container box with circular logo background inside
+    page.drawRectangle({ x: logoX, y: logoY, width: logoSize, height: logoSize, color: white })
+    page.drawCircle({ x: logoX + logoSize / 2, y: logoY + logoSize / 2, size: logoSize / 2 - 3, color: teal })
     const initial = clean(user?.businessName || user?.name || 'A').charAt(0).toUpperCase() || 'A'
+    const initW = fontBold.widthOfTextAtSize(initial, 18)
     page.drawText(initial, {
-      x: logoX + logoSize / 2 - fontBold.widthOfTextAtSize(initial, 22) / 2,
-      y: logoY + logoSize / 2 - 8,
-      size: 22, font: fontBold, color: white,
+      x: logoX + (logoSize - initW) / 2,
+      y: logoY + 14,
+      size: 18, font: fontBold, color: white,
     })
   }
 
-  // Business name right of logo
-  if (user?.businessName) {
-    draw(user.businessName, logoX + logoSize + 12, H - 38, { font: fontBold, size: 13, color: dark })
-  }
+  // Business Name next to logo
+  const bizTitle = clean(user?.businessName || user?.name || 'nkd insurance')
+  draw(bizTitle, logoX + logoSize + 12, logoY + 16, { font: fontBold, size: 14, color: textLight })
 
-  // Advisor contact block (top right)
-  const advisorLines = [
-    `Advisor Name : ${fmt(user?.name)}`,
-    `Mobile no : ${fmt(user?.mobile)}`,
-    `Email id : ${fmt(user?.email)}`,
-  ]
-  advisorLines.forEach((line, i) => {
-    drawRight(line, W - 30, H - 26 - i * 16, { font: fontRegular, size: 9, color: grey })
-  })
+  // Advisor info block (top right aligned)
+  const rightX = W - marginX
+  drawRight(`Advisor Name : ${fmt(user?.name)}`, rightX, H - 32, { font: fontBold, size: 9, color: textMuted })
+  drawRight(`Mobile no : ${fmt(user?.mobile)}`, rightX, H - 46, { font: fontBold, size: 9, color: textMuted })
+  drawRight(`Email id : ${fmt(user?.email)}`, rightX, H - 60, { font: fontBold, size: 9, color: textMuted })
 
-  // Horizontal separator
-  hLine(H - 82, { color: teal, thickness: 1.5 })
+  // Full-width teal line below header
+  hLine(H - 74, { color: teal, thickness: 1.5 })
 
-  // ── POLICY SUMMARY title ─────────────────────────────────────────────────
-  const title = 'POLICY SUMMARY'
-  const titleW = fontBold.widthOfTextAtSize(title, 18)
-  page.drawText(title, { x: (W - titleW) / 2, y: H - 118, size: 18, font: fontBold, color: dark })
+  // ── POLICY SUMMARY MAIN TITLE ────────────────────────────────────────────
+  const mainTitle = 'POLICY SUMMARY'
+  const titleW = fontBold.widthOfTextAtSize(mainTitle, 18)
+  const titleX = (W - titleW) / 2
+  const titleY = H - 110
+  page.drawText(mainTitle, { x: titleX, y: titleY, size: 18, font: fontBold, color: white })
+  // White underline under main title
+  hLine(titleY - 6, { x1: titleX - 4, x2: titleX + titleW + 4, color: white, thickness: 1.2 })
 
-  // Underline
-  hLine(H - 123, { x1: (W - titleW) / 2 - 4, x2: (W - titleW) / 2 + titleW + 4, color: dark, thickness: 1 })
-
-  // ── Dear … greeting ──────────────────────────────────────────────────────
+  // ── GREETING & THANK YOU PARAGRAPH ───────────────────────────────────────
   const clientName = clean(record?.policyHolderName || record?.ownerName || record?.vehicleOwner || 'Valued Customer').toUpperCase()
-  draw(`Dear ${clientName}`, 36, H - 150, { font: fontBold, size: 11, color: teal })
+  draw(`Dear ${clientName}`, marginX, H - 142, { font: fontBold, size: 11, color: teal })
 
-  // ── Thank you paragraph ──────────────────────────────────────────────────
-  const bizName = clean(user?.businessName || user?.name || 'our team')
-  draw(`Thank you for choosing ${bizName}.`, 36, H - 172, { font: fontBold, size: 10, color: dark })
-  const paraLines = [
-    'We sincerely appreciate the opportunity to serve you. Your trust is valuable to us, and we remain committed',
-    'to providing prompt assistance throughout your policy period -- from policy issuance to renewals and claim',
-    'support. Please keep this document safely for your records.',
-  ]
-  paraLines.forEach((line, i) => draw(line, 36, H - 188 - i * 14, { size: 9, color: grey }))
+  const displayBizName = clean(user?.businessName || user?.name || 'NKD Insurance')
+  draw(`Thank you for choosing ${displayBizName}.`, marginX, H - 162, { font: fontRegular, size: 10, color: textLight })
 
-  // ── Advisor name row ─────────────────────────────────────────────────────
-  hLine(H - 240)
-  draw(`Advisor Name : ${fmt(user?.name)}`, 36, H - 255, { font: fontBold, size: 10, color: dark })
-  drawRight('Your Trusted Advisor', W - 36, H - 255, { font: fontBold, size: 10, color: dark })
-  draw(fmt(user?.name), W - 36 - fontRegular.widthOfTextAtSize(fmt(user?.name), 10), H - 269, { size: 10, color: grey })
-  hLine(H - 278)
+  const paraText1 = 'We sincerely appreciate the opportunity to serve you. Your trust is valuable to us, and we remain committed to providing prompt assistance throughout your policy period--from policy issuance to renewals and claim support.'
+  const paraText2 = 'Please keep this document safely for your records. If you require any assistance regarding your insurance policy or claim, our team is always happy to help.'
 
-  // ── Policy Summary section ───────────────────────────────────────────────
-  draw('Policy Summary', 36, H - 300, { font: fontBold, size: 12, color: dark })
-  hLine(H - 305, { x1: 36, x2: 36 + fontBold.widthOfTextAtSize('Policy Summary', 12) + 4, color: dark, thickness: 1 })
-
-  const fmtDate = (d) => {
-    if (!d) return 'N/A'
-    try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) }
-    catch { return clean(d) }
+  // Format paragraphs cleanly across lines
+  let curY = H - 184
+  const wrapAndDraw = (text, startY, lineGap = 14) => {
+    const words = text.split(' ')
+    let line = ''
+    let y = startY
+    const maxW = W - marginX * 2
+    words.forEach((w) => {
+      const test = line ? `${line} ${w}` : w
+      if (fontRegular.widthOfTextAtSize(clean(test), 9.5) > maxW) {
+        draw(line, marginX, y, { font: fontRegular, size: 9.5, color: textLight })
+        line = w
+        y -= lineGap
+      } else {
+        line = test
+      }
+    })
+    if (line) {
+      draw(line, marginX, y, { font: fontRegular, size: 9.5, color: textLight })
+      y -= lineGap
+    }
+    return y
   }
+
+  curY = wrapAndDraw(paraText1, curY)
+  curY -= 4
+  curY = wrapAndDraw(paraText2, curY)
+
+  // Separator line below paragraphs
+  curY -= 10
+  hLine(curY, { color: lineGrey, thickness: 0.6 })
+
+  // ── POLICY SUMMARY TABLE ────────────────────────────────────────────────
+  curY -= 22
+  const secTitle1 = 'Policy Summary'
+  draw(secTitle1, marginX, curY, { font: fontBold, size: 11, color: white })
+  const st1W = fontBold.widthOfTextAtSize(secTitle1, 11)
+  hLine(curY - 4, { x1: marginX, x2: marginX + st1W + 4, color: white, thickness: 0.8 })
+
+  const parseOrFmtDate = (d) => {
+    if (!d) return 'N/A'
+    const str = clean(d)
+    if (!str) return 'N/A'
+    if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}$/.test(str)) return str
+    try {
+      const dt = new Date(d)
+      if (isNaN(dt.getTime())) return str
+      return dt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch {
+      return str
+    }
+  }
+
+  const startDateStr = parseOrFmtDate(record?.issueDate || record?.validFrom)
+  const endDateStr = parseOrFmtDate(record?.validTo)
 
   const summaryRows = [
     ['Policyholder',        record?.policyHolderName || record?.vehicleOwner || 'N/A'],
     ['Policy Number',       record?.policyNumber || 'N/A'],
-    ['Policy Type',         record?.product || record?.insuranceType || 'MOTOR'],
+    ['Policy Type',         record?.product || record?.insuranceType || 'Two Wheeler'],
     ['Vehicle Number',      record?.vehicleNumber || 'N/A'],
     ['Annual Premium',      record?.premium ? `Rs. ${Number(record.premium).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'],
-    ['Policy Start Date',   record?.issueDate ? clean(record.issueDate) : fmtDate(record?.validFrom)],
-    ['Maturity / End Date', record?.validTo ? clean(record.validTo) : 'N/A'],
+    ['Policy Start Date',   startDateStr],
+    ['Maturity / End Date', endDateStr],
     ['Insurance Company',   record?.insuranceCompany || 'N/A'],
   ]
 
-  let rowY = H - 320
+  curY -= 18
   const rowH = 22
-  const col1 = 36
-  const col2 = 230
+  const col1 = marginX
+  const col2 = 210
 
   summaryRows.forEach((row, i) => {
-    const bg = i % 2 === 0 ? white : tealLight
-    page.drawRectangle({ x: col1, y: rowY - 5, width: W - col1 * 2, height: rowH, color: bg })
-    draw(row[0], col1 + 6, rowY + 4, { font: fontBold, size: 9.5, color: dark })
-    draw(`: ${row[1]}`, col2, rowY + 4, { size: 9.5, color: dark })
-    rowY -= rowH
+    const isLightRow = i % 2 === 1
+    const bg = isLightRow ? lightTeal : darkRow
+    const labelColor = isLightRow ? textDark : textLight
+    const valColor = isLightRow ? textDark : textLight
+    const valFont = (row[0] === 'Vehicle Number' || row[0] === 'Policy Number') ? fontBold : fontRegular
+
+    page.drawRectangle({ x: col1, y: curY - 4, width: W - marginX * 2, height: rowH, color: bg })
+    draw(row[0], col1 + 8, curY + 3, { font: fontBold, size: 9.5, color: labelColor })
+    draw(`: ${row[1]}`, col2, curY + 3, { font: valFont, size: 9.5, color: valColor })
+    curY -= rowH
   })
 
-  // ── Services We Offer section ────────────────────────────────────────────
-  rowY -= 14
-  draw('Services We Offer', col1, rowY, { font: fontBold, size: 11, color: dark })
-  hLine(rowY - 4, { x1: col1, x2: col1 + fontBold.widthOfTextAtSize('Services We Offer', 11) + 4, color: dark, thickness: 0.8 })
+  // ── SERVICES WE OFFER SECTION ───────────────────────────────────────────
+  curY -= 14
+  const secTitle2 = 'Services We Offer'
+  draw(secTitle2, marginX, curY, { font: fontBold, size: 11, color: white })
+  const st2W = fontBold.widthOfTextAtSize(secTitle2, 11)
+  hLine(curY - 4, { x1: marginX, x2: marginX + st2W + 4, color: white, thickness: 0.8 })
 
-  // Sub-heading: Explore More Protection for Your Family
-  rowY -= 18
-  draw('Explore More Protection for Your Family', col1, rowY, { font: fontBold, size: 9.5, color: teal })
-
-  rowY -= 18
-  // Use user's saved modeOfBusiness services; fall back to defaults if none saved
+  curY -= 20
+  // Use user's modeOfBusiness services or default to ['Motor', 'Health']
   const serviceLabels = (user?.modeOfBusiness && user.modeOfBusiness.length > 0)
     ? user.modeOfBusiness.map((s) => clean(s))
     : ['Motor', 'Health']
-  const numServices = serviceLabels.length
-  const gapBetween = 8
-  const totalGap = gapBetween * (numServices - 1)
-  const boxW = Math.min(140, (W - col1 * 2 - totalGap) / numServices)
-  serviceLabels.forEach((label, i) => {
-    const bx = col1 + i * (boxW + gapBetween)
-    page.drawRectangle({ x: bx, y: rowY - 18, width: boxW, height: 26, color: tealLight, borderColor: teal, borderWidth: 0.8 })
-    const lw = fontBold.widthOfTextAtSize(label, 10)
-    page.drawText(label, { x: bx + (boxW - lw) / 2, y: rowY - 8, size: 10, font: fontBold, color: teal })
+
+  const colsPerRow = 4
+  const gapBetweenX = 10
+  const gapBetweenY = 8
+  const boxH = 24
+  const boxW = (W - marginX * 2 - gapBetweenX * (colsPerRow - 1)) / colsPerRow
+
+  serviceLabels.forEach((label, idx) => {
+    const rowIdx = Math.floor(idx / colsPerRow)
+    const colIdx = idx % colsPerRow
+
+    const bx = marginX + colIdx * (boxW + gapBetweenX)
+    const by = curY - rowIdx * (boxH + gapBetweenY) - 18
+
+    page.drawRectangle({ x: bx, y: by, width: boxW, height: boxH, color: lightTeal, borderColor: teal, borderWidth: 1 })
+
+    const textToDraw = clampText(label, fontBold, 9.5, boxW - 6)
+    const lw = fontBold.widthOfTextAtSize(textToDraw, 9.5)
+    page.drawText(textToDraw, {
+      x: bx + (boxW - lw) / 2,
+      y: by + 7,
+      size: 9.5,
+      font: fontBold,
+      color: teal,
+    })
   })
 
-  // ── Reach Your Advisor Anytime ───────────────────────────────────────────
-  rowY -= 44
-  draw('Reach Your Advisor Anytime', col1, rowY, { font: fontBold, size: 11, color: dark })
-  hLine(rowY - 4, { x1: col1, x2: col1 + fontBold.widthOfTextAtSize('Reach Your Advisor Anytime', 11) + 4, color: dark, thickness: 0.8 })
+  // Update curY dynamically based on number of service rows rendered
+  const totalServiceRows = Math.ceil(serviceLabels.length / colsPerRow)
+  curY -= (totalServiceRows * boxH + (totalServiceRows - 1) * gapBetweenY) + 24
 
-  rowY -= 22
+  // ── REACH YOUR ADVISOR ANYTIME ───────────────────────────────────────────
+  const secTitle3 = 'Reach Your Advisor Anytime'
+  draw(secTitle3, marginX, curY, { font: fontBold, size: 11, color: white })
+  const st3W = fontBold.widthOfTextAtSize(secTitle3, 11)
+  hLine(curY - 4, { x1: marginX, x2: marginX + st3W + 4, color: white, thickness: 0.8 })
+
+  curY -= 22
   const contactLines = [
     ['N', `Name : ${fmt(user?.name)}`],
     ['M', `Mobile : ${fmt(user?.mobile)}`],
     ['E', `Email : ${fmt(user?.email)}`],
   ]
   contactLines.forEach(([badgeLetter, text]) => {
-    // Draw icon circle with ASCII badge letter inside
-    page.drawCircle({ x: col1 + 8, y: rowY + 3, size: 8, color: teal })
-    page.drawText(badgeLetter, { x: col1 + 5.5, y: rowY, size: 8, font: fontBold, color: white })
-    draw(text, col1 + 22, rowY, { size: 9.5, color: dark })
-    rowY -= 20
+    page.drawCircle({ x: marginX + 8, y: curY + 3, size: 8, color: teal })
+    page.drawText(badgeLetter, { x: marginX + 5.5, y: curY, size: 8, font: fontBold, color: white })
+    draw(text, marginX + 22, curY, { font: fontRegular, size: 9.5, color: textLight })
+    curY -= 20
   })
 
-  // ── Footer bar ───────────────────────────────────────────────────────────
-  page.drawRectangle({ x: 0, y: 0, width: W, height: 30, color: teal })
-  const footerText = user?.businessName || user?.name || 'BimaBox'
-  const ftw = fontRegular.widthOfTextAtSize(footerText, 9)
-  page.drawText(footerText, { x: (W - ftw) / 2, y: 10, size: 9, font: fontRegular, color: white })
-
-  // ── Merge: cover page first, then original pages or image page ───────────
+  // ── MERGE COVER PAGE WITH ORIGINAL DOCUMENT ──────────────────────────────
   const coverBytes = await coverDoc.save()
   const mergedDoc = await PDFDocument.create()
 
@@ -267,14 +321,13 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   const [coverPg] = await mergedDoc.copyPages(coverSrc, [0])
   mergedDoc.addPage(coverPg)
 
-  // Try to load as PDF first (ignoring encryption if present)
+  // Copy original document pages (PDF or embedded Image)
   try {
     const origSrc = await PDFDocument.load(existingPdfBytes, { ignoreEncryption: true })
     const origPageCount = origSrc.getPageCount()
     const origPages = await mergedDoc.copyPages(origSrc, [...Array(origPageCount).keys()])
     origPages.forEach((p) => mergedDoc.addPage(p))
   } catch (pdfErr) {
-    // If not a valid PDF (e.g. image document like PNG/JPG/WebP), embed image onto page 2
     try {
       let embeddedImg
       try {
@@ -293,9 +346,10 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
         imgPage.drawImage(embeddedImg, { x, y, width: imgWidth, height: imgHeight })
       }
     } catch (imgErr) {
-      console.error('Failed to embed attached document image into PDF:', imgErr)
+      console.error('Failed to embed document image into PDF:', imgErr)
     }
   }
 
   return await mergedDoc.save()
 }
+

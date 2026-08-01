@@ -6,6 +6,11 @@ import AddInsuranceModal from './Insurance/AddInsuranceModal'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
+const getCurrentFY = () => {
+  const now = new Date()
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1
+}
+
 
 // Document type -> API base + field mapping so the same Renewals view can drive any type.
 const DOCUMENT_TYPES = [
@@ -23,7 +28,7 @@ const Renewals = () => {
   const [policies, setPolicies] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('pending')
-  const [financialYear, setFinancialYear] = useState('')
+  const [financialYear, setFinancialYear] = useState(String(getCurrentFY()))
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [tabCounts, setTabCounts] = useState({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
   const [confirmModal, setConfirmModal] = useState(null)
@@ -50,7 +55,13 @@ const Renewals = () => {
       if (response.data?.success) {
         setPolicies(response.data.data)
         if (response.data.counts) setTabCounts(response.data.counts)
-        if (response.data.financialYears) setAvailableFinancialYears(response.data.financialYears)
+        if (response.data.financialYears) {
+          setAvailableFinancialYears(response.data.financialYears)
+          setFinancialYear((prev) => {
+            if (!prev) return prev
+            return response.data.financialYears.includes(Number(prev)) ? prev : ''
+          })
+        }
       }
     } catch (err) {
       console.error('Error fetching renewals:', err)
@@ -59,13 +70,13 @@ const Renewals = () => {
     }
   }, [])
 
-  // When document type changes: reset state and fetch with All FY (default)
+  // When document type changes: reset state and fetch with current FY (default)
   useEffect(() => {
     setAvailableFinancialYears([])
     setPolicies([])
     setTabCounts({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
-    setFinancialYear('') // Always default to All FY
-    fetchRenewals('', docType, statusFilter)
+    setFinancialYear(String(getCurrentFY())) // Always default to current FY
+    fetchRenewals(String(getCurrentFY()), docType, statusFilter)
   }, [docType]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch whenever FY selection or status tab changes (user explicitly chose a FY)

@@ -24,5 +24,7 @@ router.post('/admin/change-password', requireAdminAuth, controller.changeAdminPa
 router.post('/forgot-password', controller.forgotPassword)
 router.post('/verify-otp', controller.verifyOtp)
 router.post('/reset-password', controller.resetPassword)
+router.post('/send-email-verification', requireAuth, controller.sendEmailVerificationOtp)
+router.post('/verify-email', requireAuth, controller.verifyEmailOtp)
 
 module.exports = router

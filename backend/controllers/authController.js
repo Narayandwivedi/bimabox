@@ -7,7 +7,7 @@ const { recordFailedAttempt } = require('../middleware/adminRateLimiter')
 const bcrypt = require('bcryptjs')
 const { OAuth2Client } = require('google-auth-library')
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
-const { sendOtpEmail } = require('../utils/email')
+const { sendOtpEmail, sendEmailVerificationEmail } = require('../utils/email')
 const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
 const { generateUniqueReferralCode } = require('../utils/generateReferralCode')
 const {
@@ -35,6 +35,7 @@ const sanitizeUser = (user) => ({
   modeOfBusiness: user.modeOfBusiness || [],
   referralCode: user.referralCode || '',
   walletBalance: user.walletBalance || 0,
+  emailVerified: user.emailVerified === true || !!user.googleId,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 })
@@ -295,8 +296,24 @@ const register = async (req, res) => {
     await user.save()
     await assignFreePlanIfNone(user._id)
 
-    if (referredByUser) {
-      await processReferralReward(referredByUser._id, user._id)
+    // NOTE: referral reward is intentionally deferred until email is verified.
+    // Do NOT call processReferralReward here for normal email signups.
+
+    // Send email verification OTP
+    try {
+      const otp = String(Math.floor(100000 + Math.random() * 900000))
+      const bcrypt = require('bcryptjs')
+      const hashedOtp = await bcrypt.hash(otp, 10)
+      await Otp.deleteMany({ email, purpose: 'email-verification' })
+      await Otp.create({
+        email,
+        otp: hashedOtp,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        purpose: 'email-verification'
+      })
+      await sendEmailVerificationEmail(email, otp)
+    } catch (emailErr) {
+      console.error('[Email Verification] Failed to send OTP on register:', emailErr)
     }
 
     const token = signToken({ userId: String(user._id), type: 'user' })
@@ -304,6 +321,7 @@ const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
+      requiresEmailVerification: true,
       data: { user: sanitizeUser(user) },
     })
   } catch (error) {
@@ -337,6 +355,7 @@ const googleLogin = async (req, res) => {
       if (!user.googleId) {
         user.googleId = googleId
       }
+      user.emailVerified = true
       user.lastLogin = new Date()
       await user.save()
     } else {
@@ -355,7 +374,8 @@ const googleLogin = async (req, res) => {
         picture,
         referralCode: uniqueReferralCode,
         isActive: true,
-        lastLogin: new Date()
+        lastLogin: new Date(),
+        emailVerified: true  // Google verifies the email
       }
 
       if (referredByUser) {
@@ -669,6 +689,75 @@ const resetPassword = async (req, res) => {
   }
 }
 
+const sendEmailVerificationOtp = async (req, res) => {
+  try {
+    const user = req.user
+    if (user.emailVerified || user.googleId) {
+      return res.json({ success: true, message: 'Email is already verified' })
+    }
+    const email = user.email
+    const otp = String(Math.floor(100000 + Math.random() * 900000))
+    const bcryptLib = require('bcryptjs')
+    const hashedOtp = await bcryptLib.hash(otp, 10)
+    await Otp.deleteMany({ email, purpose: 'email-verification' })
+    await Otp.create({
+      email,
+      otp: hashedOtp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      purpose: 'email-verification'
+    })
+    await sendEmailVerificationEmail(email, otp)
+    res.json({ success: true, message: 'Verification OTP sent to your email' })
+  } catch (error) {
+    console.error('Send email verification OTP error:', error)
+    res.status(500).json({ success: false, message: 'Failed to send verification OTP' })
+  }
+}
+
+const verifyEmailOtp = async (req, res) => {
+  try {
+    const user = req.user
+    if (user.emailVerified) {
+      return res.json({ success: true, message: 'Email already verified' })
+    }
+    const otp = String(req.body.otp || '').trim()
+    if (!otp || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ success: false, message: 'OTP must be 6 digits' })
+    }
+    const email = user.email
+    const otpRecord = await Otp.findOne({ email, verified: false, purpose: 'email-verification' })
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ success: false, message: 'OTP expired or invalid. Please request a new one.' })
+    }
+    const isValid = await otpRecord.compareOtp(otp)
+    if (!isValid) {
+      return res.status(400).json({ success: false, message: 'Invalid OTP' })
+    }
+    // Mark email as verified
+    await Otp.deleteMany({ email, purpose: 'email-verification' })
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { emailVerified: true },
+      { new: true }
+    )
+    // Now process any pending referral reward
+    if (updatedUser.referredBy) {
+      const alreadyRewarded = await Referral.findOne({ referredUser: updatedUser._id })
+      if (!alreadyRewarded) {
+        await processReferralReward(updatedUser.referredBy, updatedUser._id)
+      }
+    }
+    res.json({
+      success: true,
+      message: 'Email verified successfully!',
+      data: { user: sanitizeUser(updatedUser) }
+    })
+  } catch (error) {
+    console.error('Verify email OTP error:', error)
+    res.status(500).json({ success: false, message: 'Failed to verify email' })
+  }
+}
+
 module.exports = {
   login,
   register,
@@ -687,4 +776,6 @@ module.exports = {
   forgotPassword,
   verifyOtp,
   resetPassword,
+  sendEmailVerificationOtp,
+  verifyEmailOtp,
 }

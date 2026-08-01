@@ -74,14 +74,10 @@ const getFinancialYearsByField = (records, dateField) => {
   for (const r of records) {
     const value = r[dateField]
     if (!value) continue
-    const parts = value.trim().split(/[/-]/)
-    if (parts.length !== 3) continue
-    const day = parseInt(parts[0], 10)
-    const month = parseInt(parts[1], 10)
-    const year = parseInt(parts[2], 10)
-    if (isNaN(day) || isNaN(month) || isNaN(year)) continue
+    const d = parseDateString(value)
+    if (!d) continue
     // Indian financial year: Apr-Mar → year starts in April
-    const fy = month >= 4 ? year : year - 1
+    const fy = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1
     years.add(fy)
   }
   return Array.from(years).sort((a, b) => b - a)
@@ -532,25 +528,12 @@ const listRecords = async (req, res, filterType = 'all') => {
       const all = await Model.find({ userId: req.user._id }).lean()
       const withDaysLeft = all.map((r) => ({ ...r, daysLeft: getDaysToExpiry(r, expiryField) }))
 
-      // Helper: parse DD/MM/YYYY or DD-MM-YYYY into a Date object
-      const parseFYDate = (dateValue) => {
-        if (!dateValue) return null
-        const parts = dateValue.trim().split(/[\/\-]/)
-        if (parts.length !== 3) return null
-        const day = parseInt(parts[0], 10)
-        const month = parseInt(parts[1], 10)
-        const year = parseInt(parts[2], 10)
-        if (isNaN(day) || isNaN(month) || isNaN(year) || year < 1900) return null
-        return new Date(year, month - 1, day)
-      }
-
-      // FY bucketing uses the document's start/issue date (fyDateField), NOT the expiry date.
-      // This means "FY 2024-25" shows all documents issued/started in Apr 2024 – Mar 2025,
-      // regardless of when they expire. Expired docs from FY 2023-24 will NOT appear in FY 2024-25.
+      // FY bucketing for renewals uses the document's expiry date (expiryField).
+      // This ensures filtering by FY (e.g. FY 2025-26 or FY 2026-27) filters policies based on when they expire.
       const getFYYear = (r) => {
-        const dateValue = fyDateField ? r[fyDateField] : null
+        const dateValue = expiryField ? r[expiryField] : null
         if (!dateValue) return null
-        const d = parseFYDate(dateValue)
+        const d = parseDateString(dateValue)
         if (!d) return null
         // Indian FY: Apr-Mar. If month >= April (index 3), FY starts this year.
         return d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1
@@ -595,10 +578,8 @@ const listRecords = async (req, res, filterType = 'all') => {
         .filter(isRenewable) // applies renewable window filter to pending; no-op for others
         .sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999))
 
-      // Return only the FY years that have actual documents (based on fyDateField).
-      // If fyDateField is not set, fall back to expiryField.
-      const fyListField = fyDateField || expiryField
-      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, fyListField) })
+      // Return only the FY years that have actual document expirations (based on expiryField).
+      res.json({ success: true, data: result, counts, financialYears: getFinancialYearsByField(all, expiryField) })
     } catch (error) {
       console.error(`Error fetching ${config.name} renewals list:`, error)
       res.status(500).json({ success: false, message: `Failed to fetch ${config.label} renewals list` })

@@ -348,7 +348,10 @@ const Renewals = () => {
                                 <span><span className='font-semibold text-slate-500'>{docConfig.numberLabel}:</span> {policy[docConfig.numberField] || '—'}</span>
                               )}
                               {docType === 'Insurance' && (
-                                <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
+                                <>
+                                  <span><span className='font-semibold text-slate-500'>Issue Date:</span> {policy.issueDate || '—'}</span>
+                                  <span><span className='font-semibold text-slate-500'>Class:</span> {policy.insuranceClass || '—'}</span>
+                                </>
                               )}
                             </div>
                           </div>
@@ -404,8 +407,9 @@ const Renewals = () => {
                       <tr className='border-b border-slate-100 bg-slate-50/50'>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
                         {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Product / Class</th>}
-                        {docConfig.subField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company Name</th>}
-                        {docConfig.numberField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>{docConfig.numberLabel}</th>}
+                        {docConfig.subField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company / {docConfig.numberLabel || 'Policy No'}</th>}
+                        {!docConfig.subField && docConfig.numberField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>{docConfig.numberLabel}</th>}
+                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Issue Date</th>}
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Days</th>
                         <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Actions</th>
@@ -444,12 +448,20 @@ const Renewals = () => {
                             )}
                             {docConfig.subField && (
                               <td className='px-4 py-2'>
-                                <span className='text-xs font-medium text-slate-500'>{policy[docConfig.subField]}</span>
+                                <div className='text-xs font-medium text-slate-700'>{policy[docConfig.subField] || '—'}</div>
+                                {docConfig.numberField && policy[docConfig.numberField] && (
+                                  <div className='text-[10px] font-mono text-slate-500 mt-0.5'>{policy[docConfig.numberField]}</div>
+                                )}
                               </td>
                             )}
-                            {docConfig.numberField && (
+                            {!docConfig.subField && docConfig.numberField && (
                               <td className='px-4 py-2'>
                                 <span className='text-xs font-semibold text-slate-600'>{policy[docConfig.numberField] || '—'}</span>
+                              </td>
+                            )}
+                            {docType === 'Insurance' && (
+                              <td className='px-4 py-2 text-xs font-medium text-slate-500'>
+                                <span className='text-xs font-medium text-slate-600'>{policy.issueDate || '—'}</span>
                               </td>
                             )}
                             <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy[docConfig.validToField]}</td>

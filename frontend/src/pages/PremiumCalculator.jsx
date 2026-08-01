@@ -146,7 +146,7 @@ const PremiumCalculator = () => {
     const kwVal = parseFloat(kwPower) || 0
 
     const vehicleConfig = allConfigs[vehicleType] || null
-    const imt23Rate = vehicleConfig?.extraRates?.imt23Rate ?? 15
+    const imt23Rate = 15 // IMT 23 is always 15% of OD as per Indian Motor Tariff
 
     const calcFn = CALCULATORS[vehicleType]
     let { tpPremium = 0, odRate = 0, details = {} } = calcFn ? calcFn({

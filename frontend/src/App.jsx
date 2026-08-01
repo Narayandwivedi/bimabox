@@ -26,17 +26,20 @@ import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
 import PricingPage from './pages/Pricing/PricingPage'
 import ReferralPage from './pages/ReferralPage'
+import ForceEmailVerificationModal from './components/ForceEmailVerificationModal'
 
 function AppContent() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth()
   const isLoginPage = location.pathname === '/login'
   const isLandingPage = location.pathname === '/'
   const publicPages = ['/privacy-policy', '/terms-and-conditions', '/contact-us', '/pricing']
   const isPublicPage = publicPages.includes(location.pathname)
   const showNav = !isLoginPage && !isLandingPage && (isAuthenticated || !isPublicPage)
   const theme = getTheme()
+
+  const needsEmailVerification = isAuthenticated && user && !user.emailVerified && !user.googleId
 
   useEffect(() => {
     if (isLandingPage && isAuthenticated && !loading) {
@@ -47,6 +50,7 @@ function AppContent() {
   return (
     <>
       <ToastContainer />
+      {needsEmailVerification && <ForceEmailVerificationModal />}
       {showNav && <Sidebar />}
 
       {showNav && (

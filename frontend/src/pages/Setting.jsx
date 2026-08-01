@@ -84,67 +84,6 @@ const Setting = () => {
   const [myPlan, setMyPlan] = useState(null)
   const [planLoading, setPlanLoading] = useState(true)
 
-  const [showVerifyModal, setShowVerifyModal] = useState(false)
-  const [verifyOtp, setVerifyOtp] = useState('')
-  const [verifyLoading, setVerifyLoading] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
-
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [resendCooldown])
-
-  const openVerifyModal = async () => {
-    setShowVerifyModal(true)
-    setVerifyOtp('')
-    handleSendVerifyOtp()
-  }
-
-  const handleSendVerifyOtp = async () => {
-    if (resendCooldown > 0) return
-    setVerifyLoading(true)
-    try {
-      const res = await axios.post(`${API_URL}/api/auth/send-email-verification`, {}, { withCredentials: true })
-      if (res.data.success) {
-        toast.success('Verification OTP sent to your email')
-        setResendCooldown(60)
-      } else {
-        toast.error(res.data.message || 'Failed to send OTP')
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send OTP')
-    } finally {
-      setVerifyLoading(false)
-    }
-  }
-
-  const handleConfirmVerifyEmail = async (e) => {
-    e.preventDefault()
-    if (!verifyOtp || verifyOtp.trim().length !== 6) {
-      toast.error('Please enter valid 6-digit OTP')
-      return
-    }
-    setVerifyLoading(true)
-    try {
-      const res = await axios.post(`${API_URL}/api/auth/verify-email`, { otp: verifyOtp.trim() }, { withCredentials: true })
-      if (res.data.success) {
-        toast.success('Email verified successfully! Referral reward unlocked.')
-        if (res.data.data?.user) {
-          setUser(res.data.data.user)
-        }
-        setShowVerifyModal(false)
-      } else {
-        toast.error(res.data.message || 'Verification failed')
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to verify email')
-    } finally {
-      setVerifyLoading(false)
-    }
-  }
-
   useEffect(() => {
     const loadPlan = async () => {
       try {
@@ -345,21 +284,13 @@ const Setting = () => {
                       <div className='min-w-0 flex-1'>
                         <div className='flex items-center justify-between gap-1'>
                           <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Email Address</p>
-                          {user?.emailVerified ? (
+                          {user?.emailVerified && (
                             <span className='inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200'>
                               <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                               </svg>
                               Verified
                             </span>
-                          ) : (
-                            <button
-                              type='button'
-                              onClick={openVerifyModal}
-                              className='text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-0.5 rounded-full transition-colors cursor-pointer border border-amber-300'
-                            >
-                              Verify Email
-                            </button>
                           )}
                         </div>
                         <p className='text-sm font-bold text-slate-800 truncate'>{user?.email || 'Not linked'}</p>
@@ -935,66 +866,6 @@ const Setting = () => {
                 ) : 'Save Changes'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Email Verification Modal */}
-      {showVerifyModal && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in'>
-          <div className='bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative'>
-            <button
-              type='button'
-              onClick={() => setShowVerifyModal(false)}
-              className='absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors'
-            >
-              <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
-              </svg>
-            </button>
-
-            <div className='text-center mb-5'>
-              <div className='w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3'>
-                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
-                </svg>
-              </div>
-              <h3 className='text-lg font-bold text-slate-900'>Verify Email Address</h3>
-              <p className='text-xs text-slate-500 mt-1'>We sent a 6-digit OTP to <span className='font-bold text-slate-700'>{user?.email}</span></p>
-            </div>
-
-            <form onSubmit={handleConfirmVerifyEmail} className='space-y-4'>
-              <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 text-center'>Enter 6-digit OTP</label>
-                <input
-                  type='text'
-                  maxLength={6}
-                  value={verifyOtp}
-                  onChange={(e) => setVerifyOtp(e.target.value.replace(/\D/g, ''))}
-                  placeholder='123456'
-                  className='w-full text-center tracking-[0.5em] text-2xl font-bold py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all'
-                />
-              </div>
-
-              <button
-                type='submit'
-                disabled={verifyLoading || verifyOtp.length !== 6}
-                className='w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-50 cursor-pointer'
-              >
-                {verifyLoading ? 'Verifying...' : 'Verify Email'}
-              </button>
-
-              <div className='text-center'>
-                <button
-                  type='button'
-                  onClick={handleSendVerifyOtp}
-                  disabled={resendCooldown > 0 || verifyLoading}
-                  className='text-xs font-bold text-blue-600 hover:text-blue-800 disabled:text-slate-400 cursor-pointer transition-colors'
-                >
-                  {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : 'Resend OTP'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

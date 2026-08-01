@@ -312,6 +312,12 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     curY -= 20
   })
 
+  // ── BOTTOM FOOTER STRIP ──────────────────────────────────────────────────
+  page.drawRectangle({ x: 0, y: 0, width: W, height: 26, color: teal })
+  const footerText = clean(user?.businessName || user?.name || 'NKD Insurance').toUpperCase()
+  const ftw = fontBold.widthOfTextAtSize(footerText, 9.5)
+  page.drawText(footerText, { x: (W - ftw) / 2, y: 8, size: 9.5, font: fontBold, color: white })
+
   // ── MERGE COVER PAGE WITH ORIGINAL DOCUMENT ──────────────────────────────
   const coverBytes = await coverDoc.save()
   const mergedDoc = await PDFDocument.create()

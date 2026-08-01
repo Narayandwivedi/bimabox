@@ -319,15 +319,7 @@ const Login = () => {
       if (response.data.success) {
         setUser(response.data.data.user)
         setIsAuthenticated(true)
-        if (response.data.requiresEmailVerification) {
-          // Stay on login page but show OTP verification step
-          setSignupEmail(response.data.data.user.email)
-          setSignupVerifyMode(true)
-          setVerifyOtpDigits(['','','','','',''])
-          setVerifyResendCooldown(60)
-        } else {
-          navigate('/')
-        }
+        navigate('/')
       } else {
         setError(response.data.message || 'Registration failed')
       }
@@ -465,94 +457,6 @@ const Login = () => {
       </div>
 
       <div className='w-full max-w-md z-10'>
-        {signupVerifyMode ? (
-          <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/20'>
-            {/* Logo */}
-            <div className='text-center mb-6'>
-              <Link to='/' className='inline-flex items-center gap-1'>
-                <img src='/bimalogo.png' alt='BimaBox' className='h-[72px] w-auto' />
-                <div className='flex flex-col'>
-                  <span className='text-[26px] font-bold leading-none' style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    <span className='text-slate-800'>Bima</span><span style={{ color: '#003afd' }}>Box</span>
-                  </span>
-                  <span className='mt-0.5 text-[6.5px] font-medium tracking-wide' style={{ color: '#0c1f48', fontFamily: "'Inter', sans-serif" }}>All your policies. One smart place.</span>
-                </div>
-              </Link>
-            </div>
-
-            {/* Verify Email heading */}
-            <div className='text-center mb-5'>
-              <div className='flex justify-center mb-3'>
-                <div className='w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center'>
-                  <svg className='w-7 h-7 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
-                  </svg>
-                </div>
-              </div>
-              <h2 className='text-lg font-black text-slate-900'>Verify Your Email</h2>
-              <p className='text-xs text-slate-500 mt-1'>We sent a 6-digit OTP to</p>
-              <p className='text-xs font-bold text-blue-600 mt-0.5'>{signupEmail}</p>
-              <p className='text-[10px] text-slate-400 mt-1'>Verify now to unlock referral rewards</p>
-            </div>
-
-            {error && (
-              <div className='mb-4 p-3 bg-red-50 border border-red-200 rounded-xl'>
-                <p className='text-sm text-red-800 font-medium'>{error}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleVerifySignupEmail} className='space-y-4'>
-              <div>
-                <label className='block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 text-center'>Enter OTP</label>
-                <div className='flex items-center justify-center gap-2' onPaste={handleVerifyOtpPaste}>
-                  {verifyOtpDigits.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={verifyOtpRefs[index]}
-                      type='text'
-                      inputMode='numeric'
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleVerifyOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleVerifyOtpKeyDown(index, e)}
-                      className='w-11 h-14 text-center text-xl font-bold bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all'
-                      disabled={loading}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <button type='submit' disabled={loading || verifyOtpDigits.join('').length !== 6} className='w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'>
-                {loading ? (
-                  <>
-                    <svg className='animate-spin h-5 w-5 text-white' xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'>
-                      <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
-                      <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
-                    </svg>
-                    <span>Verifying...</span>
-                  </>
-                ) : (
-                  <span>Verify Email</span>
-                )}
-              </button>
-
-              <button type='button' onClick={() => navigate('/')} className='w-full border-2 border-slate-200 text-slate-500 py-3 rounded-xl font-bold hover:border-slate-300 hover:bg-slate-50 transition-all'>
-                Skip for Now
-              </button>
-
-              <div className='text-center'>
-                <button
-                  type='button'
-                  onClick={handleResendVerificationOtp}
-                  disabled={verifyResendCooldown > 0 || loading}
-                  className='text-xs font-semibold text-blue-600 hover:text-blue-800 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors'
-                >
-                  {verifyResendCooldown > 0 ? `Resend OTP in ${verifyResendCooldown}s` : 'Resend OTP'}
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
         <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-6 border border-white/20'>
           <div className='text-center mb-6'>
             <div className='mb-4'>
@@ -954,7 +858,6 @@ const Login = () => {
             </p>
           </div>
         </div>
-        )}
       </div>
     </div>
   )

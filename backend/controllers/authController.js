@@ -296,32 +296,14 @@ const register = async (req, res) => {
     await user.save()
     await assignFreePlanIfNone(user._id)
 
-    // NOTE: referral reward is intentionally deferred until email is verified.
+    // NOTE: referral reward is intentionally deferred until email is verified in Settings.
     // Do NOT call processReferralReward here for normal email signups.
-
-    // Send email verification OTP
-    try {
-      const otp = String(Math.floor(100000 + Math.random() * 900000))
-      const bcrypt = require('bcryptjs')
-      const hashedOtp = await bcrypt.hash(otp, 10)
-      await Otp.deleteMany({ email, purpose: 'email-verification' })
-      await Otp.create({
-        email,
-        otp: hashedOtp,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        purpose: 'email-verification'
-      })
-      await sendEmailVerificationEmail(email, otp)
-    } catch (emailErr) {
-      console.error('[Email Verification] Failed to send OTP on register:', emailErr)
-    }
 
     const token = signToken({ userId: String(user._id), type: 'user' })
     res.setHeader('Set-Cookie', buildAuthCookie(token))
 
     res.status(201).json({
       success: true,
-      requiresEmailVerification: true,
       data: { user: sanitizeUser(user) },
     })
   } catch (error) {

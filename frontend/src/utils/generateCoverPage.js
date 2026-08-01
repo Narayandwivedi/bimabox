@@ -158,11 +158,12 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   draw(`Dear ${clientName}`, 36, H - 150, { font: fontBold, size: 11, color: teal })
 
   // ── Thank you paragraph ──────────────────────────────────────────────────
-  draw('Thank you for trusting me with something this important.', 36, H - 172, { font: fontBold, size: 10, color: dark })
+  const bizName = clean(user?.businessName || user?.name || 'our team')
+  draw(`Thank you for choosing ${bizName}.`, 36, H - 172, { font: fontBold, size: 10, color: dark })
   const paraLines = [
-    'Your policy is not just a piece of paper -- it is my personal commitment to stand by you and your',
-    'family when it matters most. I have put together this summary so you always know exactly what',
-    'you are covered for. Whether it\'s a claim, a renewal, or simply a question, I am just one call away.',
+    'We sincerely appreciate the opportunity to serve you. Your trust is valuable to us, and we remain committed',
+    'to providing prompt assistance throughout your policy period -- from policy issuance to renewals and claim',
+    'support. Please keep this document safely for your records.',
   ]
   paraLines.forEach((line, i) => draw(line, 36, H - 188 - i * 14, { size: 9, color: grey }))
 
@@ -187,10 +188,10 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     ['Policyholder',        record?.policyHolderName || record?.vehicleOwner || 'N/A'],
     ['Policy Number',       record?.policyNumber || 'N/A'],
     ['Policy Type',         record?.product || record?.insuranceType || 'MOTOR'],
-    ['Sum Assured / Coverage', record?.idv ? `Rs. ${Number(record.idv).toLocaleString('en-IN')}` : 'N/A'],
+    ['Vehicle Number',      record?.vehicleNumber || 'N/A'],
     ['Annual Premium',      record?.premium ? `Rs. ${Number(record.premium).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'N/A'],
-    ['Policy Start Date',   fmtDate(record?.validFrom || record?.issueDate)],
-    ['Maturity / End Date', fmtDate(record?.validTo)],
+    ['Policy Start Date',   record?.issueDate ? clean(record.issueDate) : fmtDate(record?.validFrom)],
+    ['Maturity / End Date', record?.validTo ? clean(record.validTo) : 'N/A'],
     ['Insurance Company',   record?.insuranceCompany || 'N/A'],
   ]
 
@@ -207,15 +208,26 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     rowY -= rowH
   })
 
-  // ── Explore More section ─────────────────────────────────────────────────
+  // ── Services We Offer section ────────────────────────────────────────────
   rowY -= 14
-  draw('Explore More Protection for Your Family', col1, rowY, { font: fontBold, size: 11, color: dark })
-  hLine(rowY - 4, { x1: col1, x2: col1 + fontBold.widthOfTextAtSize('Explore More Protection for Your Family', 11) + 4, color: dark, thickness: 0.8 })
+  draw('Services We Offer', col1, rowY, { font: fontBold, size: 11, color: dark })
+  hLine(rowY - 4, { x1: col1, x2: col1 + fontBold.widthOfTextAtSize('Services We Offer', 11) + 4, color: dark, thickness: 0.8 })
 
-  rowY -= 20
-  const boxW = (W - col1 * 2 - 12) / 2
-  ;['Motor', 'Health'].forEach((label, i) => {
-    const bx = col1 + i * (boxW + 12)
+  // Sub-heading: Explore More Protection for Your Family
+  rowY -= 18
+  draw('Explore More Protection for Your Family', col1, rowY, { font: fontBold, size: 9.5, color: teal })
+
+  rowY -= 18
+  // Use user's saved modeOfBusiness services; fall back to defaults if none saved
+  const serviceLabels = (user?.modeOfBusiness && user.modeOfBusiness.length > 0)
+    ? user.modeOfBusiness.map((s) => clean(s))
+    : ['Motor', 'Health']
+  const numServices = serviceLabels.length
+  const gapBetween = 8
+  const totalGap = gapBetween * (numServices - 1)
+  const boxW = Math.min(140, (W - col1 * 2 - totalGap) / numServices)
+  serviceLabels.forEach((label, i) => {
+    const bx = col1 + i * (boxW + gapBetween)
     page.drawRectangle({ x: bx, y: rowY - 18, width: boxW, height: 26, color: tealLight, borderColor: teal, borderWidth: 0.8 })
     const lw = fontBold.widthOfTextAtSize(label, 10)
     page.drawText(label, { x: bx + (boxW - lw) / 2, y: rowY - 8, size: 10, font: fontBold, color: teal })

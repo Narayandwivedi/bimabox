@@ -33,46 +33,52 @@ const getFinancialYears = (records) => {
   return Array.from(years).sort((a, b) => b - a)
 }
 
+const buildFilteredRecords = async (req) => {
+  const mongoFilter = {}
+  if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
+    mongoFilter.userId = req.query.userId
+  }
+  if (req.query.insuranceCompanyId && mongoose.Types.ObjectId.isValid(req.query.insuranceCompanyId)) {
+    mongoFilter.insuranceCompanyId = req.query.insuranceCompanyId
+  }
+  if (req.query.productTypeId && mongoose.Types.ObjectId.isValid(req.query.productTypeId)) {
+    mongoFilter.productTypeId = req.query.productTypeId
+  }
+
+  const rawRecords = await Insurance.find(mongoFilter)
+    .populate('userId', 'name mobile email')
+    .sort({ createdAt: -1 })
+    .lean()
+
+  const search = (req.query.search || '').trim().toLowerCase()
+  const matchesSearch = (record) => {
+    if (!search) return true
+    if (SEARCH_FIELDS.some((f) => String(record[f] || '').toLowerCase().includes(search))) return true
+    const owner = record.userId
+    if (owner && (String(owner.name || '').toLowerCase().includes(search) || String(owner.mobile || '').toLowerCase().includes(search))) return true
+    return false
+  }
+
+  const filtered = rawRecords.filter(matchesSearch).filter((record) => {
+    if (req.query.financialYear) {
+      const year = parseInt(req.query.financialYear, 10)
+      const fyStart = new Date(year, 3, 1)
+      const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
+      const recordDate = parseDateString(record.issueDate)
+      if (!recordDate || recordDate < fyStart || recordDate > fyEnd) return false
+    }
+    return true
+  })
+
+  return { filtered, rawRecords }
+}
+
 const listPolicies = async (req, res) => {
   try {
     const page = Math.max(Number(req.query.page) || 1, 1)
     const limit = Math.max(Number(req.query.limit) || 20, 1)
 
-    const mongoFilter = {}
-    if (req.query.userId && mongoose.Types.ObjectId.isValid(req.query.userId)) {
-      mongoFilter.userId = req.query.userId
-    }
-    if (req.query.insuranceCompanyId && mongoose.Types.ObjectId.isValid(req.query.insuranceCompanyId)) {
-      mongoFilter.insuranceCompanyId = req.query.insuranceCompanyId
-    }
-    if (req.query.productTypeId && mongoose.Types.ObjectId.isValid(req.query.productTypeId)) {
-      mongoFilter.productTypeId = req.query.productTypeId
-    }
-
-    const rawRecords = await Insurance.find(mongoFilter)
-      .populate('userId', 'name mobile email')
-      .sort({ createdAt: -1 })
-      .lean()
-
-    const search = (req.query.search || '').trim().toLowerCase()
-    const matchesSearch = (record) => {
-      if (!search) return true
-      if (SEARCH_FIELDS.some((f) => String(record[f] || '').toLowerCase().includes(search))) return true
-      const owner = record.userId
-      if (owner && (String(owner.name || '').toLowerCase().includes(search) || String(owner.mobile || '').toLowerCase().includes(search))) return true
-      return false
-    }
-
-    const filtered = rawRecords.filter(matchesSearch).filter((record) => {
-      if (req.query.financialYear) {
-        const year = parseInt(req.query.financialYear, 10)
-        const fyStart = new Date(year, 3, 1)
-        const fyEnd = new Date(year + 1, 2, 31, 23, 59, 59, 999)
-        const recordDate = parseDateString(record.issueDate)
-        if (!recordDate || recordDate < fyStart || recordDate > fyEnd) return false
-      }
-      return true
-    })
+    const { filtered, rawRecords } = await buildFilteredRecords(req)
 
     const totalRecords = filtered.length
     const data = filtered.slice((page - 1) * limit, page * limit)
@@ -94,6 +100,19 @@ const listPolicies = async (req, res) => {
   }
 }
 
+const exportPolicies = async (req, res) => {
+  try {
+    const { filtered } = await buildFilteredRecords(req)
+    res.json({
+      success: true,
+      data: filtered,
+    })
+  } catch (error) {
+    console.error('Error exporting admin policy search results:', error)
+    res.status(500).json({ success: false, message: 'Failed to export policies' })
+  }
+}
+
 const getFilters = async (_req, res) => {
   try {
     const [users, companies, productTypes] = await Promise.all([
@@ -112,4 +131,4 @@ const getFilters = async (_req, res) => {
   }
 }
 
-module.exports = { listPolicies, getFilters }
+module.exports = { listPolicies, exportPolicies, getFilters }

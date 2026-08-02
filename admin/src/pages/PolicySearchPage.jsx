@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import * as XLSX from 'xlsx'
 import '../App.css'
 
 const PAGE_SIZE = 25
@@ -65,6 +66,42 @@ function PolicySearchPage({ apiFetch }) {
     setFinancialYear('')
   }
 
+  const handleExport = async () => {
+    try {
+      setError('')
+      const params = new URLSearchParams()
+      if (searchTerm.trim()) params.set('search', searchTerm.trim())
+      if (userId) params.set('userId', userId)
+      if (productTypeId) params.set('productTypeId', productTypeId)
+      if (insuranceCompanyId) params.set('insuranceCompanyId', insuranceCompanyId)
+      if (financialYear) params.set('financialYear', financialYear)
+
+      const result = await apiFetch(`/api/admin-policies/export?${params.toString()}`)
+      const records = result.data || []
+
+      const exportData = records.map((p) => ({
+        'User Name': p.userId?.name || 'N/A',
+        'Mobile': p.userId?.mobile || '',
+        'Policy Holder': p.policyHolderName || '',
+        'Vehicle No': p.vehicleNumber || '',
+        'Policy No': p.policyNumber || '',
+        'Insurance Company': p.insuranceCompany || '',
+        'Product': p.product || '',
+        'Policy Type': p.insuranceClass || '',
+        'Valid From': p.validFrom || '',
+        'Valid To': p.validTo || '',
+        'Premium': p.premium || '',
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(exportData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Policies')
+      XLSX.writeFile(wb, `policies_${new Date().toISOString().split('T')[0]}.xlsx`)
+    } catch (err) {
+      setError(err.message || 'Failed to export policies')
+    }
+  }
+
   const activeFilterCount = [userId, productTypeId, insuranceCompanyId, financialYear].filter(Boolean).length
 
   const formatDate = (dateStr) => dateStr || '-'
@@ -87,6 +124,35 @@ function PolicySearchPage({ apiFetch }) {
             />
           </div>
           <button type="button" className="secondary-btn" onClick={() => fetchPolicies(page)}>Refresh</button>
+          <button
+            type="button"
+            onClick={handleExport}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              height: '40px',
+              padding: '0 16px',
+              borderRadius: '999px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+              color: '#fff',
+              fontSize: '13px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              transition: 'transform 0.18s ease, opacity 0.18s ease, background 0.18s ease',
+              boxShadow: '0 12px 24px -14px rgba(34, 197, 94, 0.7)',
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)' }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+            Export Excel
+          </button>
         </div>
       </div>
 

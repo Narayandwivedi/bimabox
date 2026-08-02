@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import '../App.css'
+import { PLANS_CONFIG } from '../config/plansConfig'
 
 function UsersPage({ apiFetch }) {
   const initialForm = {
@@ -32,12 +33,7 @@ function UsersPage({ apiFetch }) {
   const [plans, setPlans] = useState([])
 
   const fetchPlans = async () => {
-    try {
-      const result = await apiFetch('/api/subscription-plans')
-      setPlans(result.data || [])
-    } catch (error) {
-      console.error('Error fetching plans:', error)
-    }
+    setPlans(PLANS_CONFIG)
   }
 
   const fetchUsers = async () => {
@@ -108,7 +104,7 @@ function UsersPage({ apiFetch }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: savedUserId,
-              planId: formData.selectedPlanId,
+              planKey: formData.selectedPlanId,
               startDate: formData.planStartDate || undefined,
             }),
           })
@@ -562,8 +558,8 @@ function UsersPage({ apiFetch }) {
                     <span>Plan</span>
                     <select name="selectedPlanId" value={formData.selectedPlanId} onChange={handleChange} style={{ height: '42px', borderRadius: '14px', border: '1px solid #cbd5e1', background: '#fff', padding: '0 14px', fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>
                       <option value="">No plan change</option>
-                      {plans.filter((p) => p.isActive).map((p) => (
-                        <option key={p._id} value={p._id}>
+                      {plans.map((p) => (
+                        <option key={p.id} value={p.id}>
                           {p.name} - ₹{p.price} / {p.durationDays > 0 ? `${p.durationDays} days` : 'No Expiry'}
                         </option>
                       ))}
@@ -659,7 +655,7 @@ function UsersPage({ apiFetch }) {
                   {historyPlans.map((hp) => (
                     <div key={hp._id} style={{ padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <strong style={{ fontSize: '16px' }}>{hp.planId?.name || 'N/A'}</strong>
+                        <strong style={{ fontSize: '16px' }}>{hp.planName || hp.planKey || 'N/A'}</strong>
                         <span className={`status-pill ${hp.status === 'active' ? 'status-active' : hp.status === 'expired' ? 'status-inactive' : 'status-pending'}`}>
                           {hp.status}
                         </span>

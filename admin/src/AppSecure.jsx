@@ -5,7 +5,6 @@ import { apiFetch, AuthError } from './utils/api'
 import DashboardPage from './pages/DashboardPage'
 import PolicySearchPage from './pages/PolicySearchPage'
 import UsersPage from './pages/UsersPage'
-import PlansPage from './pages/PlansPage'
 import UserPlansPage from './pages/UserPlansPage'
 import WhatsAppPage from './pages/WhatsAppPage'
 import SettingsPage from './pages/SettingsPage'
@@ -13,7 +12,7 @@ import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
 import ProductTypesPage from './pages/ProductTypesPage'
 import ReferralsPage from './pages/ReferralsPage'
 import CalculatorConfigPage from './pages/CalculatorConfigPage'
-import { DashboardIcon, PolicySearchIcon, UsersIcon, PlansIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
+import { DashboardIcon, PolicySearchIcon, UsersIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
 
 
 const initialLoginForm = {
@@ -200,13 +199,6 @@ function AppSecure() {
             Policy Search
           </NavLink>
           <NavLink
-            to="/plans"
-            className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
-          >
-            <PlansIcon />
-            Plans
-          </NavLink>
-          <NavLink
             to="/user-plans"
             className={({ isActive }) => `sidebar-link${isActive ? ' sidebar-link-active' : ''}`}
           >
@@ -268,7 +260,6 @@ function AppSecure() {
           <Route path="/dashboard" element={<DashboardPage apiFetch={wrappedApiFetch} />} />
           <Route path="/users" element={<UsersPage apiFetch={wrappedApiFetch} />} />
           <Route path="/policy-search" element={<PolicySearchPage apiFetch={wrappedApiFetch} />} />
-          <Route path="/plans" element={<PlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/user-plans" element={<UserPlansPage apiFetch={wrappedApiFetch} />} />
           <Route path="/referrals" element={<ReferralsPage apiFetch={wrappedApiFetch} />} />
           <Route path="/whatsapp" element={<WhatsAppPage apiFetch={wrappedApiFetch} />} />

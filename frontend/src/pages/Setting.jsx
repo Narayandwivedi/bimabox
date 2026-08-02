@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import { toast } from 'react-toastify'
 import { enforceMobileNumberFormat } from '../utils/contactValidation'
+import { PLANS_CONFIG } from '../config/plansConfig'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -88,7 +89,13 @@ const Setting = () => {
     const loadPlan = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/user-plans/my-plan`, { withCredentials: true })
-        setMyPlan(response.data?.data || null)
+        const data = response.data?.data || null
+        if (data) {
+          const cfg = PLANS_CONFIG.find((p) => p.id === data.planKey)
+          setMyPlan({ ...data, _config: cfg })
+        } else {
+          setMyPlan(null)
+        }
       } catch (error) {
         console.error('Error fetching plan:', error)
       } finally {
@@ -417,7 +424,7 @@ const Setting = () => {
                 </div>
               ) : myPlan ? (
                 (() => {
-                  const planName = myPlan.planId?.name || 'Free'
+                  const planName = myPlan._config?.name || myPlan.name || 'Free'
                   const style = getPlanStyle(planName)
                   const isExpired = myPlan.status === 'expired'
                   const daysLeft = myPlan.expiryDate
@@ -448,27 +455,27 @@ const Setting = () => {
                         </div>
                       </div>
 
-                      {myPlan.planId?.features && (
+                      {myPlan._config?.features && (
                         <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
                           <UsageStat
                             icon={USAGE_ICONS.ai}
                             label='AI Documents'
                             used={myPlan.usage?.aiDocumentsUsed || 0}
-                            limit={myPlan.planId.features.aiDocuments}
+                            limit={myPlan._config.features.aiDocuments}
                             colorClass='bg-indigo-50 border border-indigo-100'
                           />
                           <UsageStat
                             icon={USAGE_ICONS.manual}
                             label='Manual Uploads'
                             used={myPlan.usage?.manualDocumentsUsed || 0}
-                            limit={myPlan.planId.features.manualDocuments}
+                            limit={myPlan._config.features.manualDocuments}
                             colorClass='bg-pink-50 border border-pink-100'
                           />
                           <UsageStat
                             icon={USAGE_ICONS.client}
                             label='Client Limit'
                             used={myPlan.clientsUsed ?? 0}
-                            limit={myPlan.planId.features.clientLimit}
+                            limit={myPlan._config.features.clientLimit}
                             colorClass='bg-emerald-50 border border-emerald-100'
                           />
                         </div>

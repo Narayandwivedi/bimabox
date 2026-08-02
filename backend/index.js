@@ -17,7 +17,6 @@ const uploadRoutes = require('./routes/uploadRoutes')
 const whatsAppRoutes = require('./routes/whatsAppRoutes')
 const whatsAppSessionManager = require('./services/whatsAppSessionManager')
 const expiryReminderService = require('./services/expiryReminderService')
-const { seedDefaultPlansIfMissing, applyFreePlanOneYearValidity } = require('./utils/seedPlans')
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -80,10 +79,12 @@ app.use('/api/whatsapp', whatsAppRoutes)
 app.use('/api/calculator', require('./routes/calculatorRoutes'))
 app.use('/api/insurance-companies', require('./routes/insuranceCompanyRoutes'))
 app.use('/api/product-types', require('./routes/productTypeRoutes'))
-app.use('/api/subscription-plans', require('./routes/subscriptionPlanRoutes'))
 app.use('/api/user-plans', require('./routes/userPlanRoutes'))
 app.use('/api/referral', require('./routes/referralRoutes'))
 app.use('/api/wallet', require('./routes/walletRoutes'))
+const paymentRoutes = require('./routes/paymentRoutes')
+app.use('/api/payment', paymentRoutes)
+app.use('/api', paymentRoutes)
 app.use('/api/admin-dashboard', require('./routes/adminDashboardRoutes'))
 app.use('/api/admin-policies', require('./routes/adminPolicyRoutes'))
 
@@ -103,8 +104,6 @@ mongoose
   .then(async () => {
     console.log('MongoDB connected')
 
-    await seedDefaultPlansIfMissing()
-    await applyFreePlanOneYearValidity()
     await require('./controllers/productTypeController').seedDefaultProductTypes()
 
     const server = app.listen(PORT, () => {

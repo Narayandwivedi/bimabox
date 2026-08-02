@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const userPlanSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  planId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubscriptionPlan', required: true },
+  planKey: { type: String, required: true },
   startDate: { type: Date, default: Date.now },
   // null = never expires (e.g. Free plan — only its monthly usage limit resets)
   expiryDate: { type: Date, default: null },

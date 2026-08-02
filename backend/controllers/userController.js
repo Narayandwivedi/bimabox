@@ -4,6 +4,12 @@ const Referral = require('../models/Referral')
 const bcrypt = require('bcryptjs')
 const whatsAppSessionManager = require('../services/whatsAppSessionManager')
 const { assignFreePlanIfNone } = require('../utils/assignFreePlan')
+const { getPlan } = require('../utils/planConfig')
+
+const planName = (planKey) => {
+  const plan = getPlan(planKey)
+  return plan ? plan.name : planKey
+}
 
 const sanitizeUser = async (user) => {
   const base = {
@@ -26,18 +32,20 @@ const sanitizeUser = async (user) => {
       status: 'active',
       expiryDate: { $gte: new Date() },
     })
-      .populate('planId', 'name')
-      .select('planId expiryDate')
+      .select('planKey expiryDate')
       .lean()
 
     if (activePlan) {
-      base.planName = activePlan.planId?.name || null
+      base.planKey = activePlan.planKey || null
+      base.planName = planName(activePlan.planKey)
       base.planExpiry = activePlan.expiryDate || null
     } else {
+      base.planKey = null
       base.planName = null
       base.planExpiry = null
     }
   } catch (_err) {
+    base.planKey = null
     base.planName = null
     base.planExpiry = null
   }

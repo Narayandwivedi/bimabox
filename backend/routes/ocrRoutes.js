@@ -3,6 +3,7 @@ const { rcOcr, taxOcr, fitnessOcr, pucOcr, gpsOcr, insuranceOcr } = require('../
 const { requireAuth } = require('../middleware/auth')
 const { planEnforcer, incrementUsage } = require('../middleware/planEnforcer')
 const UserPlan = require('../models/UserPlan')
+const { getPlan } = require('../utils/planConfig')
 const { ensureCurrentCycle, activePlanExpiryFilter } = require('../utils/planCycle')
 
 const router = express.Router()
@@ -27,9 +28,9 @@ router.get('/check-limit', async (req, res) => {
       userId,
       status: 'active',
       ...activePlanExpiryFilter(),
-    }).populate('planId')
+    })
 
-    if (!activePlan || !activePlan.planId) {
+    if (!activePlan) {
       return res.status(403).json({
         success: false,
         canUse: false,
@@ -39,7 +40,8 @@ router.get('/check-limit', async (req, res) => {
 
     await ensureCurrentCycle(activePlan)
 
-    const limit = activePlan.planId.features?.aiDocuments || 0
+    const plan = getPlan(activePlan.planKey)
+    const limit = plan?.features?.aiDocuments || 0
     const used = activePlan.usage?.aiDocumentsUsed || 0
     const canUse = limit <= 0 || used < limit
 

@@ -157,12 +157,7 @@ const initialConfigs = [
       { maxPsgr: 60, extra: 550 },
       { maxPsgr: 999999, extra: 680 },
     ],
-    extraRates: {
-      imt23Rate: 15,
-    },
-    customFields: [
-      { id: 'imt23', label: 'IMT 23 Cover', fieldType: 'percent_of_od', rate: 15, section: 'od', isActive: true },
-    ]
+    customFields: []
   },
   {
     vehicleType: 'pcv_3w',

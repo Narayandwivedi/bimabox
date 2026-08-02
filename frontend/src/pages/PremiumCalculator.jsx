@@ -75,7 +75,7 @@ const PremiumCalculator = () => {
   const [depreciation, setDepreciation] = useState('')
   const [customFieldValues, setCustomFieldValues] = useState({})
 
-  const activeCustomFields = (allConfigs[vehicleType]?.customFields || []).filter(f => f.isActive !== false && f.id !== 'restricted_tppd')
+  const activeCustomFields = (allConfigs[vehicleType]?.customFields || []).filter(f => f.isActive !== false && f.id !== 'restricted_tppd' && !(vehicleType === 'pcv' && f.id === 'imt23'))
 
 
 

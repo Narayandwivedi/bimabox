@@ -16,6 +16,8 @@ import EditTaxModal from './Tax/EditTaxModal'
 import EditPermitModal from './Permit/components/EditPermitModal'
 import EditRcModal from './Rc/EditRcModal'
 import ImportModal from '../components/ImportModal'
+import useCurrentPlan from '../hooks/useCurrentPlan'
+import UpgradePopup from '../components/UpgradePopup'
 
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000"
@@ -129,9 +131,11 @@ const CustomDropdown = ({ value, onChange, options, label, icon }) => {
 
 const RTODocuments = () => {
   const navigate = useNavigate()
+  const { features } = useCurrentPlan()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false)
   const [showAddFitnessModal, setShowAddFitnessModal] = useState(false)
   const [showAddPucModal, setShowAddPucModal] = useState(false)
   const [showAddGpsModal, setShowAddGpsModal] = useState(false)
@@ -314,7 +318,7 @@ const RTODocuments = () => {
                   {filteredDocuments.length > 0 && (
                     <button
                       type='button'
-                      onClick={handleExport}
+                      onClick={() => !features.excelDownload ? setShowUpgradePopup(true) : handleExport()}
                       className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
                     >
                       <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -783,6 +787,13 @@ const RTODocuments = () => {
           }}
         />
       )}
+
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        title='Excel Download'
+        message='Excel download is available on the Plus plan. Upgrade to Plus to unlock Excel exports of all your records.'
+      />
     </div>
   )
 }

@@ -4,6 +4,8 @@ import axios from 'axios'
 import * as XLSX from 'xlsx'
 import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../utils/insuranceCompanyCache'
 import { getProductTypes, subscribeProductTypes } from '../utils/productTypeCache'
+import useCurrentPlan from '../hooks/useCurrentPlan'
+import UpgradePopup from '../components/UpgradePopup'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -37,6 +39,7 @@ const API_ENDPOINTS = {
 
 const Search = () => {
   const navigate = useNavigate()
+  const { features } = useCurrentPlan()
   const [inputValue, setInputValue] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [records, setRecords] = useState([])
@@ -46,6 +49,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false)
 
   // Filter state
   const [showFilterPanel, setShowFilterPanel] = useState(false)
@@ -999,7 +1003,7 @@ const Search = () => {
                     <div className='flex items-center gap-2'>
                       {filteredRecords.length > 0 && (
                         <button
-                          onClick={handleExport}
+                          onClick={() => !features.excelDownload ? setShowUpgradePopup(true) : handleExport()}
                           className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
                         >
                           <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -1159,6 +1163,13 @@ const Search = () => {
           </div>
         </section>
       </main>
+
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        title='Excel Download'
+        message='Excel download is available on the Plus plan. Upgrade to Plus to unlock Excel exports of all your records.'
+      />
     </div>
   )
 }

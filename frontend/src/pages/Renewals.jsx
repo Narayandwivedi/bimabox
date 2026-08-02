@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import * as XLSX from 'xlsx'
 import AddInsuranceModal from './Insurance/AddInsuranceModal'
+import useCurrentPlan from '../hooks/useCurrentPlan'
+import UpgradePopup from '../components/UpgradePopup'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -24,10 +26,12 @@ const DOCUMENT_TYPES = [
 
 const Renewals = () => {
   const navigate = useNavigate()
+  const { features } = useCurrentPlan()
   const [docType, setDocType] = useState('Insurance')
   const [policies, setPolicies] = useState([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('pending')
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false)
   const [financialYear, setFinancialYear] = useState(String(getCurrentFY()))
   const [availableFinancialYears, setAvailableFinancialYears] = useState([])
   const [tabCounts, setTabCounts] = useState({ pending: 0, renewed: 0, lost: 0, opportunity: 0 })
@@ -244,7 +248,7 @@ const Renewals = () => {
 
               {sortedPolicies.length > 0 && (
                 <button
-                  onClick={handleExport}
+                  onClick={() => !features.excelDownload ? setShowUpgradePopup(true) : handleExport()}
                   className='flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-all border border-emerald-200'
                 >
                   <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -742,6 +746,13 @@ const Renewals = () => {
           prefilledOwnerName={renewalUploadPrefill?.policyHolderName || ''}
         />
       )}
+
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        title='Excel Download'
+        message='Excel download is available on the Plus plan. Upgrade to Plus to unlock Excel exports of all your records.'
+      />
     </div>
   )
 }

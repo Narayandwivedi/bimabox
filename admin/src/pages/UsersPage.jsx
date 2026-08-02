@@ -10,6 +10,7 @@ function UsersPage({ apiFetch }) {
   const [users, setUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [planFilter, setPlanFilter] = useState('')
+  const [verifiedFilter, setVerifiedFilter] = useState('verified')
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('usersPageViewMode') || 'table')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -43,7 +44,7 @@ function UsersPage({ apiFetch }) {
     try {
       setLoading(true)
       setMessage({ type: '', text: '' })
-      const result = await apiFetch('/api/users')
+      const result = await apiFetch(`/api/users${verifiedFilter && verifiedFilter !== 'all' ? `?verified=${verifiedFilter}` : ''}`)
       setUsers(result.data || [])
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -55,6 +56,9 @@ function UsersPage({ apiFetch }) {
 
   useEffect(() => {
     fetchUsers()
+  }, [verifiedFilter])
+
+  useEffect(() => {
     fetchPlans()
   }, [])
 
@@ -313,6 +317,15 @@ function UsersPage({ apiFetch }) {
                   <option key={planName} value={planName}>{planName}</option>
                 ))}
               </select>
+              <select
+                value={verifiedFilter}
+                onChange={(e) => setVerifiedFilter(e.target.value)}
+                style={{ height: '42px', borderRadius: '14px', border: '1px solid #cbd5e1', background: '#fff', padding: '0 14px', fontSize: '14px', fontWeight: '600', color: '#0f172a' }}
+              >
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+                <option value="all">All Accounts</option>
+              </select>
               <div className="view-toggle" role="group" aria-label="View mode">
                 <button
                   type="button"
@@ -366,6 +379,9 @@ function UsersPage({ apiFetch }) {
                       <td>
                         <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className="status-pill" style={{ marginLeft: '4px', background: user.emailVerified ? '#f0fdfa' : '#fef2f2', color: user.emailVerified ? '#0d9488' : '#b91c1c', borderColor: user.emailVerified ? '#99f6e4' : '#fecaca' }}>
+                          {user.emailVerified ? 'Verified' : 'Unverified'}
                         </span>
                       </td>
                       <td style={{ fontSize: '13px' }}>
@@ -436,6 +452,9 @@ function UsersPage({ apiFetch }) {
                     </div>
                     <span className={`status-pill ${user.isActive ? 'status-active' : 'status-inactive'}`}>
                       {user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <span className="status-pill" style={{ marginLeft: '4px', background: user.emailVerified ? '#f0fdfa' : '#fef2f2', color: user.emailVerified ? '#0d9488' : '#b91c1c', borderColor: user.emailVerified ? '#99f6e4' : '#fecaca' }}>
+                      {user.emailVerified ? 'Verified' : 'Unverified'}
                     </span>
                   </div>
 

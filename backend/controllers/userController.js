@@ -17,6 +17,7 @@ const sanitizeUser = async (user) => {
     createdAt: user.createdAt,
     referredByName: user.referredBy?.name || null,
     referredByMobile: user.referredBy?.mobile || null,
+    emailVerified: user.emailVerified === true || !!user.googleId,
   }
 
   try {
@@ -50,9 +51,17 @@ const sanitizeUser = async (user) => {
   return base
 }
 
-const listUsers = async (_req, res) => {
+const listUsers = async (req, res) => {
   try {
-    const users = await User.find({}).populate('referredBy', 'name mobile').sort({ createdAt: -1 }).lean()
+    const verifiedParam = req.query.verified || 'true'
+    const verifiedFilter =
+      verifiedParam === 'all'
+        ? {}
+        : verifiedParam === 'false'
+          ? { emailVerified: { $ne: true }, googleId: { $exists: false } }
+          : { $or: [{ emailVerified: true }, { googleId: { $exists: true, $ne: null } }] }
+
+    const users = await User.find(verifiedFilter).populate('referredBy', 'name mobile').sort({ createdAt: -1 }).lean()
     const sanitized = await Promise.all(users.map(sanitizeUser))
     res.json({ success: true, data: sanitized })
   } catch (error) {

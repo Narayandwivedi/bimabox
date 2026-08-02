@@ -319,7 +319,7 @@ const Setting = () => {
                           </svg>
                         </div>
                         <div className='min-w-0 flex-1'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Mode of Business</p>
+                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Services</p>
                           <div className='flex flex-wrap gap-1.5'>
                             {user.modeOfBusiness.map((mode) => (
                               <span key={mode} className='inline-flex items-center rounded-lg bg-sky-100 text-sky-700 px-2 py-0.5 text-xs font-bold'>

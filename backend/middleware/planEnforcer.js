@@ -67,6 +67,45 @@ const planEnforcer = (docType = 'manual') => {
   }
 }
 
+const planFeatureEnforcer = (featureKey) => {
+  return async (req, res, next) => {
+    try {
+      const userId = req.userId || req.user?._id
+      if (!userId) {
+        return next()
+      }
+
+      const activePlan = await UserPlan.findOne({
+        userId,
+        status: 'active',
+        ...activePlanExpiryFilter(),
+      }).populate('planId')
+
+      if (!activePlan || !activePlan.planId) {
+        return res.status(403).json({
+          success: false,
+          message: 'No active subscription plan found. Please contact admin.',
+        })
+      }
+
+      await ensureCurrentCycle(activePlan)
+
+      if (!activePlan.planId.features?.[featureKey]) {
+        return res.status(403).json({
+          success: false,
+          message: 'This feature is not available on your current plan. Please upgrade.',
+        })
+      }
+
+      req.userPlan = activePlan
+      next()
+    } catch (error) {
+      console.error('Plan feature enforcer error:', error)
+      next()
+    }
+  }
+}
+
 const incrementUsage = (docType = 'manual') => {
   return async (req, res, next) => {
     const originalJson = res.json.bind(res)
@@ -102,4 +141,4 @@ const skipIfViaAI = (middleware) => (req, res, next) => {
   return middleware(req, res, next)
 }
 
-module.exports = { planEnforcer, incrementUsage, skipIfViaAI }
+module.exports = { planEnforcer, planFeatureEnforcer, incrementUsage, skipIfViaAI }

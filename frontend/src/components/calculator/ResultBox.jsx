@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { fmt, fmtD } from './helpers'
 import PdfPreviewModal from './PdfPreviewModal'
+import UpgradePopup from '../UpgradePopup'
 import { useAuth } from '../../context/AuthContext'
+import useCurrentPlan from '../../hooks/useCurrentPlan'
 import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../../utils/insuranceCompanyCache'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -28,7 +30,10 @@ const ResultBox = ({
   const [vehicleVariant, setVehicleVariant] = useState('')
   const [modalStep, setModalStep] = useState(1)
   const { user } = useAuth()
+  const { features } = useCurrentPlan()
+  const canQuotation = features.personalisedQuotation === true
   const [insuranceCompanies, setInsuranceCompanies] = useState([])
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false)
 
   useEffect(() => {
     getInsuranceCompanies(API_URL).then(data => setInsuranceCompanies(data || []))
@@ -48,6 +53,10 @@ const ResultBox = ({
   const odBase = showOD ? effectiveIdv * (result.odRate / 100) : 0
 
   const shareQuotation = () => {
+    if (!canQuotation) {
+      setShowUpgradePopup(true)
+      return
+    }
     const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
     const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
@@ -345,6 +354,10 @@ const ResultBox = ({
     } catch (error) {
       console.error('PDF generation error:', error)
       setPdfLoading(false)
+      if (error.response?.status === 403) {
+        setShowUpgradePopup(true)
+        return
+      }
       alert('Failed to generate PDF. Please try again.')
     }
   }
@@ -498,7 +511,13 @@ const ResultBox = ({
 
       <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
         <button
-          onClick={() => { setShowCompanyModal(true); setModalStep(1); setDropdownOpen(false); setSearchQuery('') }}
+          onClick={() => {
+            if (!canQuotation) {
+              setShowUpgradePopup(true)
+              return
+            }
+            setShowCompanyModal(true); setModalStep(1); setDropdownOpen(false); setSearchQuery('')
+          }}
           className='w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-white font-black text-sm uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200'
         >
           <svg className='h-5 w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -691,6 +710,13 @@ const ResultBox = ({
         pdfUrl={pdfUrl}
         quoteId={generatedQuoteId}
         API_URL={API_URL}
+      />
+
+      {/* Upgrade Popup */}
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        message='Personalised quotations are available on the Plus plan. Upgrade to Plus to generate and download personalised quotation PDFs.'
       />
     </div>
   )

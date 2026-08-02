@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
+import useCurrentPlan from '../hooks/useCurrentPlan'
+import UpgradePopup from '../components/UpgradePopup'
 import { prependCoverPage } from '../utils/generateCoverPage'
 import EditFitnessModal from './Fitness/EditFitnessModal'
 import EditPucModal from './Puc/EditPucModal'
@@ -181,6 +183,8 @@ const RTODocumentDetail = () => {
   const { type, id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { features } = useCurrentPlan()
+  const canPersonalized = features.customizedPolicyDownload === true
   const [record, setRecord] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -189,6 +193,7 @@ const RTODocumentDetail = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false)
 
   const resolvedTypeKey = Object.keys(TYPE_CONFIG).find(k => k.toLowerCase() === (type || '').toLowerCase()) || type
   const config = TYPE_CONFIG[resolvedTypeKey]
@@ -296,6 +301,10 @@ const RTODocumentDetail = () => {
   const handleDownload = async (forcePersonalized = null) => {
     if (!fullDocUrl) return
     const personalizedEnabled = forcePersonalized === true
+    if (personalizedEnabled && !canPersonalized) {
+      setShowUpgradePopup(true)
+      return
+    }
     const isInsurance = (type || '').toLowerCase() === 'insurance'
     try {
       const response = await fetch(fullDocUrl)
@@ -506,16 +515,29 @@ const RTODocumentDetail = () => {
                     </h3>
                     {(type || '').toLowerCase() === 'insurance' ? (
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleDownload(true)}
-                          className='flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer'
-                          title='Download PDF with personalized cover page'
-                        >
-                          <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
-                          </svg>
-                          Personalized PDF
-                        </button>
+                        {canPersonalized ? (
+                          <button
+                            onClick={() => handleDownload(true)}
+                            className='flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer'
+                            title='Download PDF with personalized cover page'
+                          >
+                            <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' />
+                            </svg>
+                            Personalized PDF
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setShowUpgradePopup(true)}
+                            className='flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-[11px] font-extrabold text-slate-500 cursor-pointer hover:bg-slate-100 transition-all'
+                            title='Upgrade to download the personalized PDF'
+                          >
+                            <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
+                            </svg>
+                            Personalized PDF
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDownload(false)}
                           className='flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-[10px] font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm cursor-pointer'
@@ -638,8 +660,7 @@ const RTODocumentDetail = () => {
 
       {/* Modals */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3 text-red-600">
               <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -732,6 +753,12 @@ const RTODocumentDetail = () => {
           isEditMode={true}
         />
       )}
+
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        message='Personalised policy download is available on the Plus plan. Upgrade to Plus to unlock personalised PDF downloads.'
+      />
     </div>
   )
 }

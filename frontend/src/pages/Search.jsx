@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import * as XLSX from 'xlsx'
 import { getInsuranceCompanies, subscribeInsuranceCompanies } from '../utils/insuranceCompanyCache'
 import { getProductTypes, subscribeProductTypes } from '../utils/productTypeCache'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const PAGE_SIZE = 40
+
+const computeFilterMode = (q = '', company = '', productType = '', policyType = '', validity = '', dateFrom = '', dateTo = '', referenceId = '', imdId = '', claimStatus = '', financialYear = '') => Boolean(
+  String(q || '').trim() || company || productType || policyType || validity || dateFrom || dateTo || referenceId || imdId || claimStatus || financialYear
+)
 
 const POLICY_TYPES = [
   'Comprehensive', 'Third Party', 'Standalone OD', 'Bundle'
@@ -74,7 +79,10 @@ const Search = () => {
     setSearched(true)
 
     try {
-      const params = { search: q, limit: PAGE_SIZE, page: pageNum }
+      const filterMode = computeFilterMode(q, company, productType, policyType, validity, dateFrom, dateTo, referenceId, imdId, claimStatus, financialYear)
+      const params = filterMode
+        ? { search: q, all: 'true' }
+        : { search: q, limit: PAGE_SIZE, page: pageNum }
       if (type === 'Insurance') {
         if (company) params.insuranceCompanyId = company
         if (productType) {
@@ -222,46 +230,75 @@ const Search = () => {
     setFilterImd('')
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!filteredRecords.length) return
-    const exportData = filteredRecords.map((r) => {
-      const row = {
-        'Vehicle Number': r.vehicleNumber || 'N/A',
-        'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
-        'Mobile': r.mobileNumber || '',
-      }
+    try {
+      const params = { search: inputValue.trim(), all: 'true' }
       if (filterType === 'Insurance') {
-        row['Insurance Company'] = recordCompanyName(r)
-        row['Product'] = r.product || ''
-        row['Vehicle Class'] = r.vehicleClass || ''
-        row['Policy Type'] = r.insuranceClass || ''
-        row['Policy Number'] = r.policyNumber || ''
-        row['Issue Date'] = r.issueDate || ''
-        row['Valid From'] = r.validFrom || ''
-        row['Valid To'] = r.validTo || ''
-        row['TP Valid From'] = r.tpValidFrom || ''
-        row['TP Valid To'] = r.tpValidTo || ''
-        row['OD Premium'] = r.odPremium ?? ''
-        row['TP Premium'] = r.tpPremium ?? ''
-        row['Net Premium'] = r.netPremium ?? ''
-        row['Gross Premium'] = r.premium ?? ''
-        row['Client Name'] = recordReferenceName(r)
-        row['Agent Name (IMD)'] = recordImdName(r)
-        row['Claim Raised'] = r.claimRaised ? 'Yes' : 'No'
-        row['Claim Date'] = r.claimDate || ''
-        row['Claim Remarks'] = r.claimRemarks || ''
-        row['Renewal Status'] = r.renewalStatus || 'pending'
-      } else {
-        row['Valid From'] = r.validFrom || r.taxFrom || ''
-        row['Valid To'] = r.validTo || r.taxTo || ''
+        if (filterCompany) params.insuranceCompanyId = filterCompany
+        if (filterProductType) {
+          params.product = filterProductType
+          const matchedP = productTypesList.find(p => (typeof p === 'string' ? p : p.name) === filterProductType)
+          if (matchedP && typeof matchedP === 'object' && matchedP._id) {
+            params.productTypeId = matchedP._id
+          }
+        }
+        if (filterPolicyType) params.insuranceClass = filterPolicyType
+        if (filterReference) params.referenceId = filterReference
+        if (filterImd) params.imdId = filterImd
+        if (filterClaimStatus) params.claimStatus = filterClaimStatus
+        if (filterFinancialYear) params.financialYear = filterFinancialYear
       }
-      row['Remarks'] = r.remarks || ''
-      return row
-    })
-    const ws = XLSX.utils.json_to_sheet(exportData)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Records')
-    XLSX.writeFile(wb, `${filterType}_${new Date().toISOString().split('T')[0]}.xlsx`)
+      if (filterValidity) params.validity = filterValidity
+      if (filterDateFrom) params.dateFrom = filterDateFrom
+      if (filterDateTo) params.dateTo = filterDateTo
+
+      const endpoint = API_ENDPOINTS[filterType] || '/api/insurance'
+      const res = await axios.get(`${API_URL}${endpoint}`, { withCredentials: true, params })
+      const data = res.data?.data || []
+      if (!data.length) return
+
+      const exportData = data.map((r) => {
+        const row = {
+          'Vehicle Number': r.vehicleNumber || 'N/A',
+          'Policy Holder': r.policyHolderName || r.ownerName || r.name || '',
+          'Mobile': r.mobileNumber || '',
+        }
+        if (filterType === 'Insurance') {
+          row['Insurance Company'] = recordCompanyName(r)
+          row['Product'] = r.product || ''
+          row['Vehicle Class'] = r.vehicleClass || ''
+          row['Policy Type'] = r.insuranceClass || ''
+          row['Policy Number'] = r.policyNumber || ''
+          row['Issue Date'] = r.issueDate || ''
+          row['Valid From'] = r.validFrom || ''
+          row['Valid To'] = r.validTo || ''
+          row['TP Valid From'] = r.tpValidFrom || ''
+          row['TP Valid To'] = r.tpValidTo || ''
+          row['OD Premium'] = r.odPremium ?? ''
+          row['TP Premium'] = r.tpPremium ?? ''
+          row['Net Premium'] = r.netPremium ?? ''
+          row['Gross Premium'] = r.premium ?? ''
+          row['Client Name'] = recordReferenceName(r)
+          row['Agent Name (IMD)'] = recordImdName(r)
+          row['Claim Raised'] = r.claimRaised ? 'Yes' : 'No'
+          row['Claim Date'] = r.claimDate || ''
+          row['Claim Remarks'] = r.claimRemarks || ''
+          row['Renewal Status'] = r.renewalStatus || 'pending'
+        } else {
+          row['Valid From'] = r.validFrom || r.taxFrom || ''
+          row['Valid To'] = r.validTo || r.taxTo || ''
+        }
+        row['Remarks'] = r.remarks || ''
+        return row
+      })
+      const ws = XLSX.utils.json_to_sheet(exportData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Records')
+      XLSX.writeFile(wb, `${filterType}_${new Date().toISOString().split('T')[0]}.xlsx`)
+    } catch (err) {
+      console.error('Export error:', err)
+    }
   }
 
   // Validity filter applied client-side on loaded records
@@ -277,6 +314,8 @@ const Search = () => {
   }
 
   const filteredRecords = records
+
+  const filterMode = computeFilterMode(inputValue, filterCompany, filterProductType, filterPolicyType, filterValidity, filterDateFrom, filterDateTo, filterReference, filterImd, filterClaimStatus, filterFinancialYear)
 
   const getDaysLeft = (dateStr) => {
     if (!dateStr) return null
@@ -1090,7 +1129,7 @@ const Search = () => {
                     })}
                   </div>
 
-                  {hasMore && (
+                  {!filterMode && hasMore && (
                     <div className='mt-8 text-center'>
                       <button
                         onClick={handleLoadMore}

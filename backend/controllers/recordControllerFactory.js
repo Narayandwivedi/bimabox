@@ -255,7 +255,7 @@ const createRecordController = (config) => {
 const listRecords = async (req, res, filterType = 'all') => {
     try {
       const page = Math.max(Number(req.query.page) || 1, 1)
-      const limit = Math.max(Number(req.query.limit) || 20, 1)
+      const requestedLimit = Number(req.query.limit) || 20
       const matcher = buildSearchMatcher(searchFields, req.query.search || '')
 
       const targetReference = req.query.referenceId ? await Reference.findOne({ _id: req.query.referenceId, userId: req.user._id }).lean() : null
@@ -349,6 +349,9 @@ const listRecords = async (req, res, filterType = 'all') => {
         })
 
       const totalRecords = enriched.length
+      const limit = req.query.all === 'true' || requestedLimit <= 0
+        ? Math.max(totalRecords, 1)
+        : Math.max(requestedLimit, 1)
       const data = enriched.slice((page - 1) * limit, page * limit)
 
       res.json({

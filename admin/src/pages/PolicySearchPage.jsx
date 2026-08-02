@@ -162,12 +162,8 @@ function PolicySearchPage({ apiFetch }) {
                 <tr>
                   <th>User</th>
                   <th>Vehicle No</th>
-                  <th>Policy No</th>
                   <th>Company</th>
-                  <th>Product</th>
-                  <th>Policy Type</th>
-                  <th>Valid From</th>
-                  <th>Valid To</th>
+                  <th>Validity</th>
                   <th>Premium</th>
                 </tr>
               </thead>
@@ -178,13 +174,20 @@ function PolicySearchPage({ apiFetch }) {
                       <div style={{ fontWeight: 700 }}>{p.userId?.name || 'N/A'}</div>
                       <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{p.userId?.mobile || ''}</div>
                     </td>
-                    <td style={{ fontWeight: 700 }}>{p.vehicleNumber || '-'}</td>
-                    <td>{p.policyNumber || '-'}</td>
-                    <td>{p.insuranceCompany || '-'}</td>
-                    <td>{p.product || '-'}</td>
-                    <td>{p.insuranceClass || '-'}</td>
-                    <td>{formatDate(p.validFrom)}</td>
-                    <td>{formatDate(p.validTo)}</td>
+                    <td>
+                      <div style={{ fontWeight: 700 }}>{p.policyHolderName || p.vehicleNumber || '-'}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{p.policyHolderName ? (p.vehicleNumber || '-') : ''}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '13px', fontWeight: 600 }}>{p.insuranceCompany || '-'}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{p.policyNumber || '-'}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8' }}>{p.product || '-'}</div>
+                      <div style={{ fontSize: '11px', fontWeight: 500, color: '#94a3b8' }}>{p.insuranceClass || '-'}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#16a34a' }}>{formatDate(p.validFrom)}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: '#dc2626' }}>{formatDate(p.validTo)}</div>
+                    </td>
                     <td>₹{(p.premium || 0).toLocaleString('en-IN')}</td>
                   </tr>
                 ))}

@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import * as XLSX from 'xlsx'
 import '../App.css'
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 500
+const ALL_LIMIT = 100000
 
 function PolicySearchPage({ apiFetch }) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -15,7 +16,6 @@ function PolicySearchPage({ apiFetch }) {
   const [financialYears, setFinancialYears] = useState([])
   const [policies, setPolicies] = useState([])
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalRecords: 0 })
-  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,11 +28,13 @@ function PolicySearchPage({ apiFetch }) {
     }
   }, [apiFetch])
 
-  const fetchPolicies = useCallback(async (pageNum = 1) => {
+  const fetchPolicies = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
-      const params = new URLSearchParams({ page: String(pageNum), limit: String(PAGE_SIZE) })
+      const hasActiveFilter = Boolean(searchTerm.trim() || userId || productTypeId || insuranceCompanyId || financialYear)
+      const limit = hasActiveFilter ? ALL_LIMIT : PAGE_SIZE
+      const params = new URLSearchParams({ page: '1', limit: String(limit) })
       if (searchTerm.trim()) params.set('search', searchTerm.trim())
       if (userId) params.set('userId', userId)
       if (productTypeId) params.set('productTypeId', productTypeId)
@@ -43,7 +45,6 @@ function PolicySearchPage({ apiFetch }) {
       setPolicies(result.data || [])
       setPagination(result.pagination || { currentPage: 1, totalPages: 1, totalRecords: 0 })
       setFinancialYears(result.financialYears || [])
-      setPage(pageNum)
     } catch (err) {
       setError(err.message || 'Failed to fetch policies')
     } finally {
@@ -54,7 +55,7 @@ function PolicySearchPage({ apiFetch }) {
   useEffect(() => { fetchFilters() }, [fetchFilters])
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => fetchPolicies(1), 300)
+    const timeoutId = window.setTimeout(() => fetchPolicies(), 300)
     return () => window.clearTimeout(timeoutId)
   }, [searchTerm, userId, productTypeId, insuranceCompanyId, financialYear, fetchPolicies])
 
@@ -123,7 +124,7 @@ function PolicySearchPage({ apiFetch }) {
               style={{ minWidth: '320px' }}
             />
           </div>
-          <button type="button" className="secondary-btn" onClick={() => fetchPolicies(page)}>Refresh</button>
+          <button type="button" className="secondary-btn" onClick={() => fetchPolicies()}>Refresh</button>
           <button
             type="button"
             onClick={handleExport}
@@ -263,13 +264,8 @@ function PolicySearchPage({ apiFetch }) {
 
           <div className="toolbar" style={{ padding: '16px 24px', justifyContent: 'space-between' }}>
             <span className="section-text" style={{ margin: 0 }}>
-              Showing {(pagination.currentPage - 1) * PAGE_SIZE + 1}-{Math.min(pagination.currentPage * PAGE_SIZE, pagination.totalRecords)} of {pagination.totalRecords}
+              Showing {policies.length} of {pagination.totalRecords} records
             </span>
-            <div className="toolbar">
-              <button type="button" className="secondary-btn" disabled={page <= 1} onClick={() => fetchPolicies(page - 1)}>Previous</button>
-              <span className="section-text" style={{ margin: 0 }}>Page {pagination.currentPage} of {pagination.totalPages}</span>
-              <button type="button" className="secondary-btn" disabled={page >= pagination.totalPages} onClick={() => fetchPolicies(page + 1)}>Next</button>
-            </div>
           </div>
         </>
       )}

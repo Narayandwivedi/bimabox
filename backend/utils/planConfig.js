@@ -83,4 +83,34 @@ const BACKEND_PLANS = {
 
 const getPlan = (planKey) => (planKey && BACKEND_PLANS[planKey]) || null
 
-module.exports = { BACKEND_PLANS, getPlan }
+const ALLOWED_DURATIONS = [3, 6, 9, 12]
+const MONTHS_TO_DAYS = 30
+const ANNUAL_DISCOUNT = 0.1
+
+// User-selectable subscription durations (months). 12-month (1 year) plans get
+// a 10% discount.
+const isAllowedDuration = (months) => ALLOWED_DURATIONS.includes(Number(months))
+
+const computePlanPricePaise = (planKey, months) => {
+  const plan = getPlan(planKey)
+  if (!plan) return 0
+  const m = Number(months) || 3
+  const base = plan.price || 0
+  const gross = base * (m / 3)
+  const net = m === 12 ? gross * (1 - ANNUAL_DISCOUNT) : gross
+  return Math.round(net * 100)
+}
+
+const computePlanDurationDays = (months) => {
+  const m = Number(months) || 3
+  return m * MONTHS_TO_DAYS
+}
+
+module.exports = {
+  BACKEND_PLANS,
+  getPlan,
+  ALLOWED_DURATIONS,
+  isAllowedDuration,
+  computePlanPricePaise,
+  computePlanDurationDays,
+}

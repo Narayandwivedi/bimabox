@@ -11,6 +11,10 @@ const paymentOrderSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    durationMonths: {
+      type: Number,
+      default: null,
+    },
     orderId: {
       type: String,
       required: true,

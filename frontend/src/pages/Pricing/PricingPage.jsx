@@ -3,7 +3,6 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
-import { openRazorpayCheckout } from '../../utils/razorpay'
 import { PLANS_CONFIG } from '../../config/plansConfig'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
@@ -77,7 +76,6 @@ const PricingPage = () => {
   const [plans] = useState(PLANS_CONFIG)
   const [myPlan, setMyPlan] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [purchasingPlanId, setPurchasingPlanId] = useState(null)
 
   const fetchMyPlan = async () => {
     try {
@@ -105,7 +103,7 @@ const PricingPage = () => {
   const currentPlanName = (myPlan?.planKey || 'free').toLowerCase()
   const currentFeatures = myPlanConfig?.features
 
-  const handleBuyPlan = async (plan) => {
+  const handleBuyPlan = (plan) => {
     if (!user) {
       toast.info('Please sign in to purchase or upgrade a plan.')
       navigate('/login')
@@ -117,84 +115,7 @@ const PricingPage = () => {
       return
     }
 
-    setPurchasingPlanId(plan.id || plan.name)
-
-    try {
-      // 1. Create Razorpay Order on Backend
-      const orderRes = await axios.post(
-        `${API_URL}/api/payment/create-order`,
-        {
-          planKey: plan.id,
-          planName: plan.name,
-          price: plan.price,
-          durationDays: plan.durationDays,
-        },
-        { withCredentials: true }
-      )
-
-      if (!orderRes.data?.success) {
-        throw new Error(orderRes.data?.message || 'Failed to create payment order')
-      }
-
-      const { order_id, amount, currency, key_id } = orderRes.data
-
-      // 2. Open Razorpay Checkout Modal
-      openRazorpayCheckout({
-        order_id,
-        amount,
-        currency,
-        key_id,
-        name: 'BimaBox',
-        description: `${plan.name} Subscription Plan`,
-        prefill: {
-          name: user.name || '',
-          email: user.email || '',
-          contact: user.mobile || '',
-        },
-        onSuccess: async (paymentResponse) => {
-          try {
-            // 3. Verify Payment Signature on Backend & Activate Plan
-            const verifyRes = await axios.post(
-              `${API_URL}/api/payment/verify-payment`,
-              {
-                razorpay_order_id: paymentResponse.razorpay_order_id,
-                razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                razorpay_signature: paymentResponse.razorpay_signature,
-                planKey: plan.id,
-                planName: plan.name,
-                planDetails: plan,
-              },
-              { withCredentials: true }
-            )
-
-            if (verifyRes.data?.success) {
-              toast.success(`Payment successful! Welcome to ${plan.name} plan. 🎉`, { autoClose: 4000 })
-              await fetchMyPlan()
-            } else {
-              toast.error(verifyRes.data?.message || 'Payment verification failed.')
-            }
-          } catch (verifyErr) {
-            console.error('Payment verification error:', verifyErr)
-            toast.error(verifyErr.response?.data?.message || 'Payment verification failed.')
-          } finally {
-            setPurchasingPlanId(null)
-          }
-        },
-        onFailure: (err) => {
-          console.error('Razorpay payment failed:', err)
-          toast.error(err.description || 'Payment failed or cancelled.')
-          setPurchasingPlanId(null)
-        },
-        onDismiss: () => {
-          toast.info('Payment window closed.')
-          setPurchasingPlanId(null)
-        },
-      })
-    } catch (error) {
-      console.error('Error starting checkout:', error)
-      toast.error(error.response?.data?.message || error.message || 'Error starting payment process.')
-      setPurchasingPlanId(null)
-    }
+    navigate(`/subscribe/${plan.id}`)
   }
 
   return (
@@ -248,7 +169,6 @@ const PricingPage = () => {
               const { amount, period } = formatPrice(plan)
               const isCurrent = plan.name.toLowerCase() === currentPlanName
               const highlight = plan.badge || plan.name === 'Plus'
-              const isPurchasingThis = purchasingPlanId === plan.id || purchasingPlanId === plan.name
 
               return (
                 <div
@@ -298,22 +218,12 @@ const PricingPage = () => {
                   ) : (
                     <button
                       onClick={() => handleBuyPlan(plan)}
-                      disabled={isPurchasingThis}
-                      className='mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold shadow-md shadow-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed'
+                      className='mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold shadow-md shadow-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
                     >
-                      {isPurchasingThis ? (
-                        <>
-                          <div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>{plan.price === 0 ? 'Free Plan' : 'Subscribe Now'}</span>
-                          <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 8l4 4m0 0l-4 4m4-4H3' />
-                          </svg>
-                        </>
-                      )}
+                      <span>{plan.price === 0 ? 'Free Plan' : 'Choose Duration'}</span>
+                      <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 8l4 4m0 0l-4 4m4-4H3' />
+                      </svg>
                     </button>
                   )}
                 </div>

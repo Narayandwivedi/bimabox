@@ -25,6 +25,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsAndConditions from './pages/TermsAndConditions'
 import ContactUs from './pages/ContactUs'
 import PricingPage from './pages/Pricing/PricingPage'
+import SubscribePage from './pages/Pricing/SubscribePage'
 import ReferralPage from './pages/ReferralPage'
 import ForceEmailVerificationModal from './components/ForceEmailVerificationModal'
 
@@ -99,6 +100,7 @@ function AppContent() {
             <Route path='/kyc/:id' element={<ProtectedRoute><KycDetail /></ProtectedRoute>} />
             <Route path='/renewals' element={<ProtectedRoute><Renewals /></ProtectedRoute>} />
             <Route path='/pricing' element={<PricingPage />} />
+            <Route path='/subscribe/:planId' element={<ProtectedRoute><SubscribePage /></ProtectedRoute>} />
             <Route path='/references' element={<Navigate to='/client-name' replace />} />
             <Route path='/client-name' element={<ProtectedRoute><Reference /></ProtectedRoute>} />
             <Route path='/imd' element={<Navigate to='/agent-name' replace />} />

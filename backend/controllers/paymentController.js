@@ -3,7 +3,7 @@ const Razorpay = require('razorpay')
 const PaymentOrder = require('../models/PaymentOrder')
 const UserPlan = require('../models/UserPlan')
 const User = require('../models/User')
-const { getPlan } = require('../utils/planConfig')
+const { getPlan, isAllowedDuration, computePlanPricePaise, computePlanDurationDays } = require('../utils/planConfig')
 const { computeExpiryDate } = require('../utils/planCycle')
 
 const getRazorpayInstance = () => {
@@ -31,6 +31,7 @@ const createOrder = async (req, res) => {
     const { planKey, amount: customAmount } = req.body
     let amountInPaise = 0
     let plan = null
+    let durationMonths = Number(req.body.durationMonths) || 3
 
     if (planKey) {
       plan = getPlan(planKey)
@@ -38,8 +39,16 @@ const createOrder = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Subscription plan not found' })
       }
 
-      // Convert INR price to Paise (1 INR = 100 paise)
-      amountInPaise = Math.round((plan.price || 0) * 100)
+      if (!isAllowedDuration(durationMonths)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid duration. Allowed durations: 3, 6, 9, 12 months.',
+        })
+      }
+
+      // Amount is computed server-side from the plan + duration (never trusted
+      // from the client). 12-month (1 year) plans get a 10% discount.
+      amountInPaise = computePlanPricePaise(planKey, durationMonths)
     } else if (customAmount !== undefined && customAmount !== null) {
       amountInPaise = Math.round(Number(customAmount))
     }
@@ -62,6 +71,7 @@ const createOrder = async (req, res) => {
       notes: {
         userId: userId.toString(),
         planKey: planKey || '',
+        durationMonths: durationMonths || '',
         planName: plan ? plan.name : 'Custom Payment',
       },
     }
@@ -72,6 +82,7 @@ const createOrder = async (req, res) => {
     await PaymentOrder.create({
       userId,
       planKey: planKey || null,
+      durationMonths: durationMonths || null,
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
@@ -153,13 +164,17 @@ const verifyPayment = async (req, res) => {
 
     // Activate Subscription Plan for User if planKey provided
     const targetPlanKey = planKey || paymentOrderDoc?.planKey
+    const durationMonths = Number(req.body.durationMonths) || paymentOrderDoc?.durationMonths || 3
     let userPlan = null
 
     if (targetPlanKey) {
       const plan = getPlan(targetPlanKey)
       if (plan) {
         const startDate = new Date()
-        const expiryDate = computeExpiryDate(plan.durationDays, startDate)
+        const durationDays = isAllowedDuration(durationMonths)
+          ? computePlanDurationDays(durationMonths)
+          : plan.durationDays
+        const expiryDate = computeExpiryDate(durationDays, startDate)
 
         // Expire any existing active plans for this user
         await UserPlan.updateMany(

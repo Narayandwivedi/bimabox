@@ -51,7 +51,7 @@ const UsageStat = ({ icon, label, used, limit, colorClass }) => {
         <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${colorClass}`}>
           {icon}
         </div>
-        <span className='text-xs font-bold uppercase tracking-wider text-slate-500'>{label}</span>
+        <span className='text-xs font-bold tracking-wider text-slate-500'>{label}</span>
       </div>
       <div className='flex items-baseline justify-between mb-2'>
         <span className='text-2xl font-black text-slate-900 tracking-tight'>{used}</span>
@@ -255,7 +255,7 @@ const Setting = () => {
 
                   <h2 className='text-xl font-bold text-slate-900 truncate max-w-full'>{user?.name || 'User'}</h2>
                   <div className='inline-flex items-center gap-1.5 mt-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100'>
-                    <p className='text-[10px] font-black uppercase tracking-wider'>Active Member</p>
+                    <p className='text-[10px] font-black tracking-wider'>Active Member</p>
                   </div>
 
                   <button
@@ -277,7 +277,7 @@ const Setting = () => {
                         </svg>
                       </div>
                       <div className='min-w-0'>
-                        <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Mobile</p>
+                        <p className='text-[10px] font-bold tracking-wider text-slate-400'>Mobile</p>
                         <p className='text-sm font-bold text-slate-800'>{user?.mobile?.replace(/(\d{5})(\d{5})/, '$1 $2') || 'Not linked'}</p>
                       </div>
                     </div>
@@ -290,7 +290,7 @@ const Setting = () => {
                       </div>
                       <div className='min-w-0 flex-1'>
                         <div className='flex items-center justify-between gap-1'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Email Address</p>
+                          <p className='text-[10px] font-bold tracking-wider text-slate-400'>Email Address</p>
                           {user?.emailVerified && (
                             <span className='inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200'>
                               <svg className='w-3 h-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -312,7 +312,7 @@ const Setting = () => {
                           </svg>
                         </div>
                         <div className='min-w-0'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Business Name</p>
+                          <p className='text-[10px] font-bold tracking-wider text-slate-400'>Business Name</p>
                           <p className='text-sm font-bold text-slate-800 truncate'>{user.businessName}</p>
                         </div>
                       </div>
@@ -326,7 +326,7 @@ const Setting = () => {
                           </svg>
                         </div>
                         <div className='min-w-0 flex-1'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1'>Services</p>
+                          <p className='text-[10px] font-bold tracking-wider text-slate-400 mb-1'>Services</p>
                           <div className='flex flex-wrap gap-1.5'>
                             {user.modeOfBusiness.map((mode) => (
                               <span key={mode} className='inline-flex items-center rounded-lg bg-sky-100 text-sky-700 px-2 py-0.5 text-xs font-bold'>
@@ -347,7 +347,7 @@ const Setting = () => {
                           </svg>
                         </div>
                         <div className='min-w-0'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Address</p>
+                          <p className='text-[10px] font-bold tracking-wider text-slate-400'>Address</p>
                           <p className='text-sm font-bold text-slate-800 truncate'>{user.address}</p>
                         </div>
                       </div>
@@ -363,7 +363,7 @@ const Setting = () => {
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' />
                           </svg>
                         </div>
-                        <span className='text-xs font-bold uppercase tracking-wider text-amber-700'>Wallet Balance</span>
+                        <span className='text-xs font-bold tracking-wider text-amber-700'>Wallet Balance</span>
                       </div>
                       <span className='text-xl font-black text-amber-800'>₹{user?.walletBalance || 0}</span>
                     </div>
@@ -396,7 +396,7 @@ const Setting = () => {
                   </div>
                   <div>
                     <h3 className='text-sm font-bold text-slate-800 tracking-tight'>Active Subscription</h3>
-                    <p className='text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5'>Billing details &amp; quotas</p>
+                    <p className='text-[10px] text-slate-400 font-semibold tracking-wider mt-0.5'>Billing details &amp; quotas</p>
                   </div>
                 </div>
                 <Link
@@ -437,13 +437,13 @@ const Setting = () => {
                           <span className={`inline-flex items-center gap-1.5 rounded-2xl bg-gradient-to-r ${style.badge} px-5 py-2.5 text-base font-black text-white shadow-lg ${style.ring}`}>
                             {planName}
                           </span>
-                          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${isExpired ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+                          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider ${isExpired ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
                             <span className={`h-2 w-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
                             {isExpired ? 'Expired' : 'Active'}
                           </span>
                         </div>
                         <div className='text-left sm:text-right'>
-                          <p className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>
+                          <p className='text-[10px] font-bold tracking-wider text-slate-400'>
                             {isExpired ? 'Expired On' : myPlan.expiryDate ? 'Expiration / Renewal Date' : 'Plan Duration'}
                           </p>
                           <p className={`text-sm font-extrabold ${isExpired ? 'text-rose-600' : 'text-slate-800'} mt-1`}>
@@ -509,7 +509,7 @@ const Setting = () => {
                 </div>
                 <div>
                   <h3 className='text-sm font-bold text-slate-800 tracking-tight'>Database Management</h3>
-                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5'>Manage directory names &amp; categories</p>
+                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider mt-0.5'>Manage directory names &amp; categories</p>
                 </div>
               </div>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
@@ -562,7 +562,7 @@ const Setting = () => {
                 </div>
                 <div>
                   <h3 className='text-sm font-bold text-slate-800 tracking-tight'>Refer & Earn</h3>
-                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5'>Invite friends, earn ₹99 per referral</p>
+                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider mt-0.5'>Invite friends, earn ₹99 per referral</p>
                 </div>
               </div>
               <Link
@@ -599,7 +599,7 @@ const Setting = () => {
                 </div>
                 <div>
                   <h3 className='text-sm font-bold text-slate-800 tracking-tight'>Help &amp; Documentation</h3>
-                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5'>Support, terms &amp; legal resources</p>
+                  <p className='text-[10px] text-slate-400 font-semibold tracking-wider mt-0.5'>Support, terms &amp; legal resources</p>
                 </div>
               </div>
 
@@ -633,7 +633,7 @@ const Setting = () => {
               <div className='pt-2'>
                 <div className='flex items-center gap-2 mb-3'>
                   <div className='h-1.5 w-1.5 rounded-full bg-slate-300' />
-                  <span className='text-[10px] font-bold uppercase tracking-wider text-slate-400'>Connect with us</span>
+                  <span className='text-[10px] font-bold tracking-wider text-slate-400'>Connect with us</span>
                 </div>
                 <div className='flex items-center gap-3'>
                   <a
@@ -709,7 +709,7 @@ const Setting = () => {
             <div>
               <button
                 onClick={handleLogout}
-                className='group w-full flex items-center justify-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/30 hover:bg-rose-50 hover:border-rose-200 py-4.5 text-xs font-black uppercase tracking-wider text-rose-600 transition-all hover:shadow-[0_8px_20px_-6px_rgba(244,63,94,0.15)] active:scale-[0.99] cursor-pointer'
+                className='group w-full flex items-center justify-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/30 hover:bg-rose-50 hover:border-rose-200 py-4.5 text-xs font-black tracking-wider text-rose-600 transition-all hover:shadow-[0_8px_20px_-6px_rgba(244,63,94,0.15)] active:scale-[0.99] cursor-pointer'
               >
                 <svg className='h-4.5 w-4.5 text-rose-600 transition-transform group-hover:translate-x-0.5 duration-200' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1' />
@@ -774,7 +774,7 @@ const Setting = () => {
                 </div>
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Full Name <span className='text-rose-500'>*</span></label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Full Name <span className='text-rose-500'>*</span></label>
                 <input
                   type='text'
                   value={editName}
@@ -784,7 +784,7 @@ const Setting = () => {
                 />
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Mobile Number</label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Mobile Number</label>
                 <input
                   type='text'
                   value={editMobile}
@@ -795,7 +795,7 @@ const Setting = () => {
                 />
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Email Address</label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Email Address</label>
                 <input
                   type='email'
                   value={user?.email || ''}
@@ -805,7 +805,7 @@ const Setting = () => {
                 <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Email address cannot be modified</p>
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Business / Agency Name</label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Business / Agency Name</label>
                 <input
                   type='text'
                   value={editBusinessName}
@@ -815,7 +815,7 @@ const Setting = () => {
                 />
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Services</label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Services</label>
                 <div className='flex flex-wrap gap-1.5 mb-2'>
                   {editModeOfBusiness.map((mode) => (
                     <span key={mode} className='inline-flex items-center gap-1 rounded-lg bg-sky-100 text-sky-700 pl-2 pr-1 py-0.5 text-xs font-bold'>
@@ -844,7 +844,7 @@ const Setting = () => {
                 <p className='text-[10px] text-slate-400 mt-1 font-semibold'>Press Enter or comma to add each service</p>
               </div>
               <div>
-                <label className='block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5'>Office Address</label>
+                <label className='block text-xs font-bold tracking-wider text-slate-500 mb-1.5'>Office Address</label>
                 <textarea
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}

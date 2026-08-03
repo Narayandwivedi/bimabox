@@ -201,7 +201,7 @@ const Renewals = () => {
                 <div>
                   <h2 className='text-lg font-black text-slate-900'>Renewals</h2>
                   {expiredPendingCount > 0 && statusFilter === 'pending' && (
-                    <p className='text-[10px] font-bold text-rose-500 uppercase tracking-wide'>
+                    <p className='text-[10px] font-bold text-rose-500 tracking-wide'>
                       {expiredPendingCount} expired · action needed
                     </p>
                   )}
@@ -265,7 +265,7 @@ const Renewals = () => {
                 <button
                   key={tab.key}
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`flex-none items-center justify-center gap-1 rounded-lg px-2 py-2 lg:px-4 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  className={`flex-none items-center justify-center gap-1 rounded-lg px-2 py-2 lg:px-4 text-[9px] lg:text-[10px] font-bold tracking-wider transition-all ${
                     statusFilter === tab.key
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-slate-500 hover:text-slate-700'
@@ -290,7 +290,7 @@ const Renewals = () => {
             {loading ? (
               <div className='text-center py-12'>
                 <div className='animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto'></div>
-                <p className='text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest'>Loading renewals...</p>
+                <p className='text-xs text-slate-500 mt-2 font-bold tracking-widest'>Loading renewals...</p>
               </div>
             ) : sortedPolicies.length === 0 ? (
               <div className='text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200'>
@@ -327,8 +327,8 @@ const Renewals = () => {
                       >
                         {/* Expired ribbon */}
                         {isExpired && !isResolved && (
-                          <div className='absolute top-0 right-0 bg-rose-500 text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-bl-lg rounded-tr-xl'>
-                            EXPIRED
+                          <div className='absolute top-0 right-0 bg-rose-500 text-white text-[8px] font-black tracking-wider px-2 py-0.5 rounded-bl-lg rounded-tr-xl'>
+                            Expired
                           </div>
                         )}
                         <div className='flex items-center gap-3'>
@@ -398,7 +398,7 @@ const Renewals = () => {
                               <svg className='h-3.5 w-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
                               </svg>
-                              Opp
+                              Opportunity
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}
@@ -420,14 +420,14 @@ const Renewals = () => {
                   <table className='w-full text-left'>
                     <thead>
                       <tr className='border-b border-slate-100 bg-slate-50/50'>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Holder</th>
-                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Product / Class</th>}
-                        {docConfig.subField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Company / {docConfig.numberLabel || 'Policy No'}</th>}
-                        {!docConfig.subField && docConfig.numberField && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>{docConfig.numberLabel}</th>}
-                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Issue Date</th>}
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Valid To</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Days</th>
-                        <th className='px-4 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400'>Actions</th>
+                        <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Holder</th>
+                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Product / Class</th>}
+                        {docConfig.subField && <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Company / {docConfig.numberLabel || 'Policy No'}</th>}
+                        {!docConfig.subField && docConfig.numberField && <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>{docConfig.numberLabel}</th>}
+                        {docType === 'Insurance' && <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Issue Date</th>}
+                        <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Valid To</th>
+                        <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Days</th>
+                        <th className='px-4 py-2 text-[10px] font-black tracking-wider text-slate-400'>Actions</th>
                       </tr>
                     </thead>
                     <tbody className='divide-y divide-slate-50'>
@@ -481,7 +481,7 @@ const Renewals = () => {
                             )}
                             <td className='px-4 py-2 text-xs font-medium text-slate-500'>{policy[docConfig.validToField]}</td>
                             <td className='px-4 py-2'>
-                              <span className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                              <span className={`inline-block text-[10px] font-black px-2 py-0.5 rounded-md ${
                                 status === 'renewed'
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                   : status === 'lost'
@@ -560,7 +560,7 @@ const Renewals = () => {
                                     <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={3} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
                                     </svg>
-                                    Opp
+                                    Opportunity
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); handleStatusChange(policy._id, 'lost') }}

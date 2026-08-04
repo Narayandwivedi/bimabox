@@ -232,7 +232,7 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     ['Insurance Company',   record?.insuranceCompany || 'N/A'],
   ]
 
-  curY -= 18
+  curY -= 30
   const rowH = 22
   const col1 = marginX
   const col2 = 210

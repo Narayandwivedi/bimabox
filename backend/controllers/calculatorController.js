@@ -2,6 +2,9 @@ const PDFDocument = require('pdfkit')
 const path = require('path')
 const fs = require('fs')
 const axios = require('axios')
+const UserPlan = require('../models/UserPlan')
+const { getPlan } = require('../utils/planConfig')
+const { activePlanExpiryFilter } = require('../utils/planCycle')
 
 const QUOTATIONS_DIR = path.join(__dirname, '..', 'uploads', 'quotations')
 
@@ -35,6 +38,24 @@ async function resolveImageBuffer(picture) {
   return null
 }
 
+// Logo branding on quotations is a paid feature (Plus/Pro). Free users still
+// get the quotation PDF, but without the business logo.
+async function userHasQuotationBranding(userId) {
+  if (!userId) return false
+  try {
+    const activePlan = await UserPlan.findOne({
+      userId,
+      status: 'active',
+      ...activePlanExpiryFilter(),
+    }).lean()
+    const plan = getPlan(activePlan?.planKey)
+    return plan?.features?.personalisedQuotation === true
+  } catch (error) {
+    console.error('Error checking quotation branding:', error.message)
+    return false
+  }
+}
+
 
 const generatePdf = async (req, res) => {
   try {
@@ -47,7 +68,8 @@ const generatePdf = async (req, res) => {
     const producerEmail = data.producerEmail || 'N/A'
     const insuranceCompany = data.insuranceCompany || 'BIMABOX'
     const insuranceCompanyId = data.insuranceCompanyId || null
-    const businessPictureBuffer = await resolveImageBuffer(data.businessPicture)
+    const canBrand = await userHasQuotationBranding(req.user?._id || req.userId)
+    const businessPictureBuffer = canBrand ? await resolveImageBuffer(data.businessPicture) : null
 
     // Compute policy dates
     const startDate = new Date()

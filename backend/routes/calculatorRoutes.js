@@ -2,11 +2,10 @@ const express = require('express')
 const controller = require('../controllers/calculatorController')
 const configController = require('../controllers/calculatorConfigController')
 const { requireAuth } = require('../middleware/auth')
-const { planFeatureEnforcer } = require('../middleware/planEnforcer')
 
 const router = express.Router()
 
-router.post('/generate-pdf', requireAuth, planFeatureEnforcer('personalisedQuotation'), controller.generatePdf)
+router.post('/generate-pdf', requireAuth, controller.generatePdf)
 
 // Calculator Tariff & Field Configuration Routes
 router.get('/config', configController.getAllConfigs)

@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
 import '../App.css'
+import { PLANS_CONFIG } from '../config/plansConfig'
+
+const planNameFor = (planKey) => {
+  const plan = PLANS_CONFIG.find((p) => p.id === planKey)
+  return plan ? plan.name : planKey
+}
 
 function UserPlansPage({ apiFetch }) {
   const [userPlans, setUserPlans] = useState([])
@@ -54,7 +60,7 @@ function UserPlansPage({ apiFetch }) {
                   <td>{up.userId?.mobile || 'N/A'}</td>
                   <td>
                     <span className="status-pill" style={{ background: '#f0fdfa', color: '#0d9488', borderColor: '#99f6e4' }}>
-                      {up.planId?.name || 'N/A'}
+                      {up.planName || planNameFor(up.planKey) || 'N/A'}
                     </span>
                   </td>
                   <td style={{ fontSize: '13px' }}>{new Date(up.startDate).toLocaleDateString()}</td>

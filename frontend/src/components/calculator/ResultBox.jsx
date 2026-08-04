@@ -53,10 +53,6 @@ const ResultBox = ({
   const odBase = showOD ? effectiveIdv * (result.odRate / 100) : 0
 
   const shareQuotation = () => {
-    if (!canQuotation) {
-      setShowUpgradePopup(true)
-      return
-    }
     const quoteId = `BBQ-${Math.floor(100000 + Math.random() * 900000)}`
     const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     const policyLabel = policyType === 'od' ? 'Own Damage Only' : policyType === 'tp' ? 'Third Party Only' : policyType === 'comprehensive' ? 'Comprehensive' : (vehicleType === 'two_wheeler' ? '1Yr OD + 5Yr TP Bundle' : '1Yr OD + 3Yr TP Bundle')
@@ -300,7 +296,7 @@ const ResultBox = ({
         businessName: user?.businessName || '',
         businessAddress: user?.address || '',
         businessServices: user?.modeOfBusiness || [],
-        businessPicture: user?.picture || '',
+        businessPicture: canQuotation ? (user?.picture || '') : '',
         insuranceCompany: insuranceCompany?.name || '',
         insuranceCompanyId: insuranceCompany?._id || null,
         premiums: {
@@ -512,10 +508,6 @@ const ResultBox = ({
       <div className='rounded-xl bg-slate-50/80 border border-slate-200 p-3 sm:p-4'>
         <button
           onClick={() => {
-            if (!canQuotation) {
-              setShowUpgradePopup(true)
-              return
-            }
             setShowCompanyModal(true); setModalStep(1); setDropdownOpen(false); setSearchQuery('')
           }}
           className='w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-white font-black text-sm uppercase tracking-widest hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200'
@@ -716,7 +708,7 @@ const ResultBox = ({
       <UpgradePopup
         isOpen={showUpgradePopup}
         onClose={() => setShowUpgradePopup(false)}
-        message='Personalised quotations are available on the Plus plan. Upgrade to Plus to generate and download personalised quotation PDFs.'
+        message='Personalised branding (your logo with producer name) on quotations is available on the Plus plan. Upgrade to add your logo to quotation PDFs.'
       />
     </div>
   )

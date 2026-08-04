@@ -1,6 +1,6 @@
 const UserPlan = require('../models/UserPlan')
-const SubscriptionPlan = require('../models/SubscriptionPlan')
 const Vehicle = require('../models/Vehicle')
+const { getPlan } = require('../utils/planConfig')
 const { ensureCurrentCycle, activePlanExpiryFilter } = require('../utils/planCycle')
 
 const planEnforcer = (docType = 'manual') => {
@@ -15,9 +15,9 @@ const planEnforcer = (docType = 'manual') => {
         userId,
         status: 'active',
         ...activePlanExpiryFilter(),
-      }).populate('planId')
+      })
 
-      if (!activePlan || !activePlan.planId) {
+      if (!activePlan) {
         return res.status(403).json({
           success: false,
           message: 'No active subscription plan found. Please contact admin.',
@@ -26,11 +26,11 @@ const planEnforcer = (docType = 'manual') => {
 
       await ensureCurrentCycle(activePlan)
 
-      const plan = activePlan.planId
+      const plan = getPlan(activePlan.planKey)
       const usage = activePlan.usage || { aiDocumentsUsed: 0, manualDocumentsUsed: 0 }
 
       if (docType === 'ai') {
-        const limit = plan.features?.aiDocuments || 0
+        const limit = plan?.features?.aiDocuments || 0
         if (limit > 0 && usage.aiDocumentsUsed >= limit) {
           return res.status(403).json({
             success: false,
@@ -38,7 +38,7 @@ const planEnforcer = (docType = 'manual') => {
           })
         }
       } else if (docType === 'client') {
-        const limit = plan.features?.clientLimit || 0
+        const limit = plan?.features?.clientLimit || 0
         if (limit > 0) {
           const clientCount = await Vehicle.countDocuments({ userId })
           if (clientCount >= limit) {
@@ -49,7 +49,7 @@ const planEnforcer = (docType = 'manual') => {
           }
         }
       } else {
-        const limit = plan.features?.manualDocuments || 0
+        const limit = plan?.features?.manualDocuments || 0
         if (limit > 0 && usage.manualDocumentsUsed >= limit) {
           return res.status(403).json({
             success: false,
@@ -79,9 +79,9 @@ const planFeatureEnforcer = (featureKey) => {
         userId,
         status: 'active',
         ...activePlanExpiryFilter(),
-      }).populate('planId')
+      })
 
-      if (!activePlan || !activePlan.planId) {
+      if (!activePlan) {
         return res.status(403).json({
           success: false,
           message: 'No active subscription plan found. Please contact admin.',
@@ -90,7 +90,8 @@ const planFeatureEnforcer = (featureKey) => {
 
       await ensureCurrentCycle(activePlan)
 
-      if (!activePlan.planId.features?.[featureKey]) {
+      const plan = getPlan(activePlan.planKey)
+      if (!plan?.features?.[featureKey]) {
         return res.status(403).json({
           success: false,
           message: 'This feature is not available on your current plan. Please upgrade.',

@@ -52,7 +52,7 @@ const PCVForm = ({
         <ManufacturingYearInput manufacturingYear={manufacturingYear} setManufacturingYear={setManufacturingYear} currentYear={currentYear} />
         <AgeSelector vehicleAge={vehicleAge} setVehicleAge={setVehicleAge} />
       </div>
-      <div className={`grid grid-cols-1 ${!isElectricSubtype ? 'sm:grid-cols-4' : 'sm:grid-cols-2'} gap-3`}>
+      <div className={`grid grid-cols-1 ${!isElectricSubtype ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3`}>
         <div>
           <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>No. of Passengers (Seating Capacity)</label>
           <input type='number' value={passengers} onChange={e => setPassengers(e.target.value)} placeholder='e.g. 36' min={0}
@@ -83,19 +83,17 @@ const PCVForm = ({
             </select>
           </div>
         )}
-        {!isElectricSubtype && (
-          <div>
-            <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23 Cover</label>
-            <select
-              value={imt23}
-              onChange={e => setImt23(e.target.value)}
-              className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
-            >
-              <option value="no">No</option>
-              <option value="yes">Yes (+15% OD)</option>
-            </select>
-          </div>
-        )}
+        <div>
+          <label className='mb-1.5 block text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-500'>IMT 23 Cover</label>
+          <select
+            value={imt23}
+            onChange={e => setImt23(e.target.value)}
+            className='w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer transition-all'
+          >
+            <option value="no">No</option>
+            <option value="yes">Yes (+15% OD)</option>
+          </select>
+        </div>
       </div>
       <IDVSection
         idv={idv} setIdv={setIdv}

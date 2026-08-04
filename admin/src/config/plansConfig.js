@@ -1,12 +1,18 @@
-// Canonical definition of the 4 subscription plans. Used both by the manual
-// seed script (scripts/seedPlans.js) and by the startup auto-seed
-// (utils/seedPlans.js) so the two never drift apart.
-const DEFAULT_PLANS = [
+/**
+ * Admin Subscription Plans Configuration
+ *
+ * Mirror of the frontend plans config (frontend/src/config/plansConfig.js).
+ * Plan definitions are managed in code — keep this copy in sync when plans change.
+ */
+
+export const PLANS_CONFIG = [
   {
+    id: 'free',
     name: 'Free',
     price: 0,
-    durationDays: 365, // valid for 1 year
+    durationDays: 365,
     sortOrder: 1,
+    badge: null,
     features: {
       aiDocuments: 20,
       manualDocuments: 20,
@@ -23,10 +29,12 @@ const DEFAULT_PLANS = [
     },
   },
   {
+    id: 'go',
     name: 'Go',
     price: 99,
     durationDays: 90,
     sortOrder: 2,
+    badge: null,
     features: {
       aiDocuments: 50,
       manualDocuments: 50,
@@ -43,10 +51,12 @@ const DEFAULT_PLANS = [
     },
   },
   {
+    id: 'plus',
     name: 'Plus',
     price: 199,
     durationDays: 90,
     sortOrder: 3,
+    badge: 'Most Popular',
     features: {
       aiDocuments: 200,
       manualDocuments: 200,
@@ -63,10 +73,12 @@ const DEFAULT_PLANS = [
     },
   },
   {
+    id: 'pro',
     name: 'Pro',
     price: 499,
     durationDays: 90,
     sortOrder: 4,
+    badge: null,
     features: {
       aiDocuments: 500,
       manualDocuments: 500,
@@ -83,5 +95,3 @@ const DEFAULT_PLANS = [
     },
   },
 ]
-
-module.exports = { DEFAULT_PLANS }

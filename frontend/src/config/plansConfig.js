@@ -1,0 +1,97 @@
+/**
+ * Frontend Subscription Plans Configuration
+ * 
+ * You can edit, customize, add, or remove plans and their details here.
+ * All pricing, features, limits, and descriptions are controlled directly from this file.
+ */
+
+export const PLANS_CONFIG = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    durationDays: 365,
+    sortOrder: 1,
+    badge: null,
+    features: {
+      aiDocuments: 20,
+      manualDocuments: 20,
+      desktopAccess: true,
+      mobileAppAccess: true,
+      excelDownload: false,
+      clientLimit: 20,
+      appNotificationRenewal: true,
+      whatsappRenewal: false,
+      customizedPolicyDownload: false,
+      personalisedQuotation: false,
+      processingSpeed: 'Standard',
+      support: 'Standard',
+    },
+  },
+  {
+    id: 'go',
+    name: 'Go',
+    price: 99,
+    durationDays: 90,
+    sortOrder: 2,
+    badge: null,
+    features: {
+      aiDocuments: 50,
+      manualDocuments: 50,
+      desktopAccess: true,
+      mobileAppAccess: true,
+      excelDownload: true,
+      clientLimit: 50,
+      appNotificationRenewal: true,
+      whatsappRenewal: false,
+      customizedPolicyDownload: false,
+      personalisedQuotation: false,
+      processingSpeed: 'Fast',
+      support: 'Standard',
+    },
+  },
+  {
+    id: 'plus',
+    name: 'Plus',
+    price: 199,
+    durationDays: 90,
+    sortOrder: 3,
+    badge: 'Most Popular',
+    features: {
+      aiDocuments: 200,
+      manualDocuments: 200,
+      desktopAccess: true,
+      mobileAppAccess: true,
+      excelDownload: true,
+      clientLimit: 200,
+      appNotificationRenewal: true,
+      whatsappRenewal: true,
+      customizedPolicyDownload: true,
+      personalisedQuotation: true,
+      processingSpeed: 'Accelerated',
+      support: 'Priority',
+    },
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: 499,
+    durationDays: 90,
+    sortOrder: 4,
+    badge: null,
+    features: {
+      aiDocuments: 500,
+      manualDocuments: 500,
+      desktopAccess: true,
+      mobileAppAccess: true,
+      excelDownload: true,
+      clientLimit: 0, // 0 = Unlimited
+      appNotificationRenewal: true,
+      whatsappRenewal: true,
+      customizedPolicyDownload: true,
+      personalisedQuotation: true,
+      processingSpeed: 'Highest',
+      support: 'Priority',
+    },
+  },
+]

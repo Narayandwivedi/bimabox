@@ -44,7 +44,7 @@ const fmt = (v) => (v ? clean(v) : 'N/A')
 
 /**
  * Generates a personalized PDF cover page and prepends it to existingPdfBytes.
- * Matches the reference image exact design, layout, dark theme background, and typography.
+ * Matches the reference image exact design, layout, light theme background, and typography.
  * 
  * @param {Uint8Array} existingPdfBytes  - the original policy document bytes
  * @param {object} user                  - AuthContext user (name, email, mobile, businessName, picture, modeOfBusiness)
@@ -63,28 +63,28 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   const fontRegular = await coverDoc.embedFont(StandardFonts.Helvetica)
   const fontBold    = await coverDoc.embedFont(StandardFonts.HelveticaBold)
 
-  // ── Colors (exact match to reference design image) ───────────────────────
-  const darkBg    = rgb(0.149, 0.149, 0.149)   // #262626 Dark gray page background
-  const darkRow   = rgb(0.149, 0.149, 0.149)   // #262626 Dark row background
+  // ── Colors (light theme, keeps the same structure/layout) ────────────────
+  const pageBg    = rgb(1, 1, 1)               // #FFFFFF White page background
+  const rowBg     = rgb(0.953, 0.953, 0.961)   // #F3F4F6 Light grey alternate row bg
   const lightTeal = rgb(0.898, 0.969, 0.965)   // #E5F7F5 Light teal/cyan row & box bg
   const teal      = rgb(0.0, 0.659, 0.588)     // #00A896 Bright teal accent
   const white     = rgb(1, 1, 1)               // #FFFFFF
-  const textDark  = rgb(0.067, 0.094, 0.153)   // #111827 Dark text for light rows
-  const textLight = rgb(0.949, 0.953, 0.961)   // #F3F4F6 Light text for dark rows
-  const textMuted = rgb(0.82, 0.835, 0.855)    // #D1D5DB Muted text
-  const lineGrey  = rgb(0.35, 0.37, 0.40)      // #595E66 Horizontal divider line
+  const textDark  = rgb(0.067, 0.094, 0.153)   // #111827 Dark text
+  const body      = rgb(0.118, 0.161, 0.231)   // #1E293B Body text on light bg
+  const textMuted = rgb(0.392, 0.455, 0.545)   // #64748B Muted text
+  const lineGrey  = rgb(0.886, 0.91, 0.941)    // #E2E8F0 Horizontal divider line
 
-  // ── Draw full page dark background ───────────────────────────────────────
-  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: darkBg })
+  // ── Draw full page light background ──────────────────────────────────────
+  page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: pageBg })
 
   // ── Helper Draw Functions ────────────────────────────────────────────────
-  const draw = (text, x, y, { font = fontRegular, size = 10, color = textLight } = {}) => {
+  const draw = (text, x, y, { font = fontRegular, size = 10, color = body } = {}) => {
     const txt = clampText(text, font, size, W - x - 24)
     if (!txt) return
     page.drawText(txt, { x, y, size, font, color })
   }
 
-  const drawRight = (text, rightX, y, { font = fontRegular, size = 10, color = textLight } = {}) => {
+  const drawRight = (text, rightX, y, { font = fontRegular, size = 10, color = body } = {}) => {
     const txt = clean(text)
     if (!txt) return
     const w = font.widthOfTextAtSize(txt, size)
@@ -121,8 +121,8 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   }
 
   if (!logoLoaded) {
-    // White logo container box with circular logo background inside
-    page.drawRectangle({ x: logoX, y: logoY, width: logoSize, height: logoSize, color: white })
+    // Light grey logo container box with circular logo background inside
+    page.drawRectangle({ x: logoX, y: logoY, width: logoSize, height: logoSize, color: rowBg })
     page.drawCircle({ x: logoX + logoSize / 2, y: logoY + logoSize / 2, size: logoSize / 2 - 3, color: teal })
     const initial = clean(user?.businessName || user?.name || 'A').charAt(0).toUpperCase() || 'A'
     const initW = fontBold.widthOfTextAtSize(initial, 18)
@@ -135,7 +135,7 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
 
   // Business Name next to logo
   const bizTitle = clean(user?.businessName || user?.name || 'nkd insurance')
-  draw(bizTitle, logoX + logoSize + 12, logoY + 16, { font: fontBold, size: 14, color: textLight })
+  draw(bizTitle, logoX + logoSize + 12, logoY + 16, { font: fontBold, size: 14, color: body })
 
   // Advisor info block (top right aligned)
   const rightX = W - marginX
@@ -151,16 +151,16 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   const titleW = fontBold.widthOfTextAtSize(mainTitle, 18)
   const titleX = (W - titleW) / 2
   const titleY = H - 110
-  page.drawText(mainTitle, { x: titleX, y: titleY, size: 18, font: fontBold, color: white })
-  // White underline under main title
-  hLine(titleY - 6, { x1: titleX - 4, x2: titleX + titleW + 4, color: white, thickness: 1.2 })
+  page.drawText(mainTitle, { x: titleX, y: titleY, size: 18, font: fontBold, color: textDark })
+  // Teal underline under main title
+  hLine(titleY - 6, { x1: titleX - 4, x2: titleX + titleW + 4, color: teal, thickness: 1.2 })
 
   // ── GREETING & THANK YOU PARAGRAPH ───────────────────────────────────────
   const clientName = clean(record?.policyHolderName || record?.ownerName || record?.vehicleOwner || 'Valued Customer').toUpperCase()
   draw(`Dear ${clientName}`, marginX, H - 142, { font: fontBold, size: 11, color: teal })
 
   const displayBizName = clean(user?.businessName || user?.name || 'NKD Insurance')
-  draw(`Thank you for choosing ${displayBizName}.`, marginX, H - 162, { font: fontRegular, size: 10, color: textLight })
+  draw(`Thank you for choosing ${displayBizName}.`, marginX, H - 162, { font: fontRegular, size: 10, color: body })
 
   const paraText1 = 'We sincerely appreciate the opportunity to serve you. Your trust is valuable to us, and we remain committed to providing prompt assistance throughout your policy period--from policy issuance to renewals and claim support.'
   const paraText2 = 'Please keep this document safely for your records. If you require any assistance regarding your insurance policy or claim, our team is always happy to help.'
@@ -175,7 +175,7 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     words.forEach((w) => {
       const test = line ? `${line} ${w}` : w
       if (fontRegular.widthOfTextAtSize(clean(test), 9.5) > maxW) {
-        draw(line, marginX, y, { font: fontRegular, size: 9.5, color: textLight })
+        draw(line, marginX, y, { font: fontRegular, size: 9.5, color: body })
         line = w
         y -= lineGap
       } else {
@@ -183,7 +183,7 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
       }
     })
     if (line) {
-      draw(line, marginX, y, { font: fontRegular, size: 9.5, color: textLight })
+      draw(line, marginX, y, { font: fontRegular, size: 9.5, color: body })
       y -= lineGap
     }
     return y
@@ -200,9 +200,9 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   // ── POLICY SUMMARY TABLE ────────────────────────────────────────────────
   curY -= 22
   const secTitle1 = 'Policy Summary'
-  draw(secTitle1, marginX, curY, { font: fontBold, size: 11, color: white })
+  draw(secTitle1, marginX, curY, { font: fontBold, size: 11, color: textDark })
   const st1W = fontBold.widthOfTextAtSize(secTitle1, 11)
-  hLine(curY - 4, { x1: marginX, x2: marginX + st1W + 4, color: white, thickness: 0.8 })
+  hLine(curY - 4, { x1: marginX, x2: marginX + st1W + 4, color: teal, thickness: 0.8 })
 
   const parseOrFmtDate = (d) => {
     if (!d) return 'N/A'
@@ -232,16 +232,16 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
     ['Insurance Company',   record?.insuranceCompany || 'N/A'],
   ]
 
-  curY -= 18
+  curY -= 30
   const rowH = 22
   const col1 = marginX
   const col2 = 210
 
   summaryRows.forEach((row, i) => {
     const isLightRow = i % 2 === 1
-    const bg = isLightRow ? lightTeal : darkRow
-    const labelColor = isLightRow ? textDark : textLight
-    const valColor = isLightRow ? textDark : textLight
+    const bg = isLightRow ? lightTeal : rowBg
+    const labelColor = textDark
+    const valColor = textDark
     const valFont = (row[0] === 'Vehicle Number' || row[0] === 'Policy Number') ? fontBold : fontRegular
 
     page.drawRectangle({ x: col1, y: curY - 4, width: W - marginX * 2, height: rowH, color: bg })
@@ -253,9 +253,9 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   // ── SERVICES WE OFFER SECTION ───────────────────────────────────────────
   curY -= 14
   const secTitle2 = 'Services We Offer'
-  draw(secTitle2, marginX, curY, { font: fontBold, size: 11, color: white })
+  draw(secTitle2, marginX, curY, { font: fontBold, size: 11, color: textDark })
   const st2W = fontBold.widthOfTextAtSize(secTitle2, 11)
-  hLine(curY - 4, { x1: marginX, x2: marginX + st2W + 4, color: white, thickness: 0.8 })
+  hLine(curY - 4, { x1: marginX, x2: marginX + st2W + 4, color: teal, thickness: 0.8 })
 
   curY -= 20
   // Use user's modeOfBusiness services or default to ['Motor', 'Health']
@@ -295,9 +295,9 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
 
   // ── REACH YOUR ADVISOR ANYTIME ───────────────────────────────────────────
   const secTitle3 = 'Reach Your Advisor Anytime'
-  draw(secTitle3, marginX, curY, { font: fontBold, size: 11, color: white })
+  draw(secTitle3, marginX, curY, { font: fontBold, size: 11, color: textDark })
   const st3W = fontBold.widthOfTextAtSize(secTitle3, 11)
-  hLine(curY - 4, { x1: marginX, x2: marginX + st3W + 4, color: white, thickness: 0.8 })
+  hLine(curY - 4, { x1: marginX, x2: marginX + st3W + 4, color: teal, thickness: 0.8 })
 
   curY -= 22
   const contactLines = [
@@ -308,7 +308,7 @@ export async function prependCoverPage(existingPdfBytes, user, record) {
   contactLines.forEach(([badgeLetter, text]) => {
     page.drawCircle({ x: marginX + 8, y: curY + 3, size: 8, color: teal })
     page.drawText(badgeLetter, { x: marginX + 5.5, y: curY, size: 8, font: fontBold, color: white })
-    draw(text, marginX + 22, curY, { font: fontRegular, size: 9.5, color: textLight })
+    draw(text, marginX + 22, curY, { font: fontRegular, size: 9.5, color: body })
     curY -= 20
   })
 

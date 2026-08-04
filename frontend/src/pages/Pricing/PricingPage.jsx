@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { useAuth } from '../../context/AuthContext'
+import { PLANS_CONFIG } from '../../config/plansConfig'
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
 const FEATURE_ROWS = [
-  { key: 'aiDocuments', label: 'AI Documents / Month', render: (f) => f.aiDocuments > 0 ? `${f.aiDocuments}` : '—' },
-  { key: 'manualDocuments', label: 'Manual Documents / Month', render: (f) => f.manualDocuments > 0 ? `${f.manualDocuments}` : '—' },
-  { key: 'clientLimit', label: 'Clients', render: (f) => f.clientLimit === 0 ? 'Unlimited' : `${f.clientLimit}` },
+  { key: 'aiDocuments', label: 'AI Documents / Month', render: (f) => (f.aiDocuments > 0 ? `${f.aiDocuments}` : '—') },
+  { key: 'manualDocuments', label: 'Manual Documents / Month', render: (f) => (f.manualDocuments > 0 ? `${f.manualDocuments}` : '—') },
+  { key: 'clientLimit', label: 'Clients', render: (f) => (f.clientLimit === 0 ? 'Unlimited' : `${f.clientLimit}`) },
   { key: 'desktopAccess', label: 'Access from Desktop/Laptop', render: (f) => f.desktopAccess },
   { key: 'mobileAppAccess', label: 'Access from Mobile App', render: (f) => f.mobileAppAccess },
   { key: 'premiumCalculator', label: 'Premium Calculator', render: () => true },
@@ -69,22 +72,26 @@ const FeatureValue = ({ value }) => {
 
 const PricingPage = () => {
   const { user } = useAuth()
-  const [plans, setPlans] = useState([])
+  const navigate = useNavigate()
+  const [plans] = useState(PLANS_CONFIG)
   const [myPlan, setMyPlan] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  const fetchMyPlan = async () => {
+    try {
+      const myPlanRes = await axios.get(`${API_URL}/api/user-plans/my-plan`, { withCredentials: true })
+      setMyPlan(myPlanRes?.data?.data || null)
+    } catch (_error) {
+      // ignore
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [plansRes, myPlanRes] = await Promise.all([
-          axios.get(`${API_URL}/api/subscription-plans`),
-          axios.get(`${API_URL}/api/user-plans/my-plan`, { withCredentials: true }).catch(() => null),
-        ])
-        const activePlans = (plansRes.data?.data || []).filter((p) => p.isActive).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-        setPlans(activePlans)
-        setMyPlan(myPlanRes?.data?.data || null)
+        await fetchMyPlan()
       } catch (error) {
-        console.error('Error loading plans:', error)
+        console.error('Error loading user plan:', error)
       } finally {
         setLoading(false)
       }
@@ -92,8 +99,24 @@ const PricingPage = () => {
     load()
   }, [])
 
-  const currentPlanId = myPlan?.planId?._id
-  const currentFeatures = myPlan?.planId?.features
+  const myPlanConfig = PLANS_CONFIG.find((p) => p.id === myPlan?.planKey) || null
+  const currentPlanName = (myPlan?.planKey || 'free').toLowerCase()
+  const currentFeatures = myPlanConfig?.features
+
+  const handleBuyPlan = (plan) => {
+    if (!user) {
+      toast.info('Please sign in to purchase or upgrade a plan.')
+      navigate('/login')
+      return
+    }
+
+    if (plan.price === 0) {
+      toast.info('Free plan is active by default for new accounts.')
+      return
+    }
+
+    navigate(`/subscribe/${plan.id}`)
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 pb-32 pt-6 md:px-6 lg:px-8'>
@@ -117,7 +140,7 @@ const PricingPage = () => {
             <div className='flex flex-wrap items-center justify-between gap-3 mb-4'>
               <div>
                 <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400'>Current Plan</p>
-                <h2 className='text-lg font-black text-slate-900'>{myPlan.planId?.name || 'Free'}</h2>
+                <h2 className='text-lg font-black text-slate-900'>{myPlanConfig?.name || myPlan?.name || 'Free'}</h2>
               </div>
               <div className='text-right'>
                 <p className='text-[9px] font-bold uppercase tracking-widest text-slate-400'>
@@ -144,11 +167,12 @@ const PricingPage = () => {
           <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
             {plans.map((plan) => {
               const { amount, period } = formatPrice(plan)
-              const isCurrent = plan._id === currentPlanId
-              const highlight = plan.name === 'Plus'
+              const isCurrent = plan.name.toLowerCase() === currentPlanName
+              const highlight = plan.badge || plan.name === 'Plus'
+
               return (
                 <div
-                  key={plan._id}
+                  key={plan.id || plan.name}
                   className={`relative flex flex-col rounded-[28px] border p-5 shadow-[0_28px_60px_-34px_rgba(15,23,42,0.25)] transition-all duration-300 animate-slideUp hover:-translate-y-1 hover:shadow-[0_32px_70px_-30px_rgba(15,23,42,0.3)] ${
                     isCurrent
                       ? 'border-blue-400 bg-gradient-to-b from-blue-50/60 to-white ring-2 ring-blue-200'
@@ -162,9 +186,9 @@ const PricingPage = () => {
                       Current Plan
                     </span>
                   )}
-                  {!isCurrent && highlight && (
+                  {!isCurrent && plan.badge && (
                     <span className='absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-md shadow-indigo-500/30'>
-                      Most Popular
+                      {plan.badge}
                     </span>
                   )}
                   <h3 className='text-center text-base font-black uppercase tracking-wide text-slate-900 mt-2'>{plan.name}</h3>
@@ -192,15 +216,15 @@ const PricingPage = () => {
                       Active Plan
                     </div>
                   ) : (
-                    <a
-                      href='/contact-us'
-                      className='mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold shadow-md shadow-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+                    <button
+                      onClick={() => handleBuyPlan(plan)}
+                      className='mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 text-sm font-bold shadow-md shadow-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
                     >
-                      {user ? 'Contact Us to Upgrade' : 'Get Started'}
+                      <span>{plan.price === 0 ? 'Free Plan' : 'Choose Duration'}</span>
                       <svg className='h-3.5 w-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M17 8l4 4m0 0l-4 4m4-4H3' />
                       </svg>
-                    </a>
+                    </button>
                   )}
                 </div>
               )

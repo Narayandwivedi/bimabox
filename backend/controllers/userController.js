@@ -61,11 +61,11 @@ const sanitizeUser = async (user) => {
 
 const listUsers = async (req, res) => {
   try {
-    const verifiedParam = req.query.verified || 'true'
+    const verifiedParam = String(req.query.verified || 'true').toLowerCase()
     const verifiedFilter =
       verifiedParam === 'all'
         ? {}
-        : verifiedParam === 'false'
+        : verifiedParam === 'false' || verifiedParam === 'unverified'
           ? { emailVerified: { $ne: true }, googleId: { $exists: false } }
           : { $or: [{ emailVerified: true }, { googleId: { $exists: true, $ne: null } }] }
 

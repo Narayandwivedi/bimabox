@@ -882,6 +882,33 @@ tbody tr:hover {
   transform: scale(0.94);
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 24px 24px;
+}
+
+.pagination-info {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-pages {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
 @media (max-width: 960px) {
   .admin-shell {
     flex-direction: row;

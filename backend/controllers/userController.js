@@ -61,7 +61,7 @@ const sanitizeUser = async (user) => {
 
 const listUsers = async (req, res) => {
   try {
-    const verifiedParam = String(req.query.verified || 'true').toLowerCase()
+    const verifiedParam = String(req.query.verified || 'all').toLowerCase()
     const verifiedFilter =
       verifiedParam === 'all'
         ? {}
@@ -69,9 +69,27 @@ const listUsers = async (req, res) => {
           ? { emailVerified: { $ne: true }, googleId: { $exists: false } }
           : { $or: [{ emailVerified: true }, { googleId: { $exists: true, $ne: null } }] }
 
-    const users = await User.find(verifiedFilter).populate('referredBy', 'name mobile').sort({ createdAt: -1 }).lean()
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
+
+    const total = await User.countDocuments(verifiedFilter)
+    const users = await User.find(verifiedFilter)
+      .populate('referredBy', 'name mobile')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
     const sanitized = await Promise.all(users.map(sanitizeUser))
-    res.json({ success: true, data: sanitized })
+    res.json({
+      success: true,
+      data: sanitized,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
   } catch (error) {
     console.error('Error listing users:', error)
     res.status(500).json({ success: false, message: 'Failed to fetch users' })

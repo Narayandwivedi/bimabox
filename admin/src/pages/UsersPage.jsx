@@ -9,6 +9,9 @@ function UsersPage({ apiFetch }) {
   }
 
   const [users, setUsers] = useState([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalUsers, setTotalUsers] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
   const [planFilter, setPlanFilter] = useState('')
   const [verifiedFilter, setVerifiedFilter] = useState('verified')
@@ -40,8 +43,12 @@ function UsersPage({ apiFetch }) {
     try {
       setLoading(true)
       setMessage({ type: '', text: '' })
-      const result = await apiFetch(`/api/users${verifiedFilter && verifiedFilter !== 'all' ? `?verified=${verifiedFilter}` : ''}`)
+      const params = new URLSearchParams({ page: String(page), limit: '50' })
+      params.set('verified', verifiedFilter)
+      const result = await apiFetch(`/api/users?${params.toString()}`)
       setUsers(result.data || [])
+      setTotalPages(result.pagination?.totalPages || 1)
+      setTotalUsers(result.pagination?.total || 0)
     } catch (error) {
       console.error('Error fetching users:', error)
       setMessage({ type: 'error', text: error.message || 'Failed to fetch users' })
@@ -52,7 +59,8 @@ function UsersPage({ apiFetch }) {
 
   useEffect(() => {
     fetchUsers()
-  }, [verifiedFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verifiedFilter, page])
 
   useEffect(() => {
     fetchPlans()
@@ -315,7 +323,10 @@ function UsersPage({ apiFetch }) {
               </select>
               <select
                 value={verifiedFilter}
-                onChange={(e) => setVerifiedFilter(e.target.value)}
+                onChange={(e) => {
+                  setVerifiedFilter(e.target.value)
+                  setPage(1)
+                }}
                 style={{ height: '42px', borderRadius: '14px', border: '1px solid #cbd5e1', background: '#fff', padding: '0 14px', fontSize: '14px', fontWeight: '600', color: '#0f172a' }}
               >
                 <option value="verified">Verified</option>
@@ -511,6 +522,33 @@ function UsersPage({ apiFetch }) {
               ))}
             </div>
           )}
+
+          <div className="pagination">
+            <span className="pagination-info">
+              Showing {filteredUsers.length} of {totalUsers} users
+            </span>
+            <div className="pagination-controls">
+              <button
+                type="button"
+                className="secondary-btn table-btn"
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page <= 1 || loading}
+              >
+                Prev
+              </button>
+              <span className="pagination-pages">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                className="secondary-btn table-btn"
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                disabled={page >= totalPages || loading}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </section>
       </div>
 

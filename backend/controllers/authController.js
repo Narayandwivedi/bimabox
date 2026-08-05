@@ -333,6 +333,9 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ $or: [{ googleId }, { email }] })
 
     if (user) {
+      if (user.isActive === false) {
+        return res.status(401).json({ success: false, message: 'Your account has been deactivated. Please contact support.' })
+      }
       // Update googleId if not present (case where email matched)
       if (!user.googleId) {
         user.googleId = googleId
@@ -515,6 +518,10 @@ const accessUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' })
     }
 
+    if (user.isActive === false) {
+      return res.status(400).json({ success: false, message: 'Cannot access a deactivated user account' })
+    }
+
     user.lastLogin = new Date()
     await user.save()
 
@@ -572,6 +579,10 @@ const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email })
     if (!user) {
       return res.json({ success: true, message: 'If this email is registered, you will receive an OTP' })
+    }
+
+    if (user.isActive === false) {
+      return res.status(401).json({ success: false, message: 'Your account has been deactivated. Please contact support.' })
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000))

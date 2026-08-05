@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
@@ -10,10 +11,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  const isAuthenticatedRef = useRef(false)
+
+  useEffect(() => {
+    isAuthenticatedRef.current = isAuthenticated
+  }, [isAuthenticated])
+
   const clearAuthState = () => {
     setUser(null)
     setIsAuthenticated(false)
   }
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          const url = error.config?.url || ''
+          // If this is a login or google login request, let the component handle the error
+          if (!url.endsWith('/api/auth/login') && !url.endsWith('/api/auth/google')) {
+            if (isAuthenticatedRef.current) {
+              toast.error('Your session has expired or your account has been deactivated.', { toastId: 'auth-error' })
+            }
+            clearAuthState()
+          }
+        }
+        return Promise.reject(error)
+      }
+    )
+
+    return () => {
+      axios.interceptors.response.eject(interceptor)
+    }
+  }, [])
 
   // Check if user is already logged in on mount
   useEffect(() => {

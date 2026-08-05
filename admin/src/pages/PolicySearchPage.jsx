@@ -5,6 +5,15 @@ import '../App.css'
 const PAGE_SIZE = 500
 const ALL_LIMIT = 100000
 
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+
+const resolveDocumentUrl = (documentPath) => {
+  if (!documentPath) return ''
+  if (documentPath.startsWith('data:')) return documentPath
+  if (documentPath.startsWith('http://') || documentPath.startsWith('https://')) return documentPath
+  return `${API_URL}${documentPath}`
+}
+
 function PolicySearchPage({ apiFetch }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [userId, setUserId] = useState('')
@@ -232,6 +241,7 @@ function PolicySearchPage({ apiFetch }) {
                   <th>Company</th>
                   <th>Validity</th>
                   <th>Premium</th>
+                  <th>Document</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,6 +266,36 @@ function PolicySearchPage({ apiFetch }) {
                       <div style={{ fontSize: '12px', fontWeight: 500, color: '#dc2626' }}>{formatDate(p.validTo)}</div>
                     </td>
                     <td>₹{(p.premium || 0).toLocaleString('en-IN')}</td>
+                    <td>
+                      {p.insuranceDocument ? (
+                        <a
+                          href={resolveDocumentUrl(p.insuranceDocument)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="secondary-btn table-btn"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            borderColor: '#3b82f6',
+                            color: '#1d4ed8',
+                            textDecoration: 'none',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            borderRadius: '999px',
+                          }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" x2="12" y1="15" y2="3" />
+                          </svg>
+                          Download
+                        </a>
+                      ) : (
+                        <span style={{ color: '#94a3b8', fontSize: '12px' }}>Not Available</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

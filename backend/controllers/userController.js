@@ -72,8 +72,20 @@ const listUsers = async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1)
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200)
 
-    const total = await User.countDocuments(verifiedFilter)
-    const users = await User.find(verifiedFilter)
+    const search = String(req.query.search || '').trim()
+    const searchFilter = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { mobile: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+          ],
+        }
+      : {}
+    const combinedFilter = { ...verifiedFilter, ...searchFilter }
+
+    const total = await User.countDocuments(combinedFilter)
+    const users = await User.find(combinedFilter)
       .populate('referredBy', 'name mobile')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

@@ -13,6 +13,7 @@ function UsersPage({ apiFetch }) {
   const [totalPages, setTotalPages] = useState(1)
   const [totalUsers, setTotalUsers] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('')
   const [verifiedFilter, setVerifiedFilter] = useState('verified')
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('usersPageViewMode') || 'table')
@@ -45,6 +46,7 @@ function UsersPage({ apiFetch }) {
       setMessage({ type: '', text: '' })
       const params = new URLSearchParams({ page: String(page), limit: '50' })
       params.set('verified', verifiedFilter)
+      if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim())
       const result = await apiFetch(`/api/users?${params.toString()}`)
       setUsers(result.data || [])
       setTotalPages(result.pagination?.totalPages || 1)
@@ -60,7 +62,15 @@ function UsersPage({ apiFetch }) {
   useEffect(() => {
     fetchUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [verifiedFilter, page])
+  }, [verifiedFilter, page, debouncedSearch])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1)
+      setDebouncedSearch(searchTerm)
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     fetchPlans()
@@ -275,10 +285,8 @@ function UsersPage({ apiFetch }) {
   const planFilterOptions = Array.from(new Set(users.map((user) => user.planName || 'Free')))
 
   const filteredUsers = users.filter((user) => {
-    const query = searchTerm.trim().toLowerCase()
-    const matchesSearch = !query || [user.name, user.mobile].some((value) => String(value || '').toLowerCase().includes(query))
     const matchesPlan = !planFilter || (user.planName || 'Free') === planFilter
-    return matchesSearch && matchesPlan
+    return matchesPlan
   })
 
   const formatTimeAgo = (date) => {

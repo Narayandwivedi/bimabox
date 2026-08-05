@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import './App.css'
 import { apiFetch, AuthError } from './utils/api'
 import DashboardPage from './pages/DashboardPage'
@@ -12,7 +12,7 @@ import InsuranceCompaniesPage from './pages/InsuranceCompaniesPage'
 import ProductTypesPage from './pages/ProductTypesPage'
 import ReferralsPage from './pages/ReferralsPage'
 import CalculatorConfigPage from './pages/CalculatorConfigPage'
-import { DashboardIcon, PolicySearchIcon, UsersIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon } from './icons'
+import { DashboardIcon, PolicySearchIcon, UsersIcon, UserPlansIcon, ReferralsIcon, WhatsAppIcon, BuildingIcon, ProductTypesIcon, SettingsIcon, CalculatorIcon, LogoutIcon, MenuIcon, CloseIcon } from './icons'
 
 
 const initialLoginForm = {
@@ -22,6 +22,8 @@ const initialLoginForm = {
 
 function AppSecure() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loginForm, setLoginForm] = useState(initialLoginForm)
   const [loginState, setLoginState] = useState({
     checking: true,
@@ -66,6 +68,18 @@ function AppSecure() {
 
   useEffect(() => {
     checkAdminAuth()
+  }, [])
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location])
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setSidebarOpen(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
   const handleLoginChange = (e) => {
@@ -165,13 +179,16 @@ function AppSecure() {
 
   return (
     <div className="admin-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-brand">
           <div className="sidebar-brand-mark">BB</div>
           <div className="sidebar-brand-text">
             <p className="eyebrow">Bimabox Admin</p>
             <p className="sidebar-brand-email">{loginState.admin?.email || ''}</p>
           </div>
+          <button type="button" className="sidebar-close" aria-label="Close menu" onClick={() => setSidebarOpen(false)}>
+            <CloseIcon />
+          </button>
         </div>
 
         <p className="sidebar-section-label">Menu</p>
@@ -255,7 +272,16 @@ function AppSecure() {
         </button>
       </aside>
 
+      {sidebarOpen ? <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} /> : null}
+
       <div className="content-area">
+        <div className="admin-topbar">
+          <button type="button" className="topbar-burger" aria-label="Open menu" onClick={() => setSidebarOpen(true)}>
+            <MenuIcon />
+          </button>
+          <p className="topbar-title">Bimabox Admin</p>
+        </div>
+
         <Routes>
           <Route path="/dashboard" element={<DashboardPage apiFetch={wrappedApiFetch} />} />
           <Route path="/users" element={<UsersPage apiFetch={wrappedApiFetch} />} />
